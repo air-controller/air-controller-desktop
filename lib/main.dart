@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:shelf/shelf.dart';
+import 'package:shelf/shelf_io.dart' as shelf_io;
+import 'package:shelf_web_socket/shelf_web_socket.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
   runApp(MyApp());
+  startServer();
 }
+
+void startServer() async {
+  var handler = webSocketHandler((webSocket) {
+    webSocket.stream.listen((message) {
+      webSocket.sink.add("echo $message");
+    });
+  });
+
+  shelf_io.serve(handler, '127.0.0.1', 9527).then((server) {
+    print('Serving at ws://${server.address.host}:${server.port}');
+  });
+}
+
+Response _echoRequest(Request request) => Response.ok('Request for "${request.url}"');
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

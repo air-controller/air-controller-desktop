@@ -43,6 +43,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.15.0"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.1"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -67,6 +74,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  http_parser:
+    dependency: transitive
+    description:
+      name: http_parser
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.0.0"
   matcher:
     dependency: transitive
     description:
@@ -88,6 +102,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.8.0"
+  shelf:
+    dependency: "direct main"
+    description:
+      name: shelf
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.0"
+  shelf_web_socket:
+    dependency: "direct main"
+    description:
+      name: shelf_web_socket
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -146,6 +174,13 @@ packages:
     dependency: transitive
     description:
       name: vector_math
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.1.0"
+  web_socket_channel:
+    dependency: transitive
+    description:
+      name: web_socket_channel
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.0"
