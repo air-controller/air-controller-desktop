@@ -10,18 +10,23 @@ void main() {
 }
 
 void startServer() async {
-  var handler = webSocketHandler((webSocket) {
-    webSocket.stream.listen((message) {
-      webSocket.sink.add("echo $message");
+  var handler = webSocketHandler((channel) {
+    channel.stream.listen((message) {
+      channel.sink.add("我已经收到了你的消息： $message，$channel");
+      channel.sink.add("1111");
+      channel.sink.add("2222");
     });
+
+    channel.sink.add("Hello, MIX2S");
+
   });
 
-  shelf_io.serve(handler, '127.0.0.1', 9527).then((server) {
+  shelf_io.serve(handler, '192.168.0.201', 9527).then((server) {
     print('Serving at ws://${server.address.host}:${server.port}');
+
+    print("响应: ${server.serverHeader}");
   });
 }
-
-Response _echoRequest(Request request) => Response.ok('Request for "${request.url}"');
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
