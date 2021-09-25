@@ -15,7 +15,12 @@
 
 端口：20000
 
-搜索指令：search#ip
+搜索指令：search#{randomStr1}#name#ip
 
-响应指令：search_msg_received#ip
+响应指令：search_msg_received#{randomStr2}#name#ip
 
+其中，`{randomStr1}`与`{randomStr2}`为约定随机字符串，用于防止模拟请求，干扰搜索功能。目前，防干扰级别低，先考虑
+简单实现。
+
+`randomStr1`：a2w0nuNyiD6vYogF
+`randomStr2`: RBIDoKFHLX9frYTh
