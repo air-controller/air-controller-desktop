@@ -30,6 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   shelf: ^1.2.0
   shelf_web_socket: ^1.0.1
+  device_info_plus: ^2.1.0
 
 dev_dependencies:
   flutter_test:
