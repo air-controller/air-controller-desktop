@@ -1,22 +1,34 @@
 PODS:
+  - desktop_window (0.0.1):
+    - FlutterMacOS
   - device_info_plus_macos (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
+  - window_size (0.0.2):
+    - FlutterMacOS
 
 DEPENDENCIES:
+  - desktop_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_window/macos`)
   - device_info_plus_macos (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - window_size (from `Flutter/ephemeral/.symlinks/plugins/window_size/macos`)
 
 EXTERNAL SOURCES:
+  desktop_window:
+    :path: Flutter/ephemeral/.symlinks/plugins/desktop_window/macos
   device_info_plus_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus_macos/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  window_size:
+    :path: Flutter/ephemeral/.symlinks/plugins/window_size/macos
 
 SPEC CHECKSUMS:
+  desktop_window: fb7c4f12c1129f947ac482296b6f14059d57a3c3
   device_info_plus_macos: 1ad388a1ef433505c4038e7dd9605aadd1e2e9c7
   FlutterMacOS: 57701585bf7de1b3fc2bb61f6378d73bbdea8424
+  window_size: 339dafa0b27a95a62a843042038fa6c3c48de195
 
 PODFILE CHECKSUM: 6eac6b3292e5142cfc23bdeb71848a40ec51c14c
 
-COCOAPODS: 1.11.0
+COCOAPODS: 1.11.2

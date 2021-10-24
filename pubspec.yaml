@@ -31,6 +31,11 @@ dependencies:
   shelf: ^1.2.0
   shelf_web_socket: ^1.0.1
   device_info_plus: ^2.1.0
+  desktop_window: ^0.4.0
+  window_size:
+    git:
+      url: git://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
 
 dev_dependencies:
   flutter_test:
@@ -48,9 +53,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+     - icons/intro_nonetwork.tiff
+     - icons/intro_radar.tiff
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

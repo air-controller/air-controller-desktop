@@ -4,8 +4,13 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:desktop_window/desktop_window.dart';
+import 'package:window_size/window_size.dart';
+import 'ext/string-ext.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setWindowMinSize(Size(800, 600));
   runApp(MyApp());
   startServer();
 }
@@ -70,6 +75,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  var _iconSize = 80.0;
 
   @override
   Widget build(BuildContext context) {
@@ -79,51 +85,38 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
-        ),
-        body: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
+    return Container(
+        padding: EdgeInsets.fromLTRB(
+            0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-                onPressed: () {
-                  debugPrint("点击了打开搜索");
-
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return new DeviceSearch();
-                  }));
-                },
-                child: Text("打开搜索"),
-                style: ButtonStyle(
-                    fixedSize: MaterialStateProperty.all(Size(350, 50)))),
-
-            SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: () {},
-              child: Text("接口测试"),
-              style: ButtonStyle(
-                  fixedSize: MaterialStateProperty.all(Size(350, 50))),
-            )
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset("icons/intro_nonetwork.tiff",
+                width: _iconSize, height: _iconSize),
+            Container(
+              child:
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text("当前网络：",
+                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false)),
+                Text("YHDM",
+                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false))
+              ]),
+              margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+            ),
+            Container(
+                child: Text(
+                  "请确保手机和电脑处理同一无线网络，并在手机端打开HandShaker应用",
+                  style: TextStyle(color: "#a1a1a1".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false),
+                  textAlign: TextAlign.center,
+                ),
+                margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
+            Spacer(),
+            Text("如手机上尚未安装HandShaker应用，请扫描二维码下载。",
+                style: TextStyle(color: "#949494".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false)),
+            SizedBox(height: 20)
           ],
-        ) // This trailing comma makes auto-formatting nicer for build methods.
-        );
+        ),
+        color: Colors.white);
   }
 }
