@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/search.dart';
-import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:desktop_window/desktop_window.dart';
 import 'package:window_size/window_size.dart';
 import 'ext/string-ext.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setWindowMinSize(Size(800, 600));
   runApp(MyApp());
-  startServer();
+  // startServer();
 }
 
 void startServer() async {
@@ -57,7 +55,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+
+  MyHomePage({Key? key, required this.title}) : super(key: key) {
+  
+  }
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -71,20 +72,88 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State createState() =>  _WifiState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _WifiState extends State<MyHomePage> {
   var _iconSize = 80.0;
+  var _isWifiOn = false;
+  var subscription = null;
+  String? _wifiName = "Unknown-ssid";
+
+  @override
+  void initState() {
+    super.initState();
+
+    initWifiState();
+
+    subscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      if (result == ConnectivityResult.wifi) {
+        debugPrint("Wifi已连接");
+        updateWifiStatus(true);
+      } else {
+        debugPrint("Wifi已断开");
+        updateWifiStatus(false);
+      }
+    });
+  }
+
+  void initWifiState() async {
+    final result = Connectivity().checkConnectivity();
+    if (result == ConnectivityResult.wifi) {
+      debugPrint("Wifi已连接");
+      updateWifiStatus(true);
+    } else {
+      debugPrint("Wifi已断开");
+      updateWifiStatus(false);
+    }
+  }
+
+  Future<void> updateWifiStatus(bool isConnected) async {
+    final info = NetworkInfo();
+    _wifiName = await info.getWifiName();
+
+    setState(() {
+      _isWifiOn = isConnected;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    return _isWifiOn ? _createWifiOnWidget() : _createWifiOffWidget();
+  }
+
+  Widget _createWifiOffWidget() {
+    return Container(
+        padding: EdgeInsets.fromLTRB(
+            0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset("icons/intro_nonetwork.tiff",
+                width: _iconSize, height: _iconSize),
+            Container(
+              child:
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text("请先连接到无线网络",
+                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 25, decoration: TextDecoration.none, inherit: false))
+              ]),
+              margin: EdgeInsets.fromLTRB(0, 100, 0, 0),
+            ),
+            Container(
+                child: Text(
+                  "要通过无线网络与手机建立链接，请确保电脑与手机连接至同一网络",
+                  style: TextStyle(color: "#a1a1a1".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false),
+                  textAlign: TextAlign.center,
+                ),
+                margin: EdgeInsets.fromLTRB(0, 20, 0, 0)),
+          ],
+        ),
+        color: Colors.white);
+  }
+
+  Widget _createWifiOnWidget() {
     return Container(
         padding: EdgeInsets.fromLTRB(
             0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
@@ -92,14 +161,14 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset("icons/intro_nonetwork.tiff",
+            Image.asset("icons/intro_radar.tiff",
                 width: _iconSize, height: _iconSize),
             Container(
               child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text("当前网络：",
                     style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false)),
-                Text("YHDM",
+                Text("${_wifiName}",
                     style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false))
               ]),
               margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -118,5 +187,12 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         color: Colors.white);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    subscription?.cancel();
   }
 }
