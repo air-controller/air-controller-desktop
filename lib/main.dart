@@ -5,12 +5,18 @@ import 'package:window_size/window_size.dart';
 import 'ext/string-ext.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'network/device_search_manager.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setWindowMinSize(Size(800, 600));
   runApp(MyApp());
+  startSearchDevices();
   // startServer();
+}
+
+void startSearchDevices() {
+  DeviceSearchManager.instance.startSearch();
 }
 
 void startServer() async {
