@@ -23,4 +23,13 @@ class Device {
 
     return PLATFORM_UNKNOWN;
   }
+
+  @override
+  bool operator ==(Object other) {
+    // IP地址相同，就认为是同一台设备，暂时这样处理
+    if (other is Device) {
+      return other.ip == this.ip;
+    }
+    return super == other;
+  }
 }

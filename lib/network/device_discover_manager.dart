@@ -95,7 +95,7 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
 
     String ip = "";
     if (strList.length > 2) {
-      name = strList[2];
+      ip = strList[2];
     }
 
     Device device = Device(platform, name, ip);

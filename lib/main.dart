@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/model/Device.dart';
 import 'package:mobile_assistant_client/network/device_discover_manager.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
@@ -7,35 +8,12 @@ import 'ext/string-ext.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'network/device_discover_manager.dart';
+import 'dart:math';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setWindowMinSize(Size(800, 600));
   runApp(MyApp());
-  startSearchDevices();
-  // startServer();
-}
-
-void startSearchDevices() {
-  DeviceDiscoverManager.instance.startDiscover();
-}
-
-void startServer() async {
-  var handler = webSocketHandler((channel) {
-    channel.stream.listen((message) {
-      channel.sink.add("我已经收到了你的消息： $message，$channel");
-      channel.sink.add("1111");
-      channel.sink.add("2222");
-    });
-
-    channel.sink.add("Hello, MIX2S");
-  });
-
-  shelf_io.serve(handler, '192.168.0.201', 9527).then((server) {
-    print('Serving at ws://${server.address.host}:${server.port}');
-
-    print("响应: ${server.serverHeader}");
-  });
 }
 
 class MyApp extends StatelessWidget {
@@ -53,24 +31,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-
-  MyHomePage({Key? key, required this.title}) : super(key: key) {
-  
-  }
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  MyHomePage({Key? key, required this.title}) : super(key: key) {}
 
   final String title;
 
   @override
-  State createState() =>  _WifiState();
+  State createState() => _WifiState();
 }
 
 class _WifiState extends State<MyHomePage> {
@@ -79,16 +45,24 @@ class _WifiState extends State<MyHomePage> {
   var subscription = null;
   String? _wifiName = "Unknown-ssid";
 
+  var _randomLeft = 0;
+  var _randomTop = 0;
+  final _devices = <Device>[];
+
   @override
   void initState() {
     super.initState();
 
     initWifiState();
 
-    subscription = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
       if (result == ConnectivityResult.wifi) {
         debugPrint("Wifi已连接");
         updateWifiStatus(true);
+        // Wifi已连接的情况下，开启设备搜索
+        _startSearchDevices();
       } else {
         debugPrint("Wifi已断开");
         updateWifiStatus(false);
@@ -101,10 +75,25 @@ class _WifiState extends State<MyHomePage> {
     if (result == ConnectivityResult.wifi) {
       debugPrint("Wifi已连接");
       updateWifiStatus(true);
+      // Wifi已连接的情况下，开启设备搜索
+      _startSearchDevices();
     } else {
       debugPrint("Wifi已断开");
       updateWifiStatus(false);
     }
+  }
+
+  void _startSearchDevices() {
+    debugPrint("Device discover service start...");
+    DeviceDiscoverManager.instance.onDeviceFind((device) {
+      if (!_devices.contains(device)) {
+        debugPrint("Find new device, ip: ${device.ip}");
+        setState(() {
+          _devices.add(device);
+        });
+      }
+    });
+    DeviceDiscoverManager.instance.startDiscover();
   }
 
   Future<void> updateWifiStatus(bool isConnected) async {
@@ -133,16 +122,24 @@ class _WifiState extends State<MyHomePage> {
                 width: _iconSize, height: _iconSize),
             Container(
               child:
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Text("请先连接到无线网络",
-                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 25, decoration: TextDecoration.none, inherit: false))
+                    style: TextStyle(
+                        color: "#5b5c61".toColor(),
+                        fontSize: 25,
+                        decoration: TextDecoration.none,
+                        inherit: false))
               ]),
               margin: EdgeInsets.fromLTRB(0, 100, 0, 0),
             ),
             Container(
                 child: Text(
                   "要通过无线网络与手机建立链接，请确保电脑与手机连接至同一网络",
-                  style: TextStyle(color: "#a1a1a1".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false),
+                  style: TextStyle(
+                      color: "#a1a1a1".toColor(),
+                      fontSize: 16,
+                      decoration: TextDecoration.none,
+                      inherit: false),
                   textAlign: TextAlign.center,
                 ),
                 margin: EdgeInsets.fromLTRB(0, 20, 0, 0)),
@@ -152,39 +149,74 @@ class _WifiState extends State<MyHomePage> {
   }
 
   Widget _createWifiOnWidget() {
-    return Container(
-        padding: EdgeInsets.fromLTRB(
-            0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset("icons/intro_radar.tiff",
-                width: _iconSize, height: _iconSize),
-            Container(
-              child:
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text("当前网络：",
-                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false)),
-                Text("${_wifiName}",
-                    style: TextStyle(color: "#5b5c61".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false))
-              ]),
-              margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-            ),
-            Container(
-                child: Text(
-                  "请确保手机和电脑处理同一无线网络，并在手机端打开HandShaker应用",
-                  style: TextStyle(color: "#a1a1a1".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false),
-                  textAlign: TextAlign.center,
-                ),
-                margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
-            Spacer(),
-            Text("如手机上尚未安装HandShaker应用，请扫描二维码下载。",
-                style: TextStyle(color: "#949494".toColor(), fontSize: 16, decoration: TextDecoration.none, inherit: false)),
-            SizedBox(height: 20)
-          ],
-        ),
-        color: Colors.white);
+    return Stack(children: [
+      Container(
+          padding: EdgeInsets.fromLTRB(
+              0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset("icons/intro_radar.tiff",
+                  width: _iconSize, height: _iconSize),
+              Container(
+                child:
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text("当前网络：",
+                      style: TextStyle(
+                          color: "#5b5c61".toColor(),
+                          fontSize: 16,
+                          decoration: TextDecoration.none,
+                          inherit: false)),
+                  Text("${_wifiName}",
+                      style: TextStyle(
+                          color: "#5b5c61".toColor(),
+                          fontSize: 16,
+                          decoration: TextDecoration.none,
+                          inherit: false))
+                ]),
+                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+              ),
+              Container(
+                  child: Text(
+                    "请确保手机和电脑处理同一无线网络，并在手机端打开HandShaker应用",
+                    style: TextStyle(
+                        color: "#a1a1a1".toColor(),
+                        fontSize: 16,
+                        decoration: TextDecoration.none,
+                        inherit: false),
+                    textAlign: TextAlign.center,
+                  ),
+                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
+              Spacer(),
+              Text("如手机上尚未安装HandShaker应用，请扫描二维码下载。",
+                  style: TextStyle(
+                      color: "#949494".toColor(),
+                      fontSize: 16,
+                      decoration: TextDecoration.none,
+                      inherit: false)),
+              SizedBox(height: 20)
+            ],
+          ),
+          color: Colors.white),
+      Stack(
+          children: List.generate(_devices.length, (index) {
+            var width = MediaQuery.of(context).size.width - 80;
+            var height = MediaQuery.of(context).size.height - 30;
+
+            final left = _randomDouble(0, width);
+            final top = _randomDouble(0, height);
+        return Positioned(
+            child: ElevatedButton(onPressed: () {
+
+            }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
+      }))
+    ]);
+  }
+
+  double _randomDouble(double start, double end) {
+    final random = Random();
+    return random.nextDouble() * (end - start) + start;
   }
 
   @override
