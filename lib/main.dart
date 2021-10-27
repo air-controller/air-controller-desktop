@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/network/device_discover_manager.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
@@ -208,7 +210,15 @@ class _WifiState extends State<MyHomePage> {
             final top = _randomDouble(0, height);
         return Positioned(
             child: ElevatedButton(onPressed: () {
+              final device = _devices[index];
 
+              DeviceConnectionManager.instance.onConnectSuccess((manager) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return FileManagerWidget();
+                }));
+              });
+
+              DeviceConnectionManager.instance.connect(device);
             }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
       }))
     ]);
