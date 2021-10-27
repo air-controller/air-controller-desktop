@@ -38,6 +38,7 @@ dependencies:
       path: plugins/window_size
   connectivity_plus: ^2.0.2
   network_info_plus: ^2.0.2
+  fluttertoast: ^8.0.8
 
 dev_dependencies:
   flutter_test:

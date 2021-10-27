@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/network/device_discover_manager.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:window_size/window_size.dart';
 import 'ext/string-ext.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
-import 'network/device_search_manager.dart';
+import 'network/device_discover_manager.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,7 @@ void main() {
 }
 
 void startSearchDevices() {
-  DeviceSearchManager.instance.startSearch();
+  DeviceDiscoverManager.instance.startDiscover();
 }
 
 void startServer() async {
