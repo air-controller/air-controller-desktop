@@ -12,4 +12,6 @@ class Constant {
   static const String RADNOM_STR_RES_SEARCH = "RBIDoKFHLX9frYTh";
 
   static const int PORT_CONNECTION = 9527;
+
+  static const double HOME_NAVI_BAR_HEIGHT = 50.0;
 }

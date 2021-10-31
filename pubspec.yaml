@@ -59,6 +59,15 @@ flutter:
   assets:
      - icons/intro_nonetwork.tiff
      - icons/intro_radar.tiff
+     - icons/icon_image.png
+     - icons/icon_music.png
+     - icons/icon_video.png
+     - icons/icon_download.png
+     - icons/icon_all_file.png
+     - icons/icon_image_text_normal.png
+     - icons/icon_image_text_selected.png
+     - icons/icon_list_normal.png
+     - icons/icon_delete.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
