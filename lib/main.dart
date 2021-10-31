@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: !Constant.HIDE_DEBUG_MARK,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,

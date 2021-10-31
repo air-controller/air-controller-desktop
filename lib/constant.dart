@@ -14,4 +14,7 @@ class Constant {
   static const int PORT_CONNECTION = 9527;
 
   static const double HOME_NAVI_BAR_HEIGHT = 50.0;
+
+  /// 是否隐藏右上角DEBUG标记
+  static const bool HIDE_DEBUG_MARK = true;
 }

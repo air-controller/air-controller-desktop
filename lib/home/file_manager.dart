@@ -4,6 +4,7 @@ import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import '../ext/string-ext.dart';
+import '../constant.dart';
 
 class FileManagerWidget extends StatelessWidget {
   // This widget is the root of your application.
@@ -11,6 +12,7 @@ class FileManagerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '文件管理页面',
+      debugShowCheckedModeBanner: !Constant.HIDE_DEBUG_MARK,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -38,7 +40,7 @@ class _FileManagerState extends State<FileManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pageController = PageController(initialPage: 5);
+    final pageController = PageController(initialPage: 4);
 
     return Row(mainAxisAlignment: MainAxisAlignment.start, children: [
       Container(child: Column(children: [
@@ -102,6 +104,7 @@ class _FileManagerState extends State<FileManagerPage> {
       Expanded(
           child: PageView(
               scrollDirection: Axis.vertical,
+              physics: NeverScrollableScrollPhysics(),
               children: [
                 ImageManagerPage(),
                 MusicManagerPage(),
