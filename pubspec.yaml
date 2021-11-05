@@ -39,6 +39,8 @@ dependencies:
   connectivity_plus: ^2.0.2
   network_info_plus: ^2.0.2
   fluttertoast: ^8.0.8
+  syncfusion_flutter_datagrid: ^19.3.48
+  syncfusion_flutter_core: ^19.3.48
 
 dev_dependencies:
   flutter_test:

@@ -67,6 +67,10 @@ class DeviceConnectionManagerImpl implements DeviceConnectionManager {
             } else {
               debugPrint("Wrong message type");
             }
+
+            if (message is Stream) {
+
+            }
           },
           // Ws channel close.
           onDone: () {
