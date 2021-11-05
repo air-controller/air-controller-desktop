@@ -30,6 +30,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _divider_line_color = "#e0e0e0";
   final _isListMode = true;
   final _headerTextStyle = TextStyle(color: "#5d5e63".toColor(), fontSize: 12, inherit: false);
+  final _minColumnWidth = 200.0;
+  final _maxColumnWidth = 400.0;
 
   List<FileItem> _fileItems = <FileItem>[];
   late FileItemDataSource fileItemDataSource;
@@ -229,7 +231,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                               )),
                           columnWidthMode: ColumnWidthMode.fill,
                           width: columnWidths['name']!,
-                          minimumWidth: 80),
+                          minimumWidth: _minColumnWidth,
+                      maximumWidth: _maxColumnWidth),
                       GridColumn(
                         columnName: 'size',
                         width: columnWidths['size']!,
@@ -237,7 +240,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                             alignment: Alignment.center,
                             child: Text('大小',
                                 style: _headerTextStyle)),
-                        minimumWidth: 80,
+                        minimumWidth: _minColumnWidth,
+                        maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
                       ),
                       GridColumn(
@@ -250,7 +254,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                               style: _headerTextStyle,
                               overflow: TextOverflow.ellipsis,
                             )),
-                        minimumWidth: 80,
+                        minimumWidth: _minColumnWidth,
+                        maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
                       ),
                       GridColumn(
@@ -260,7 +265,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                             alignment: Alignment.center,
                             child: Text('修改日期',
                                 style: _headerTextStyle)),
-                        minimumWidth: 80,
+                        minimumWidth: _minColumnWidth,
+                        maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
                       ),
 
