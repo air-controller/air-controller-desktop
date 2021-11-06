@@ -43,6 +43,7 @@ dependencies:
   syncfusion_flutter_core: ^19.3.48
   http: ^0.13.4
   statusbarmanager: ^0.0.1
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:

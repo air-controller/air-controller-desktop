@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import '../ext/string-ext.dart';
@@ -375,35 +376,26 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
 class FileItemDataSource extends DataGridSource {
   List<DataGridRow> _dataGridRows = [];
   int _selectedIndex = -1;
+  final _KB_BOUND = 1 * 1024;
+  final _MB_BOUND = 1 * 1024 * 1024;
+  final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
   FileItemDataSource({required List<FileItem> datas}) {
-    _dataGridRows = datas
-        .map<DataGridRow>((e) => DataGridRow(cells: [
-              DataGridCell<String>(columnName: 'name', value: e.name),
-              DataGridCell<int>(columnName: 'size', value: e.size),
-              DataGridCell<String>(
-                  columnName: 'category',
-                  value: _convertToCategory(e.name, e.isDir)),
-              DataGridCell<String>(
-                  columnName: 'changeDate', value: "${e.changeDate}"),
-              DataGridCell<String>(columnName: 'empty', value: ""),
-            ]))
-        .toList();
+    setNewDatas(datas);
   }
 
   void setNewDatas(List<FileItem> datas) {
     _dataGridRows = datas
         .map<DataGridRow>((e) => DataGridRow(cells: [
-              DataGridCell<String>(columnName: 'name', value: e.name),
-              DataGridCell<int>(columnName: 'size', value: e.size),
-              DataGridCell<String>(
-                  columnName: 'category',
-                  value: _convertToCategory(e.name, e.isDir)),
-              DataGridCell<String>(
-                  columnName: 'changeDate', value: "${e.changeDate}"),
-              DataGridCell<String>(columnName: 'empty', value: ""),
-            ]))
-        .toList();
+      DataGridCell<FileItem>(columnName: 'name', value: e),
+      DataGridCell<FileItem>(columnName: 'size', value: e),
+      DataGridCell<FileItem>(
+          columnName: 'category',
+          value: e),
+      DataGridCell<FileItem>(
+          columnName: 'changeDate', value: e),
+      DataGridCell<String>(columnName: 'empty', value: ""),
+    ])).toList();
     notifyListeners();
   }
 
@@ -412,11 +404,34 @@ class FileItemDataSource extends DataGridSource {
     notifyListeners();
   }
 
-  String _convertToCategory(String name, bool isDir) {
-    if (isDir) {
+  String _convertToCategory(FileItem item) {
+    if (item.isDir) {
       return "文件夹";
     } else {
-      return name;
+      String name = item.name.toLowerCase();
+      if (name.trim() == "") return "--";
+
+      if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
+        return "JPEG图像";
+      }
+
+      if (name.endsWith(".png")) {
+        return "PNG图像";
+      }
+
+      if (name.endsWith(".raw")) {
+        return "Panasonic raw图像";
+      }
+
+      if (name.endsWith(".mp3")) {
+        return "MP3音频";
+      }
+
+      if (name.endsWith(".txt")) {
+        return "文本";
+      }
+
+      return "文档";
     }
   }
 
@@ -447,40 +462,81 @@ class FileItemDataSource extends DataGridSource {
       }
     }
 
-    Image getRightArrowIcon() {
+    Visibility getRightArrowIcon(FileItem fileItem) {
       int index = rows.indexOf(row);
       debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
 
+      late Image icon;
+
       if (index == _selectedIndex) {
-        return Image.asset("icons/icon_right_arrow_selected.png",
+        icon = Image.asset("icons/icon_right_arrow_selected.png",
             width: 20, height: 20);
       } else {
-        return Image.asset("icons/icon_right_arrow_normal.png",
+        icon = Image.asset("icons/icon_right_arrow_normal.png",
             width: 20, height: 20);
       }
+
+      return Visibility(
+          child: icon,
+          maintainSize: true,
+          maintainState: true,
+          maintainAnimation: true,
+          visible: fileItem.isDir);
     }
 
     return DataGridRowAdapter(
         color: getRowBackgroundColor(),
         cells: row.getCells().map<Widget>((e) {
-          // 名称
-          if (e.columnName == "name") {
-            return Row(children: [
-              getRightArrowIcon(),
-              Image.asset("icons/icon_folder.png", width: 20, height: 20),
-              SizedBox(width: 10.0),
-              Flexible(
-                  child: Text(e.value.toString(),
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          inherit: false, fontSize: 12, color: getTextColor())))
-            ]);
+          dynamic value = e.value;
+          if (value is FileItem) {
+            final fileItem = e.value as FileItem;
+
+            if (e.columnName == "name") {
+              return Row(children: [
+                getRightArrowIcon(fileItem),
+                Image.asset("icons/icon_folder.png", width: 20, height: 20),
+                SizedBox(width: 10.0),
+                Flexible(
+                    child: Text(fileItem.name,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            inherit: false, fontSize: 12, color: getTextColor())))
+              ]);
+            } else {
+              String text = value.toString();
+
+              if (e.columnName == "size") {
+                if (fileItem.isDir) {
+                  text = "--";
+                } else {
+                  text = _convertToReadableSize(fileItem.size);
+                }
+              }
+
+              if (e.columnName == "category") {
+                text = _convertToCategory(fileItem);
+              }
+
+              if (e.columnName == "changeDate") {
+                text = _formatChangeDate(fileItem.changeDate);
+              }
+
+              return Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(text,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: TextStyle(
+                        inherit: false, fontSize: 12, color: getTextColor())),
+              );
+            }
           } else {
             return Container(
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(e.value.toString(),
+              child: Text("",
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: TextStyle(
@@ -490,8 +546,68 @@ class FileItemDataSource extends DataGridSource {
         }).toList());
   }
 
+  String _formatChangeDate(int changeDate) {
+    final df = DateFormat("yyyy年M月D日 HH:mm");
+    return df.format(new DateTime.fromMicrosecondsSinceEpoch(changeDate));
+  }
+
+  String _convertToReadableSize(int size) {
+    if (size < _KB_BOUND) {
+      return "${size}Byte";
+    }
+    if (size >= _KB_BOUND && size < _MB_BOUND) {
+      return "${size ~/ 1024}KB";
+    }
+
+    if (size >= _MB_BOUND && size <= _GB_BOUND) {
+      return "${size / 1024 ~/ 1024}MB";
+    }
+
+    return "${size / 1024 / 1024 ~/ 1024}GB";
+  }
+
   @override
   bool shouldRecalculateColumnWidths() {
     return true;
+  }
+
+  @override
+  int compare(DataGridRow? a, DataGridRow? b, SortColumnDetails sortColumn) {
+    FileItem itemA = a?.getCells().firstWhere((element) => element.columnName == sortColumn.name).value;
+    FileItem itemB = b?.getCells().firstWhere((element) => element.columnName == sortColumn.name).value;
+
+
+    if (sortColumn.name == "name" || sortColumn.name == "category") {
+      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
+        return itemA.name.compareTo(itemB.name);
+      } else {
+        return itemB.name.compareTo(itemA.name);
+      }
+    }
+
+    if (sortColumn.name == "size") {
+      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
+        return itemA.size.compareTo(itemB.size);
+      } else {
+        return itemB.size.compareTo(itemA.size);
+      }
+    }
+
+    if (sortColumn.name == "changeDate") {
+      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
+        return itemA.changeDate.compareTo(itemB.changeDate);
+      } else {
+        return itemB.changeDate.compareTo(itemA.changeDate);
+
+      }
+    }
+
+    return super.compare(a, b, sortColumn);
+  }
+
+  @override
+  void performSorting(List<DataGridRow> rows) {
+    // TODO: implement performSorting
+    super.performSorting(rows);
   }
 }
