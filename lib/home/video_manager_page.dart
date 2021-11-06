@@ -13,6 +13,6 @@ class _VideoManagerState extends State<VideoManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Text("音乐页面");
+    return Text("视频页面");
   }
 }
