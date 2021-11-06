@@ -30,7 +30,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _delete_btn_padding_vertical = 4.5;
   final _divider_line_color = "#e0e0e0";
   final _isListMode = true;
-  final _headerTextStyle = TextStyle(color: "#5d5e63".toColor(), fontSize: 12, inherit: false);
+  final _headerTextStyle =
+      TextStyle(color: "#5d5e63".toColor(), fontSize: 12, inherit: false);
   final _minColumnWidth = 200.0;
   final _maxColumnWidth = 400.0;
   final _headerPaddingStart = 15.0;
@@ -47,9 +48,11 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
     fileItemDataSource = FileItemDataSource(datas: _fileItems);
 
     var url = Uri.parse("http://192.168.0.102:8080/file/list");
-    http.post(url, headers: {
-      "Content-Type": "application/json"
-    }, body: json.encode({"path": ""})).then((response) {
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({"path": ""}))
+        .then((response) {
       var body = response.body;
 
       if (body.trim() != '') {
@@ -74,14 +77,12 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
             debugPrint("Get file list completed...");
           });
         });
-
       }
 
       debugPrint("$body");
     }).catchError((error) {
       debugPrint("Meet error: $error");
     });
-
   }
 
   @override
@@ -240,8 +241,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                       headerColor: "#fcfcfc".toColor(),
                       selectionColor: "#5a87ec".toColor(),
                       brightness: Brightness.light,
-                      columnResizeIndicatorStrokeWidth: 0
-                  ),
+                      columnResizeIndicatorStrokeWidth: 0),
                   child: SfDataGrid(
                     source: fileItemDataSource,
                     columnWidthMode: ColumnWidthMode.fill,
@@ -262,34 +262,37 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                       });
                       return true;
                     },
-                    onSelectionChanged: (List<DataGridRow> addedRows, List<DataGridRow> removedRows) {
+                    onSelectionChanged: (List<DataGridRow> addedRows,
+                        List<DataGridRow> removedRows) {
                       setState(() {
-                        fileItemDataSource.setSelectedRow(_dataGridController.selectedIndex);
+                        fileItemDataSource
+                            .setSelectedRow(_dataGridController.selectedIndex);
                       });
                     },
                     columns: <GridColumn>[
                       GridColumn(
                           columnName: 'name',
                           label: Container(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '名称',
-                                style: _headerTextStyle,
-                              ),
-                            padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '名称',
+                              style: _headerTextStyle,
+                            ),
+                            padding: EdgeInsets.fromLTRB(
+                                _headerPaddingStart, 0, 0, 0),
                           ),
                           columnWidthMode: ColumnWidthMode.fill,
                           width: columnWidths['name']!,
-                          minimumWidth: _minColumnWidth,
-                      maximumWidth: _maxColumnWidth),
+                          minimumWidth: 250.0,
+                          maximumWidth: _maxColumnWidth),
                       GridColumn(
                         columnName: 'size',
                         width: columnWidths['size']!,
                         label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text('大小',
-                                style: _headerTextStyle),
-                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                          alignment: Alignment.centerLeft,
+                          child: Text('大小', style: _headerTextStyle),
+                          padding:
+                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
                         ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
@@ -299,13 +302,14 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: 'category',
                         width: columnWidths['category']!,
                         label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '种类',
-                              style: _headerTextStyle,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '种类',
+                            style: _headerTextStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          padding:
+                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
                         ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
@@ -315,31 +319,26 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: 'changeDate',
                         width: columnWidths['changeDate']!,
                         label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text('修改日期',
-                                style: _headerTextStyle),
-                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                          alignment: Alignment.centerLeft,
+                          child: Text('修改日期', style: _headerTextStyle),
+                          padding:
+                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
                         ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
                       ),
-
                       GridColumn(
                         columnName: '',
                         width: columnWidths['empty']!,
                         label: Container(
                             alignment: Alignment.centerLeft,
-                            child: Text('',
-                                style: _headerTextStyle)),
+                            child: Text('', style: _headerTextStyle)),
                         minimumWidth: 80,
                         columnWidthMode: ColumnWidthMode.none,
                       ),
                     ],
-                  )
-              )
-          )
-      );
+                  ))));
     } else {
       return Expanded(
           child: Column(children: [
@@ -387,25 +386,24 @@ class FileItemDataSource extends DataGridSource {
                   value: _convertToCategory(e.name, e.isDir)),
               DataGridCell<String>(
                   columnName: 'changeDate', value: "${e.changeDate}"),
-              DataGridCell<String>(
-                  columnName: 'empty', value: ""),
-                    ]))
+              DataGridCell<String>(columnName: 'empty', value: ""),
+            ]))
         .toList();
   }
 
   void setNewDatas(List<FileItem> datas) {
     _dataGridRows = datas
         .map<DataGridRow>((e) => DataGridRow(cells: [
-      DataGridCell<String>(columnName: 'name', value: e.name),
-      DataGridCell<int>(columnName: 'size', value: e.size),
-      DataGridCell<String>(
-          columnName: 'category',
-          value: _convertToCategory(e.name, e.isDir)),
-      DataGridCell<String>(
-          columnName: 'changeDate', value: "${e.changeDate}"),
-      DataGridCell<String>(
-          columnName: 'empty', value: ""),
-    ])).toList();
+              DataGridCell<String>(columnName: 'name', value: e.name),
+              DataGridCell<int>(columnName: 'size', value: e.size),
+              DataGridCell<String>(
+                  columnName: 'category',
+                  value: _convertToCategory(e.name, e.isDir)),
+              DataGridCell<String>(
+                  columnName: 'changeDate', value: "${e.changeDate}"),
+              DataGridCell<String>(columnName: 'empty', value: ""),
+            ]))
+        .toList();
     notifyListeners();
   }
 
@@ -449,18 +447,47 @@ class FileItemDataSource extends DataGridSource {
       }
     }
 
+    Image getRightArrowIcon() {
+      int index = rows.indexOf(row);
+      debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
+
+      if (index == _selectedIndex) {
+        return Image.asset("icons/icon_right_arrow_selected.png",
+            width: 20, height: 20);
+      } else {
+        return Image.asset("icons/icon_right_arrow_normal.png",
+            width: 20, height: 20);
+      }
+    }
+
     return DataGridRowAdapter(
-      color: getRowBackgroundColor(),
+        color: getRowBackgroundColor(),
         cells: row.getCells().map<Widget>((e) {
-      return Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-        child: Text(
-            e.value.toString(),
-            style: TextStyle(inherit: false, fontSize: 12, color: getTextColor())
-        ),
-      );
-    }).toList());
+          // 名称
+          if (e.columnName == "name") {
+            return Row(children: [
+              getRightArrowIcon(),
+              Image.asset("icons/icon_folder.png", width: 20, height: 20),
+              SizedBox(width: 10.0),
+              Flexible(
+                  child: Text(e.value.toString(),
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          inherit: false, fontSize: 12, color: getTextColor())))
+            ]);
+          } else {
+            return Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+              child: Text(e.value.toString(),
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  style: TextStyle(
+                      inherit: false, fontSize: 12, color: getTextColor())),
+            );
+          }
+        }).toList());
   }
 
   @override
