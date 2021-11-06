@@ -32,7 +32,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _divider_line_color = "#e0e0e0";
   final _isListMode = true;
   final _headerTextStyle =
-      TextStyle(color: "#5d5e63".toColor(), fontSize: 12, inherit: false);
+      TextStyle(color: "#5d5e63".toColor(), fontSize: 14, inherit: false);
   final _minColumnWidth = 200.0;
   final _maxColumnWidth = 400.0;
   final _headerPaddingStart = 15.0;
@@ -523,7 +523,7 @@ class FileItemDataSource extends DataGridSource {
                         softWrap: false,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            inherit: false, fontSize: 12, color: getTextColor())))
+                            inherit: false, fontSize: 14, color: getTextColor())))
               ]);
             } else {
               String text = value.toString();
@@ -551,7 +551,7 @@ class FileItemDataSource extends DataGridSource {
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
                     style: TextStyle(
-                        inherit: false, fontSize: 12, color: getTextColor())),
+                        inherit: false, fontSize: 14, color: getTextColor())),
               );
             }
           } else {
@@ -562,7 +562,7 @@ class FileItemDataSource extends DataGridSource {
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: TextStyle(
-                      inherit: false, fontSize: 12, color: getTextColor())),
+                      inherit: false, fontSize: 14, color: getTextColor())),
             );
           }
         }).toList());
