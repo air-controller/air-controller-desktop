@@ -650,8 +650,8 @@ class FileItemDataSource extends DataGridSource {
   }
 
   String _formatChangeDate(int changeDate) {
-    final df = DateFormat("yyyy年M月D日 HH:mm");
-    return df.format(new DateTime.fromMicrosecondsSinceEpoch(changeDate));
+    final df = DateFormat("yyyy年M月d日 HH:mm");
+    return df.format(new DateTime.fromMillisecondsSinceEpoch(changeDate));
   }
 
   String _convertToReadableSize(int size) {
