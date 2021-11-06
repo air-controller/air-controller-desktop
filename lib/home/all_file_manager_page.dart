@@ -7,6 +7,7 @@ import '../constant.dart';
 import 'dart:convert';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import '../model/FileItem.dart';
+import 'package:http/http.dart' as http;
 
 class AllFileManagerPage extends StatefulWidget {
   @override
@@ -32,6 +33,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _headerTextStyle = TextStyle(color: "#5d5e63".toColor(), fontSize: 12, inherit: false);
   final _minColumnWidth = 200.0;
   final _maxColumnWidth = 400.0;
+  final _headerPaddingStart = 15.0;
 
   List<FileItem> _fileItems = <FileItem>[];
   late FileItemDataSource fileItemDataSource;
@@ -39,8 +41,46 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   @override
   void initState() {
     super.initState();
-    _fileItems = mockFileItems();
+    // _fileItems = mockFileItems();
+
     fileItemDataSource = FileItemDataSource(datas: _fileItems);
+
+    var url = Uri.parse("http://192.168.0.102:8080/file/list");
+    http.post(url, headers: {
+      "Content-Type": "application/json"
+    }, body: json.encode({"path": ""})).then((response) {
+      var body = response.body;
+
+      if (body.trim() != '') {
+        var map = jsonDecode(body);
+
+        var data = map["data"] as List<dynamic>;
+        data.forEach((item) {
+          var path = item["path"] as String;
+
+          var index = path.lastIndexOf("/");
+          var folder = path.substring(0, index);
+
+          var isDir = item["isDir"] as bool;
+
+          var size = item["size"] as int;
+
+          var fileItem = FileItem(item["name"], folder, isDir, size, 0);
+          _fileItems.add(fileItem);
+
+          setState(() {
+            fileItemDataSource.setNewDatas(_fileItems);
+            debugPrint("Get file list completed...");
+          });
+        });
+
+      }
+
+      debugPrint("$body");
+    }).catchError((error) {
+      debugPrint("Meet error: $error");
+    });
+
   }
 
   @override
@@ -224,11 +264,13 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                       GridColumn(
                           columnName: 'name',
                           label: Container(
-                              alignment: Alignment.center,
+                              alignment: Alignment.centerLeft,
                               child: Text(
                                 '名称',
                                 style: _headerTextStyle,
-                              )),
+                              ),
+                            padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                          ),
                           columnWidthMode: ColumnWidthMode.fill,
                           width: columnWidths['name']!,
                           minimumWidth: _minColumnWidth,
@@ -237,9 +279,11 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: 'size',
                         width: columnWidths['size']!,
                         label: Container(
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft,
                             child: Text('大小',
-                                style: _headerTextStyle)),
+                                style: _headerTextStyle),
+                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                        ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
@@ -248,12 +292,14 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: 'category',
                         width: columnWidths['category']!,
                         label: Container(
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft,
                             child: Text(
                               '种类',
                               style: _headerTextStyle,
                               overflow: TextOverflow.ellipsis,
-                            )),
+                            ),
+                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                        ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
@@ -262,9 +308,11 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: 'changeDate',
                         width: columnWidths['changeDate']!,
                         label: Container(
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft,
                             child: Text('修改日期',
-                                style: _headerTextStyle)),
+                                style: _headerTextStyle),
+                          padding: EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
+                        ),
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
@@ -274,7 +322,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         columnName: '',
                         width: columnWidths['empty']!,
                         label: Container(
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft,
                             child: Text('',
                                 style: _headerTextStyle)),
                         minimumWidth: 80,
@@ -315,25 +363,6 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
       ]));
     }
   }
-
-  List<FileItem> mockFileItems() {
-    return [
-      FileItem("a1", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a2", '/d1/d2/d3', false, 100, 10000),
-      FileItem("a3", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a4", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a5", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a6", '/d1/d2/d3', true, 100, 10000),
-
-      FileItem("a1", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a2", '/d1/d2/d3', false, 100, 10000),
-      FileItem("a3", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a4", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a5", '/d1/d2/d3', true, 100, 10000),
-      FileItem("a6", '/d1/d2/d3', true, 100, 10000),
-
-    ];
-  }
 }
 
 // 用于构建表格数据
@@ -354,6 +383,22 @@ class FileItemDataSource extends DataGridSource {
                   columnName: 'empty', value: ""),
                     ]))
         .toList();
+  }
+
+  void setNewDatas(List<FileItem> datas) {
+    _dataGridRows = datas
+        .map<DataGridRow>((e) => DataGridRow(cells: [
+      DataGridCell<String>(columnName: 'name', value: e.name),
+      DataGridCell<int>(columnName: 'size', value: e.size),
+      DataGridCell<String>(
+          columnName: 'category',
+          value: _convertToCategory(e.name, e.isDir)),
+      DataGridCell<String>(
+          columnName: 'changeDate', value: "${e.changeDate}"),
+      DataGridCell<String>(
+          columnName: 'empty', value: ""),
+    ])).toList();
+    notifyListeners();
   }
 
   String _convertToCategory(String name, bool isDir) {
@@ -384,8 +429,8 @@ class FileItemDataSource extends DataGridSource {
       color: getRowBackgroundColor(),
         cells: row.getCells().map<Widget>((e) {
       return Container(
-        alignment: Alignment.center,
-        padding: EdgeInsets.all(8.0),
+        alignment: Alignment.centerLeft,
+        padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
         child: Text(e.value.toString()),
       );
     }).toList());

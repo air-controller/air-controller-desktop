@@ -51,7 +51,9 @@ class _WifiState extends State<MyHomePage> {
 
   var _randomLeft = 0;
   var _randomTop = 0;
-  final _devices = <Device>[];
+  final _devices = <Device>[
+    Device(1, "aaa", "192.168.1.1")
+  ];
 
   @override
   void initState() {
