@@ -78,6 +78,10 @@ flutter:
      - icons/icon_down_arrow_normal.png
      - icons/icon_down_arrow_selected.png
      - icons/icon_folder.png
+     - icons/icon_file_type_audio.png
+     - icons/icon_file_type_doc.png
+     - icons/icon_file_type_image.png
+     - icons/icon_file_type_text.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

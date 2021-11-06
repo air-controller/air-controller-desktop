@@ -483,6 +483,28 @@ class FileItemDataSource extends DataGridSource {
           maintainAnimation: true,
           visible: fileItem.isDir);
     }
+    
+    Image getFileTypeIcon(FileItem fileItem) {
+      if (fileItem.isDir) {
+        return Image.asset("icons/icon_folder.png", width: 20, height: 20);
+      }
+
+      String name = fileItem.name.toLowerCase();
+
+      if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")) {
+        return Image.asset("icons/icon_file_type_image.png", width: 20, height: 20);
+      }
+      
+      if (name.endsWith(".mp3")) {
+        return Image.asset("icons/icon_file_type_audio.png", width: 20, height: 20);
+      }
+      
+      if (name.endsWith(".txt")) {
+        return Image.asset("icons/icon_file_type_text.png", width: 20, height: 20);
+      }
+
+      return Image.asset("icons/icon_file_type_doc.png", width: 20, height: 20);
+    }
 
     return DataGridRowAdapter(
         color: getRowBackgroundColor(),
@@ -494,7 +516,7 @@ class FileItemDataSource extends DataGridSource {
             if (e.columnName == "name") {
               return Row(children: [
                 getRightArrowIcon(fileItem),
-                Image.asset("icons/icon_folder.png", width: 20, height: 20),
+                getFileTypeIcon(fileItem),
                 SizedBox(width: 10.0),
                 Flexible(
                     child: Text(fileItem.name,
@@ -603,11 +625,5 @@ class FileItemDataSource extends DataGridSource {
     }
 
     return super.compare(a, b, sortColumn);
-  }
-
-  @override
-  void performSorting(List<DataGridRow> rows) {
-    // TODO: implement performSorting
-    super.performSorting(rows);
   }
 }
