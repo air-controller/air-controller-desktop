@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
+import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import '../ext/string-ext.dart';
 import '../constant.dart';
@@ -40,54 +42,131 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
 
   List<FileItem> _fileItems = <FileItem>[];
   late FileItemDataSource fileItemDataSource;
+  final _URL_SERVER = "http://192.168.0.102:8080";
+
+  var _isLoadingSuccess = false;
 
   @override
   void initState() {
     super.initState();
-    // _fileItems = mockFileItems();
-
     fileItemDataSource = FileItemDataSource(datas: _fileItems);
 
-    var url = Uri.parse("http://192.168.0.102:8080/file/list");
-    http
-        .post(url,
-            headers: {"Content-Type": "application/json"},
-            body: json.encode({"path": ""}))
-        .then((response) {
-      var body = response.body;
+    getFileList("", (items) => {
+      setState(() {
+        _isLoadingSuccess = true;
+        fileItemDataSource.setNewDatas(items);
+      })
+    }, (error) {
+      debugPrint("Get root file list error: $error");
 
-      if (body.trim() != '') {
-        var map = jsonDecode(body);
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("提示"),
+            content: Text(error),
+            actions: [
+              TextButton(
+                child: Text("取消"),
+                onPressed: () {
+                  Navigator.pop(context, 'Cancel');
+                },
+              ),
+              TextButton(
+                child: Text("确定"),
+                onPressed: () {
+                  Navigator.pop(context, 'OK');
+                },
+              )
+            ],
+          );
+        }
+      );
+    });
+  }
 
-        var data = map["data"] as List<dynamic>;
-        data.forEach((item) {
-          var path = item["path"] as String;
+  void _showLoadingDialog() {
 
-          var index = path.lastIndexOf("/");
-          var folder = path.substring(0, index);
-
-          var isDir = item["isDir"] as bool;
-
-          var size = item["size"] as int;
-
-          var fileItem = FileItem(item["name"], folder, isDir, size, 0);
-          _fileItems.add(fileItem);
-
-          setState(() {
-            fileItemDataSource.setNewDatas(_fileItems);
-            debugPrint("Get file list completed...");
-          });
-        });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return WillPopScope(
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0))
+              ),
+              backgroundColor: Colors.black87,
+              content: Container(
+                  child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                  ),
+                width: 32,
+                height: 32,
+              ),
+            ), 
+            onWillPop: () async {
+              Navigator.pop(context);
+              return true;
+            });
       }
+    );
+  }
 
-      debugPrint("$body");
-    }).catchError((error) {
-      debugPrint("Meet error: $error");
+  void getFileList(
+        String? path,
+        Function(List<FileItem> items) onSuccess,
+        Function(String error) onError
+      ) {
+    var url = Uri.parse("${_URL_SERVER}/file/list");
+    http.post(url,
+        headers: { "Content-Type": "application/json" },
+        body: json.encode({"path" : path == null ? "" : path}))
+    .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null ? response.reasonPhrase! : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("getFileList, body: $body");
+        
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+        
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data.map((e) => FileItem.fromJson(e as Map<String, dynamic>)).toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null ? "Unknown error" : httpResponseEntity.msg!);
+        }
+      }
+    })
+    .catchError((error) {
+      onError.call(error.toString());
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    const color = Color(0xff85a8d0);
+
+    const spinkit = SpinKitCircle(
+      color: color,
+      size: 60.0
+    );
+
+    return Stack(children: [
+      _realContent(),
+
+      Visibility(
+          child: Container(child: spinkit, color: Colors.white),
+        maintainSize: false,
+        visible: !_isLoadingSuccess,
+      )
+    ]);
+  }
+
+  Widget _realContent() {
     return Column(children: [
       Container(
           child: Stack(children: [
@@ -153,7 +232,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                                   border: new Border.all(
                                       color: "#b43f32".toColor(), width: 1.0),
                                   borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0))),
+                                  BorderRadius.all(Radius.circular(4.0))),
                               width: _delete_btn_width,
                               height: _delete_btn_height,
                               padding: EdgeInsets.fromLTRB(
@@ -477,7 +556,9 @@ class FileItemDataSource extends DataGridSource {
       }
 
       return Visibility(
-          child: icon,
+          child: GestureDetector(child: icon, onTap: () {
+            debugPrint("Expand folder...");
+          }),
           maintainSize: true,
           maintainState: true,
           maintainAnimation: true,

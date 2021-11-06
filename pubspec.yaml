@@ -44,6 +44,7 @@ dependencies:
   http: ^0.13.4
   statusbarmanager: ^0.0.1
   intl: ^0.17.0
+  flutter_spinkit: ^5.1.0
 
 dev_dependencies:
   flutter_test:
