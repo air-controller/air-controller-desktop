@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: !Constant.HIDE_DEBUG_MARK,
       title: 'Flutter Demo',
       theme: ThemeData(
+        brightness: Brightness.light,
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: '手机助手PC端'),

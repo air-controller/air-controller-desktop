@@ -350,6 +350,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.10.0"
+  statusbarmanager:
+    dependency: "direct main"
+    description:
+      name: statusbarmanager
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.0.1"
   stream_channel:
     dependency: transitive
     description:

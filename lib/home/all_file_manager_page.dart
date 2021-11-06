@@ -34,6 +34,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _minColumnWidth = 200.0;
   final _maxColumnWidth = 400.0;
   final _headerPaddingStart = 15.0;
+  final DataGridController _dataGridController = DataGridController();
 
   List<FileItem> _fileItems = <FileItem>[];
   late FileItemDataSource fileItemDataSource;
@@ -254,11 +255,17 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                     selectionMode: SelectionMode.single,
                     rowHeight: 40,
                     highlightRowOnHover: false,
+                    controller: _dataGridController,
                     onColumnResizeUpdate: (ColumnResizeUpdateDetails details) {
                       setState(() {
                         columnWidths[details.column.columnName] = details.width;
                       });
                       return true;
+                    },
+                    onSelectionChanged: (List<DataGridRow> addedRows, List<DataGridRow> removedRows) {
+                      setState(() {
+                        fileItemDataSource.setSelectedRow(_dataGridController.selectedIndex);
+                      });
                     },
                     columns: <GridColumn>[
                       GridColumn(
@@ -368,6 +375,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
 // 用于构建表格数据
 class FileItemDataSource extends DataGridSource {
   List<DataGridRow> _dataGridRows = [];
+  int _selectedIndex = -1;
 
   FileItemDataSource({required List<FileItem> datas}) {
     _dataGridRows = datas
@@ -401,6 +409,11 @@ class FileItemDataSource extends DataGridSource {
     notifyListeners();
   }
 
+  void setSelectedRow(int index) {
+    _selectedIndex = index;
+    notifyListeners();
+  }
+
   String _convertToCategory(String name, bool isDir) {
     if (isDir) {
       return "文件夹";
@@ -425,13 +438,27 @@ class FileItemDataSource extends DataGridSource {
       }
     }
 
+    Color getTextColor() {
+      int index = rows.indexOf(row);
+      debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
+
+      if (index == _selectedIndex) {
+        return Colors.white;
+      } else {
+        return "#323237".toColor();
+      }
+    }
+
     return DataGridRowAdapter(
       color: getRowBackgroundColor(),
         cells: row.getCells().map<Widget>((e) {
       return Container(
         alignment: Alignment.centerLeft,
         padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-        child: Text(e.value.toString()),
+        child: Text(
+            e.value.toString(),
+            style: TextStyle(inherit: false, fontSize: 12, color: getTextColor())
+        ),
       );
     }).toList());
   }
