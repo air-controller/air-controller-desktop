@@ -86,33 +86,6 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
     });
   }
 
-  void _showLoadingDialog() {
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return WillPopScope(
-            child: AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8.0))
-              ),
-              backgroundColor: Colors.black87,
-              content: Container(
-                  child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                  ),
-                width: 32,
-                height: 32,
-              ),
-            ), 
-            onWillPop: () async {
-              Navigator.pop(context);
-              return true;
-            });
-      }
-    );
-  }
-
   void getFileList(
         String? path,
         Function(List<FileItem> items) onSuccess,
@@ -150,7 +123,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   Widget build(BuildContext context) {
     const color = Color(0xff85a8d0);
 
-    const spinkit = SpinKitCircle(
+    const spinKit = SpinKitCircle(
       color: color,
       size: 60.0
     );
@@ -159,7 +132,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
       _realContent(),
 
       Visibility(
-          child: Container(child: spinkit, color: Colors.white),
+          child: Container(child: spinKit, color: Colors.white),
         maintainSize: false,
         visible: !_isLoadingSuccess,
       )
