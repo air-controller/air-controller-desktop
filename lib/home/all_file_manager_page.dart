@@ -563,12 +563,17 @@ class FileItemDataSource extends DataGridSource {
     }
 
     bool _isChild(FileItemVO parent, FileItemVO second) {
+      FileItemVO? currentFolder = second.parent;
 
-      FileItemVO? parent = null;
+      debugPrint("second: ${second.item.name}");
 
-      while ((parent = second.parent) != null) {
-        if (parent == parent) return true;
-        parent = parent?.parent;
+      while (currentFolder != null) {
+        debugPrint("current folder: ${currentFolder.item.folder}/${currentFolder.item.name}");
+        if (currentFolder.item.folder == parent.item.folder && currentFolder.item.name == parent.item.name) {
+          debugPrint("_isChild condition true, file: ${second.item.name}");
+          return true;
+        }
+          currentFolder = currentFolder.parent;
       }
 
       return false;
@@ -580,8 +585,6 @@ class FileItemDataSource extends DataGridSource {
       setNewDatas(_datas);
       fileItemVO.isExpanded = false;
     }
-
-
 
     Visibility getRightArrowIcon(FileItemVO fileItemVO) {
       int index = rows.indexOf(row);
