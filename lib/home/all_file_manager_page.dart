@@ -800,18 +800,11 @@ class FileItemDataSource extends DataGridSource {
                           controller: controller,
                           decoration: InputDecoration(
                               hintText: "请输入新名称",
-                              border: OutlineInputBorder(
-                                  gapPadding: 0,
-                                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
-                                  borderSide: BorderSide(
-                                      color: Color(0xffccccce),
-                                      width: 1.0
-                                  )
-                              ),
+                              border: InputBorder.none,
                               isDense: true,
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 10)
+                              contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 6)
                           ),
                           textAlign: TextAlign.left,
                           autofocus: true,
@@ -825,7 +818,7 @@ class FileItemDataSource extends DataGridSource {
                           )
                       ),
                     ),
-                    width: 180, height: 40, alignment: Alignment.centerLeft,)
+                    width: 180, height: 32, alignment: Alignment.centerLeft,)
             )
         )
       ]);
