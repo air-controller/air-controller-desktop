@@ -799,7 +799,7 @@ class FileItemDataSource extends DataGridSource {
                       child: TextField(
                           controller: controller,
                           decoration: InputDecoration(
-                              hintText: fileItemVO.item.name,
+                              hintText: "请输入新名称",
                               border: OutlineInputBorder(
                                   gapPadding: 0,
                                   borderRadius: BorderRadius.all(Radius.circular(2.0)),
