@@ -22,8 +22,8 @@ class AllFileManagerPage extends StatefulWidget {
 
 final _URL_SERVER = "http://192.168.0.101:8080";
 
-void _showTipsDialog(BuildContext context, String btnText, String message, bool cancelable,
-    Function() onDismiss) {
+void _showTipsDialog(BuildContext context, String btnText, String message,
+    bool cancelable, Function() onDismiss) {
   showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -73,21 +73,21 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   @override
   void initState() {
     super.initState();
-    fileItemDataSource = FileItemDataSource(this, context, datas: _fileItems.map((e) => FileItemVO(e, 0)).toList());
+    fileItemDataSource = FileItemDataSource(this, context,
+        datas: _fileItems.map((e) => FileItemVO(e, 0)).toList());
 
     _getFileList(
         "",
         (items) => {
               setState(() {
                 _isLoadingSuccess = true;
-                fileItemDataSource.setNewDatas(items.map((e) => FileItemVO(e, 0)).toList());
+                fileItemDataSource
+                    .setNewDatas(items.map((e) => FileItemVO(e, 0)).toList());
               })
             }, (error) {
       debugPrint("Get root file list error: $error");
 
-      _showTipsDialog(context, "确定", error, false, () {
-
-      });
+      _showTipsDialog(context, "确定", error, false, () {});
     });
   }
 
@@ -285,6 +285,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                     rowHeight: 40,
                     highlightRowOnHover: false,
                     controller: _dataGridController,
+                    allowEditing: true,
+                    navigationMode: GridNavigationMode.cell,
                     onColumnResizeUpdate: (ColumnResizeUpdateDetails details) {
                       setState(() {
                         columnWidths[details.column.columnName] = details.width;
@@ -315,57 +317,57 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                           minimumWidth: 250.0,
                           maximumWidth: _maxColumnWidth),
                       GridColumn(
-                        columnName: 'size',
-                        width: columnWidths['size']!,
-                        label: Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text('大小', style: _headerTextStyle),
-                          padding:
-                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
-                        ),
-                        minimumWidth: _minColumnWidth,
-                        maximumWidth: _maxColumnWidth,
-                        columnWidthMode: ColumnWidthMode.fill,
-                      ),
-                      GridColumn(
-                        columnName: 'category',
-                        width: columnWidths['category']!,
-                        label: Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '种类',
-                            style: _headerTextStyle,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          padding:
-                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
-                        ),
-                        minimumWidth: _minColumnWidth,
-                        maximumWidth: _maxColumnWidth,
-                        columnWidthMode: ColumnWidthMode.fill,
-                      ),
-                      GridColumn(
-                        columnName: 'changeDate',
-                        width: columnWidths['changeDate']!,
-                        label: Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text('修改日期', style: _headerTextStyle),
-                          padding:
-                              EdgeInsets.fromLTRB(_headerPaddingStart, 0, 0, 0),
-                        ),
-                        minimumWidth: _minColumnWidth,
-                        maximumWidth: _maxColumnWidth,
-                        columnWidthMode: ColumnWidthMode.fill,
-                      ),
-                      GridColumn(
-                        columnName: '',
-                        width: columnWidths['empty']!,
-                        label: Container(
+                          columnName: 'size',
+                          width: columnWidths['size']!,
+                          label: Container(
                             alignment: Alignment.centerLeft,
-                            child: Text('', style: _headerTextStyle)),
-                        minimumWidth: 80,
-                        columnWidthMode: ColumnWidthMode.none,
-                      ),
+                            child: Text('大小', style: _headerTextStyle),
+                            padding: EdgeInsets.fromLTRB(
+                                _headerPaddingStart, 0, 0, 0),
+                          ),
+                          minimumWidth: _minColumnWidth,
+                          maximumWidth: _maxColumnWidth,
+                          columnWidthMode: ColumnWidthMode.fill,
+                          allowEditing: false),
+                      GridColumn(
+                          columnName: 'category',
+                          width: columnWidths['category']!,
+                          label: Container(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '种类',
+                              style: _headerTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            padding: EdgeInsets.fromLTRB(
+                                _headerPaddingStart, 0, 0, 0),
+                          ),
+                          minimumWidth: _minColumnWidth,
+                          maximumWidth: _maxColumnWidth,
+                          columnWidthMode: ColumnWidthMode.fill,
+                          allowEditing: false),
+                      GridColumn(
+                          columnName: 'changeDate',
+                          width: columnWidths['changeDate']!,
+                          label: Container(
+                            alignment: Alignment.centerLeft,
+                            child: Text('修改日期', style: _headerTextStyle),
+                            padding: EdgeInsets.fromLTRB(
+                                _headerPaddingStart, 0, 0, 0),
+                          ),
+                          minimumWidth: _minColumnWidth,
+                          maximumWidth: _maxColumnWidth,
+                          columnWidthMode: ColumnWidthMode.fill,
+                          allowEditing: false),
+                      GridColumn(
+                          columnName: '',
+                          width: columnWidths['empty']!,
+                          label: Container(
+                              alignment: Alignment.centerLeft,
+                              child: Text('', style: _headerTextStyle)),
+                          minimumWidth: 80,
+                          columnWidthMode: ColumnWidthMode.none,
+                          allowEditing: false),
                     ],
                   ))));
     } else {
@@ -448,7 +450,8 @@ class FileItemDataSource extends DataGridSource {
   final _INDENT_STEP = 10.0;
   _AllFileManagerState allFileManagerState;
 
-  FileItemDataSource(this.allFileManagerState, this.context, {required List<FileItemVO> datas}) {
+  FileItemDataSource(this.allFileManagerState, this.context,
+      {required List<FileItemVO> datas}) {
     setNewDatas(datas);
   }
 
@@ -464,9 +467,7 @@ class FileItemDataSource extends DataGridSource {
             ]))
         .toList();
     notifyListeners();
-    allFileManagerState.setState(() {
-
-    });
+    allFileManagerState.setState(() {});
   }
 
   void setSelectedRow(int index) {
@@ -512,6 +513,131 @@ class FileItemDataSource extends DataGridSource {
   @override
   List<DataGridRow> get rows => _dataGridRows;
 
+  void _expandFolder(FileItemVO fileItemVO) {
+    _getFileList("${fileItemVO.item.folder}/${fileItemVO.item.name}", (items) {
+      int index = _datas.indexWhere((element) =>
+          "${element.item.folder}/${element.item.name}" ==
+          "${fileItemVO.item.folder}/${fileItemVO.item.name}");
+
+      if (index >= 0) {
+        _datas.insertAll(index + 1, items.map((e) {
+          FileItemVO newFileItemVO = FileItemVO(e, fileItemVO.indentLevel + 1);
+          newFileItemVO
+              .addAncestor("${fileItemVO.item.folder}/${fileItemVO.item.name}");
+
+          newFileItemVO.parent = fileItemVO;
+          return newFileItemVO;
+        }));
+        setNewDatas(_datas);
+      }
+    }, (error) {
+      _showTipsDialog(context, "确定", error, false, () {});
+    });
+
+    fileItemVO.isExpanded = true;
+  }
+
+  bool _isChild(FileItemVO parent, FileItemVO second) {
+    FileItemVO? currentFolder = second.parent;
+
+    debugPrint("second: ${second.item.name}");
+
+    while (currentFolder != null) {
+      debugPrint(
+          "current folder: ${currentFolder.item.folder}/${currentFolder.item.name}");
+      if (currentFolder.item.folder == parent.item.folder &&
+          currentFolder.item.name == parent.item.name) {
+        debugPrint("_isChild condition true, file: ${second.item.name}");
+        return true;
+      }
+      currentFolder = currentFolder.parent;
+    }
+
+    return false;
+  }
+
+  void _foldUp(FileItemVO fileItemVO) {
+    _datas.removeWhere((element) => _isChild(fileItemVO, element));
+
+    setNewDatas(_datas);
+    fileItemVO.isExpanded = false;
+  }
+
+  Visibility getRightArrowIcon(int index, FileItemVO fileItemVO) {
+    debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
+
+    late Image icon;
+
+    if (index == _selectedIndex) {
+      String iconPath = fileItemVO.isExpanded
+          ? "icons/icon_down_arrow_selected.png"
+          : "icons/icon_right_arrow_selected.png";
+      icon = Image.asset(iconPath, width: 20, height: 20);
+    } else {
+      String iconPath = fileItemVO.isExpanded
+          ? "icons/icon_down_arrow_normal.png"
+          : "icons/icon_right_arrow_normal.png";
+      icon = Image.asset(iconPath, width: 20, height: 20);
+    }
+
+    return Visibility(
+        child: GestureDetector(
+            child: Container(
+                child: icon,
+                margin: EdgeInsets.only(
+                    left: fileItemVO.indentLevel * _INDENT_STEP)),
+            onTap: () {
+              debugPrint("Expand folder...");
+              if (!fileItemVO.isExpanded) {
+                _expandFolder(fileItemVO);
+              } else {
+                _foldUp(fileItemVO);
+              }
+            }),
+        maintainSize: true,
+        maintainState: true,
+        maintainAnimation: true,
+        visible: fileItemVO.item.isDir);
+  }
+
+  Image getFileTypeIcon(FileItem fileItem) {
+    if (fileItem.isDir) {
+      return Image.asset("icons/icon_folder.png", width: 20, height: 20);
+    }
+
+    String name = fileItem.name.toLowerCase();
+
+    if (name.endsWith(".jpg") ||
+        name.endsWith(".jpeg") ||
+        name.endsWith(".png")) {
+      return Image.asset("icons/icon_file_type_image.png",
+          width: 20, height: 20);
+    }
+
+    if (name.endsWith(".mp3")) {
+      return Image.asset("icons/icon_file_type_audio.png",
+          width: 20, height: 20);
+    }
+
+    if (name.endsWith(".txt")) {
+      return Image.asset("icons/icon_file_type_text.png",
+          width: 20, height: 20);
+    }
+
+    return Image.asset("icons/icon_file_type_doc.png", width: 20, height: 20);
+  }
+
+  Color getTextColor(FileItemVO fileItemVO) {
+    int index = _datas.indexOf(fileItemVO);
+    debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
+
+    if (index == _selectedIndex) {
+      return Colors.white;
+    } else {
+      return "#323237".toColor();
+    }
+  }
+
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     Color getRowBackgroundColor() {
@@ -525,127 +651,6 @@ class FileItemDataSource extends DataGridSource {
       }
     }
 
-    Color getTextColor() {
-      int index = rows.indexOf(row);
-      debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
-
-      if (index == _selectedIndex) {
-        return Colors.white;
-      } else {
-        return "#323237".toColor();
-      }
-    }
-
-    void _expandFolder(FileItemVO fileItemVO) {
-      _getFileList(
-          "${fileItemVO.item.folder}/${fileItemVO.item.name}", (items) {
-
-            int index = _datas.indexWhere((element) => "${element.item.folder}/${element.item.name}" == "${fileItemVO.item.folder}/${fileItemVO.item.name}");
-
-            if (index >= 0) {
-              _datas.insertAll(index + 1 , items.map((e) {
-                FileItemVO newFileItemVO = FileItemVO(e, fileItemVO.indentLevel + 1);
-                newFileItemVO.addAncestor("${fileItemVO.item.folder}/${fileItemVO.item.name}");
-
-                newFileItemVO.parent = fileItemVO;
-                return newFileItemVO;
-              }));
-              setNewDatas(_datas);
-            }
-            
-      }, (error) {
-        _showTipsDialog(context, "确定", error, false, () {
-
-        });
-      });
-
-      fileItemVO.isExpanded = true;
-    }
-
-    bool _isChild(FileItemVO parent, FileItemVO second) {
-      FileItemVO? currentFolder = second.parent;
-
-      debugPrint("second: ${second.item.name}");
-
-      while (currentFolder != null) {
-        debugPrint("current folder: ${currentFolder.item.folder}/${currentFolder.item.name}");
-        if (currentFolder.item.folder == parent.item.folder && currentFolder.item.name == parent.item.name) {
-          debugPrint("_isChild condition true, file: ${second.item.name}");
-          return true;
-        }
-          currentFolder = currentFolder.parent;
-      }
-
-      return false;
-    }
-
-    void _foldUp(FileItemVO fileItemVO) {
-      _datas.removeWhere((element) => _isChild(fileItemVO, element));
-
-      setNewDatas(_datas);
-      fileItemVO.isExpanded = false;
-    }
-
-    Visibility getRightArrowIcon(FileItemVO fileItemVO) {
-      int index = rows.indexOf(row);
-      debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
-
-      late Image icon;
-
-      if (index == _selectedIndex) {
-        String iconPath = fileItemVO.isExpanded ? "icons/icon_down_arrow_selected.png" : "icons/icon_right_arrow_selected.png";
-        icon = Image.asset(iconPath,
-            width: 20, height: 20);
-      } else {
-        String iconPath = fileItemVO.isExpanded ? "icons/icon_down_arrow_normal.png" : "icons/icon_right_arrow_normal.png";
-        icon = Image.asset(iconPath,
-            width: 20, height: 20);
-      }
-
-      return Visibility(
-          child: GestureDetector(
-              child: Container(child: icon, margin: EdgeInsets.only(left: fileItemVO.indentLevel * _INDENT_STEP)),
-              onTap: () {
-                debugPrint("Expand folder...");
-                if (!fileItemVO.isExpanded) {
-                  _expandFolder(fileItemVO);
-                } else {
-                  _foldUp(fileItemVO);
-                }
-              }),
-          maintainSize: true,
-          maintainState: true,
-          maintainAnimation: true,
-          visible: fileItemVO.item.isDir);
-    }
-
-    Image getFileTypeIcon(FileItem fileItem) {
-      if (fileItem.isDir) {
-        return Image.asset("icons/icon_folder.png", width: 20, height: 20);
-      }
-
-      String name = fileItem.name.toLowerCase();
-
-      if (name.endsWith(".jpg") ||
-          name.endsWith(".jpeg") ||
-          name.endsWith(".png")) {
-        return Image.asset("icons/icon_file_type_image.png",
-            width: 20, height: 20);
-      }
-
-      if (name.endsWith(".mp3")) {
-        return Image.asset("icons/icon_file_type_audio.png",
-            width: 20, height: 20);
-      }
-
-      if (name.endsWith(".txt")) {
-        return Image.asset("icons/icon_file_type_text.png",
-            width: 20, height: 20);
-      }
-
-      return Image.asset("icons/icon_file_type_doc.png", width: 20, height: 20);
-    }
-
     return DataGridRowAdapter(
         color: getRowBackgroundColor(),
         cells: row.getCells().map<Widget>((e) {
@@ -655,7 +660,7 @@ class FileItemDataSource extends DataGridSource {
 
             if (e.columnName == "name") {
               return Row(children: [
-                getRightArrowIcon(fileItemVO),
+                getRightArrowIcon(_datas.indexOf(fileItemVO), fileItemVO),
                 getFileTypeIcon(fileItemVO.item),
                 SizedBox(width: 10.0),
                 Flexible(
@@ -665,7 +670,7 @@ class FileItemDataSource extends DataGridSource {
                         style: TextStyle(
                             inherit: false,
                             fontSize: 14,
-                            color: getTextColor())))
+                            color: getTextColor(fileItemVO))))
               ]);
             } else {
               String text = value.toString();
@@ -693,7 +698,9 @@ class FileItemDataSource extends DataGridSource {
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
                     style: TextStyle(
-                        inherit: false, fontSize: 14, color: getTextColor())),
+                        inherit: false,
+                        fontSize: 14,
+                        color: getTextColor(fileItemVO))),
               );
             }
           } else {
@@ -704,7 +711,7 @@ class FileItemDataSource extends DataGridSource {
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: TextStyle(
-                      inherit: false, fontSize: 14, color: getTextColor())),
+                      inherit: false, fontSize: 14, color: Colors.black87)),
             );
           }
         }).toList());
@@ -771,5 +778,59 @@ class FileItemDataSource extends DataGridSource {
     }
 
     return super.compare(a, b, sortColumn);
+  }
+
+  @override
+  Widget? buildEditWidget(DataGridRow dataGridRow,
+      RowColumnIndex rowColumnIndex, GridColumn column, CellSubmit submitCell) {
+    if (column.columnName == "name") {
+      FileItemVO fileItemVO = dataGridRow.getCells().first.value as FileItemVO;
+
+      TextEditingController controller = new TextEditingController(text: fileItemVO.item.name);
+
+      return Row(children: [
+        getRightArrowIcon(_datas.indexOf(fileItemVO), fileItemVO),
+        getFileTypeIcon(fileItemVO.item),
+        SizedBox(width: 10.0),
+        Flexible(
+            child: Material(
+                child: Container(
+                    child: Flexible(
+                      child: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                              hintText: fileItemVO.item.name,
+                              border: OutlineInputBorder(
+                                  gapPadding: 0,
+                                  borderRadius: BorderRadius.all(Radius.circular(2.0)),
+                                  borderSide: BorderSide(
+                                      color: Color(0xffccccce),
+                                      width: 1.0
+                                  )
+                              ),
+                              isDense: true,
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 10)
+                          ),
+                          textAlign: TextAlign.left,
+                          autofocus: true,
+                          textAlignVertical: TextAlignVertical.center,
+                          maxLines: 5,
+                          minLines: 1,
+                          keyboardType: TextInputType.multiline,
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xff333333)
+                          )
+                      ),
+                    ),
+                    width: 180, height: 40, alignment: Alignment.centerLeft,)
+            )
+        )
+      ]);
+    } else {
+      return null;
+    }
   }
 }
