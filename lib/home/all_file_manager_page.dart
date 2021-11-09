@@ -57,7 +57,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   final _delete_btn_padding_hor = 8.0;
   final _delete_btn_padding_vertical = 4.5;
   final _divider_line_color = "#e0e0e0";
-  final _isListMode = true;
+  final _isListMode = false;
   final _headerTextStyle =
       TextStyle(color: "#5d5e63".toColor(), fontSize: 14, inherit: false);
   final _minColumnWidth = 200.0;
@@ -68,7 +68,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
   List<FileItem> _fileItems = <FileItem>[];
   late FileItemDataSource fileItemDataSource;
 
-  var _isLoadingSuccess = false;
+  var _isLoadingSuccess = true;
 
   @override
   void initState() {
@@ -239,8 +239,8 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
 
   Widget getItemContainer(String item) {
     return Container(
-      width: 5.0,
-      height: 5.0,
+      width: 100.0,
+      height: 100.0,
       alignment: Alignment.center,
       child: Text(
         item,
@@ -389,12 +389,18 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
             color: _divider_line_color.toColor(), height: 1.0, thickness: 1.0),
         Expanded(
             child: Container(
-                child: GridView.count(
-                  crossAxisSpacing: 10.0,
-                  crossAxisCount: 6,
-                  mainAxisSpacing: 10,
+                child: GridView.builder(
+                  itemBuilder: (BuildContext context, int index) {
+                    final ws = getWidgetList();
+                    return ws[index];
+                  },
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.0,
+                    mainAxisSpacing: 10
+                  ),
                   padding: EdgeInsets.all(10.0),
-                  children: getWidgetList(),
                 ),
                 color: Colors.white)),
       ]));
