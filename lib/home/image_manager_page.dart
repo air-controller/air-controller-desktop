@@ -21,6 +21,9 @@ class _ImageManagerState extends State<ImageManagerPage> {
   int _currentIndex = _INDEX_ALL_IMAGE;
   final _divider_line_color = Color(0xffe0e0e0);
 
+  final _OUT_PADDING = 20.0;
+  final _IMAGE_SPACE = 15.0;
+
   @override
   Widget build(BuildContext context) {
     Color getSegmentBtnColor(int index) {
@@ -35,8 +38,8 @@ class _ImageManagerState extends State<ImageManagerPage> {
       mainAxisSize: MainAxisSize.max,
       children: [
         Container(
-          child: Expanded(
-            child: Stack(children: [
+          child: Stack(
+            children: [
               Align(
                   alignment: Alignment.center,
                   child: Container(
@@ -55,14 +58,16 @@ class _ImageManagerState extends State<ImageManagerPage> {
                               style: TextStyle(
                                   inherit: false,
                                   fontSize: 12,
-                                  color: getSegmentBtnColor(_INDEX_CAMERA_ALBUM))),
+                                  color:
+                                      getSegmentBtnColor(_INDEX_CAMERA_ALBUM))),
                         ),
                         _INDEX_ALL_ALBUM: Container(
                             child: Text("所有相册",
                                 style: TextStyle(
                                     inherit: false,
                                     fontSize: 12,
-                                    color: getSegmentBtnColor(_INDEX_ALL_ALBUM))))
+                                    color:
+                                        getSegmentBtnColor(_INDEX_ALL_ALBUM))))
                       },
                       selectionIndex: _currentIndex,
                       borderColor: Color(0xffdedede),
@@ -78,28 +83,63 @@ class _ImageManagerState extends State<ImageManagerPage> {
                       },
                     ),
                     height: 30,
-                  )
-              ),
+                  )),
               Align(
                 alignment: Alignment.centerRight,
-                child: Row(
-
-                ),
+                child: Row(),
               )
             ],
-            ),
           ),
           height: Constant.HOME_NAVI_BAR_HEIGHT,
           color: Color(0xfff6f6f6),
         ),
+        Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
 
-        Divider(
-            color: _divider_line_color,
-            height: 1.0,
-            thickness: 1.0
-        ),
-
+        Expanded(
+            child: Container(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    crossAxisSpacing: _IMAGE_SPACE,
+                    childAspectRatio: 1.0,
+                    mainAxisSpacing: _IMAGE_SPACE),
+                itemBuilder: (BuildContext context, int index) {
+                  final ws = getWidgetList();
+                  return ws[index];
+                },
+                itemCount: 100,
+                shrinkWrap: true,
+              ),
+              color: Colors.white,
+              padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
+            )
+        )
       ],
+    );
+  }
+
+  List<String> getDataList() {
+    List<String> list = [];
+    for (int i = 0; i < 100; i++) {
+      list.add(i.toString());
+    }
+    return list;
+  }
+
+  List<Widget> getWidgetList() {
+    return getDataList().map((item) => getItemContainer(item)).toList();
+  }
+
+  Widget getItemContainer(String item) {
+    return Container(
+      width: 100.0,
+      height: 100.0,
+      alignment: Alignment.center,
+      child: Text(
+        item,
+        style: TextStyle(color: Colors.white, fontSize: 40),
+      ),
+      color: Colors.blue,
     );
   }
 }
