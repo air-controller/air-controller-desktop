@@ -38,12 +38,12 @@ class _FileManagerState extends State<FileManagerPage> {
   final _tab_font_size = 16.0;
   final _tab_width = 210.0;
   final _color_tab_selected = "#ededed";
-  static final _DEFAULT_SELECTED_PAGE_INDEX = 4;
+  static final _DEFAULT_SELECTED_PAGE_INDEX = 0;
   int _selectedPageIndex = _DEFAULT_SELECTED_PAGE_INDEX;
 
   @override
   Widget build(BuildContext context) {
-    final pageController = PageController(initialPage: 4);
+    final pageController = PageController(initialPage: _selectedPageIndex);
 
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == _selectedPageIndex) {

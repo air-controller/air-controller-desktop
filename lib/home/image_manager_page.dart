@@ -132,6 +132,8 @@ class _ImageManagerState extends State<ImageManagerPage> {
                         width: 200,
                         height: 200,
                         memCacheWidth: 400,
+                        fadeOutDuration: Duration.zero,
+                        fadeInDuration: Duration.zero,
                       ),
                     decoration: BoxDecoration(
                       border: new Border.all(
