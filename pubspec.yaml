@@ -87,6 +87,12 @@ flutter:
      - icons/icon_file_type_doc.png
      - icons/icon_file_type_image.png
      - icons/icon_file_type_text.png
+     - icons/icon_grid_normal.png
+     - icons/icon_grid_selected.png
+     - icons/icon_monthly_normal.png
+     - icons/icon_monthly_selected.png
+     - icons/icon_weekly_normal.png
+     - icons/icon_weekly_selected.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

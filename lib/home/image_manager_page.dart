@@ -29,11 +29,6 @@ class _ImageManagerState extends State<ImageManagerPage> {
   int _currentIndex = _INDEX_ALL_IMAGE;
   final _divider_line_color = Color(0xffe0e0e0);
 
-  final _OUT_PADDING = 20.0;
-  final _IMAGE_SPACE = 15.0;
-
-  final _URL_SERVER = "http://192.168.0.101:8080";
-
   List<ImageItem> _allImages = [];
 
   @override
@@ -102,7 +97,69 @@ class _ImageManagerState extends State<ImageManagerPage> {
                   )),
               Align(
                 alignment: Alignment.centerRight,
-                child: Row(),
+                child: Container(
+                  child: Row(
+                    children: [
+                      Container(
+                        child: Image.asset("icons/icon_grid_selected.png", width: 20, height: 20),
+                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Color(0xffdddedf),
+                            width: 1.0
+                          ),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(4.0),
+                            bottomLeft: Radius.circular(4.0)
+                          ),
+                          color: Color(0xffc2c2c2),
+                        ),
+                      ),
+                      Container(
+                        child: Image.asset("icons/icon_weekly_normal.png", width: 20, height: 20),
+                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Color(0xffdddedf),
+                              width: 1.0
+                          ),
+                          color: Color(0xfff5f5f5),
+                        ),
+                      ),
+                      Container(
+                        child: Image.asset("icons/icon_monthly_normal.png", width: 20, height: 20),
+                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Color(0xffdddedf),
+                              width: 1.0
+                          ),
+                          color: Color(0xfff5f5f5),
+                          borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(4.0),
+                              bottomRight: Radius.circular(4.0)
+                          ),
+                        ),
+                      ),
+
+                      Container(
+                          child: Image.asset("icons/icon_delete.png",
+                              width: 10,
+                              height: 10),
+                          decoration: BoxDecoration(
+                              color: Color(0xffcb6357),
+                              border: new Border.all(
+                                  color: Color(0xffb43f32), width: 1.0),
+                              borderRadius:
+                              BorderRadius.all(Radius.circular(4.0))),
+                          width: 40,
+                          height: 25,
+                          padding: EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
+                          margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
+                    ],
+                  ),
+                  width: 210,
+                ),
               )
             ],
           ),
