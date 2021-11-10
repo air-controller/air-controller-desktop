@@ -29,7 +29,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.102:8080";
+  final _URL_SERVER = "http://192.168.0.101:8080";
 
   List<ImageItem> _allImages = [];
 
@@ -53,6 +53,8 @@ class _ImageManagerState extends State<ImageManagerPage> {
         return Color(0xff5b5c62);
       }
     }
+
+    String itemStr = "共${_allImages.length}项";
 
     return Column(
       mainAxisSize: MainAxisSize.max,
@@ -149,6 +151,21 @@ class _ImageManagerState extends State<ImageManagerPage> {
               color: Colors.white,
               padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
             )
+        ),
+
+        Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+
+        Container(
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(itemStr, style: TextStyle(
+                inherit: false,
+                fontSize: 12,
+                color: Color(0xff646464)
+            )),
+          ),
+          height: 20,
+          color: Color(0xfffafafa),
         )
       ],
     );
