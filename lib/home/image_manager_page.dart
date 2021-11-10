@@ -31,6 +31,12 @@ class _ImageManagerState extends State<ImageManagerPage> {
 
   List<ImageItem> _allImages = [];
 
+  static final _ARRANGE_MODE_GRID = 0;
+  static final _ARRANGE_MODE_WEEKLY = 1;
+  static final _ARRANGE_MODE_MONTHLY = 2;
+
+  int _arrange_mode = _ARRANGE_MODE_GRID;
+
   @override
   Widget build(BuildContext context) {
     Color getSegmentBtnColor(int index) {
@@ -44,6 +50,38 @@ class _ImageManagerState extends State<ImageManagerPage> {
     String itemStr = "共${_allImages.length}项";
     final pageController = PageController(initialPage: _currentIndex);
 
+
+    String _getArrangeModeIcon(int mode) {
+      if (mode == _ARRANGE_MODE_GRID) {
+        if (_arrange_mode == mode) {
+          return "icons/icon_grid_selected.png";
+        } else {
+          return "icons/icon_grid_normal.png";
+        }
+      }
+
+      if (mode == _ARRANGE_MODE_WEEKLY) {
+        if (_arrange_mode == mode) {
+          return "icons/icon_weekly_selected.png";
+        } else {
+          return "icons/icon_weekly_normal.png";
+        }
+      }
+
+      if (_arrange_mode == mode) {
+        return "icons/icon_monthly_selected.png";
+      } else {
+        return "icons/icon_monthly_normal.png";
+      }
+    }
+
+    Color _getArrangeModeBgColor(int mode) {
+      if (_arrange_mode == mode) {
+        return Color(0xffc2c2c2);
+      } else {
+        return Color(0xfff5f5f5);
+      }
+    }
 
     return Column(
       children: [
@@ -100,46 +138,73 @@ class _ImageManagerState extends State<ImageManagerPage> {
                 child: Container(
                   child: Row(
                     children: [
-                      Container(
-                        child: Image.asset("icons/icon_grid_selected.png", width: 20, height: 20),
-                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Color(0xffdddedf),
-                            width: 1.0
+                      GestureDetector(
+                        child: Container(
+                          child: Image.asset(_getArrangeModeIcon(_ARRANGE_MODE_GRID), width: 20, height: 20),
+                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Color(0xffdddedf),
+                                width: 1.0
+                            ),
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(4.0),
+                                bottomLeft: Radius.circular(4.0)
+                            ),
+                            color: _getArrangeModeBgColor(_ARRANGE_MODE_GRID),
                           ),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(4.0),
-                            bottomLeft: Radius.circular(4.0)
-                          ),
-                          color: Color(0xffc2c2c2),
                         ),
+                        onTap: () {
+                          if (_arrange_mode != _ARRANGE_MODE_GRID) {
+                            setState(() {
+                              _arrange_mode = _ARRANGE_MODE_GRID;
+                            });
+                          }
+                        },
                       ),
-                      Container(
-                        child: Image.asset("icons/icon_weekly_normal.png", width: 20, height: 20),
-                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: Color(0xffdddedf),
-                              width: 1.0
+                      GestureDetector(
+                        child: Container(
+                          child: Image.asset(_getArrangeModeIcon(_ARRANGE_MODE_WEEKLY), width: 20, height: 20),
+                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Color(0xffdddedf),
+                                width: 1.0
+                            ),
+                            color: _getArrangeModeBgColor(_ARRANGE_MODE_WEEKLY),
                           ),
-                          color: Color(0xfff5f5f5),
                         ),
+                        onTap: () {
+                          if (_arrange_mode != _ARRANGE_MODE_WEEKLY) {
+                            setState(() {
+                              _arrange_mode = _ARRANGE_MODE_WEEKLY;
+                            });
+                          }
+                        },
                       ),
-                      Container(
-                        child: Image.asset("icons/icon_monthly_normal.png", width: 20, height: 20),
-                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: Color(0xffdddedf),
-                              width: 1.0
-                          ),
-                          color: Color(0xfff5f5f5),
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(4.0),
-                              bottomRight: Radius.circular(4.0)
+                      GestureDetector(
+                        child: Container(
+                          child: Image.asset(_getArrangeModeIcon(_ARRANGE_MODE_MONTHLY), width: 20, height: 20),
+                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Color(0xffdddedf),
+                                width: 1.0
+                            ),
+                            color: _getArrangeModeBgColor(_ARRANGE_MODE_MONTHLY),
+                            borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(4.0),
+                                bottomRight: Radius.circular(4.0)
+                            ),
                           ),
                         ),
+                        onTap: () {
+                          if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
+                            setState(() {
+                              _arrange_mode = _ARRANGE_MODE_MONTHLY;
+                            });
+                          }
+                        },
                       ),
 
                       Container(
