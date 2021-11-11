@@ -29,7 +29,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.101:8080";
+  final _URL_SERVER = "http://192.168.0.102:8080";
 
   List<ImageItem> _allImages = [];
 
