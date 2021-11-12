@@ -29,7 +29,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.102:8080";
+  final _URL_SERVER = "http://192.168.0.103:8080";
 
   List<ImageItem> _allImages = [];
 
@@ -68,7 +68,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
           ImageItem image = _allImages[index];
           return Container(
             child: CachedNetworkImage(
-              imageUrl: "${_URL_SERVER}/${image.thumbnail}"
+              imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
                   .replaceAll("storage/emulated/0/", ""),
               fit: BoxFit.cover,
               width: 200,
