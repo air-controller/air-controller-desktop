@@ -14,12 +14,13 @@ import '../../image_preview/image_preview_page.dart';
 
 class AllImageManagerPage extends StatefulWidget {
   _AllImageManagerPageState? _allImageManagerPageState;
+  ImageManagerState imageManagerState;
 
-  AllImageManagerPage();
+  AllImageManagerPage(this.imageManagerState);
 
   @override
   State<StatefulWidget> createState() {
-    _allImageManagerPageState = _AllImageManagerPageState();
+    _allImageManagerPageState = _AllImageManagerPageState(this.imageManagerState);
     return _allImageManagerPageState!;
   }
 
@@ -44,6 +45,10 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
+
+  ImageManagerState imageManagerState;
+
+  _AllImageManagerPageState(this.imageManagerState);
 
   @override
   void initState() {
@@ -111,12 +116,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                   },
                   onDoubleTap: () {
                     debugPrint("双击");
-                    Navigator.push(context, new MaterialPageRoute(builder:
-                        (context) {
-                          return ImagePreviewPage();
-                        }
-                      )
-                    );
+                    _openImageDetail(_allImages, image);
                   },
                 ),
                 decoration: BoxDecoration(
@@ -388,6 +388,10 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     }).catchError((error) {
       onError.call(error.toString());
     });
+  }
+
+  void _openImageDetail(List<ImageItem> images, ImageItem current) {
+    imageManagerState.openImageDetail(images, current);
   }
 
   @override

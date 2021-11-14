@@ -19,11 +19,11 @@ class ImageManagerPage extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _ImageManagerState();
+    return ImageManagerState();
   }
 }
 
-class _ImageManagerState extends State<ImageManagerPage> {
+class ImageManagerState extends State<ImageManagerPage> {
   static final _INDEX_ALL_IMAGE = 0;
   static final _INDEX_CAMERA_ALBUM = 1;
   static final _INDEX_ALL_ALBUM = 2;
@@ -31,24 +31,47 @@ class _ImageManagerState extends State<ImageManagerPage> {
   int _currentIndex = _INDEX_ALL_IMAGE;
   final _divider_line_color = Color(0xffe0e0e0);
 
-  List<ImageItem> _allImages = [];
-
   static const _ARRANGE_MODE_GRID = 0;
   static const _ARRANGE_MODE_DAILY = 1;
   static const _ARRANGE_MODE_MONTHLY = 2;
 
   int _arrange_mode = _ARRANGE_MODE_GRID;
 
-  final _allImageManagerPage = AllImageManagerPage();
+  AllImageManagerPage? _allImageManagerPage ;
   final _albumImageManagerPage = AlbumImageManagerPage();
   final _allAlbumManagerPage = AllAlbumManagerPage();
 
   bool _isBackBtnDown = false;
   double _imageSizeSliderValue = 0.0;
 
+  int _currentImageIndex = -1;
+  List<ImageItem> _allImageItems = <ImageItem>[];
+  
+  bool _openImageDetail = false;
+  
+  final _URL_SERVER = "http://192.168.0.102:8080";
+
+  double _currentImageScale = 1.0;
+
   @override
   Widget build(BuildContext context) {
-    return _createImagePreviewWidget();
+    _allImageManagerPage = AllImageManagerPage(this);
+
+    Widget previewWidget = _createImagePreviewWidget();
+    Widget imageListWidget = _createImageListWidget();
+
+    return Stack(
+      children: [
+        Visibility(
+            child: imageListWidget,
+          visible: _openImageDetail ? false : true,
+        ),
+        Visibility(
+            child: previewWidget,
+          visible: _openImageDetail ? true : false,
+        )
+      ],
+    );
   }
 
   void _updateArrangeMode(int rangeModeIndex) {
@@ -56,19 +79,19 @@ class _ImageManagerState extends State<ImageManagerPage> {
       case _ARRANGE_MODE_DAILY:
         {
           _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
           break;
         }
       case _ARRANGE_MODE_MONTHLY:
         {
           _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
           break;
         }
       default:
         {
           _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
         }
     }
   }
@@ -82,7 +105,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
       }
     }
 
-    String itemStr = "共${_allImages.length}项";
+    String itemStr = "共0项";
     final pageController = PageController(initialPage: _currentIndex);
 
     String _getArrangeModeIcon(int mode) {
@@ -274,7 +297,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
             scrollDirection: Axis.vertical,
             physics: NeverScrollableScrollPhysics(),
             children: [
-              _allImageManagerPage,
+              _allImageManagerPage!,
               _albumImageManagerPage,
               _allAlbumManagerPage
             ],
@@ -303,6 +326,10 @@ class _ImageManagerState extends State<ImageManagerPage> {
   }
 
   Widget _createImagePreviewWidget() {
+    String imageIndictorStr = "${_currentImageIndex + 1} / ${_allImageItems.length}";
+
+    String imageScaleStr = "${(_currentImageScale / 1.0 * 100).toInt()}%";
+
     return Column(
       children: [
         Container(
@@ -341,7 +368,9 @@ class _ImageManagerState extends State<ImageManagerPage> {
                           padding: EdgeInsets.only(right: 6, left: 2),
                           margin: EdgeInsets.only(left: 15),
                         ),
-                        onTap: () {},
+                        onTap: () {
+                          backToImageListPage();
+                        },
                         onTapDown: (detail) {
                           setState(() {
                             _isBackBtnDown = true;
@@ -369,7 +398,9 @@ class _ImageManagerState extends State<ImageManagerPage> {
                           padding: EdgeInsets.all(5.0),
                           margin: EdgeInsets.only(left: 15),
                         ),
-                        onTap: () {},
+                        onTap: () {
+                          _setImageScale(false);
+                        },
                       ),
 
                       // SeekBar
@@ -391,10 +422,11 @@ class _ImageManagerState extends State<ImageManagerPage> {
                                   debugPrint("Current value: $value");
                                   setState(() {
                                     _imageSizeSliderValue = value;
+                                    _currentImageScale = 1.0 + _imageSizeSliderValue / 100;
                                   });
                                 },
                                 min: 0,
-                                max: 200,
+                                max: 100,
                               ),
                             )),
                         width: 80,
@@ -408,9 +440,13 @@ class _ImageManagerState extends State<ImageManagerPage> {
                             width: 20,
                             height: 20),
                         margin: EdgeInsets.only(right: 15),
-                      )),
+                      ),
+                        onTap: () {
+                          _setImageScale(true);
+                        },
+                      ),
 
-                      Text("19%",
+                      Text(imageScaleStr,
                           style: TextStyle(
                               fontSize: 13,
                               color: Color(0xff7a7a7a),
@@ -427,9 +463,12 @@ class _ImageManagerState extends State<ImageManagerPage> {
                         child: Image.asset("icons/icon_image_pre_normal.png",
                             width: 13, height: 13)
                       ),
+                      onTap: () {
+                        _openPreImage();
+                      },
                     ),
                     Container(
-                        child: Text("1 / 2",
+                        child: Text(imageIndictorStr,
                             style: TextStyle(
                                 inherit: false,
                                 color: Color(0xff626160),
@@ -441,7 +480,10 @@ class _ImageManagerState extends State<ImageManagerPage> {
                       child: Container(
                         child: Image.asset("icons/icon_image_next_normal.png",
                             width: 13, height: 13),
-                      )
+                      ),
+                      onTap: () {
+                        _openNextImage();
+                      },
                     )
                   ],
                 ),
@@ -474,7 +516,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
             child: Container(
               child: ExtendedImageGesturePageView.builder(itemBuilder: (context, index) {
                 return ExtendedImage.network(
-                  "http://192.168.0.102:8080/DCIM/Camera/IMG_20211006_101521.jpg",
+                 "${_URL_SERVER}/${_allImageItems[_currentImageIndex].path}".replaceAll("storage/emulated/0/", ""),
                   mode: ExtendedImageMode.gesture,
                   fit: BoxFit.contain,
                   initGestureConfigHandler: (state) {
@@ -485,16 +527,31 @@ class _ImageManagerState extends State<ImageManagerPage> {
                       animationMaxScale: 2.0,
                       speed: 1.0,
                       inertialSpeed: 100.0,
-                      initialScale: 1.0,
+                      initialScale: _currentImageScale,
                       inPageView: false,
                       initialAlignment: InitialAlignment.center,
                       gestureDetailsIsChanged: (detail) {
                         debugPrint("Total scale: ${detail?.totalScale}");
+                        setState(() {
+                          _currentImageScale = detail?.totalScale ?? 1.0;
+
+                          // 设置Slider的值
+                          _imageSizeSliderValue = (_currentImageScale - 1.0) / 1.0 * 100;
+
+                          debugPrint("Image slider value: ${_imageSizeSliderValue}");
+                        });
                       }
                     );
                   },
                 );
-              }),
+              },
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentImageIndex = index;
+                  });
+                },
+                itemCount: _allImageItems.length,
+              ),
               color: Colors.white,
             )
         )
@@ -502,4 +559,72 @@ class _ImageManagerState extends State<ImageManagerPage> {
       ],
     );
   }
+  
+  void openImageDetail(List<ImageItem> images, ImageItem current) {
+    setState(() {
+      _allImageItems = images;
+      _currentImageIndex = images.indexOf(current);
+      _openImageDetail = true;
+    });
+  }
+  
+  void backToImageListPage() {
+    setState(() {
+      _openImageDetail = false;
+    });
+  }
+
+  void _setImageScale(bool isEnlarge) {
+    if (isEnlarge) {
+      if (_currentImageScale < 1.5) {
+        setState(() {
+          _currentImageScale = 1.5;
+        });
+      } else if(_currentImageScale < 2.0) {
+        setState(() {
+          _currentImageScale = 2.0;
+        });
+      }
+    } else {
+      if (_currentImageScale <= 1.5) {
+        setState(() {
+          _currentImageScale = 1.0;
+        });
+      } else {
+        setState(() {
+          _currentImageScale = 1.5;
+        });
+      }
+    }
+
+    _updateImageSliderValue();
+  }
+
+  void _updateImageSliderValue() {
+    setState(() {
+      // 设置Slider的值
+      _imageSizeSliderValue = (_currentImageScale - 1.0) / 1.0 * 100;
+
+      debugPrint("Image slider value: ${_imageSizeSliderValue}");
+    });
+  }
+
+  void _openPreImage() {
+    if (_currentImageIndex > 0) {
+      setState(() {
+        _currentImageIndex --;
+      });
+    }
+  }
+
+  void _openNextImage() {
+    if (_currentImageIndex < _allImageItems.length - 1) {
+      setState(() {
+        _currentImageIndex ++;
+      });
+    }
+  }
+
+  // @override
+  // bool get wantKeepAlive => true;
 }
