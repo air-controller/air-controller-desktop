@@ -15,6 +15,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ImageManagerPage extends StatefulWidget {
   ImageManagerPage();
 
+  static final ARRANGE_MODE_GRID = 1;
+  static final ARRANGE_MODE_DAILY = 2;
+  static final ARRANGE_MODE_MONTHLY = 3;
+
   @override
   State<StatefulWidget> createState() {
     return _ImageManagerState();
@@ -31,11 +35,15 @@ class _ImageManagerState extends State<ImageManagerPage> {
 
   List<ImageItem> _allImages = [];
 
-  static final _ARRANGE_MODE_GRID = 0;
-  static final _ARRANGE_MODE_WEEKLY = 1;
-  static final _ARRANGE_MODE_MONTHLY = 2;
+  static const _ARRANGE_MODE_GRID = 0;
+  static const _ARRANGE_MODE_DAILY = 1;
+  static const _ARRANGE_MODE_MONTHLY = 2;
 
   int _arrange_mode = _ARRANGE_MODE_GRID;
+  
+  final _allImageManagerPage = AllImageManagerPage();
+  final _albumImageManagerPage = AlbumImageManagerPage();
+  final _allAlbumManagerPage = AllAlbumManagerPage();
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +68,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
         }
       }
 
-      if (mode == _ARRANGE_MODE_WEEKLY) {
+      if (mode == _ARRANGE_MODE_DAILY) {
         if (_arrange_mode == mode) {
           return "icons/icon_weekly_selected.png";
         } else {
@@ -82,7 +90,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
         return Color(0xfff5f5f5);
       }
     }
-
+    
     return Column(
       children: [
         Container(
@@ -159,26 +167,28 @@ class _ImageManagerState extends State<ImageManagerPage> {
                             setState(() {
                               _arrange_mode = _ARRANGE_MODE_GRID;
                             });
+                            _updateArrangeMode(_arrange_mode);
                           }
                         },
                       ),
                       GestureDetector(
                         child: Container(
-                          child: Image.asset(_getArrangeModeIcon(_ARRANGE_MODE_WEEKLY), width: 20, height: 20),
+                          child: Image.asset(_getArrangeModeIcon(_ARRANGE_MODE_DAILY), width: 20, height: 20),
                           padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
                           decoration: BoxDecoration(
                             border: Border.all(
                                 color: Color(0xffdddedf),
                                 width: 1.0
                             ),
-                            color: _getArrangeModeBgColor(_ARRANGE_MODE_WEEKLY),
+                            color: _getArrangeModeBgColor(_ARRANGE_MODE_DAILY),
                           ),
                         ),
                         onTap: () {
-                          if (_arrange_mode != _ARRANGE_MODE_WEEKLY) {
+                          if (_arrange_mode != _ARRANGE_MODE_DAILY) {
                             setState(() {
-                              _arrange_mode = _ARRANGE_MODE_WEEKLY;
+                              _arrange_mode = _ARRANGE_MODE_DAILY;
                             });
+                            _updateArrangeMode(_arrange_mode);
                           }
                         },
                       ),
@@ -203,6 +213,7 @@ class _ImageManagerState extends State<ImageManagerPage> {
                             setState(() {
                               _arrange_mode = _ARRANGE_MODE_MONTHLY;
                             });
+                            _updateArrangeMode(_arrange_mode);
                           }
                         },
                       ),
@@ -238,9 +249,9 @@ class _ImageManagerState extends State<ImageManagerPage> {
               scrollDirection: Axis.vertical,
               physics: NeverScrollableScrollPhysics(),
               children: [
-                AllImageManagerPage(),
-                AlbumImageManagerPage(),
-                AllAlbumManagerPage()
+                _allImageManagerPage,
+                _albumImageManagerPage,
+                _allAlbumManagerPage
               ],
               onPageChanged: (index) {
                 debugPrint("onPageChanged, index: $index");
@@ -270,5 +281,20 @@ class _ImageManagerState extends State<ImageManagerPage> {
       ],
     );
   }
-
+  
+  void _updateArrangeMode(int rangeModeIndex) {
+    switch (rangeModeIndex) {
+      case _ARRANGE_MODE_DAILY: {
+        _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+        break;
+      }
+      case _ARRANGE_MODE_MONTHLY: {
+        _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+        break;
+      }
+      default: {
+        _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+      }
+    }
+  }
 }
