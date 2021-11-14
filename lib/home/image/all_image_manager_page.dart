@@ -18,7 +18,7 @@ class AllImageManagerPage extends StatefulWidget {
   }
 }
 
-class _AllImageManagerPageState extends State<AllImageManagerPage> {
+class _AllImageManagerPageState extends State<AllImageManagerPage> with AutomaticKeepAliveClientMixin {
   static final _INDEX_ALL_IMAGE = 0;
   static final _INDEX_CAMERA_ALBUM = 1;
   static final _INDEX_ALL_ALBUM = 2;
@@ -29,7 +29,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.103:8080";
+  final _URL_SERVER = "http://192.168.0.102:8080";
 
   List<ImageItem> _allImages = [];
 
@@ -46,6 +46,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     Color getSegmentBtnColor(int index) {
       if (index == _currentIndex) {
         return Color(0xffffffff);
@@ -149,4 +151,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> {
       onError.call(error.toString());
     });
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
