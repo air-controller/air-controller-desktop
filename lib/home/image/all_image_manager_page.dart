@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:material_segmented_control/material_segmented_control.dart';
-import 'package:mobile_assistant_client/constant.dart';
 import '../../model/ImageItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,13 +16,6 @@ class AllImageManagerPage extends StatefulWidget {
 }
 
 class _AllImageManagerPageState extends State<AllImageManagerPage> with AutomaticKeepAliveClientMixin {
-  static final _INDEX_ALL_IMAGE = 0;
-  static final _INDEX_CAMERA_ALBUM = 1;
-  static final _INDEX_ALL_ALBUM = 2;
-
-  int _currentIndex = _INDEX_ALL_IMAGE;
-  final _divider_line_color = Color(0xffe0e0e0);
-
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
@@ -47,16 +37,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    Color getSegmentBtnColor(int index) {
-      if (index == _currentIndex) {
-        return Color(0xffffffff);
-      } else {
-        return Color(0xff5b5c62);
-      }
-    }
-
-    String itemStr = "共${_allImages.length}项";
 
     return Expanded(
         child: Container(
@@ -89,31 +69,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     ));
-  }
-
-  List<String> getDataList() {
-    List<String> list = [];
-    for (int i = 0; i < 100; i++) {
-      list.add(i.toString());
-    }
-    return list;
-  }
-
-  List<Widget> getWidgetList() {
-    return getDataList().map((item) => getItemContainer(item)).toList();
-  }
-
-  Widget getItemContainer(String item) {
-    return Container(
-      width: 100.0,
-      height: 100.0,
-      alignment: Alignment.center,
-      child: Text(
-        item,
-        style: TextStyle(color: Colors.white, fontSize: 40),
-      ),
-      color: Colors.blue,
-    );
   }
 
   void _getAllImages(Function(List<ImageItem> images) onSuccess,
