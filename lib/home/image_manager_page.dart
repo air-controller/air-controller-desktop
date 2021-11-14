@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
@@ -467,6 +469,36 @@ class _ImageManagerState extends State<ImageManagerPage> {
           color: Color(0xfff6f6f6),
         ),
         Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+
+        Expanded(
+            child: Container(
+              child: ExtendedImageGesturePageView.builder(itemBuilder: (context, index) {
+                return ExtendedImage.network(
+                  "http://192.168.0.102:8080/DCIM/Camera/IMG_20211006_101521.jpg",
+                  mode: ExtendedImageMode.gesture,
+                  fit: BoxFit.contain,
+                  initGestureConfigHandler: (state) {
+                    return GestureConfig(
+                      minScale: 1.0,
+                      animationMinScale: 1.0,
+                      maxScale: 2.0,
+                      animationMaxScale: 2.0,
+                      speed: 1.0,
+                      inertialSpeed: 100.0,
+                      initialScale: 1.0,
+                      inPageView: false,
+                      initialAlignment: InitialAlignment.center,
+                      gestureDetailsIsChanged: (detail) {
+                        debugPrint("Total scale: ${detail?.totalScale}");
+                      }
+                    );
+                  },
+                );
+              }),
+              color: Colors.white,
+            )
+        )
+
       ],
     );
   }
