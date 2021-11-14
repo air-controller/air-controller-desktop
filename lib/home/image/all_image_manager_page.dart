@@ -259,7 +259,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
               content: Container(
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 100,
+                      maxCrossAxisExtent: 80,
                       crossAxisSpacing: _IMAGE_SPACE,
                       childAspectRatio: 1.0,
                       mainAxisSpacing: _IMAGE_SPACE),
@@ -270,8 +270,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                         imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
                             .replaceAll("storage/emulated/0/", ""),
                         fit: BoxFit.cover,
-                        width: 100,
-                        height: 100,
+                        width: 80,
+                        height: 80,
                         memCacheWidth: 200,
                         fadeOutDuration: Duration.zero,
                         fadeInDuration: Duration.zero,
