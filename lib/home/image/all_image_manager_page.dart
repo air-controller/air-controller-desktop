@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../image_preview/image_preview_page.dart';
 
 class AllImageManagerPage extends StatefulWidget {
   _AllImageManagerPageState? _allImageManagerPageState;
@@ -107,6 +108,15 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                     setState(() {
                       _selectedImageId = image.id;
                     });
+                  },
+                  onDoubleTap: () {
+                    debugPrint("双击");
+                    Navigator.push(context, new MaterialPageRoute(builder:
+                        (context) {
+                          return ImagePreviewPage();
+                        }
+                      )
+                    );
                   },
                 ),
                 decoration: BoxDecoration(

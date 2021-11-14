@@ -94,6 +94,16 @@ flutter:
      - icons/icon_monthly_selected.png
      - icons/icon_weekly_normal.png
      - icons/icon_weekly_selected.png
+     - icons/icon_right_arrow.png
+     - icons/icon_image_size_minus_normal.png
+     - icons/icon_image_size_minus_pressed.png
+     - icons/icon_image_size_plus_normal.png
+     - icons/icon_image_size_plus_pressed.png
+     - icons/icon_image_pre_normal.png
+     - icons/icon_image_pre_pressed.png
+     - icons/icon_image_next_normal.png
+     - icons/icon_image_next_pressed.png
+     - icons/icon_about_image.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
