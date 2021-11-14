@@ -1,5 +1,8 @@
+import 'dart:collection';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import '../../model/ImageItem.dart';
@@ -105,17 +108,97 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
   
   Widget _createDailyContent() {
-    return ListView.builder(itemBuilder: (BuildContext context, int index) {
-      return StickyHeader(
-          header: Container(
-            child: Text("测试标题"),
-          ),
-          content: Container(
-            child: Text("按天排列",
-          )
-        )
-      );
+    final map = LinkedHashMap<String, List<ImageItem>>();
+
+    final timeFormat = "yyyy年M月d日";
+
+    for (ImageItem imageItem in _allImages) {
+      int createTime = imageItem.createTime;
+
+      final df = DateFormat(timeFormat);
+      String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+
+      List<ImageItem>? images = map[createTimeStr];
+      if (null == images) {
+        images = <ImageItem>[];
+        images.add(imageItem);
+        map[createTimeStr] = images;
+      } else {
+        images.add(imageItem);
+        map[createTimeStr] = images;
+      }
+    }
+
+    List<String> keys = map.keys.toList();
+    keys.sort((String a, String b) {
+      final df = DateFormat(timeFormat);
+      DateTime dateTimeA = df.parse(a);
+      DateTime dateTimeB = df.parse(b);
+
+      return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
     });
+
+    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
+
+    keys.forEach((key) {
+      sortedMap[key] = map[key]!;
+    });
+
+    return ListView.builder(itemBuilder: (BuildContext context, int index) {
+      final entry = sortedMap.entries.toList()[index];
+      String dateTime = entry.key;
+      List<ImageItem> images = entry.value;
+
+      return Container(
+        child: StickyHeader(
+            header: Container(
+              child: Text(
+                  dateTime,
+                  style: TextStyle(
+                      inherit: false,
+                      fontSize: 14,
+                      color: Color(0xff515151)
+                  )
+              ),
+              color: Colors.white,
+            ),
+            content: Container(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 100,
+                    crossAxisSpacing: _IMAGE_SPACE,
+                    childAspectRatio: 1.0,
+                    mainAxisSpacing: _IMAGE_SPACE),
+                itemBuilder: (BuildContext context, int index) {
+                  ImageItem image = images[index];
+                  return Container(
+                    child: CachedNetworkImage(
+                      imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                          .replaceAll("storage/emulated/0/", ""),
+                      fit: BoxFit.cover,
+                      width: 100,
+                      height: 100,
+                      memCacheWidth: 200,
+                      fadeOutDuration: Duration.zero,
+                      fadeInDuration: Duration.zero,
+                    ),
+                    decoration: BoxDecoration(
+                        border: new Border.all(color: Color(0xffdedede), width: 1.0)),
+                  );
+                },
+                itemCount: images.length,
+                shrinkWrap: true,
+              ),
+              color: Colors.white,
+              margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+            )
+        ),
+        color: Colors.white,
+        padding: EdgeInsets.fromLTRB(20, 15, 20, 0)
+      );
+    },
+      itemCount: map.length,
+    );
   }
 
   Widget _createMonthlyContent() {
