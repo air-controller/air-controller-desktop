@@ -36,6 +36,13 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   List<ImageItem> _allImages = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
+  String? _selectedImageId;
+
+  final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
+  final _IMAGE_GRID_RADIUS = 1.0;
+
+  final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
+  final _IMAGE_GRID_BORDER_WIDTH = 1.0;
 
   @override
   void initState() {
@@ -85,18 +92,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             itemBuilder: (BuildContext context, int index) {
               ImageItem image = _allImages[index];
               return Container(
-                child: CachedNetworkImage(
-                  imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                      .replaceAll("storage/emulated/0/", ""),
-                  fit: BoxFit.cover,
-                  width: 200,
-                  height: 200,
-                  memCacheWidth: 400,
-                  fadeOutDuration: Duration.zero,
-                  fadeInDuration: Duration.zero,
+                child: GestureDetector(
+                  child: CachedNetworkImage(
+                    imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                        .replaceAll("storage/emulated/0/", ""),
+                    fit: BoxFit.cover,
+                    width: 200,
+                    height: 200,
+                    memCacheWidth: 400,
+                    fadeOutDuration: Duration.zero,
+                    fadeInDuration: Duration.zero,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedImageId = image.id;
+                    });
+                  },
                 ),
                 decoration: BoxDecoration(
-                    border: new Border.all(color: Color(0xffdedede), width: 1.0)),
+                    border: new Border.all(
+                        color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                        width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                    ),
+                  borderRadius: new BorderRadius.all(
+                      Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                  )
+                ),
               );
             },
             itemCount: _allImages.length,
@@ -172,18 +193,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                 itemBuilder: (BuildContext context, int index) {
                   ImageItem image = images[index];
                   return Container(
-                    child: CachedNetworkImage(
-                      imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                          .replaceAll("storage/emulated/0/", ""),
-                      fit: BoxFit.cover,
-                      width: 100,
-                      height: 100,
-                      memCacheWidth: 200,
-                      fadeOutDuration: Duration.zero,
-                      fadeInDuration: Duration.zero,
+                    child: GestureDetector(
+                      child: CachedNetworkImage(
+                        imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                            .replaceAll("storage/emulated/0/", ""),
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                        memCacheWidth: 200,
+                        fadeOutDuration: Duration.zero,
+                        fadeInDuration: Duration.zero,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedImageId = image.id;
+                        });
+                      },
                     ),
                     decoration: BoxDecoration(
-                        border: new Border.all(color: Color(0xffdedede), width: 1.0)),
+                        border: new Border.all(
+                            color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                            width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                        ),
+                        borderRadius: new BorderRadius.all(
+                            Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                        )
+                    ),
                   );
                 },
                 itemCount: images.length,
@@ -266,18 +301,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                   itemBuilder: (BuildContext context, int index) {
                     ImageItem image = images[index];
                     return Container(
-                      child: CachedNetworkImage(
-                        imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                            .replaceAll("storage/emulated/0/", ""),
-                        fit: BoxFit.cover,
-                        width: 80,
-                        height: 80,
-                        memCacheWidth: 200,
-                        fadeOutDuration: Duration.zero,
-                        fadeInDuration: Duration.zero,
+                      child: GestureDetector(
+                        child: CachedNetworkImage(
+                          imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                              .replaceAll("storage/emulated/0/", ""),
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                          memCacheWidth: 200,
+                          fadeOutDuration: Duration.zero,
+                          fadeInDuration: Duration.zero,
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _selectedImageId = image.id;
+                          });
+                        },
                       ),
                       decoration: BoxDecoration(
-                          border: new Border.all(color: Color(0xffdedede), width: 1.0)),
+                          border: new Border.all(
+                              color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                              width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                          ),
+                          borderRadius: new BorderRadius.all(
+                              Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                          )
+                      ),
                     );
                   },
                   itemCount: images.length,
