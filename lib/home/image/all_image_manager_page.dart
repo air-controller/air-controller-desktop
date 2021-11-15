@@ -218,6 +218,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                           _selectedImageId = image.id;
                         });
                       },
+                      onDoubleTap: () {
+                        _openImageDetail(_allImages, image);
+                      },
                     ),
                     decoration: BoxDecoration(
                         border: new Border.all(
@@ -325,6 +328,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                           setState(() {
                             _selectedImageId = image.id;
                           });
+                        },
+                        onDoubleTap: () {
+                          _openImageDetail(_allImages, image);
                         },
                       ),
                       decoration: BoxDecoration(
