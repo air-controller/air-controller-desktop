@@ -66,6 +66,9 @@ class ImageManagerState extends State<ImageManagerPage> {
         Visibility(
             child: imageListWidget,
           visible: _openImageDetail ? false : true,
+          maintainState: true,
+          maintainSize: false,
+          maintainAnimation: false,
         ),
         Visibility(
             child: previewWidget,
