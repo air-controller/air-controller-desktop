@@ -517,7 +517,7 @@ class ImageManagerState extends State<ImageManagerPage> {
             child: Container(
               child: ExtendedImageGesturePageView.builder(itemBuilder: (context, index) {
                 return ExtendedImage.network(
-                 "${_URL_SERVER}/${_allImageItems[_currentImageIndex].path}".replaceAll("storage/emulated/0/", ""),
+                 "${_URL_SERVER}/stream/file?path=${_allImageItems[_currentImageIndex].path}",
                   mode: ExtendedImageMode.gesture,
                   fit: BoxFit.contain,
                   initGestureConfigHandler: (state) {
