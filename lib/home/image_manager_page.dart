@@ -298,7 +298,7 @@ class ImageManagerState extends State<ImageManagerPage> {
             scrollDirection: Axis.vertical,
             physics: NeverScrollableScrollPhysics(),
             children: [
-              _allImageManagerPage!,
+              _allImageManagerPage,
               _albumImageManagerPage,
               _allAlbumManagerPage
             ],
