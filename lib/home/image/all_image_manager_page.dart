@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:sticky_headers/sticky_headers.dart';
@@ -45,8 +46,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
-
-  // ImageManagerState imageManagerState;
+  bool _isLoadingCompleted = false;
 
   _AllImageManagerPageState();
 
@@ -57,8 +57,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     _getAllImages((images) {
       setState(() {
         _allImages = images;
+        _isLoadingCompleted = true;
       });
-    }, (error) => print("Get all images error: $error"));
+    }, (error) {
+      print("Get all images error: $error");
+      setState(() {
+        _isLoadingCompleted = true;
+      });
+    });
   }
 
   void setArrangeMode(int arrangeMode) {
@@ -71,7 +77,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   Widget build(BuildContext context) {
     super.build(context);
 
-    return _createContent(_arrangeMode);
+    const color = Color(0xff85a8d0);
+    const spinKit = SpinKitCircle(color: color, size: 60.0);
+
+    Widget content = _createContent(_arrangeMode);
+
+    return Stack(children: [
+      content,
+      Visibility(
+        child: Container(child: spinKit, color: Colors.white),
+        maintainSize: false,
+        visible: !_isLoadingCompleted,
+      )
+    ]);
   }
 
   Widget _createContent(int arrangeMode) {
