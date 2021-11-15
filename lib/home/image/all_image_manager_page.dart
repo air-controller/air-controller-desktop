@@ -14,13 +14,13 @@ import '../../image_preview/image_preview_page.dart';
 
 class AllImageManagerPage extends StatefulWidget {
   _AllImageManagerPageState? _allImageManagerPageState;
-  ImageManagerState imageManagerState;
+  // ImageManagerState imageManagerState;
 
-  AllImageManagerPage(this.imageManagerState);
+  AllImageManagerPage();
 
   @override
   State<StatefulWidget> createState() {
-    _allImageManagerPageState = _AllImageManagerPageState(this.imageManagerState);
+    _allImageManagerPageState = _AllImageManagerPageState();
     return _allImageManagerPageState!;
   }
 
@@ -46,9 +46,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
 
-  ImageManagerState imageManagerState;
+  // ImageManagerState imageManagerState;
 
-  _AllImageManagerPageState(this.imageManagerState);
+  _AllImageManagerPageState();
 
   @override
   void initState() {
@@ -391,7 +391,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
-    imageManagerState.openImageDetail(images, current);
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.openImageDetail(images, current);
   }
 
   @override

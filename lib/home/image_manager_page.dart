@@ -17,9 +17,12 @@ class ImageManagerPage extends StatefulWidget {
   static final ARRANGE_MODE_DAILY = 2;
   static final ARRANGE_MODE_MONTHLY = 3;
 
+  ImageManagerState? state;
+
   @override
   State<StatefulWidget> createState() {
-    return ImageManagerState();
+    state = ImageManagerState();
+    return state!;
   }
 }
 
@@ -37,7 +40,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   int _arrange_mode = _ARRANGE_MODE_GRID;
 
-  AllImageManagerPage? _allImageManagerPage ;
+  AllImageManagerPage _allImageManagerPage = AllImageManagerPage();
   final _albumImageManagerPage = AlbumImageManagerPage();
   final _allAlbumManagerPage = AllAlbumManagerPage();
 
@@ -55,8 +58,6 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    _allImageManagerPage = AllImageManagerPage(this);
-
     Widget previewWidget = _createImagePreviewWidget();
     Widget imageListWidget = _createImageListWidget();
 
@@ -79,19 +80,19 @@ class ImageManagerState extends State<ImageManagerPage> {
       case _ARRANGE_MODE_DAILY:
         {
           _allImageManagerPage
-              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
           break;
         }
       case _ARRANGE_MODE_MONTHLY:
         {
           _allImageManagerPage
-              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
           break;
         }
       default:
         {
           _allImageManagerPage
-              ?.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
         }
     }
   }
