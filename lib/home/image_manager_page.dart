@@ -48,7 +48,7 @@ class ImageManagerState extends State<ImageManagerPage> {
   double _imageSizeSliderValue = 0.0;
 
   int _currentImageIndex = -1;
-  List<ImageItem> _allImageItems = <ImageItem>[];
+  List<AlbumItem> _allImageItems = <AlbumItem>[];
   
   bool _openImageDetail = false;
   
@@ -564,7 +564,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     );
   }
   
-  void openImageDetail(List<ImageItem> images, ImageItem current) {
+  void openImageDetail(List<AlbumItem> images, AlbumItem current) {
     setState(() {
       _allImageItems = images;
       _currentImageIndex = images.indexOf(current);

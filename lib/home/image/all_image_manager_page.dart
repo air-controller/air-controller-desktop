@@ -36,7 +36,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   final _URL_SERVER = "http://192.168.0.102:8080";
 
-  List<ImageItem> _allImages = [];
+  List<AlbumItem> _allImages = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
   String? _selectedImageId;
@@ -113,7 +113,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
         itemBuilder: (BuildContext context, int index) {
-          ImageItem image = _allImages[index];
+          AlbumItem image = _allImages[index];
           return Container(
             child: GestureDetector(
               child: CachedNetworkImage(
@@ -156,19 +156,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
   
   Widget _createDailyContent() {
-    final map = LinkedHashMap<String, List<ImageItem>>();
+    final map = LinkedHashMap<String, List<AlbumItem>>();
 
     final timeFormat = "yyyy年M月d日";
 
-    for (ImageItem imageItem in _allImages) {
+    for (AlbumItem imageItem in _allImages) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
-      List<ImageItem>? images = map[createTimeStr];
+      List<AlbumItem>? images = map[createTimeStr];
       if (null == images) {
-        images = <ImageItem>[];
+        images = <AlbumItem>[];
         images.add(imageItem);
         map[createTimeStr] = images;
       } else {
@@ -186,7 +186,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
     });
 
-    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
+    Map<String, List<AlbumItem>> sortedMap = LinkedHashMap();
 
     keys.forEach((key) {
       sortedMap[key] = map[key]!;
@@ -195,7 +195,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     return ListView.builder(itemBuilder: (BuildContext context, int index) {
       final entry = sortedMap.entries.toList()[index];
       String dateTime = entry.key;
-      List<ImageItem> images = entry.value;
+      List<AlbumItem> images = entry.value;
 
       return Container(
         child: StickyHeader(
@@ -218,7 +218,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                     childAspectRatio: 1.0,
                     mainAxisSpacing: _IMAGE_SPACE),
                 itemBuilder: (BuildContext context, int index) {
-                  ImageItem image = images[index];
+                  AlbumItem image = images[index];
                   return Container(
                     child: GestureDetector(
                       child: CachedNetworkImage(
@@ -267,19 +267,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   Widget _createMonthlyContent() {
-    final map = LinkedHashMap<String, List<ImageItem>>();
+    final map = LinkedHashMap<String, List<AlbumItem>>();
 
     final timeFormat = "yyyy年M月";
 
-    for (ImageItem imageItem in _allImages) {
+    for (AlbumItem imageItem in _allImages) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
-      List<ImageItem>? images = map[createTimeStr];
+      List<AlbumItem>? images = map[createTimeStr];
       if (null == images) {
-        images = <ImageItem>[];
+        images = <AlbumItem>[];
         images.add(imageItem);
         map[createTimeStr] = images;
       } else {
@@ -297,7 +297,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
     });
 
-    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
+    Map<String, List<AlbumItem>> sortedMap = LinkedHashMap();
 
     keys.forEach((key) {
       sortedMap[key] = map[key]!;
@@ -306,7 +306,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     return ListView.builder(itemBuilder: (BuildContext context, int index) {
       final entry = sortedMap.entries.toList()[index];
       String dateTime = entry.key;
-      List<ImageItem> images = entry.value;
+      List<AlbumItem> images = entry.value;
 
       return Container(
           child: StickyHeader(
@@ -329,7 +329,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                       childAspectRatio: 1.0,
                       mainAxisSpacing: _IMAGE_SPACE),
                   itemBuilder: (BuildContext context, int index) {
-                    ImageItem image = images[index];
+                    AlbumItem image = images[index];
                     return Container(
                       child: GestureDetector(
                         child: CachedNetworkImage(
@@ -377,7 +377,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     );
   }
 
-  void _getAllImages(Function(List<ImageItem> images) onSuccess,
+  void _getAllImages(Function(List<AlbumItem> images) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/image/all");
     http
@@ -400,7 +400,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
           final data = httpResponseEntity.data as List<dynamic>;
 
           onSuccess.call(data
-              .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
+              .map((e) => AlbumItem.fromJson(e as Map<String, dynamic>))
               .toList());
         } else {
           onError.call(httpResponseEntity.msg == null
@@ -413,7 +413,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     });
   }
 
-  void _openImageDetail(List<ImageItem> images, ImageItem current) {
+  void _openImageDetail(List<AlbumItem> images, AlbumItem current) {
     ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.openImageDetail(images, current);
   }

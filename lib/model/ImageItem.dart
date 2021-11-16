@@ -1,6 +1,6 @@
 
 
-class ImageItem {
+class AlbumItem {
   String id;
   String mimeType;
   String path;
@@ -9,11 +9,11 @@ class ImageItem {
   int modifyTime;
   int createTime;
 
-  ImageItem(this.id, this.mimeType, this.path, this.width, this.height,
+  AlbumItem(this.id, this.mimeType, this.path, this.width, this.height,
       this.modifyTime, this.createTime) {}
 
-  factory ImageItem.fromJson(Map<String, dynamic> parsedJson) {
-    return ImageItem(parsedJson["id"], parsedJson["mimeType"],
+  factory AlbumItem.fromJson(Map<String, dynamic> parsedJson) {
+    return AlbumItem(parsedJson["id"], parsedJson["mimeType"],
         parsedJson["path"], parsedJson["width"], parsedJson["height"],
         parsedJson["modifyTime"], parsedJson["createTime"]);
   }
