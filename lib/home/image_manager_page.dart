@@ -82,20 +82,20 @@ class ImageManagerState extends State<ImageManagerPage> {
     switch (rangeModeIndex) {
       case _ARRANGE_MODE_DAILY:
         {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+          _albumImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
           break;
         }
       case _ARRANGE_MODE_MONTHLY:
         {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+          _albumImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
           break;
         }
       default:
         {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
         }
     }
   }
