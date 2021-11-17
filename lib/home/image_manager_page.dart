@@ -199,79 +199,90 @@ class ImageManagerState extends State<ImageManagerPage> {
                 child: Container(
                   child: Row(
                     children: [
-                      GestureDetector(
-                        child: Container(
-                          child: Image.asset(
-                              _getArrangeModeIcon(_ARRANGE_MODE_GRID),
-                              width: 20,
-                              height: 20),
-                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: Color(0xffdddedf), width: 1.0),
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(4.0),
-                                bottomLeft: Radius.circular(4.0)),
-                            color: _getArrangeModeBgColor(_ARRANGE_MODE_GRID),
+                      Visibility(
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(_ARRANGE_MODE_GRID),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        bottomLeft: Radius.circular(4.0)),
+                                    color: _getArrangeModeBgColor(_ARRANGE_MODE_GRID),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_GRID) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_GRID;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    color: _getArrangeModeBgColor(_ARRANGE_MODE_DAILY),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_DAILY) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_DAILY;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(_ARRANGE_MODE_MONTHLY),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    color:
+                                    _getArrangeModeBgColor(_ARRANGE_MODE_MONTHLY),
+                                    borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(4.0),
+                                        bottomRight: Radius.circular(4.0)),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_MONTHLY;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                        onTap: () {
-                          if (_arrange_mode != _ARRANGE_MODE_GRID) {
-                            setState(() {
-                              _arrange_mode = _ARRANGE_MODE_GRID;
-                            });
-                            _updateArrangeMode(_arrange_mode);
-                          }
-                        },
+                        maintainSize: true,
+                        maintainState: true,
+                        maintainAnimation: true,
+                        visible: _currentIndex != _INDEX_ALL_ALBUM,
                       ),
-                      GestureDetector(
-                        child: Container(
-                          child: Image.asset(
-                              _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
-                              width: 20,
-                              height: 20),
-                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: Color(0xffdddedf), width: 1.0),
-                            color: _getArrangeModeBgColor(_ARRANGE_MODE_DAILY),
-                          ),
-                        ),
-                        onTap: () {
-                          if (_arrange_mode != _ARRANGE_MODE_DAILY) {
-                            setState(() {
-                              _arrange_mode = _ARRANGE_MODE_DAILY;
-                            });
-                            _updateArrangeMode(_arrange_mode);
-                          }
-                        },
-                      ),
-                      GestureDetector(
-                        child: Container(
-                          child: Image.asset(
-                              _getArrangeModeIcon(_ARRANGE_MODE_MONTHLY),
-                              width: 20,
-                              height: 20),
-                          padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: Color(0xffdddedf), width: 1.0),
-                            color:
-                                _getArrangeModeBgColor(_ARRANGE_MODE_MONTHLY),
-                            borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(4.0),
-                                bottomRight: Radius.circular(4.0)),
-                          ),
-                        ),
-                        onTap: () {
-                          if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
-                            setState(() {
-                              _arrange_mode = _ARRANGE_MODE_MONTHLY;
-                            });
-                            _updateArrangeMode(_arrange_mode);
-                          }
-                        },
-                      ),
+
                       Container(
                           child: Image.asset("icons/icon_delete.png",
                               width: 10, height: 10),
