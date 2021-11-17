@@ -15,7 +15,7 @@ import 'dart:math';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setWindowMinSize(Size(800, 600));
+  setWindowMinSize(Size(1036, 687));
   runApp(MyApp());
 }
 
