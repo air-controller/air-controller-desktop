@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
@@ -40,14 +41,21 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   List<AlbumItem> _allAlbums = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  String? _selectedImageId;
-
-  final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
-  final _IMAGE_GRID_RADIUS = 1.0;
-
-  final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
-  final _IMAGE_GRID_BORDER_WIDTH = 1.0;
+  String? _selectedAlbumId;
+  
   bool _isLoadingCompleted = false;
+
+  final _BACKGROUND_ALBUM_SELECTED = Color(0xffe6e6e6);
+  final _BACKGROUND_ALBUM_NORMAL = Colors.white;
+
+  final _ALBUM_NAME_TEXT_COLOR_NORMAL = Color(0xff515151);
+  final _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL = Color(0xff929292);
+
+  final _ALBUM_NAME_TEXT_COLOR_SELECTED = Colors.white;
+  final _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED = Colors.white;
+
+  final _BACKGROUND_ALBUM_NAME_NORMAL = Colors.white;
+  final _BACKGROUND_ALBUM_NAME_SELECTED = Color(0xff5d87ed);
 
   _AllAlbumManagerPageState();
 
@@ -98,46 +106,133 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   Widget _createGridContent() {
+    final imageWidth = 140.0;
+    final imageHeight = 140.0;
+    final imagePadding = 3.0;
+
     return Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
+            maxCrossAxisExtent: 260,
             crossAxisSpacing: _IMAGE_SPACE,
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
         itemBuilder: (BuildContext context, int index) {
-          AlbumItem image = _allAlbums[index];
-          return Container(
-            child: GestureDetector(
-              child: CachedNetworkImage(
-                imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.coverImageId}/400/400"
-                    .replaceAll("storage/emulated/0/", ""),
-                fit: BoxFit.cover,
-                width: 200,
-                height: 200,
-                memCacheWidth: 400,
-                fadeOutDuration: Duration.zero,
-                fadeInDuration: Duration.zero,
-              ),
-              onTap: () {
-                setState(() {
-                  _selectedImageId = image.id;
-                });
-              },
-              onDoubleTap: () {
-                debugPrint("双击");
-                _openImageDetail(_allAlbums, image);
-              },
-            ),
-            decoration: BoxDecoration(
-                border: new Border.all(
-                    color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                    width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+          AlbumItem album = _allAlbums[index];
+
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                child:  Container(
+                  child: Stack(
+                    children: [
+                      Visibility(
+                        child: RotationTransition(
+                            turns: AlwaysStoppedAnimation(5 / 360),
+                            child: Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              padding: EdgeInsets.all(imagePadding),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Color(0xffdddddd), width: 1.0),
+                                  borderRadius: BorderRadius.all(Radius.circular(3.0))
+                              ),
+                            )
+                        ),
+                        visible: album.photoNum > 1 ? true : false,
+                      ),
+
+                      Visibility(
+                        child: RotationTransition(
+                            turns: AlwaysStoppedAnimation(-5 / 360),
+                            child: Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              padding: EdgeInsets.all(imagePadding),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(color: Color(0xffdddddd), width: 1.0),
+                                  borderRadius: BorderRadius.all(Radius.circular(3.0))
+                              ),
+                            )
+                        ),
+                        visible: album.photoNum > 2 ? true : false,
+                      ),
+
+                      Container(
+                        child: CachedNetworkImage(
+                            imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${album.coverImageId}/400/400"
+                                .replaceAll("storage/emulated/0/", ""),
+                            fit: BoxFit.cover,
+                            width: imageWidth,
+                            height: imageWidth,
+                            memCacheWidth: 400,
+                            fadeOutDuration: Duration.zero,
+                            fadeInDuration: Duration.zero
+                        ),
+                        padding: EdgeInsets.all(imagePadding),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Color(0xffdddddd), width: 1.0),
+                            borderRadius: BorderRadius.all(Radius.circular(3.0))
+                        ),
+                      )
+                    ],
+                  ),
+                  decoration: BoxDecoration(
+                      color: _selectedAlbumId == album.id ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
+                      borderRadius: BorderRadius.all(Radius.circular(4.0))
+                  ),
+                  padding: EdgeInsets.all(8),
                 ),
-                borderRadius: new BorderRadius.all(
-                    Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
-                )
-            ),
+                onTap: () {
+                  setState(() {
+                    _selectedAlbumId = album.id;
+                  });
+                },
+              ),
+
+              GestureDetector(
+                child: Container(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        album.name,
+                        style: TextStyle(
+                            inherit: false,
+                            color: _selectedAlbumId == album.id ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
+                        ),
+                      ),
+                      Container(
+                        child: Text(
+                          "(${album.photoNum})",
+                          style: TextStyle(
+                              inherit: false,
+                              color: _selectedAlbumId == album.id ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
+                          ),
+                        ),
+                        margin: EdgeInsets.only(left: 3),
+                      )
+                    ],
+                  ),
+                  margin: EdgeInsets.only(top: 10),
+
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(3)),
+                      color: _selectedAlbumId == album.id ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
+                  ),
+                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                ),
+                onTap: () {
+                  setState(() {
+                    _selectedAlbumId = album.id;
+                  });
+                },
+              )
+            ],
           );
         },
         itemCount: _allAlbums.length,
