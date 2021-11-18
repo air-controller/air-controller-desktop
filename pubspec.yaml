@@ -52,6 +52,7 @@ dependencies:
   sticky_headers: ^0.2.0
   extended_image: ^5.1.3
   flutter_html: ^2.1.5
+  rflutter_alert: ^2.0.4
 
 dev_dependencies:
   flutter_test:
@@ -106,6 +107,7 @@ flutter:
      - icons/icon_image_next_normal.png
      - icons/icon_image_next_pressed.png
      - icons/icon_about_image.png
+     - icons/ic_android.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

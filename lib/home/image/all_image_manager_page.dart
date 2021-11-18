@@ -5,28 +5,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import '../../model/ImageItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../image_preview/image_preview_page.dart';
 
 class AllImageManagerPage extends StatefulWidget {
-  _AllImageManagerPageState? _allImageManagerPageState;
+  _AllImageManagerPageState? state;
   // ImageManagerState imageManagerState;
 
   AllImageManagerPage();
 
   @override
   State<StatefulWidget> createState() {
-    _allImageManagerPageState = _AllImageManagerPageState();
-    return _allImageManagerPageState!;
+    state = _AllImageManagerPageState();
+    return state!;
   }
 
   void setArrangeMode(int arrangeMode) {
-    _allImageManagerPageState?.setArrangeMode(arrangeMode);
+    state?.setArrangeMode(arrangeMode);
   }
 }
 
@@ -34,12 +35,13 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.102:8080";
+  final _URL_SERVER = "http://192.168.0.101:8080";
 
-  List<AlbumItem> _allImages = [];
+  List<ImageItem> _allImages = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  String? _selectedImageId;
+  // String? _selectedImageId;
+  ImageItem? _selectedImage;
 
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
   final _IMAGE_GRID_RADIUS = 1.0;
@@ -65,6 +67,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
         _isLoadingCompleted = true;
       });
     });
+
+
   }
 
   void setArrangeMode(int arrangeMode) {
@@ -113,7 +117,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
         itemBuilder: (BuildContext context, int index) {
-          AlbumItem image = _allImages[index];
+          ImageItem image = _allImages[index];
           return Container(
             child: GestureDetector(
               child: CachedNetworkImage(
@@ -127,9 +131,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                 fadeInDuration: Duration.zero,
               ),
               onTap: () {
-                setState(() {
-                  _selectedImageId = image.id;
-                });
+                _setImageSelected(image);
               },
               onDoubleTap: () {
                 debugPrint("双击");
@@ -138,11 +140,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             ),
             decoration: BoxDecoration(
                 border: new Border.all(
-                    color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                    width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                    color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                    width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                 ),
                 borderRadius: new BorderRadius.all(
-                    Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                    Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                 )
             ),
           );
@@ -156,19 +158,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
   
   Widget _createDailyContent() {
-    final map = LinkedHashMap<String, List<AlbumItem>>();
+    final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = "yyyy年M月d日";
 
-    for (AlbumItem imageItem in _allImages) {
+    for (ImageItem imageItem in _allImages) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
-      List<AlbumItem>? images = map[createTimeStr];
+      List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
-        images = <AlbumItem>[];
+        images = <ImageItem>[];
         images.add(imageItem);
         map[createTimeStr] = images;
       } else {
@@ -186,7 +188,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
     });
 
-    Map<String, List<AlbumItem>> sortedMap = LinkedHashMap();
+    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
 
     keys.forEach((key) {
       sortedMap[key] = map[key]!;
@@ -195,7 +197,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     return ListView.builder(itemBuilder: (BuildContext context, int index) {
       final entry = sortedMap.entries.toList()[index];
       String dateTime = entry.key;
-      List<AlbumItem> images = entry.value;
+      List<ImageItem> images = entry.value;
 
       return Container(
         child: StickyHeader(
@@ -218,7 +220,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                     childAspectRatio: 1.0,
                     mainAxisSpacing: _IMAGE_SPACE),
                 itemBuilder: (BuildContext context, int index) {
-                  AlbumItem image = images[index];
+                  ImageItem image = images[index];
                   return Container(
                     child: GestureDetector(
                       child: CachedNetworkImage(
@@ -232,9 +234,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                         fadeInDuration: Duration.zero,
                       ),
                       onTap: () {
-                        setState(() {
-                          _selectedImageId = image.id;
-                        });
+                        _setImageSelected(image);
                       },
                       onDoubleTap: () {
                         _openImageDetail(_allImages, image);
@@ -242,11 +242,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                     ),
                     decoration: BoxDecoration(
                         border: new Border.all(
-                            color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                            width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                            color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                            width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                         ),
                         borderRadius: new BorderRadius.all(
-                            Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                            Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                         )
                     ),
                   );
@@ -267,19 +267,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   Widget _createMonthlyContent() {
-    final map = LinkedHashMap<String, List<AlbumItem>>();
+    final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = "yyyy年M月";
 
-    for (AlbumItem imageItem in _allImages) {
+    for (ImageItem imageItem in _allImages) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
-      List<AlbumItem>? images = map[createTimeStr];
+      List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
-        images = <AlbumItem>[];
+        images = <ImageItem>[];
         images.add(imageItem);
         map[createTimeStr] = images;
       } else {
@@ -297,7 +297,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
     });
 
-    Map<String, List<AlbumItem>> sortedMap = LinkedHashMap();
+    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
 
     keys.forEach((key) {
       sortedMap[key] = map[key]!;
@@ -306,7 +306,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     return ListView.builder(itemBuilder: (BuildContext context, int index) {
       final entry = sortedMap.entries.toList()[index];
       String dateTime = entry.key;
-      List<AlbumItem> images = entry.value;
+      List<ImageItem> images = entry.value;
 
       return Container(
           child: StickyHeader(
@@ -329,7 +329,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                       childAspectRatio: 1.0,
                       mainAxisSpacing: _IMAGE_SPACE),
                   itemBuilder: (BuildContext context, int index) {
-                    AlbumItem image = images[index];
+                    ImageItem image = images[index];
                     return Container(
                       child: GestureDetector(
                         child: CachedNetworkImage(
@@ -343,9 +343,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                           fadeInDuration: Duration.zero,
                         ),
                         onTap: () {
-                          setState(() {
-                            _selectedImageId = image.id;
-                          });
+                          _setImageSelected(image);
                         },
                         onDoubleTap: () {
                           _openImageDetail(_allImages, image);
@@ -353,11 +351,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                       ),
                       decoration: BoxDecoration(
                           border: new Border.all(
-                              color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                              width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                              color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
+                              width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                           ),
                           borderRadius: new BorderRadius.all(
-                              Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                              Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                           )
                       ),
                     );
@@ -377,7 +375,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     );
   }
 
-  void _getAllImages(Function(List<AlbumItem> images) onSuccess,
+  void _getAllImages(Function(List<ImageItem> images) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/image/all");
     http
@@ -400,7 +398,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
           final data = httpResponseEntity.data as List<dynamic>;
 
           onSuccess.call(data
-              .map((e) => AlbumItem.fromJson(e as Map<String, dynamic>))
+              .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
               .toList());
         } else {
           onError.call(httpResponseEntity.msg == null
@@ -413,9 +411,96 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     });
   }
 
-  void _openImageDetail(List<AlbumItem> images, AlbumItem current) {
+  void _setImageSelected(ImageItem? image) {
+    setState(() {
+      _selectedImage = image;
+    });
+
+    _setDeleteBtnEnabled(null != _selectedImage);
+  }
+
+  void _openImageDetail(List<ImageItem> images, ImageItem current) {
     ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.openImageDetail(images, current);
+  }
+
+  void _setDeleteBtnEnabled(bool enable) {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+  }
+
+  void deleteSingleImage() {
+    Dialog dialog = ConfirmDialogBuilder().content("测试内容")
+        .desc("测试描述")
+        .negativeBtnText("取消")
+        .positiveBtnText("删除")
+        .build();
+
+    showDialog<Dialog>(context: context, builder: (context) {
+      return dialog;
+    });
+
+
+    // if (null == _selectedImage) {
+    //   debugPrint("Selected image is null");
+    //   return;
+    // }
+    //
+    // var url = Uri.parse("${_URL_SERVER}/image/delete");
+    // http.post(url,
+    //     headers: {"Content-Type": "application/json"},
+    //     body: json.encode({
+    //       "path": _selectedImage?.path
+    //     }))
+    //     .then((response) {
+    //   if (response.statusCode != 200) {
+    //     _showErrorDialog(response.reasonPhrase != null
+    //         ? response.reasonPhrase!
+    //         : "Unknown error");
+    //   } else {
+    //     var body = response.body;
+    //     debugPrint("Delete single image: $body");
+    //
+    //     final map = jsonDecode(body);
+    //     final httpResponseEntity = ResponseEntity.fromJson(map);
+    //
+    //     if (httpResponseEntity.isSuccessful()) {
+    //       setState(() {
+    //         _allImages.removeWhere((image) => image.id == _selectedImage?.id);
+    //         _setImageSelected(null);
+    //       });
+    //     } else {
+    //       _showErrorDialog(httpResponseEntity.msg == null
+    //           ? "Unknown error"
+    //           : httpResponseEntity.msg!);
+    //     }
+    //   }
+    // }).catchError((error) {
+    //   _showErrorDialog(error.toString());
+    // });
+  }
+  
+  void _showErrorDialog(String error) {
+    Alert alert = Alert(
+      context: context,
+      type: AlertType.error,
+      desc: error,
+      buttons: [
+        DialogButton(
+            child: Text(
+              "我知道了",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+            })
+      ]
+    );
+
+    alert.show();
   }
 
   @override

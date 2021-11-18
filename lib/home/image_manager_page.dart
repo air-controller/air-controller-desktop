@@ -48,13 +48,15 @@ class ImageManagerState extends State<ImageManagerPage> {
   double _imageSizeSliderValue = 0.0;
 
   int _currentImageIndex = -1;
-  List<AlbumItem> _allImageItems = <AlbumItem>[];
-  
+  List<ImageItem> _allImageItems = <ImageItem>[];
+
   bool _openImageDetail = false;
-  
+
   final _URL_SERVER = "http://192.168.0.102:8080";
 
   double _currentImageScale = 1.0;
+  // 标记删除按钮是否可以点击
+  bool _isDeleteBtnEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -64,14 +66,14 @@ class ImageManagerState extends State<ImageManagerPage> {
     return Stack(
       children: [
         Visibility(
-            child: imageListWidget,
+          child: imageListWidget,
           visible: _openImageDetail ? false : true,
           maintainState: true,
           maintainSize: false,
           maintainAnimation: false,
         ),
         Visibility(
-            child: previewWidget,
+          child: previewWidget,
           visible: _openImageDetail ? true : false,
         )
       ],
@@ -82,20 +84,26 @@ class ImageManagerState extends State<ImageManagerPage> {
     switch (rangeModeIndex) {
       case _ARRANGE_MODE_DAILY:
         {
-          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
-          _albumImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+          _allImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+          _albumImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
           break;
         }
       case _ARRANGE_MODE_MONTHLY:
         {
-          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
-          _albumImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+          _allImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+          _albumImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
           break;
         }
       default:
         {
-          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
-          _allImageManagerPage.setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+          _allImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+          _allImageManagerPage
+              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
         }
     }
   }
@@ -200,101 +208,120 @@ class ImageManagerState extends State<ImageManagerPage> {
                   child: Row(
                     children: [
                       Visibility(
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(_ARRANGE_MODE_GRID),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(4.0),
-                                        bottomLeft: Radius.circular(4.0)),
-                                    color: _getArrangeModeBgColor(_ARRANGE_MODE_GRID),
-                                  ),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                child: Image.asset(
+                                    _getArrangeModeIcon(_ARRANGE_MODE_GRID),
+                                    width: 20,
+                                    height: 20),
+                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Color(0xffdddedf), width: 1.0),
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(4.0),
+                                      bottomLeft: Radius.circular(4.0)),
+                                  color: _getArrangeModeBgColor(
+                                      _ARRANGE_MODE_GRID),
                                 ),
-                                onTap: () {
-                                  if (_arrange_mode != _ARRANGE_MODE_GRID) {
-                                    setState(() {
-                                      _arrange_mode = _ARRANGE_MODE_GRID;
-                                    });
-                                    _updateArrangeMode(_arrange_mode);
-                                  }
-                                },
                               ),
-                              GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    color: _getArrangeModeBgColor(_ARRANGE_MODE_DAILY),
-                                  ),
+                              onTap: () {
+                                if (_arrange_mode != _ARRANGE_MODE_GRID) {
+                                  setState(() {
+                                    _arrange_mode = _ARRANGE_MODE_GRID;
+                                  });
+                                  _updateArrangeMode(_arrange_mode);
+                                }
+                              },
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                child: Image.asset(
+                                    _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
+                                    width: 20,
+                                    height: 20),
+                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Color(0xffdddedf), width: 1.0),
+                                  color: _getArrangeModeBgColor(
+                                      _ARRANGE_MODE_DAILY),
                                 ),
-                                onTap: () {
-                                  if (_arrange_mode != _ARRANGE_MODE_DAILY) {
-                                    setState(() {
-                                      _arrange_mode = _ARRANGE_MODE_DAILY;
-                                    });
-                                    _updateArrangeMode(_arrange_mode);
-                                  }
-                                },
                               ),
-                              GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(_ARRANGE_MODE_MONTHLY),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    color:
-                                    _getArrangeModeBgColor(_ARRANGE_MODE_MONTHLY),
-                                    borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(4.0),
-                                        bottomRight: Radius.circular(4.0)),
-                                  ),
+                              onTap: () {
+                                if (_arrange_mode != _ARRANGE_MODE_DAILY) {
+                                  setState(() {
+                                    _arrange_mode = _ARRANGE_MODE_DAILY;
+                                  });
+                                  _updateArrangeMode(_arrange_mode);
+                                }
+                              },
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                child: Image.asset(
+                                    _getArrangeModeIcon(_ARRANGE_MODE_MONTHLY),
+                                    width: 20,
+                                    height: 20),
+                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Color(0xffdddedf), width: 1.0),
+                                  color: _getArrangeModeBgColor(
+                                      _ARRANGE_MODE_MONTHLY),
+                                  borderRadius: BorderRadius.only(
+                                      topRight: Radius.circular(4.0),
+                                      bottomRight: Radius.circular(4.0)),
                                 ),
-                                onTap: () {
-                                  if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
-                                    setState(() {
-                                      _arrange_mode = _ARRANGE_MODE_MONTHLY;
-                                    });
-                                    _updateArrangeMode(_arrange_mode);
-                                  }
-                                },
                               ),
-                            ],
-                          ),
+                              onTap: () {
+                                if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
+                                  setState(() {
+                                    _arrange_mode = _ARRANGE_MODE_MONTHLY;
+                                  });
+                                  _updateArrangeMode(_arrange_mode);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                         maintainSize: true,
                         maintainState: true,
                         maintainAnimation: true,
                         visible: _currentIndex != _INDEX_ALL_ALBUM,
                       ),
-
                       Container(
-                          child: Image.asset("icons/icon_delete.png",
-                              width: 10, height: 10),
-                          decoration: BoxDecoration(
-                              color: Color(0xffcb6357),
-                              border: new Border.all(
-                                  color: Color(0xffb43f32), width: 1.0),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(4.0))),
-                          width: 40,
-                          height: 25,
-                          padding: EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
+                          child: GestureDetector(
+                            child: Opacity(
+                              opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                              child: Container(
+                                child: Image.asset("icons/icon_delete.png",
+                                    width: 10, height: 10),
+                                decoration: BoxDecoration(
+                                    color: Color(0xffcb6357),
+                                    border: new Border.all(
+                                        color: Color(0xffb43f32), width: 1.0),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(4.0))),
+                                width: 40,
+                                height: 25,
+                                padding:
+                                    EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
+                              ),
+                            ),
+                            onTap: () {
+                              debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
+
+                              if (_isDeleteBtnEnabled) {
+                                if (_currentIndex == _INDEX_ALL_IMAGE) {
+                                  _allImageManagerPage.state?.deleteSingleImage();
+                                  return;
+                                }
+                              }
+                            },
+                          ),
                           margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
                     ],
                   ),
@@ -341,7 +368,8 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   Widget _createImagePreviewWidget() {
-    String imageIndictorStr = "${_currentImageIndex + 1} / ${_allImageItems.length}";
+    String imageIndictorStr =
+        "${_currentImageIndex + 1} / ${_allImageItems.length}";
 
     String imageScaleStr = "${(_currentImageScale / 1.0 * 100).toInt()}%";
 
@@ -437,7 +465,8 @@ class ImageManagerState extends State<ImageManagerPage> {
                                   debugPrint("Current value: $value");
                                   setState(() {
                                     _imageSizeSliderValue = value;
-                                    _currentImageScale = 1.0 + _imageSizeSliderValue / 100;
+                                    _currentImageScale =
+                                        1.0 + _imageSizeSliderValue / 100;
                                   });
                                 },
                                 min: 0,
@@ -449,13 +478,13 @@ class ImageManagerState extends State<ImageManagerPage> {
                       ),
 
                       GestureDetector(
-                          child: Container(
-                        child: Image.asset(
-                            "icons/icon_image_size_plus_normal.png",
-                            width: 20,
-                            height: 20),
-                        margin: EdgeInsets.only(right: 15),
-                      ),
+                        child: Container(
+                          child: Image.asset(
+                              "icons/icon_image_size_plus_normal.png",
+                              width: 20,
+                              height: 20),
+                          margin: EdgeInsets.only(right: 15),
+                        ),
                         onTap: () {
                           _setImageScale(true);
                         },
@@ -475,22 +504,20 @@ class ImageManagerState extends State<ImageManagerPage> {
                   children: [
                     GestureDetector(
                       child: Container(
-                        child: Image.asset("icons/icon_image_pre_normal.png",
-                            width: 13, height: 13)
-                      ),
+                          child: Image.asset("icons/icon_image_pre_normal.png",
+                              width: 13, height: 13)),
                       onTap: () {
                         _openPreImage();
                       },
                     ),
                     Container(
-                        child: Text(imageIndictorStr,
-                            style: TextStyle(
-                                inherit: false,
-                                color: Color(0xff626160),
-                                fontSize: 16)),
+                      child: Text(imageIndictorStr,
+                          style: TextStyle(
+                              inherit: false,
+                              color: Color(0xff626160),
+                              fontSize: 16)),
                       padding: EdgeInsets.only(left: 20, right: 20),
                     ),
-
                     GestureDetector(
                       child: Container(
                         child: Image.asset("icons/icon_image_next_normal.png",
@@ -503,19 +530,15 @@ class ImageManagerState extends State<ImageManagerPage> {
                   ],
                 ),
               ),
-              
               Align(
                 alignment: Alignment.centerRight,
                 child: Container(
-                  child: Image.asset("icons/icon_about_image.png", width: 14, height: 14),
+                  child: Image.asset("icons/icon_about_image.png",
+                      width: 14, height: 14),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Color(0xffd5d5d5),
-                      width: 1.0
-                    ),
-                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    color: Color(0xfff4f4f4)
-                  ),
+                      border: Border.all(color: Color(0xffd5d5d5), width: 1.0),
+                      borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                      color: Color(0xfff4f4f4)),
                   padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
                   margin: EdgeInsets.only(right: 15),
                 ),
@@ -526,16 +549,16 @@ class ImageManagerState extends State<ImageManagerPage> {
           color: Color(0xfff6f6f6),
         ),
         Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
-
         Expanded(
             child: Container(
-              child: ExtendedImageGesturePageView.builder(itemBuilder: (context, index) {
-                return ExtendedImage.network(
-                 "${_URL_SERVER}/stream/file?path=${_allImageItems[_currentImageIndex].path}",
-                  mode: ExtendedImageMode.gesture,
-                  fit: BoxFit.contain,
-                  initGestureConfigHandler: (state) {
-                    return GestureConfig(
+          child: ExtendedImageGesturePageView.builder(
+            itemBuilder: (context, index) {
+              return ExtendedImage.network(
+                "${_URL_SERVER}/stream/file?path=${_allImageItems[_currentImageIndex].path}",
+                mode: ExtendedImageMode.gesture,
+                fit: BoxFit.contain,
+                initGestureConfigHandler: (state) {
+                  return GestureConfig(
                       minScale: 1.0,
                       animationMinScale: 1.0,
                       maxScale: 2.0,
@@ -551,38 +574,37 @@ class ImageManagerState extends State<ImageManagerPage> {
                           _currentImageScale = detail?.totalScale ?? 1.0;
 
                           // 设置Slider的值
-                          _imageSizeSliderValue = (_currentImageScale - 1.0) / 1.0 * 100;
+                          _imageSizeSliderValue =
+                              (_currentImageScale - 1.0) / 1.0 * 100;
 
-                          debugPrint("Image slider value: ${_imageSizeSliderValue}");
+                          debugPrint(
+                              "Image slider value: ${_imageSizeSliderValue}");
                         });
-                      }
-                    );
-                  },
-                );
-              },
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentImageIndex = index;
-                  });
+                      });
                 },
-                itemCount: _allImageItems.length,
-              ),
-              color: Colors.white,
-            )
-        )
-
+              );
+            },
+            onPageChanged: (index) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+            itemCount: _allImageItems.length,
+          ),
+          color: Colors.white,
+        ))
       ],
     );
   }
-  
-  void openImageDetail(List<AlbumItem> images, AlbumItem current) {
+
+  void openImageDetail(List<ImageItem> images, ImageItem current) {
     setState(() {
       _allImageItems = images;
       _currentImageIndex = images.indexOf(current);
       _openImageDetail = true;
     });
   }
-  
+
   void backToImageListPage() {
     setState(() {
       _openImageDetail = false;
@@ -595,7 +617,7 @@ class ImageManagerState extends State<ImageManagerPage> {
         setState(() {
           _currentImageScale = 1.5;
         });
-      } else if(_currentImageScale < 2.0) {
+      } else if (_currentImageScale < 2.0) {
         setState(() {
           _currentImageScale = 2.0;
         });
@@ -627,7 +649,7 @@ class ImageManagerState extends State<ImageManagerPage> {
   void _openPreImage() {
     if (_currentImageIndex > 0) {
       setState(() {
-        _currentImageIndex --;
+        _currentImageIndex--;
       });
     }
   }
@@ -635,11 +657,14 @@ class ImageManagerState extends State<ImageManagerPage> {
   void _openNextImage() {
     if (_currentImageIndex < _allImageItems.length - 1) {
       setState(() {
-        _currentImageIndex ++;
+        _currentImageIndex++;
       });
     }
   }
 
-  // @override
-  // bool get wantKeepAlive => true;
+  void setDeleteBtnEnabled(bool enable) {
+    setState(() {
+      _isDeleteBtnEnabled = enable;
+    });
+  }
 }

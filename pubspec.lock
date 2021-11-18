@@ -555,6 +555,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.1+1"
+  rflutter_alert:
+    dependency: "direct main"
+    description:
+      name: rflutter_alert
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.4"
   rxdart:
     dependency: transitive
     description:
