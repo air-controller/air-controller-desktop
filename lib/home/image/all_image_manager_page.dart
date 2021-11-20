@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
@@ -41,7 +42,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
   // String? _selectedImageId;
-  ImageItem? _selectedImage;
+  List<ImageItem> _selectedImages = [];
 
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
   final _IMAGE_GRID_RADIUS = 1.0;
@@ -49,12 +50,26 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
   bool _isLoadingCompleted = false;
+  // 用于监听Control、Shift键按下
+  late final FocusNode _focusNode;
+  late final FocusAttachment _nodeAttachment;
+  bool _isControlDown = false;
+  bool _isShiftDown = false;
 
   _AllImageManagerPageState();
 
   @override
   void initState() {
     super.initState();
+
+    _focusNode = FocusNode(debugLabel: 'All image page');
+    _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
+        _isControlDown = event.isControlPressed;
+
+        _isShiftDown = event.isShiftPressed;
+        return KeyEventResult.handled;
+    });
+    _focusNode.requestFocus();
 
     _getAllImages((images) {
       setState(() {
@@ -67,8 +82,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
         _isLoadingCompleted = true;
       });
     });
-
-
   }
 
   void setArrangeMode(int arrangeMode) {
@@ -80,20 +93,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    _nodeAttachment.reparent();
 
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
     Widget content = _createContent(_arrangeMode);
 
-    return Stack(children: [
-      content,
-      Visibility(
-        child: Container(child: spinKit, color: Colors.white),
-        maintainSize: false,
-        visible: !_isLoadingCompleted,
-      )
-    ]);
+    return GestureDetector(
+      child: Stack(children: [
+        content,
+        Visibility(
+          child: Container(child: spinKit, color: Colors.white),
+          maintainSize: false,
+          visible: !_isLoadingCompleted,
+        )
+      ]),
+      onTap: () {
+        _clearSelectedImages();
+      },
+    );
+  }
+
+  void _clearSelectedImages() {
+    setState(() {
+      _selectedImages.clear();
+    });
   }
 
   Widget _createContent(int arrangeMode) {
@@ -140,11 +165,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             ),
             decoration: BoxDecoration(
                 border: new Border.all(
-                    color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                    width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                    color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
+                    width: _isContainsImage(_selectedImages, image)? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                 ),
                 borderRadius: new BorderRadius.all(
-                    Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                    Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                 )
             ),
           );
@@ -155,6 +180,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+  }
+
+  bool _isContainsImage(List<ImageItem> images, ImageItem current) {
+    for (ImageItem imageItem in images) {
+      if (imageItem.id == current.id) return true;
+    }
+
+    return false;
   }
   
   Widget _createDailyContent() {
@@ -242,11 +275,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                     ),
                     decoration: BoxDecoration(
                         border: new Border.all(
-                            color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                            width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                            color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
+                            width: _isContainsImage(_selectedImages, image)? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                         ),
                         borderRadius: new BorderRadius.all(
-                            Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                            Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                         )
                     ),
                   );
@@ -351,11 +384,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
                       ),
                       decoration: BoxDecoration(
                           border: new Border.all(
-                              color: _selectedImage?.id == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                              width: _selectedImage?.id == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                              color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
+                              width: _isContainsImage(_selectedImages, image) ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                           ),
                           borderRadius: new BorderRadius.all(
-                              Radius.circular(_selectedImage?.id == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                              Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                           )
                       ),
                     );
@@ -411,12 +444,84 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     });
   }
 
-  void _setImageSelected(ImageItem? image) {
-    setState(() {
-      _selectedImage = image;
-    });
+  void _setImageSelected(ImageItem image) {
+    debugPrint("Shift key down status: $_isShiftDown");
+    debugPrint("Control key down status: $_isControlDown");
 
-    _setDeleteBtnEnabled(null != _selectedImage);
+    if (!_isContainsImage(_selectedImages, image)) {
+      if (_isControlDown) {
+        setState(() {
+          _selectedImages.add(image);
+        });
+      } else if (_isShiftDown) {
+        if (_selectedImages.length == 0) {
+          setState(() {
+            _selectedImages.add(image);
+          });
+        } else if (_selectedImages.length == 1) {
+          int index = _allImages.indexOf(_selectedImages[0]);
+
+          int current = _allImages.indexOf(image);
+
+          if (current > index) {
+            setState(() {
+              _selectedImages = _allImages.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedImages.length; i++) {
+            ImageItem current = _selectedImages[i];
+            int index = _allImages.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _allImages.indexOf(image);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${image.id}");
+    }
+
+    _setDeleteBtnEnabled(_selectedImages.length > 0);
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
@@ -456,43 +561,43 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   void _deleteSingleImage() {
-    if (null == _selectedImage) {
-      debugPrint("Selected image is null");
-      return;
-    }
-
-    var url = Uri.parse("${_URL_SERVER}/image/delete");
-    http.post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "paths": [_selectedImage?.path]
-        }))
-        .then((response) {
-      if (response.statusCode != 200) {
-        _showErrorDialog(response.reasonPhrase != null
-            ? response.reasonPhrase!
-            : "Unknown error");
-      } else {
-        var body = response.body;
-        debugPrint("Delete single image: $body");
-
-        final map = jsonDecode(body);
-        final httpResponseEntity = ResponseEntity.fromJson(map);
-
-        if (httpResponseEntity.isSuccessful()) {
-          setState(() {
-            _allImages.removeWhere((image) => image.id == _selectedImage?.id);
-            _setImageSelected(null);
-          });
-        } else {
-          _showErrorDialog(httpResponseEntity.msg == null
-              ? "Unknown error"
-              : httpResponseEntity.msg!);
-        }
-      }
-    }).catchError((error) {
-      _showErrorDialog(error.toString());
-    });
+    // if (null == _selectedImage) {
+    //   debugPrint("Selected image is null");
+    //   return;
+    // }
+    //
+    // var url = Uri.parse("${_URL_SERVER}/image/delete");
+    // http.post(url,
+    //     headers: {"Content-Type": "application/json"},
+    //     body: json.encode({
+    //       "paths": [_selectedImage?.path]
+    //     }))
+    //     .then((response) {
+    //   if (response.statusCode != 200) {
+    //     _showErrorDialog(response.reasonPhrase != null
+    //         ? response.reasonPhrase!
+    //         : "Unknown error");
+    //   } else {
+    //     var body = response.body;
+    //     debugPrint("Delete single image: $body");
+    //
+    //     final map = jsonDecode(body);
+    //     final httpResponseEntity = ResponseEntity.fromJson(map);
+    //
+    //     if (httpResponseEntity.isSuccessful()) {
+    //       setState(() {
+    //         _allImages.removeWhere((image) => image.id == _selectedImage?.id);
+    //         _setImageSelected(null);
+    //       });
+    //     } else {
+    //       _showErrorDialog(httpResponseEntity.msg == null
+    //           ? "Unknown error"
+    //           : httpResponseEntity.msg!);
+    //     }
+    //   }
+    // }).catchError((error) {
+    //   _showErrorDialog(error.toString());
+    // });
   }
   
   void _showErrorDialog(String error) {
@@ -520,4 +625,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _focusNode.dispose();
+  }
 }
