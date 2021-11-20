@@ -577,52 +577,52 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   void deleteImage() {
     _showConfirmDialog("确定删除该图片吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
       Navigator.of(context, rootNavigator: true).pop();
-      _deleteSingleImage();
+      _tryToDeleteImages();
     }, (context) {
         Navigator.of(context, rootNavigator: true).pop();
     });
   }
 
-  void _deleteSingleImage() {
-    // if (null == _selectedImage) {
-    //   debugPrint("Selected image is null");
-    //   return;
-    // }
-    //
-    // var url = Uri.parse("${_URL_SERVER}/image/delete");
-    // http.post(url,
-    //     headers: {"Content-Type": "application/json"},
-    //     body: json.encode({
-    //       "paths": [_selectedImage?.path]
-    //     }))
-    //     .then((response) {
-    //   if (response.statusCode != 200) {
-    //     _showErrorDialog(response.reasonPhrase != null
-    //         ? response.reasonPhrase!
-    //         : "Unknown error");
-    //   } else {
-    //     var body = response.body;
-    //     debugPrint("Delete single image: $body");
-    //
-    //     final map = jsonDecode(body);
-    //     final httpResponseEntity = ResponseEntity.fromJson(map);
-    //
-    //     if (httpResponseEntity.isSuccessful()) {
-    //       setState(() {
-    //         _allImages.removeWhere((image) => image.id == _selectedImage?.id);
-    //         _setImageSelected(null);
-    //       });
-    //     } else {
-    //       _showErrorDialog(httpResponseEntity.msg == null
-    //           ? "Unknown error"
-    //           : httpResponseEntity.msg!);
-    //     }
-    //   }
-    // }).catchError((error) {
-    //   _showErrorDialog(error.toString());
-    // });
+  void _tryToDeleteImages() {
+    if (_selectedImages.isEmpty) {
+      debugPrint("Selected images is empty");
+      return;
+    }
+
+    var url = Uri.parse("${_URL_SERVER}/image/delete");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "paths": _selectedImages.map((image) => image.path).toList()
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        _showErrorDialog(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Delete image: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          setState(() {
+            _allImages.removeWhere((image) => _selectedImages.any((element) => element.id == image.id));
+            _clearSelectedImages();
+          });
+        } else {
+          _showErrorDialog(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      _showErrorDialog(error.toString());
+    });
   }
-  
+
   void _showErrorDialog(String error) {
     Alert alert = Alert(
       context: context,
