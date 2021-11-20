@@ -316,7 +316,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
                               if (_isDeleteBtnEnabled) {
                                 if (_currentIndex == _INDEX_ALL_IMAGE) {
-                                  _allImageManagerPage.state?.deleteSingleImage();
+                                  _allImageManagerPage.state?.deleteImage();
                                   return;
                                 }
                               }

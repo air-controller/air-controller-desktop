@@ -428,56 +428,71 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.setDeleteBtnEnabled(enable);
   }
+  
+  void _showConfirmDialog(String content, String desc, String negativeText, String positiveText,
+      Function(BuildContext context) onPositiveClick, Function(BuildContext context) onNegativeClick) {
+      Dialog dialog = ConfirmDialogBuilder().content(content)
+          .desc(desc)
+          .negativeBtnText(negativeText)
+          .positiveBtnText(positiveText)
+          .onPositiveClick(onPositiveClick)
+          .onNegativeClick(onNegativeClick)
+          .build();
 
-  void deleteSingleImage() {
-    Dialog dialog = ConfirmDialogBuilder().content("测试内容")
-        .desc("测试描述")
-        .negativeBtnText("取消")
-        .positiveBtnText("删除")
-        .build();
-
-    showDialog<Dialog>(context: context, builder: (context) {
-      return dialog;
+      showDialog(context: context, builder: (context) {
+        return dialog;
+      },
+        barrierDismissible: false
+      );
+  }
+  
+  void deleteImage() {
+    _showConfirmDialog("确定删除该图片吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+      _deleteSingleImage();
+    }, (context) {
+        Navigator.of(context, rootNavigator: true).pop();
     });
+  }
 
+  void _deleteSingleImage() {
+    if (null == _selectedImage) {
+      debugPrint("Selected image is null");
+      return;
+    }
 
-    // if (null == _selectedImage) {
-    //   debugPrint("Selected image is null");
-    //   return;
-    // }
-    //
-    // var url = Uri.parse("${_URL_SERVER}/image/delete");
-    // http.post(url,
-    //     headers: {"Content-Type": "application/json"},
-    //     body: json.encode({
-    //       "path": _selectedImage?.path
-    //     }))
-    //     .then((response) {
-    //   if (response.statusCode != 200) {
-    //     _showErrorDialog(response.reasonPhrase != null
-    //         ? response.reasonPhrase!
-    //         : "Unknown error");
-    //   } else {
-    //     var body = response.body;
-    //     debugPrint("Delete single image: $body");
-    //
-    //     final map = jsonDecode(body);
-    //     final httpResponseEntity = ResponseEntity.fromJson(map);
-    //
-    //     if (httpResponseEntity.isSuccessful()) {
-    //       setState(() {
-    //         _allImages.removeWhere((image) => image.id == _selectedImage?.id);
-    //         _setImageSelected(null);
-    //       });
-    //     } else {
-    //       _showErrorDialog(httpResponseEntity.msg == null
-    //           ? "Unknown error"
-    //           : httpResponseEntity.msg!);
-    //     }
-    //   }
-    // }).catchError((error) {
-    //   _showErrorDialog(error.toString());
-    // });
+    var url = Uri.parse("${_URL_SERVER}/image/delete");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "paths": [_selectedImage?.path]
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        _showErrorDialog(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Delete single image: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          setState(() {
+            _allImages.removeWhere((image) => image.id == _selectedImage?.id);
+            _setImageSelected(null);
+          });
+        } else {
+          _showErrorDialog(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      _showErrorDialog(error.toString());
+    });
   }
   
   void _showErrorDialog(String error) {

@@ -5,11 +5,27 @@ class ConfirmDialogBuilder {
   String? descStr;
   String negativeBtnStr = "Cancel";
   String positiveBtnStr = "Sure";
+  final _OPERATE_BTN_HEIGHT = 35.0;
+  final _OPERATE_BTN_WIDTH = 110.0;
+  bool _isNegativeBtnDown = false;
+  bool _isPositiveBtnDown = false;
+  Function(BuildContext context)? _onPositiveClick;
+  Function(BuildContext context)? _onNegativeClick;
 
   ConfirmDialogBuilder();
 
   ConfirmDialogBuilder content(String content) {
     this.contentStr = content;
+    return this;
+  }
+
+  ConfirmDialogBuilder onPositiveClick(Function(BuildContext context)? onPositiveClick) {
+    _onPositiveClick = onPositiveClick;
+    return this;
+  }
+
+  ConfirmDialogBuilder onNegativeClick(Function(BuildContext context)? onNegativeClick) {
+    _onNegativeClick = onNegativeClick;
     return this;
   }
 
@@ -31,68 +47,124 @@ class ConfirmDialogBuilder {
   Dialog build() {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5)
+        borderRadius: BorderRadius.circular(10)
       ),
       backgroundColor: Color(0xffc6c6c6),
       elevation: 0,
-      child: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset("icons/ic_android.jpg", width: 30, height: 30),
-            Text(contentStr ?? "", style: TextStyle(
-              color: Color(0xff11171d),
-              fontSize: 14
-            )),
-            Text(descStr ?? "", style: TextStyle(
-                color: Color(0xff060f19),
-                fontSize: 14
-            )),
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          return Container(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset("icons/ic_android.jpg", width: 60, height: 60),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  child: Text(
-                    negativeBtnStr,
-                    style: TextStyle(
-                      color: Color(0xff383838),
-                      fontSize: 14.0
-                    )
+                  Container(
+                    child: Text(contentStr ?? "", style: TextStyle(
+                        color: Color(0xff3d3d3d),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600
+                    )),
+                    margin: EdgeInsets.only(top: 5),
                   ),
-                  decoration: BoxDecoration(
-                    color: Color(0xffd0cecf),
-                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                    border: Border.all(color: Color(0xffadacac), width: 3.0)
-                  ),
-                  width: 80,
-                ),
 
-                Container(
-                  child: Text(
-                      negativeBtnStr,
-                      style: TextStyle(
-                        color: Colors.white, fontSize: 14.0
-                      )
+                  Container(
+                    child: Text(descStr ?? "", style: TextStyle(
+                        color: Color(0xff262626),
+                        fontSize: 14
+                    )),
+                    margin: EdgeInsets.only(top: 5),
                   ),
-                  decoration: BoxDecoration(
-                      color: Color(0xff2d373e),
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      border: Border.all(color: Color(0xffadacac), width: 3.0)
-                  ),
-                  width: 80,
-                ),
-              ],
-            )
-          ]
-        ),
-        decoration: BoxDecoration(
-            color: Color(0xffc6c6c6),
-            borderRadius: BorderRadius.all(Radius.circular(5.0)),
-        ),
-        width: 300,
-        height: 200,
-      ),
+
+                  Container(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          child: Container(
+                            child: Text(
+                              negativeBtnStr,
+                              style: TextStyle(
+                                  color: Color(0xff383838),
+                                  fontSize: 14.0
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            decoration: BoxDecoration(
+                                color: _isNegativeBtnDown ? Color(0xffadaba7) : Color(0xffd0cecf),//adaba7
+                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                                border: Border.all(color: Color(0xffadacac), width: 3.0)
+                            ),
+                            width: _OPERATE_BTN_WIDTH,
+                            height: _OPERATE_BTN_HEIGHT,
+                            alignment: Alignment.center,
+                          ),
+
+                          onTapDown: (detail) {
+                            setState(() => _isNegativeBtnDown = true);
+                          },
+
+                          onTapUp: (detail) {
+                            setState(() => _isNegativeBtnDown = false);
+                          },
+
+                          onTapCancel: () {
+                            setState(() => _isNegativeBtnDown = false);
+                          },
+
+                          onTap: () {
+                            debugPrint("Negative button clicked");
+                            _onNegativeClick?.call(context);
+                          },
+                        ),
+
+                        GestureDetector(
+                          child: Container(
+                            child: Text(
+                              positiveBtnStr,
+                              style: TextStyle(
+                                color: Colors.white, fontSize: 14.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isPositiveBtnDown ? Color(0xff373a3d) : Color(0xff2d373e),
+                              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                            ),
+                            width: _OPERATE_BTN_WIDTH,
+                            height: _OPERATE_BTN_HEIGHT,
+                            margin: EdgeInsets.fromLTRB(15, 0, 0, 0),
+                            alignment: Alignment.center,
+                          ),
+                          onTap: () {
+                            debugPrint("Positive button clicked");
+                            _onPositiveClick?.call(context);
+                          },
+                          onTapDown: (detail) {
+                            setState(() => _isPositiveBtnDown = true);
+                          },
+                          onTapCancel: () {
+                            setState(() => _isPositiveBtnDown = false);
+                          },
+                          onTapUp: (detail) {
+                            setState(() => _isPositiveBtnDown = false);
+                          },
+                        )
+                      ],
+                    ),
+                    margin: EdgeInsets.only(top: 30),
+                  )
+                ]
+            ),
+            decoration: BoxDecoration(
+              color: Color(0xffc6c6c6),
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            ),
+            width: 260,
+            height: 210,
+          );
+        },
+      )
     );
   }
 }
