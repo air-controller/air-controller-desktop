@@ -65,8 +65,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     _focusNode = FocusNode(debugLabel: 'All image page');
     _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
         _isControlDown = event.isControlPressed;
-
         _isShiftDown = event.isShiftPressed;
+
+        bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
+        if (_isControlDown && isKeyAPressed) {
+          _setAllSelected();
+          debugPrint("Ctrl + A pressed...");
+        }
+
         return KeyEventResult.handled;
     });
     _focusNode.requestFocus();
@@ -81,6 +87,13 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       setState(() {
         _isLoadingCompleted = true;
       });
+    });
+  }
+
+  void _setAllSelected() {
+    setState(() {
+      _selectedImages.clear();
+      _selectedImages.addAll(_allImages);
     });
   }
 
@@ -519,6 +532,16 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       }
     } else {
       debugPrint("It's already contains this image, id: ${image.id}");
+
+      if (_isControlDown) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      } else if (_isShiftDown) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      }
     }
 
     _setDeleteBtnEnabled(_selectedImages.length > 0);
