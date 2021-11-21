@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 import '../model/Device.dart';
 import 'package:web_socket_channel/io.dart';
@@ -54,6 +58,8 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
             Device device = _convertToDevice(str);
             _onDeviceFind?.call(device);
 
+            _responseToDesktop(device.ip);
+
             debugPrint("Device: $device");
           } else {
             debugPrint("It's not valid, str: ${str}");
@@ -67,6 +73,24 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
     }).catchError((error) {
       debugPrint("startDiscover error: $error");
     });
+  }
+
+  void _responseToDesktop(String address) async {
+    DeviceInfoPlugin deviceInfo = new DeviceInfoPlugin();
+    String deviceName = "";
+    String? ip = "";
+
+    if (Platform.isMacOS) {
+      MacOsDeviceInfo macOsDeviceInfo = await deviceInfo.macOsInfo;
+      deviceName = macOsDeviceInfo.computerName;
+
+      NetworkInfo networkInfo = NetworkInfo();
+      ip = await networkInfo.getWifiIP();
+    }
+
+    String data = "${Constant.CMD_SEARCH_RES_PREFIX}${Constant.RADNOM_STR_RES_SEARCH}#${Constant.PLATFORM_MACOS}#$deviceName#$ip";
+    
+    this.udpSocket?.send(utf8.encode(data), InternetAddress(address, type: InternetAddressType.IPv4), Constant.PORT_SEARCH);
   }
 
   bool _isValidData(String data) {

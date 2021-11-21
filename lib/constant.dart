@@ -17,4 +17,8 @@ class Constant {
 
   /// 是否隐藏右上角DEBUG标记
   static const bool HIDE_DEBUG_MARK = true;
+
+  static const int PLATFORM_MACOS = 1;
+
+  static const int PLATFORM_UBUNTU = 2;
 }

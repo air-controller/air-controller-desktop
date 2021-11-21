@@ -52,9 +52,7 @@ class _WifiState extends State<MyHomePage> {
 
   var _randomLeft = 0;
   var _randomTop = 0;
-  final _devices = <Device>[
-    Device(1, "aaa", "192.168.1.1")
-  ];
+  final _devices = <Device>[];
 
   @override
   void initState() {
@@ -217,13 +215,10 @@ class _WifiState extends State<MyHomePage> {
             child: ElevatedButton(onPressed: () {
               final device = _devices[index];
 
-              DeviceConnectionManager.instance.onConnectSuccess((manager) {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return FileManagerWidget();
-                }));
-              });
-
-              DeviceConnectionManager.instance.connect(device);
+              DeviceConnectionManager.instance.currentDevice = device;
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return FileManagerWidget();
+              }));
             }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
       }))
     ]);
