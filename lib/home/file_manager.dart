@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_assistant_client/home/all_file_manager_page.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
@@ -25,24 +26,80 @@ class FileManagerWidget extends StatelessWidget {
 class FileManagerPage extends StatefulWidget {
   FileManagerPage({Key? key, required this.title}) : super(key: key) {}
 
+  FileManagerState? state;
+
   final String title;
 
   @override
-  State createState() => _FileManagerState();
+  State createState() {
+    state = FileManagerState();
+    return state!;
+  }
 }
 
-class _FileManagerState extends State<FileManagerPage> {
+class FileManagerState extends State<FileManagerPage> {
   final _icons_size = 30.0;
   final _tab_height = 50.0;
   final _icon_margin_hor = 10.0;
   final _tab_font_size = 16.0;
   final _tab_width = 210.0;
   final _color_tab_selected = "#ededed";
+
+  static final PAGE_INDEX_IMAGE = 0;
+  static final PAGE_INDEX_MUSIC = 1;
+  static final PAGE_INDEX_VIDEO = 2;
+  static final PAGE_INDEX_DOWNLOAD = 3;
+  static final PAGE_INDEX_ALL_FILE = 4;
+
   static final _DEFAULT_SELECTED_PAGE_INDEX = 0;
   int _selectedPageIndex = _DEFAULT_SELECTED_PAGE_INDEX;
+  // 用于监听Control、Shift键按下
+  late final FocusNode _focusNode;
+  late final FocusAttachment _nodeAttachment;
+  bool _isControlDown = false;
+  bool _isShiftDown = false;
+  
+  List<Function()> _ctrlAPressedCallbacks = [];
+  
+  @override
+  void initState() {
+    super.initState();
 
+    _focusNode = FocusNode(debugLabel: 'All image page');
+    _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
+      _isControlDown = event.isControlPressed;
+      _isShiftDown = event.isShiftPressed;
+
+      bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
+      if (_isControlDown && isKeyAPressed) {
+        debugPrint("Ctrl + A pressed...");
+
+        for (Function() callback in _ctrlAPressedCallbacks) {
+          callback.call();
+        }
+      }
+
+      return KeyEventResult.handled;
+    });
+    _focusNode.requestFocus();
+  }
+  
+  void addCtrlAPressedCallback(Function() callback) {
+    _ctrlAPressedCallbacks.add(callback);
+  }
+  
+  void removeCtrlAPressedCallback(Function() callback) {
+    _ctrlAPressedCallbacks.remove(callback);
+  }
+  
+  bool isControlDown() => _isControlDown;
+
+  bool isShiftDown() => _isShiftDown;
+  
   @override
   Widget build(BuildContext context) {
+    _nodeAttachment.reparent();
+
     final pageController = PageController(initialPage: _selectedPageIndex);
 
     Color getTabBgColor(int currentIndex) {
@@ -209,5 +266,16 @@ class _FileManagerState extends State<FileManagerPage> {
               },
               controller: pageController))
     ]);
+  }
+
+  int selectedTabIndex() {
+    return _selectedPageIndex;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _focusNode.dispose();
   }
 }

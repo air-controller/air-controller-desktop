@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
@@ -41,7 +42,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   List<ImageItem> _allImages = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  // String? _selectedImageId;
   List<ImageItem> _selectedImages = [];
 
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
@@ -50,11 +50,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
   bool _isLoadingCompleted = false;
-  // 用于监听Control、Shift键按下
-  late final FocusNode _focusNode;
-  late final FocusAttachment _nodeAttachment;
-  bool _isControlDown = false;
-  bool _isShiftDown = false;
+
+  late Function() _ctrlAPressedCallback;
 
   _AllImageManagerPageState();
 
@@ -62,32 +59,47 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   void initState() {
     super.initState();
 
-    _focusNode = FocusNode(debugLabel: 'All image page');
-    _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
-        _isControlDown = event.isControlPressed;
-        _isShiftDown = event.isShiftPressed;
+    _ctrlAPressedCallback = () {
+      if (_isFront()) {
+        _setAllSelected();
+      }
+      debugPrint("Ctrl + A pressed...");
+    };
 
-        bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
-        if (_isControlDown && isKeyAPressed) {
-          _setAllSelected();
-          debugPrint("Ctrl + A pressed...");
-        }
-
-        return KeyEventResult.handled;
-    });
-    _focusNode.requestFocus();
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllImages((images) {
       setState(() {
         _allImages = images;
         _isLoadingCompleted = true;
       });
+      updateBottomItemNum();
     }, (error) {
       print("Get all images error: $error");
       setState(() {
         _isLoadingCompleted = true;
       });
     });
+  }
+
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
   void _setAllSelected() {
@@ -107,7 +119,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _nodeAttachment.reparent();
 
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
@@ -460,15 +471,15 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   void _setImageSelected(ImageItem image) {
-    debugPrint("Shift key down status: $_isShiftDown");
-    debugPrint("Control key down status: $_isControlDown");
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
 
     if (!_isContainsImage(_selectedImages, image)) {
-      if (_isControlDown) {
+      if (_isControlDown()) {
         setState(() {
           _selectedImages.add(image);
         });
-      } else if (_isShiftDown) {
+      } else if (_isShiftDown()) {
         if (_selectedImages.length == 0) {
           setState(() {
             _selectedImages.add(image);
@@ -535,11 +546,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     } else {
       debugPrint("It's already contains this image, id: ${image.id}");
 
-      if (_isControlDown) {
+      if (_isControlDown()) {
         setState(() {
           _selectedImages.remove(image);
         });
-      } else if (_isShiftDown) {
+      } else if (_isShiftDown()) {
         setState(() {
           _selectedImages.remove(image);
         });
@@ -657,10 +668,22 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, _selectedImages.length);
   }
 
+  // 判断当前页面是否在前台显示
+  bool _isFront() {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    int? leftTabIndex = fileManagerPage?.state?.selectedTabIndex();
+
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    int? imageTabIndex = imageManagerPage?.state?.selectedIndex();
+
+    return leftTabIndex == FileManagerState.PAGE_INDEX_IMAGE
+        && imageTabIndex == ImageManagerState.INDEX_ALL_IMAGE;
+  }
+
   @override
   void dispose() {
     super.dispose();
 
-    _focusNode.dispose();
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
   }
 }

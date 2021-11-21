@@ -2,8 +2,10 @@ import 'dart:collection';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
@@ -38,7 +40,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
   List<ImageItem> _allImages = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  String? _selectedImageId;
+  List<ImageItem> _selectedImages = [];
 
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
   final _IMAGE_GRID_RADIUS = 1.0;
@@ -47,17 +49,29 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
   bool _isLoadingCompleted = false;
 
+  late Function() _ctrlAPressedCallback;
+
   _AlbumImageManagerPageState();
 
   @override
   void initState() {
     super.initState();
 
+    _ctrlAPressedCallback = () {
+      if (_isFront()) {
+        _setAllSelected();
+      }
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
+
     _getAlbumImages((images) {
       setState(() {
         _allImages = images;
         _isLoadingCompleted = true;
       });
+      updateBottomItemNum();
     }, (error) {
       print("Get all images error: $error");
       setState(() {
@@ -72,6 +86,41 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
     });
   }
 
+  void _setAllSelected() {
+    setState(() {
+      _selectedImages.clear();
+      _selectedImages.addAll(_allImages);
+      updateBottomItemNum();
+    });
+  }
+
+  void _clearSelectedImages() {
+    setState(() {
+      _selectedImages.clear();
+      updateBottomItemNum();
+    });
+  }
+
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -81,14 +130,123 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
 
     Widget content = _createContent(_arrangeMode);
 
-    return Stack(children: [
-      content,
-      Visibility(
-        child: Container(child: spinKit, color: Colors.white),
-        maintainSize: false,
-        visible: !_isLoadingCompleted,
-      )
-    ]);
+    return GestureDetector(
+      child: Stack(children: [
+        content,
+        Visibility(
+          child: Container(child: spinKit, color: Colors.white),
+          maintainSize: false,
+          visible: !_isLoadingCompleted,
+        )
+      ]),
+      onTap: () {
+        _clearSelectedImages();
+      },
+    );
+  }
+
+  bool _isContainsImage(List<ImageItem> images, ImageItem current) {
+    for (ImageItem imageItem in images) {
+      if (imageItem.id == current.id) return true;
+    }
+
+    return false;
+  }
+
+  void _setDeleteBtnEnabled(bool enable) {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+  }
+
+  void _setImageSelected(ImageItem image) {
+    debugPrint("Shift key down status: $_isShiftDown");
+    debugPrint("Control key down status: $_isControlDown");
+
+    if (!_isContainsImage(_selectedImages, image)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedImages.add(image);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedImages.length == 0) {
+          setState(() {
+            _selectedImages.add(image);
+          });
+        } else if (_selectedImages.length == 1) {
+          int index = _allImages.indexOf(_selectedImages[0]);
+
+          int current = _allImages.indexOf(image);
+
+          if (current > index) {
+            setState(() {
+              _selectedImages = _allImages.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedImages.length; i++) {
+            ImageItem current = _selectedImages[i];
+            int index = _allImages.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _allImages.indexOf(image);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${image.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedImages.length > 0);
+    updateBottomItemNum();
   }
 
   Widget _createContent(int arrangeMode) {
@@ -127,7 +285,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
               ),
               onTap: () {
                 setState(() {
-                  _selectedImageId = image.id;
+                  _setImageSelected(image);
                 });
               },
               onDoubleTap: () {
@@ -137,11 +295,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
             ),
             decoration: BoxDecoration(
                 border: new Border.all(
-                    color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                    width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                    color: _isContainsImage(_selectedImages, image)  ? Color(0xff5d86ec) : Color(0xffdedede),
+                    width: _isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                 ),
                 borderRadius: new BorderRadius.all(
-                    Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                    Radius.circular(_isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                 )
             ),
           );
@@ -232,7 +390,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
                         ),
                         onTap: () {
                           setState(() {
-                            _selectedImageId = image.id;
+                            _setImageSelected(image);
                           });
                         },
                         onDoubleTap: () {
@@ -241,11 +399,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
                       ),
                       decoration: BoxDecoration(
                           border: new Border.all(
-                              color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                              width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                              color: _isContainsImage(_selectedImages, image)  ? Color(0xff5d86ec) : Color(0xffdedede),
+                              width: _isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                           ),
                           borderRadius: new BorderRadius.all(
-                              Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                              Radius.circular(_isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                           )
                       ),
                     );
@@ -343,7 +501,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
                         ),
                         onTap: () {
                           setState(() {
-                            _selectedImageId = image.id;
+                            _setImageSelected(image);
                           });
                         },
                         onDoubleTap: () {
@@ -352,11 +510,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
                       ),
                       decoration: BoxDecoration(
                           border: new Border.all(
-                              color: _selectedImageId == image.id ? Color(0xff5d86ec) : Color(0xffdedede),
-                              width: _selectedImageId == image.id ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                              color: _isContainsImage(_selectedImages, image)  ? Color(0xff5d86ec) : Color(0xffdedede),
+                              width: _isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
                           ),
                           borderRadius: new BorderRadius.all(
-                              Radius.circular(_selectedImageId == image.id ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
+                              Radius.circular(_isContainsImage(_selectedImages, image)  ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
                           )
                       ),
                     );
@@ -422,6 +580,26 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
     imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, 1);
   }
 
+  // 判断当前页面是否在前台显示
+  bool _isFront() {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    int? imageTabIndex = imageManagerPage?.state?.selectedIndex();
+
+    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    int? leftTabIndex = fileManagerPage?.state?.selectedTabIndex();
+
+    return leftTabIndex == FileManagerState.PAGE_INDEX_IMAGE
+        && imageTabIndex == ImageManagerState.INDEX_CAMERA_ALBUM;
+  }
+
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+  }
 }

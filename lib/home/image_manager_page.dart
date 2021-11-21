@@ -28,11 +28,11 @@ class ImageManagerPage extends StatefulWidget {
 }
 
 class ImageManagerState extends State<ImageManagerPage> {
-  static final _INDEX_ALL_IMAGE = 0;
-  static final _INDEX_CAMERA_ALBUM = 1;
-  static final _INDEX_ALL_ALBUM = 2;
+  static final INDEX_ALL_IMAGE = 0;
+  static final INDEX_CAMERA_ALBUM = 1;
+  static final INDEX_ALL_ALBUM = 2;
 
-  int _currentIndex = _INDEX_ALL_IMAGE;
+  int _currentIndex = INDEX_ALL_IMAGE;
   final _divider_line_color = Color(0xffe0e0e0);
 
   static const _ARRANGE_MODE_GRID = 0;
@@ -169,29 +169,29 @@ class ImageManagerState extends State<ImageManagerPage> {
                   child: Container(
                     child: MaterialSegmentedControl<int>(
                       children: {
-                        _INDEX_ALL_IMAGE: Container(
+                        INDEX_ALL_IMAGE: Container(
                           child: Text("所有图片",
                               style: TextStyle(
                                   inherit: false,
                                   fontSize: 12,
-                                  color: getSegmentBtnColor(_INDEX_ALL_IMAGE))),
+                                  color: getSegmentBtnColor(INDEX_ALL_IMAGE))),
                           padding: EdgeInsets.only(left: 10, right: 10),
                         ),
-                        _INDEX_CAMERA_ALBUM: Container(
+                        INDEX_CAMERA_ALBUM: Container(
                           child: Text("相机相册",
                               style: TextStyle(
                                   inherit: false,
                                   fontSize: 12,
                                   color:
-                                      getSegmentBtnColor(_INDEX_CAMERA_ALBUM))),
+                                      getSegmentBtnColor(INDEX_CAMERA_ALBUM))),
                         ),
-                        _INDEX_ALL_ALBUM: Container(
+                        INDEX_ALL_ALBUM: Container(
                             child: Text("所有相册",
                                 style: TextStyle(
                                     inherit: false,
                                     fontSize: 12,
                                     color:
-                                        getSegmentBtnColor(_INDEX_ALL_ALBUM))))
+                                        getSegmentBtnColor(INDEX_ALL_ALBUM))))
                       },
                       selectionIndex: _currentIndex,
                       borderColor: Color(0xffdedede),
@@ -205,9 +205,9 @@ class ImageManagerState extends State<ImageManagerPage> {
                           _currentIndex = index;
                           pageController.jumpToPage(_currentIndex);
 
-                          if (_currentIndex == _INDEX_ALL_IMAGE) {
+                          if (_currentIndex == INDEX_ALL_IMAGE) {
                             _allImageManagerPage.state?.updateBottomItemNum();
-                          } else if (_currentIndex == _INDEX_CAMERA_ALBUM) {
+                          } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
                             _albumImageManagerPage.state?.updateBottomItemNum();
                           } else {
                             _allAlbumManagerPage.state?.updateBottomItemNum();
@@ -305,7 +305,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                         maintainSize: true,
                         maintainState: true,
                         maintainAnimation: true,
-                        visible: _currentIndex != _INDEX_ALL_ALBUM,
+                        visible: _currentIndex != INDEX_ALL_ALBUM,
                       ),
                       Container(
                           child: GestureDetector(
@@ -330,7 +330,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                               debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
 
                               if (_isDeleteBtnEnabled) {
-                                if (_currentIndex == _INDEX_ALL_IMAGE) {
+                                if (_currentIndex == INDEX_ALL_IMAGE) {
                                   _allImageManagerPage.state?.deleteImage();
                                   return;
                                 }
@@ -688,5 +688,9 @@ class ImageManagerState extends State<ImageManagerPage> {
       _allItemNum = allItemNum;
       _selectedItemNum = selectedItemNum;
     });
+  }
+  
+  int selectedIndex() {
+    return _currentIndex;
   }
 }

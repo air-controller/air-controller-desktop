@@ -68,6 +68,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
         _allAlbums = images;
         _isLoadingCompleted = true;
       });
+      updateBottomItemNum();
     }, (error) {
       print("Get all images error: $error");
       setState(() {
