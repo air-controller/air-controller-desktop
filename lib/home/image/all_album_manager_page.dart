@@ -7,6 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import '../../model/AlbumItem.dart';
 import 'package:http/http.dart' as http;
@@ -36,7 +37,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://192.168.0.102:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   List<AlbumItem> _allAlbums = [];
 
