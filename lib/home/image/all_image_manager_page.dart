@@ -18,7 +18,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class AllImageManagerPage extends StatefulWidget {
   _AllImageManagerPageState? state;
-  // ImageManagerState imageManagerState;
 
   AllImageManagerPage();
 
@@ -95,6 +94,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     setState(() {
       _selectedImages.clear();
       _selectedImages.addAll(_allImages);
+      updateBottomItemNum();
     });
   }
 
@@ -132,6 +132,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   void _clearSelectedImages() {
     setState(() {
       _selectedImages.clear();
+      updateBottomItemNum();
     });
   }
 
@@ -546,6 +547,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     }
 
     _setDeleteBtnEnabled(_selectedImages.length > 0);
+    updateBottomItemNum();
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
@@ -649,6 +651,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
   @override
   bool get wantKeepAlive => true;
+
+  void updateBottomItemNum() {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, _selectedImages.length);
+  }
 
   @override
   void dispose() {

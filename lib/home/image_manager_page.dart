@@ -7,6 +7,7 @@ import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_image_manager_page.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 
 import '../model/ImageItem.dart';
 
@@ -52,11 +53,13 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   bool _openImageDetail = false;
 
-  final _URL_SERVER = "http://192.168.0.102:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   double _currentImageScale = 1.0;
   // 标记删除按钮是否可以点击
   bool _isDeleteBtnEnabled = false;
+  int _allItemNum = 0;
+  int _selectedItemNum = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,6 @@ class ImageManagerState extends State<ImageManagerPage> {
       }
     }
 
-    String itemStr = "共0项";
     final pageController = PageController(initialPage: _currentIndex);
 
     String _getArrangeModeIcon(int mode) {
@@ -150,6 +152,11 @@ class ImageManagerState extends State<ImageManagerPage> {
       } else {
         return Color(0xfff5f5f5);
       }
+    }
+
+    String itemNumStr = "共${_allItemNum}项";
+    if (_selectedItemNum > 0) {
+      itemNumStr = "$itemNumStr (选中${_selectedItemNum}项)";
     }
 
     return Column(
@@ -197,6 +204,14 @@ class ImageManagerState extends State<ImageManagerPage> {
                         setState(() {
                           _currentIndex = index;
                           pageController.jumpToPage(_currentIndex);
+
+                          if (_currentIndex == _INDEX_ALL_IMAGE) {
+                            _allImageManagerPage.state?.updateBottomItemNum();
+                          } else if (_currentIndex == _INDEX_CAMERA_ALBUM) {
+                            _albumImageManagerPage.state?.updateBottomItemNum();
+                          } else {
+                            _allAlbumManagerPage.state?.updateBottomItemNum();
+                          }
                         });
                       },
                     ),
@@ -356,7 +371,7 @@ class ImageManagerState extends State<ImageManagerPage> {
         Container(
           child: Align(
             alignment: Alignment.center,
-            child: Text(itemStr,
+            child: Text(itemNumStr,
                 style: TextStyle(
                     inherit: false, fontSize: 12, color: Color(0xff646464))),
           ),
@@ -665,6 +680,13 @@ class ImageManagerState extends State<ImageManagerPage> {
   void setDeleteBtnEnabled(bool enable) {
     setState(() {
       _isDeleteBtnEnabled = enable;
+    });
+  }
+
+  void updateBottomItemNumber(int allItemNum, int selectedItemNum) {
+    setState(() {
+      _allItemNum = allItemNum;
+      _selectedItemNum = selectedItemNum;
     });
   }
 }

@@ -14,19 +14,18 @@ import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class AlbumImageManagerPage extends StatefulWidget {
-  _AlbumImageManagerPageState? _allImageManagerPageState;
-  // ImageManagerState imageManagerState;
+  _AlbumImageManagerPageState? state;
 
   AlbumImageManagerPage();
 
   @override
   State<StatefulWidget> createState() {
-    _allImageManagerPageState = _AlbumImageManagerPageState();
-    return _allImageManagerPageState!;
+    state = _AlbumImageManagerPageState();
+    return state!;
   }
 
   void setArrangeMode(int arrangeMode) {
-    _allImageManagerPageState?.setArrangeMode(arrangeMode);
+    state?.setArrangeMode(arrangeMode);
   }
 }
 
@@ -416,6 +415,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage> with Auto
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
     ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.openImageDetail(images, current);
+  }
+
+  void updateBottomItemNum() {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, 1);
   }
 
   @override

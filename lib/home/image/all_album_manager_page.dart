@@ -17,19 +17,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../image_preview/image_preview_page.dart';
 
 class AllAlbumManagerPage extends StatefulWidget {
-  _AllAlbumManagerPageState? _allImageManagerPageState;
-  // ImageManagerState imageManagerState;
+  _AllAlbumManagerPageState? state;
 
   AllAlbumManagerPage();
 
   @override
   State<StatefulWidget> createState() {
-    _allImageManagerPageState = _AllAlbumManagerPageState();
-    return _allImageManagerPageState!;
+    state = _AllAlbumManagerPageState();
+    return state!;
   }
 
   void setArrangeMode(int arrangeMode) {
-    _allImageManagerPageState?.setArrangeMode(arrangeMode);
+    state?.setArrangeMode(arrangeMode);
   }
 }
 
@@ -280,7 +279,9 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     });
   }
 
-  void _openImageDetail(List<AlbumItem> images, AlbumItem current) {
+  void updateBottomItemNum() {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.updateBottomItemNumber(_allAlbums.length, 0);
   }
 
   @override
