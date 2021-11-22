@@ -101,6 +101,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       _selectedAlbums.clear();
       _selectedAlbums.addAll(_allAlbums);
       updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
     });
   }
 

@@ -119,6 +119,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
       _selectedImages.clear();
       _selectedImages.addAll(_allImages);
       updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
     });
   }
 
