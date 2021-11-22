@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -17,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../util/event_bus.dart';
 
 class AllImageManagerPage extends StatefulWidget {
   _AllImageManagerPageState? state;
@@ -161,6 +164,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     setState(() {
       _selectedImages.clear();
       updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
     });
   }
 
@@ -593,9 +597,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
+  }
+
+  void updateDeleteBtnStatus() {
+    _setDeleteBtnEnabled(_selectedImages.length > 0);
   }
 
   void _showConfirmDialog(
@@ -692,10 +698,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   bool get wantKeepAlive => true;
 
   void updateBottomItemNum() {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state
-        ?.updateBottomItemNumber(_allImages.length, _selectedImages.length);
+    eventBus.fire(UpdateBottomItemNum(_allImages.length, _selectedImages.length));
   }
 
   // 判断当前页面是否在前台显示

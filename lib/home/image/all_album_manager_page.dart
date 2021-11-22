@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
@@ -17,6 +19,7 @@ import 'dart:convert';
 import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../image_preview/image_preview_page.dart';
+import '../../util/event_bus.dart';
 
 class AllAlbumManagerPage extends StatefulWidget {
   _AllAlbumManagerPageState? state;
@@ -142,7 +145,12 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     setState(() {
       _selectedAlbums.clear();
       updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
     });
+  }
+
+  void updateDeleteBtnStatus() {
+    _setDeleteBtnEnabled(_selectedAlbums.length > 0);
   }
 
   Widget _createContent(int arrangeMode) {
@@ -379,8 +387,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
   }
 
   bool _isContainsImage(List<AlbumItem> albums, AlbumItem current) {
@@ -452,8 +459,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   void updateBottomItemNum() {
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.updateBottomItemNumber(_allAlbums.length, 0);
+    eventBus.fire(UpdateBottomItemNum(_allAlbums.length, _selectedAlbums.length));
   }
 
   // 判断当前页面是否在前台显示

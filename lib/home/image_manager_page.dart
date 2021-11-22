@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-
+import 'package:mobile_assistant_client/util/event_bus.dart';
+import '../event/update_bottom_item_num.dart';
 import '../model/ImageItem.dart';
 
 class ImageManagerPage extends StatefulWidget {
@@ -60,6 +64,30 @@ class ImageManagerState extends State<ImageManagerPage> {
   bool _isDeleteBtnEnabled = false;
   int _allItemNum = 0;
   int _selectedItemNum = 0;
+
+  StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
+  StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _registerEventBus();
+  }
+
+  void _registerEventBus() {
+    _updateDeleteBtnStream = eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+      setDeleteBtnEnabled(event.isEnable);
+    });
+
+    _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
+      updateBottomItemNumber(event.totalNum, event.selectedNum);
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateDeleteBtnStream?.cancel();
+    _updateBottomItemNumStream?.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +240,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                           } else {
                             _allAlbumManagerPage.state?.updateBottomItemNum();
                           }
+                          _updateDeleteBtnStatus();
                         });
                       },
                     ),
@@ -677,6 +706,16 @@ class ImageManagerState extends State<ImageManagerPage> {
     }
   }
 
+  void _updateDeleteBtnStatus () {
+    if (_currentIndex == INDEX_ALL_IMAGE) {
+      _allImageManagerPage.state?.updateDeleteBtnStatus();
+    } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
+      _albumImageManagerPage.state?.updateDeleteBtnStatus();
+    } else {
+      _allAlbumManagerPage.state?.updateDeleteBtnStatus;
+    }
+  }
+
   void setDeleteBtnEnabled(bool enable) {
     setState(() {
       _isDeleteBtnEnabled = enable;
@@ -692,5 +731,12 @@ class ImageManagerState extends State<ImageManagerPage> {
   
   int selectedIndex() {
     return _currentIndex;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _unRegisterEventBus();
   }
 }

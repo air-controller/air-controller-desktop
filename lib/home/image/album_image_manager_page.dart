@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -15,6 +16,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../model/ResponseEntity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../util/event_bus.dart';
+import '../../event/update_delete_btn_status.dart';
 
 class AlbumImageManagerPage extends StatefulWidget {
   _AlbumImageManagerPageState? state;
@@ -96,6 +99,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
       _selectedImages.clear();
       _selectedImages.addAll(_allImages);
       updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
     });
   }
 
@@ -103,6 +107,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     setState(() {
       _selectedImages.clear();
       updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
     });
   }
 
@@ -128,6 +133,10 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     FileManagerPage? fileManagerPage =
         context.findAncestorWidgetOfExactType<FileManagerPage>();
     fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void updateDeleteBtnStatus() {
+    _setDeleteBtnEnabled(_selectedImages.length > 0);
   }
 
   @override
@@ -170,9 +179,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
   }
 
   void _setImageSelected(ImageItem image) {
@@ -602,9 +609,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   }
 
   void updateBottomItemNum() {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, 1);
+    eventBus.fire(UpdateBottomItemNum(_allImages.length, _selectedImages.length));
   }
 
   // 判断当前页面是否在前台显示
