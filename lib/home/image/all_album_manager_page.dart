@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/AlbumItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -41,7 +43,8 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   List<AlbumItem> _allAlbums = [];
 
   int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  String? _selectedAlbumId;
+  
+  List<AlbumItem> _selectedAlbums = [];
   
   bool _isLoadingCompleted = false;
 
@@ -57,11 +60,24 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   final _BACKGROUND_ALBUM_NAME_NORMAL = Colors.white;
   final _BACKGROUND_ALBUM_NAME_SELECTED = Color(0xff5d87ed);
 
+  late Function() _ctrlAPressedCallback;
+  // 标记当前页面是否可见
+  bool _isVisible = false;
+  
   _AllAlbumManagerPageState();
 
   @override
   void initState() {
     super.initState();
+
+    _ctrlAPressedCallback = () {
+      if (_isFront()) {
+        _setAllAlbumSelected();
+      }
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllAlbums((images) {
       setState(() {
@@ -74,6 +90,14 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       setState(() {
         _isLoadingCompleted = true;
       });
+    });
+  }
+
+  void _setAllAlbumSelected() {
+    setState(() {
+      _selectedAlbums.clear();
+      _selectedAlbums.addAll(_allAlbums);
+      updateBottomItemNum();
     });
   }
 
@@ -92,14 +116,33 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
     Widget content = _createContent(_arrangeMode);
 
-    return Stack(children: [
-      content,
-      Visibility(
-        child: Container(child: spinKit, color: Colors.white),
-        maintainSize: false,
-        visible: !_isLoadingCompleted,
-      )
-    ]);
+    return VisibilityDetector(
+        key: Key("all_album_manager"),
+        child: GestureDetector(
+          child: Stack(children: [
+            content,
+            Visibility(
+              child: Container(child: spinKit, color: Colors.white),
+              maintainSize: false,
+              visible: !_isLoadingCompleted,
+            )
+          ]),
+          onTap: () {
+            _clearSelectedAlbums();
+          },
+        ),
+        onVisibilityChanged: (info) {
+          setState(() {
+            _isVisible = info.visibleFraction * 100 >= 100.0;
+          });
+        });
+  }
+
+  void _clearSelectedAlbums() {
+    setState(() {
+      _selectedAlbums.clear();
+      updateBottomItemNum();
+    });
   }
 
   Widget _createContent(int arrangeMode) {
@@ -183,14 +226,14 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                     ],
                   ),
                   decoration: BoxDecoration(
-                      color: _selectedAlbumId == album.id ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
+                      color:  _isContainsImage(_selectedAlbums, album) ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
                       borderRadius: BorderRadius.all(Radius.circular(4.0))
                   ),
                   padding: EdgeInsets.all(8),
                 ),
                 onTap: () {
                   setState(() {
-                    _selectedAlbumId = album.id;
+                    _setAlbumSelected(album);
                   });
                 },
               ),
@@ -204,7 +247,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                         album.name,
                         style: TextStyle(
                             inherit: false,
-                            color: _selectedAlbumId == album.id ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
+                            color: _isContainsImage(_selectedAlbums, album) ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
                         ),
                       ),
                       Container(
@@ -212,7 +255,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                           "(${album.photoNum})",
                           style: TextStyle(
                               inherit: false,
-                              color: _selectedAlbumId == album.id ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
+                              color: _isContainsImage(_selectedAlbums, album) ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
                           ),
                         ),
                         margin: EdgeInsets.only(left: 3),
@@ -223,13 +266,13 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(3)),
-                      color: _selectedAlbumId == album.id ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
+                      color: _isContainsImage(_selectedAlbums, album) ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
                   ),
                   padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                 ),
                 onTap: () {
                   setState(() {
-                    _selectedAlbumId = album.id;
+                    _setAlbumSelected(album);
                   });
                 },
               )
@@ -242,6 +285,122 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+  }
+
+  void _setAlbumSelected(AlbumItem album) {
+    debugPrint("Shift key down status: $_isShiftDown");
+    debugPrint("Control key down status: $_isControlDown");
+
+    if (!_isContainsImage(_selectedAlbums, album)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedAlbums.add(album);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedAlbums.length == 0) {
+          setState(() {
+            _selectedAlbums.add(album);
+          });
+        } else if (_selectedAlbums.length == 1) {
+          int index = _selectedAlbums.indexOf(_selectedAlbums[0]);
+
+          int current = _allAlbums.indexOf(album);
+
+          if (current > index) {
+            setState(() {
+              _selectedAlbums = _allAlbums.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedAlbums = _allAlbums.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedAlbums.length; i++) {
+            AlbumItem current = _selectedAlbums[i];
+            int index = _allAlbums.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _allAlbums.indexOf(album);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedAlbums = _allAlbums.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedAlbums = _allAlbums.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedAlbums = _allAlbums.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedAlbums.clear();
+          _selectedAlbums.add(album);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${album.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedAlbums.remove(album);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedAlbums.remove(album);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedAlbums.length > 0);
+    updateBottomItemNum();
+  }
+
+  void _setDeleteBtnEnabled(bool enable) {
+    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state?.setDeleteBtnEnabled(enable);
+  }
+
+  bool _isContainsImage(List<AlbumItem> albums, AlbumItem current) {
+    for (AlbumItem albumItem in albums) {
+      if (albumItem.id == current.id) return true;
+    }
+
+    return false;
+  }
+
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
   }
 
   void _getAllAlbums(Function(List<AlbumItem> albums) onSuccess,
@@ -280,11 +439,35 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     });
   }
 
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
   void updateBottomItemNum() {
     ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.updateBottomItemNumber(_allAlbums.length, 0);
   }
 
+  // 判断当前页面是否在前台显示
+  bool _isFront() {
+    return _isVisible;
+  }
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+  }
 }

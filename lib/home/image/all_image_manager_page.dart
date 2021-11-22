@@ -11,6 +11,7 @@ import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/ImageItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -33,11 +34,13 @@ class AllImageManagerPage extends StatefulWidget {
   }
 }
 
-class _AllImageManagerPageState extends State<AllImageManagerPage> with AutomaticKeepAliveClientMixin {
+class _AllImageManagerPageState extends State<AllImageManagerPage>
+    with AutomaticKeepAliveClientMixin {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   List<ImageItem> _allImages = [];
 
@@ -52,6 +55,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   bool _isLoadingCompleted = false;
 
   late Function() _ctrlAPressedCallback;
+  // 标记当前页面是否可见
+  bool _isVisible = false;
 
   _AllImageManagerPageState();
 
@@ -83,22 +88,26 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    FileManagerPage? fileManagerPage =
+        context.findAncestorWidgetOfExactType<FileManagerPage>();
     return fileManagerPage?.state?.isControlDown() == true;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    FileManagerPage? fileManagerPage =
+        context.findAncestorWidgetOfExactType<FileManagerPage>();
     return fileManagerPage?.state?.isShiftDown() == true;
   }
 
   void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    FileManagerPage? fileManagerPage =
+        context.findAncestorWidgetOfExactType<FileManagerPage>();
     fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
   void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
+    FileManagerPage? fileManagerPage =
+        context.findAncestorWidgetOfExactType<FileManagerPage>();
     fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
@@ -125,19 +134,27 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
     Widget content = _createContent(_arrangeMode);
 
-    return GestureDetector(
-      child: Stack(children: [
-        content,
-        Visibility(
-          child: Container(child: spinKit, color: Colors.white),
-          maintainSize: false,
-          visible: !_isLoadingCompleted,
-        )
-      ]),
-      onTap: () {
-        _clearSelectedImages();
-      },
-    );
+    return VisibilityDetector(
+        key: Key("all_image_manager_page"),
+        child: GestureDetector(
+          child: Stack(children: [
+            content,
+            Visibility(
+              child: Container(child: spinKit, color: Colors.white),
+              maintainSize: false,
+              visible: !_isLoadingCompleted,
+            )
+          ]),
+          onTap: () {
+            _clearSelectedImages();
+          },
+        ),
+        onVisibilityChanged: (info) {
+          debugPrint("当前页面是否可见：${info.visibleFraction * 100}");
+          setState(() {
+            _isVisible = info.visibleFraction * 100 >= 100;
+          });
+        });
   }
 
   void _clearSelectedImages() {
@@ -172,8 +189,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
           return Container(
             child: GestureDetector(
               child: CachedNetworkImage(
-                imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                    .replaceAll("storage/emulated/0/", ""),
+                imageUrl:
+                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                        .replaceAll("storage/emulated/0/", ""),
                 fit: BoxFit.cover,
                 width: 200,
                 height: 200,
@@ -191,13 +209,16 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
             ),
             decoration: BoxDecoration(
                 border: new Border.all(
-                    color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
-                    width: _isContainsImage(_selectedImages, image)? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
-                ),
-                borderRadius: new BorderRadius.all(
-                    Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
-                )
-            ),
+                    color: _isContainsImage(_selectedImages, image)
+                        ? Color(0xff5d86ec)
+                        : Color(0xffdedede),
+                    width: _isContainsImage(_selectedImages, image)
+                        ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                        : _IMAGE_GRID_BORDER_WIDTH),
+                borderRadius: new BorderRadius.all(Radius.circular(
+                    _isContainsImage(_selectedImages, image)
+                        ? _IMAGE_GRID_RADIUS_SELECTED
+                        : _IMAGE_GRID_RADIUS))),
           );
         },
         itemCount: _allImages.length,
@@ -215,7 +236,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
     return false;
   }
-  
+
   Widget _createDailyContent() {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
@@ -225,7 +246,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
-      String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      String createTimeStr =
+          df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
@@ -244,7 +266,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       DateTime dateTimeA = df.parse(a);
       DateTime dateTimeB = df.parse(b);
 
-      return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
+      return dateTimeB.millisecondsSinceEpoch -
+          dateTimeA.millisecondsSinceEpoch;
     });
 
     Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
@@ -253,74 +276,74 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       sortedMap[key] = map[key]!;
     });
 
-    return ListView.builder(itemBuilder: (BuildContext context, int index) {
-      final entry = sortedMap.entries.toList()[index];
-      String dateTime = entry.key;
-      List<ImageItem> images = entry.value;
+    return ListView.builder(
+      itemBuilder: (BuildContext context, int index) {
+        final entry = sortedMap.entries.toList()[index];
+        String dateTime = entry.key;
+        List<ImageItem> images = entry.value;
 
-      return Container(
-        child: StickyHeader(
-            header: Container(
-              child: Text(
-                  dateTime,
-                  style: TextStyle(
-                      inherit: false,
-                      fontSize: 14,
-                      color: Color(0xff515151)
-                  )
-              ),
-              color: Colors.white,
-            ),
-            content: Container(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 100,
-                    crossAxisSpacing: _IMAGE_SPACE,
-                    childAspectRatio: 1.0,
-                    mainAxisSpacing: _IMAGE_SPACE),
-                itemBuilder: (BuildContext context, int index) {
-                  ImageItem image = images[index];
-                  return Container(
-                    child: GestureDetector(
-                      child: CachedNetworkImage(
-                        imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                            .replaceAll("storage/emulated/0/", ""),
-                        fit: BoxFit.cover,
-                        width: 100,
-                        height: 100,
-                        memCacheWidth: 200,
-                        fadeOutDuration: Duration.zero,
-                        fadeInDuration: Duration.zero,
-                      ),
-                      onTap: () {
-                        _setImageSelected(image);
-                      },
-                      onDoubleTap: () {
-                        _openImageDetail(_allImages, image);
-                      },
-                    ),
-                    decoration: BoxDecoration(
-                        border: new Border.all(
-                            color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
-                            width: _isContainsImage(_selectedImages, image)? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+        return Container(
+            child: StickyHeader(
+                header: Container(
+                  child: Text(dateTime,
+                      style: TextStyle(
+                          inherit: false,
+                          fontSize: 14,
+                          color: Color(0xff515151))),
+                  color: Colors.white,
+                ),
+                content: Container(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 100,
+                        crossAxisSpacing: _IMAGE_SPACE,
+                        childAspectRatio: 1.0,
+                        mainAxisSpacing: _IMAGE_SPACE),
+                    itemBuilder: (BuildContext context, int index) {
+                      ImageItem image = images[index];
+                      return Container(
+                        child: GestureDetector(
+                          child: CachedNetworkImage(
+                            imageUrl:
+                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                    .replaceAll("storage/emulated/0/", ""),
+                            fit: BoxFit.cover,
+                            width: 100,
+                            height: 100,
+                            memCacheWidth: 200,
+                            fadeOutDuration: Duration.zero,
+                            fadeInDuration: Duration.zero,
+                          ),
+                          onTap: () {
+                            _setImageSelected(image);
+                          },
+                          onDoubleTap: () {
+                            _openImageDetail(_allImages, image);
+                          },
                         ),
-                        borderRadius: new BorderRadius.all(
-                            Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
-                        )
-                    ),
-                  );
-                },
-                itemCount: images.length,
-                shrinkWrap: true,
-              ),
-              color: Colors.white,
-              margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-            )
-        ),
-        color: Colors.white,
-        padding: EdgeInsets.fromLTRB(20, 15, 20, 0)
-      );
-    },
+                        decoration: BoxDecoration(
+                            border: new Border.all(
+                                color: _isContainsImage(_selectedImages, image)
+                                    ? Color(0xff5d86ec)
+                                    : Color(0xffdedede),
+                                width: _isContainsImage(_selectedImages, image)
+                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                    : _IMAGE_GRID_BORDER_WIDTH),
+                            borderRadius: new BorderRadius.all(Radius.circular(
+                                _isContainsImage(_selectedImages, image)
+                                    ? _IMAGE_GRID_RADIUS_SELECTED
+                                    : _IMAGE_GRID_RADIUS))),
+                      );
+                    },
+                    itemCount: images.length,
+                    shrinkWrap: true,
+                  ),
+                  color: Colors.white,
+                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                )),
+            color: Colors.white,
+            padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
+      },
       itemCount: map.length,
     );
   }
@@ -334,7 +357,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
-      String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      String createTimeStr =
+          df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
@@ -353,7 +377,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       DateTime dateTimeA = df.parse(a);
       DateTime dateTimeB = df.parse(b);
 
-      return dateTimeB.millisecondsSinceEpoch - dateTimeA.millisecondsSinceEpoch;
+      return dateTimeB.millisecondsSinceEpoch -
+          dateTimeA.millisecondsSinceEpoch;
     });
 
     Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
@@ -362,74 +387,74 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
       sortedMap[key] = map[key]!;
     });
 
-    return ListView.builder(itemBuilder: (BuildContext context, int index) {
-      final entry = sortedMap.entries.toList()[index];
-      String dateTime = entry.key;
-      List<ImageItem> images = entry.value;
+    return ListView.builder(
+      itemBuilder: (BuildContext context, int index) {
+        final entry = sortedMap.entries.toList()[index];
+        String dateTime = entry.key;
+        List<ImageItem> images = entry.value;
 
-      return Container(
-          child: StickyHeader(
-              header: Container(
-                child: Text(
-                    dateTime,
-                    style: TextStyle(
-                        inherit: false,
-                        fontSize: 14,
-                        color: Color(0xff515151)
-                    )
+        return Container(
+            child: StickyHeader(
+                header: Container(
+                  child: Text(dateTime,
+                      style: TextStyle(
+                          inherit: false,
+                          fontSize: 14,
+                          color: Color(0xff515151))),
+                  color: Colors.white,
                 ),
-                color: Colors.white,
-              ),
-              content: Container(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 80,
-                      crossAxisSpacing: _IMAGE_SPACE,
-                      childAspectRatio: 1.0,
-                      mainAxisSpacing: _IMAGE_SPACE),
-                  itemBuilder: (BuildContext context, int index) {
-                    ImageItem image = images[index];
-                    return Container(
-                      child: GestureDetector(
-                        child: CachedNetworkImage(
-                          imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                              .replaceAll("storage/emulated/0/", ""),
-                          fit: BoxFit.cover,
-                          width: 80,
-                          height: 80,
-                          memCacheWidth: 200,
-                          fadeOutDuration: Duration.zero,
-                          fadeInDuration: Duration.zero,
-                        ),
-                        onTap: () {
-                          _setImageSelected(image);
-                        },
-                        onDoubleTap: () {
-                          _openImageDetail(_allImages, image);
-                        },
-                      ),
-                      decoration: BoxDecoration(
-                          border: new Border.all(
-                              color: _isContainsImage(_selectedImages, image) ? Color(0xff5d86ec) : Color(0xffdedede),
-                              width: _isContainsImage(_selectedImages, image) ? _IMAGE_GRID_BORDER_WIDTH_SELECTED : _IMAGE_GRID_BORDER_WIDTH
+                content: Container(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 80,
+                        crossAxisSpacing: _IMAGE_SPACE,
+                        childAspectRatio: 1.0,
+                        mainAxisSpacing: _IMAGE_SPACE),
+                    itemBuilder: (BuildContext context, int index) {
+                      ImageItem image = images[index];
+                      return Container(
+                        child: GestureDetector(
+                          child: CachedNetworkImage(
+                            imageUrl:
+                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                    .replaceAll("storage/emulated/0/", ""),
+                            fit: BoxFit.cover,
+                            width: 80,
+                            height: 80,
+                            memCacheWidth: 200,
+                            fadeOutDuration: Duration.zero,
+                            fadeInDuration: Duration.zero,
                           ),
-                          borderRadius: new BorderRadius.all(
-                              Radius.circular(_isContainsImage(_selectedImages, image) ? _IMAGE_GRID_RADIUS_SELECTED : _IMAGE_GRID_RADIUS)
-                          )
-                      ),
-                    );
-                  },
-                  itemCount: images.length,
-                  shrinkWrap: true,
-                ),
-                color: Colors.white,
-                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-              )
-          ),
-          color: Colors.white,
-          padding: EdgeInsets.fromLTRB(20, 15, 20, 0)
-      );
-    },
+                          onTap: () {
+                            _setImageSelected(image);
+                          },
+                          onDoubleTap: () {
+                            _openImageDetail(_allImages, image);
+                          },
+                        ),
+                        decoration: BoxDecoration(
+                            border: new Border.all(
+                                color: _isContainsImage(_selectedImages, image)
+                                    ? Color(0xff5d86ec)
+                                    : Color(0xffdedede),
+                                width: _isContainsImage(_selectedImages, image)
+                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                    : _IMAGE_GRID_BORDER_WIDTH),
+                            borderRadius: new BorderRadius.all(Radius.circular(
+                                _isContainsImage(_selectedImages, image)
+                                    ? _IMAGE_GRID_RADIUS_SELECTED
+                                    : _IMAGE_GRID_RADIUS))),
+                      );
+                    },
+                    itemCount: images.length,
+                    shrinkWrap: true,
+                  ),
+                  color: Colors.white,
+                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                )),
+            color: Colors.white,
+            padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
+      },
       itemCount: map.length,
     );
   }
@@ -562,38 +587,47 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    ImageManagerPage? imageManagerPage =
+        context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.openImageDetail(images, current);
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    ImageManagerPage? imageManagerPage =
+        context.findAncestorWidgetOfExactType<ImageManagerPage>();
     imageManagerPage?.state?.setDeleteBtnEnabled(enable);
   }
-  
-  void _showConfirmDialog(String content, String desc, String negativeText, String positiveText,
-      Function(BuildContext context) onPositiveClick, Function(BuildContext context) onNegativeClick) {
-      Dialog dialog = ConfirmDialogBuilder().content(content)
-          .desc(desc)
-          .negativeBtnText(negativeText)
-          .positiveBtnText(positiveText)
-          .onPositiveClick(onPositiveClick)
-          .onNegativeClick(onNegativeClick)
-          .build();
 
-      showDialog(context: context, builder: (context) {
-        return dialog;
-      },
-        barrierDismissible: false
-      );
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
   }
-  
+
   void deleteImage() {
     _showConfirmDialog("确定删除该图片吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
       Navigator.of(context, rootNavigator: true).pop();
       _tryToDeleteImages();
     }, (context) {
-        Navigator.of(context, rootNavigator: true).pop();
+      Navigator.of(context, rootNavigator: true).pop();
     });
   }
 
@@ -604,11 +638,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
     }
 
     var url = Uri.parse("${_URL_SERVER}/image/delete");
-    http.post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "paths": _selectedImages.map((image) => image.path).toList()
-        }))
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode(
+                {"paths": _selectedImages.map((image) => image.path).toList()}))
         .then((response) {
       if (response.statusCode != 200) {
         _showErrorDialog(response.reasonPhrase != null
@@ -623,7 +657,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
 
         if (httpResponseEntity.isSuccessful()) {
           setState(() {
-            _allImages.removeWhere((image) => _selectedImages.any((element) => element.id == image.id));
+            _allImages.removeWhere((image) =>
+                _selectedImages.any((element) => element.id == image.id));
             _clearSelectedImages();
           });
         } else {
@@ -638,24 +673,17 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   }
 
   void _showErrorDialog(String error) {
-    Alert alert = Alert(
-      context: context,
-      type: AlertType.error,
-      desc: error,
-      buttons: [
-        DialogButton(
-            child: Text(
-              "我知道了",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20
-              ),
-            ),
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-            })
-      ]
-    );
+    Alert alert =
+        Alert(context: context, type: AlertType.error, desc: error, buttons: [
+      DialogButton(
+          child: Text(
+            "我知道了",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+          })
+    ]);
 
     alert.show();
   }
@@ -664,20 +692,22 @@ class _AllImageManagerPageState extends State<AllImageManagerPage> with Automati
   bool get wantKeepAlive => true;
 
   void updateBottomItemNum() {
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.updateBottomItemNumber(_allImages.length, _selectedImages.length);
+    ImageManagerPage? imageManagerPage =
+        context.findAncestorWidgetOfExactType<ImageManagerPage>();
+    imageManagerPage?.state
+        ?.updateBottomItemNumber(_allImages.length, _selectedImages.length);
   }
 
   // 判断当前页面是否在前台显示
   bool _isFront() {
-    FileManagerPage? fileManagerPage = context.findAncestorWidgetOfExactType<FileManagerPage>();
-    int? leftTabIndex = fileManagerPage?.state?.selectedTabIndex();
+    return _isVisible;
+  }
 
-    ImageManagerPage? imageManagerPage = context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    int? imageTabIndex = imageManagerPage?.state?.selectedIndex();
+  @override
+  void deactivate() {
+    super.deactivate();
 
-    return leftTabIndex == FileManagerState.PAGE_INDEX_IMAGE
-        && imageTabIndex == ImageManagerState.INDEX_ALL_IMAGE;
+    debugPrint("所有图片：deactivate");
   }
 
   @override
