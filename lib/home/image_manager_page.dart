@@ -712,7 +712,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
       _albumImageManagerPage.state?.updateDeleteBtnStatus();
     } else {
-      _allAlbumManagerPage.state?.updateDeleteBtnStatus;
+      _allAlbumManagerPage.state?.updateDeleteBtnStatus();
     }
   }
 

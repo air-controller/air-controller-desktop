@@ -94,6 +94,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
         _isLoadingCompleted = true;
       });
     });
+    updateDeleteBtnStatus();
   }
 
   void _setAllAlbumSelected() {
@@ -151,6 +152,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   void updateDeleteBtnStatus() {
+    debugPrint("All album page: updateDeleteBtnStatus, ${_selectedAlbums.length > 0}");
     _setDeleteBtnEnabled(_selectedAlbums.length > 0);
   }
 

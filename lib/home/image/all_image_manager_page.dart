@@ -88,6 +88,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         _isLoadingCompleted = true;
       });
     });
+    updateDeleteBtnStatus();
   }
 
   bool _isControlDown() {

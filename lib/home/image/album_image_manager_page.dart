@@ -86,6 +86,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
         _isLoadingCompleted = true;
       });
     });
+    updateDeleteBtnStatus();
   }
 
   void setArrangeMode(int arrangeMode) {
