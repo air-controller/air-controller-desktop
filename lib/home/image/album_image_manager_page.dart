@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
@@ -604,9 +605,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.openImageDetail(images, current);
+    eventBus.fire(OpenImageDetail(images, current));
   }
 
   void updateBottomItemNum() {

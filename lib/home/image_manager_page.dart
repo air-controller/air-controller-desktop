@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
@@ -67,6 +68,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+  StreamSubscription<OpenImageDetail>? _openImageDetailStream;
 
   @override
   void initState() {
@@ -82,11 +84,16 @@ class ImageManagerState extends State<ImageManagerPage> {
     _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
       updateBottomItemNumber(event.totalNum, event.selectedNum);
     });
+
+    _openImageDetailStream = eventBus.on<OpenImageDetail>().listen((event) {
+      openImageDetail(event.images, event.current);
+    });
   }
 
   void _unRegisterEventBus() {
     _updateDeleteBtnStream?.cancel();
     _updateBottomItemNumStream?.cancel();
+    _openImageDetailStream?.cancel();
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
@@ -593,9 +594,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   void _openImageDetail(List<ImageItem> images, ImageItem current) {
-    ImageManagerPage? imageManagerPage =
-        context.findAncestorWidgetOfExactType<ImageManagerPage>();
-    imageManagerPage?.state?.openImageDetail(images, current);
+    eventBus.fire(OpenImageDetail(images, current));
   }
 
   void _setDeleteBtnEnabled(bool enable) {
