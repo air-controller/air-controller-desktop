@@ -6,6 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
@@ -65,10 +67,13 @@ class ImageManagerState extends State<ImageManagerPage> {
   bool _isDeleteBtnEnabled = false;
   int _allItemNum = 0;
   int _selectedItemNum = 0;
+  bool _isBackBtnVisible = false;
 
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<OpenImageDetail>? _openImageDetailStream;
+  StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
+
 
   @override
   void initState() {
@@ -88,12 +93,19 @@ class ImageManagerState extends State<ImageManagerPage> {
     _openImageDetailStream = eventBus.on<OpenImageDetail>().listen((event) {
       openImageDetail(event.images, event.current);
     });
+
+    _backBtnVisibilityStream = eventBus.on<BackBtnVisibility>().listen((event) {
+      setState(() {
+        _isBackBtnVisible = event.visible;
+      });
+    });
   }
 
   void _unRegisterEventBus() {
     _updateDeleteBtnStream?.cancel();
     _updateBottomItemNumStream?.cancel();
     _openImageDetailStream?.cancel();
+    _backBtnVisibilityStream?.cancel();
   }
 
   @override
@@ -199,6 +211,59 @@ class ImageManagerState extends State<ImageManagerPage> {
         Container(
           child: Stack(
             children: [
+              GestureDetector(
+                child: Visibility(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      child: Row(
+                        children: [
+                          Image.asset("icons/icon_right_arrow.png",
+                              width: 12, height: 12),
+                          Container(
+                            child: Text("返回",
+                                style: TextStyle(
+                                    color: Color(0xff5c5c62),
+                                    fontSize: 13,
+                                    inherit: false)),
+                            margin: EdgeInsets.only(left: 3),
+                          ),
+                        ],
+                      ),
+                      decoration: BoxDecoration(
+                          color: _isBackBtnDown
+                              ? Color(0xffe8e8e8)
+                              : Color(0xfff3f3f4),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(3.0)),
+                          border: Border.all(
+                              color: Color(0xffdedede), width: 1.0)),
+                      height: 25,
+                      width: 50,
+                      margin: EdgeInsets.only(left: 15),
+                    ),
+                  ),
+                  visible: _isBackBtnVisible,
+                ),
+                onTap: () {
+                  _onBackPressed();
+                },
+                onTapDown: (detail) {
+                  setState(() {
+                    _isBackBtnDown = true;
+                  });
+                },
+                onTapCancel: () {
+                  setState(() {
+                    _isBackBtnDown = false;
+                  });
+                },
+                onTapUp: (detail) {
+                  setState(() {
+                    _isBackBtnDown = false;
+                  });
+                },
+              ),
               Align(
                   alignment: Alignment.center,
                   child: Container(
@@ -416,6 +481,10 @@ class ImageManagerState extends State<ImageManagerPage> {
         )
       ],
     );
+  }
+
+  void _onBackPressed() {
+    eventBus.fire(BackBtnPressed());
   }
 
   Widget _createImagePreviewWidget() {

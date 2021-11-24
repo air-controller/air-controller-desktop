@@ -1,16 +1,23 @@
 import 'dart:collection';
+import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
+import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/AlbumItem.dart';
@@ -45,8 +52,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
   List<AlbumItem> _allAlbums = [];
 
-  int _arrangeMode = ImageManagerPage.ARRANGE_MODE_GRID;
-  
   List<AlbumItem> _selectedAlbums = [];
   
   bool _isLoadingCompleted = false;
@@ -66,7 +71,19 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   late Function() _ctrlAPressedCallback;
   // 标记当前页面是否可见
   bool _isVisible = false;
-  
+  int _arrangeMode = ImageFlowWidget.ARRANGE_MODE_GRID;
+  // 标记是否进入专辑图片列表页
+  bool _openAlbumImagesPage = false;
+  // 标记是否进入图片详情页
+  bool _openImageDetailPage = false;
+  // 当前专辑图片列表
+  List<ImageItem> _allImages = [];
+  // 当前专辑图片列表页选中的图片
+  List<ImageItem> _selectedImages = [];
+  // 当前专辑
+  AlbumItem? _currentAlbum;
+  StreamSubscription<BackBtnPressed>? _backBtnPressedStream;
+
   _AllAlbumManagerPageState();
 
   @override
@@ -74,9 +91,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     super.initState();
 
     _ctrlAPressedCallback = () {
-      if (_isFront()) {
-        _setAllAlbumSelected();
-      }
+      _setAllAlbumSelected();
       debugPrint("Ctrl + A pressed...");
     };
 
@@ -95,14 +110,35 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       });
     });
     updateDeleteBtnStatus();
+    _registerEventBus();
+  }
+
+
+  void _registerEventBus() {
+    _backBtnPressedStream = eventBus.on<BackBtnPressed>().listen((event) {
+      _backToAlbumListPage();
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _backBtnPressedStream?.cancel();
   }
 
   void _setAllAlbumSelected() {
     setState(() {
-      _selectedAlbums.clear();
-      _selectedAlbums.addAll(_allAlbums);
-      updateBottomItemNum();
-      _setDeleteBtnEnabled(true);
+      if (_openAlbumImagesPage) {
+        _selectedImages.clear();
+        _selectedImages.addAll(_allImages);
+        updateBottomItemNum();
+        _setDeleteBtnEnabled(true);
+      }
+
+      if (_isFront()) {
+        _selectedAlbums.clear();
+        _selectedAlbums.addAll(_allAlbums);
+        updateBottomItemNum();
+        _setDeleteBtnEnabled(true);
+      }
     });
   }
 
@@ -121,26 +157,225 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
     Widget content = _createContent(_arrangeMode);
 
-    return VisibilityDetector(
-        key: Key("all_album_manager"),
-        child: GestureDetector(
-          child: Stack(children: [
-            content,
-            Visibility(
-              child: Container(child: spinKit, color: Colors.white),
-              maintainSize: false,
-              visible: !_isLoadingCompleted,
-            )
-          ]),
-          onTap: () {
-            _clearSelectedAlbums();
-          },
+    Widget albumImagesWidget = _createAlbumImagesWidget();
+
+    return Stack(
+      children: [
+        Visibility(
+            child: VisibilityDetector(
+                key: Key("all_album_manager"),
+                child: GestureDetector(
+                  child: Stack(children: [
+                    content,
+                    Visibility(
+                      child: Container(child: spinKit, color: Colors.white),
+                      maintainSize: false,
+                      visible: !_isLoadingCompleted,
+                    )
+                  ]),
+                  onTap: () {
+                    _clearSelectedAlbums();
+                  },
+                ),
+                onVisibilityChanged: (info) {
+                  setState(() {
+                    _isVisible = info.visibleFraction * 100 >= 100.0;
+                  });
+                }),
+          visible: !_openAlbumImagesPage && !_openImageDetailPage,
         ),
-        onVisibilityChanged: (info) {
-          setState(() {
-            _isVisible = info.visibleFraction * 100 >= 100.0;
-          });
+
+        Visibility(
+            child: Column(
+              children: [
+                Container(
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        child: Container(
+                          child: Text("所有相册", style: TextStyle(
+                              color: Color(0xff5b5c62),
+                              inherit: false,
+                              fontSize: 14
+                          )),
+                          padding: EdgeInsets.only(left: 10),
+                        ),
+                        onTap: () {
+                          _backToAlbumListPage();
+                        },
+                      ),
+
+                      Image.asset("icons/ic_right_arrow.png", height: 20),
+                      Text(_currentAlbum?.name ?? "", style: TextStyle(
+                          color: Color(0xff5b5c62),
+                          inherit: false,
+                          fontSize: 14
+                      ))
+                    ],
+                  ),
+                  color: Color(0xfffafafa),
+                  height: 30,
+                ),
+
+                Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+
+                Expanded(child: albumImagesWidget)
+              ],
+            ),
+          visible: _openAlbumImagesPage,
+        )
+      ],
+    );
+  }
+
+  // 回到相册列表页面
+  void _backToAlbumListPage() {
+    setState(() {
+      _openAlbumImagesPage = false;
+      _allImages = [];
+      _selectedImages = [];
+      updateDeleteBtnStatus();
+      updateBottomItemNum();
+      _setBackBtnVisible(false);
+    });
+  }
+
+  void _openImageDetail(List<ImageItem> images, ImageItem current) {
+    eventBus.fire(OpenImageDetail(images, current));
+  }
+
+  Widget _createAlbumImagesWidget() {
+    return ImageFlowWidget(
+        arrangeMode: _arrangeMode,
+        images: _allImages,
+        selectedImages: _selectedImages,
+        onImageDoubleTap: (image) {
+          _openImageDetail(_allImages, image);
+        },
+        onImageSelected: (image) {
+          _setImageSelected(image);
+        },
+      onOutsideTap: () {
+          _clearSelectedImages();
+      },
+    );
+  }
+
+  bool _isContainsImage(List<ImageItem> images, ImageItem current) {
+    for (ImageItem imageItem in images) {
+      if (imageItem.id == current.id) return true;
+    }
+
+    return false;
+  }
+  
+  void _setImageSelected(ImageItem image) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    if (!_isContainsImage(_selectedImages, image)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedImages.add(image);
         });
+      } else if (_isShiftDown()) {
+        if (_selectedImages.length == 0) {
+          setState(() {
+            _selectedImages.add(image);
+          });
+        } else if (_selectedImages.length == 1) {
+          int index = _allImages.indexOf(_selectedImages[0]);
+
+          int current = _allImages.indexOf(image);
+
+          if (current > index) {
+            setState(() {
+              _selectedImages = _allImages.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedImages.length; i++) {
+            ImageItem current = _selectedImages[i];
+            int index = _allImages.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _allImages.indexOf(image);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedImages = _allImages.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${image.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedImages.remove(image);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedImages.length > 0);
+    updateBottomItemNum();
+  }
+  
+  void _tryToOpenAlbumImages(String albumId) {
+    SmartDialog.showLoading(background: Colors.red);
+    _getImagesOfAlbum(albumId, (images) {
+      debugPrint("_tryToOpenAlbumImages, image size: ${images.length}");
+      setState(() {
+        _allImages = images;
+        _openAlbumImagesPage = true;
+        updateBottomItemNum();
+        updateDeleteBtnStatus();
+        _setBackBtnVisible(true);
+        SmartDialog.dismiss();
+      });
+    }, (error) {
+      debugPrint("_tryToOpenAlbumImages: $error");
+      SmartDialog.dismiss();
+    });
   }
 
   void _clearSelectedAlbums() {
@@ -151,9 +386,28 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     });
   }
 
+  void _clearSelectedImages() {
+    setState(() {
+      _selectedImages.clear();
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
+    });
+  }
+
   void updateDeleteBtnStatus() {
-    debugPrint("All album page: updateDeleteBtnStatus, ${_selectedAlbums.length > 0}");
-    _setDeleteBtnEnabled(_selectedAlbums.length > 0);
+    if (!_openAlbumImagesPage && !_openImageDetailPage) {
+      debugPrint(
+          "All album page: updateDeleteBtnStatus, ${_selectedAlbums.length >
+              0}");
+      _setDeleteBtnEnabled(_selectedAlbums.length > 0);
+    }
+
+    if (_openAlbumImagesPage) {
+      debugPrint(
+          "All album page: updateDeleteBtnStatus, ${_selectedImages.length >
+              0}");
+      _setDeleteBtnEnabled(_selectedImages.length > 0);
+    }
   }
 
   Widget _createContent(int arrangeMode) {
@@ -237,7 +491,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                     ],
                   ),
                   decoration: BoxDecoration(
-                      color:  _isContainsImage(_selectedAlbums, album) ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
+                      color:  _isContainsAlbum(_selectedAlbums, album) ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
                       borderRadius: BorderRadius.all(Radius.circular(4.0))
                   ),
                   padding: EdgeInsets.all(8),
@@ -246,6 +500,10 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                   setState(() {
                     _setAlbumSelected(album);
                   });
+                },
+                onDoubleTap: () {
+                  _currentAlbum = album;
+                  _tryToOpenAlbumImages(album.id);
                 },
               ),
 
@@ -258,7 +516,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                         album.name,
                         style: TextStyle(
                             inherit: false,
-                            color: _isContainsImage(_selectedAlbums, album) ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
+                            color: _isContainsAlbum(_selectedAlbums, album) ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
                         ),
                       ),
                       Container(
@@ -266,7 +524,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                           "(${album.photoNum})",
                           style: TextStyle(
                               inherit: false,
-                              color: _isContainsImage(_selectedAlbums, album) ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
+                              color: _isContainsAlbum(_selectedAlbums, album) ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
                           ),
                         ),
                         margin: EdgeInsets.only(left: 3),
@@ -277,7 +535,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(3)),
-                      color: _isContainsImage(_selectedAlbums, album) ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
+                      color: _isContainsAlbum(_selectedAlbums, album) ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
                   ),
                   padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                 ),
@@ -302,7 +560,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     debugPrint("Shift key down status: $_isShiftDown");
     debugPrint("Control key down status: $_isControlDown");
 
-    if (!_isContainsImage(_selectedAlbums, album)) {
+    if (!_isContainsAlbum(_selectedAlbums, album)) {
       if (_isControlDown()) {
         setState(() {
           _selectedAlbums.add(album);
@@ -393,7 +651,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     eventBus.fire(UpdateDeleteBtnStatus(enable));
   }
 
-  bool _isContainsImage(List<AlbumItem> albums, AlbumItem current) {
+  bool _isContainsAlbum(List<AlbumItem> albums, AlbumItem current) {
     for (AlbumItem albumItem in albums) {
       if (albumItem.id == current.id) return true;
     }
@@ -449,6 +707,44 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     });
   }
 
+  // 获取相册图片列表
+  void _getImagesOfAlbum(String albumId, Function(List<ImageItem> images) onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/image/imagesOfAlbum");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({ "id" : albumId}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get all image list, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+
   void _addCtrlAPressedCallback(Function() callback) {
     FileManagerPage? fileManagerPage =
     context.findAncestorWidgetOfExactType<FileManagerPage>();
@@ -462,7 +758,19 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   void updateBottomItemNum() {
-    eventBus.fire(UpdateBottomItemNum(_allAlbums.length, _selectedAlbums.length));
+    if (!_openAlbumImagesPage && !_openImageDetailPage) {
+      eventBus.fire(
+          UpdateBottomItemNum(_allAlbums.length, _selectedAlbums.length));
+    }
+
+    if (_openAlbumImagesPage) {
+      eventBus.fire(
+          UpdateBottomItemNum(_allImages.length, _selectedImages.length));
+    }
+  }
+
+  void _setBackBtnVisible(bool visible) {
+    eventBus.fire(BackBtnVisibility(visible));
   }
 
   // 判断当前页面是否在前台显示
@@ -478,5 +786,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     super.dispose();
 
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+    _unRegisterEventBus();
   }
 }

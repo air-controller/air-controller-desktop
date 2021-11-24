@@ -55,6 +55,7 @@ dependencies:
   rflutter_alert: ^2.0.4
   visibility_detector: ^0.2.2
   event_bus: ^2.0.0
+  flutter_smart_dialog: ^3.0.2
 
 dev_dependencies:
   flutter_test:
@@ -110,6 +111,7 @@ flutter:
      - icons/icon_image_next_pressed.png
      - icons/icon_about_image.png
      - icons/ic_android.jpg
+     - icons/ic_right_arrow.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
