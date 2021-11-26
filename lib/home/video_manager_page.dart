@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:mobile_assistant_client/constant.dart';
@@ -5,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
+import '../event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
 
 class VideoManagerPage extends StatefulWidget {
 
@@ -16,7 +19,6 @@ class VideoManagerPage extends StatefulWidget {
 
 class _VideoManagerState extends State<VideoManagerPage> {
   final _divider_line_color = Color(0xffe0e0e0);
-  String itemNumStr = "共0项";
 
   static final int INDEX_ALL_VIDEOS = 0;
   static final int INDEX_VIDEO_FOLDERS = 1;
@@ -31,6 +33,26 @@ class _VideoManagerState extends State<VideoManagerPage> {
 
   final _allVideoManagerPage = AllVideoManagerPage();
   final _videoFolderManagerPage = VideoFolderManagerPage();
+  int _allItemNum = 0;
+  int _selectedItemNum = 0;
+
+  StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+
+  void _registerEventBus() {
+    _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
+      updateBottomItemNumber(event.totalNum, event.selectedNum);
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateBottomItemNumStream?.cancel();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _registerEventBus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +90,11 @@ class _VideoManagerState extends State<VideoManagerPage> {
       }
     }
 
+    String itemNumStr = "共${_allItemNum}项";
+    if (_selectedItemNum > 0) {
+      itemNumStr = "$itemNumStr (选中${_selectedItemNum}项)";
+    }
+
     return Column(
       children: [
         Container(
@@ -93,6 +120,7 @@ class _VideoManagerState extends State<VideoManagerPage> {
                                   fontSize: 12,
                                   color:
                                   getSegmentBtnColor(INDEX_VIDEO_FOLDERS))),
+                          padding: EdgeInsets.only(left: 10, right: 10),
                         ),
                       },
                       selectionIndex: _currentIndex,
@@ -242,5 +270,19 @@ class _VideoManagerState extends State<VideoManagerPage> {
         )
       ],
     );
+  }
+
+  void updateBottomItemNumber(int allItemNum, int selectedItemNum) {
+    setState(() {
+      _allItemNum = allItemNum;
+      _selectedItemNum = selectedItemNum;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _unRegisterEventBus();
   }
 }

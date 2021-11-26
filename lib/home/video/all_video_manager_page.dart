@@ -8,6 +8,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:http/http.dart' as http;
 import '../../model/ResponseEntity.dart';
+import '../../util/event_bus.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 
 class AllVideoManagerPage extends StatefulWidget {
 
@@ -37,6 +39,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
     _getAllVideos((videos) {
       setState(() {
         _videos = videos;
+        updateBottomItemNum();
       });
     }, (error) {
       developer.log("_getAllVideos, error: $error");
@@ -56,7 +59,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
             : "Unknown error");
       } else {
         var body = response.body;
-        debugPrint("Get all image list, body: $body");
+        debugPrint("Get all videos list, body: $body");
 
         final map = jsonDecode(body);
         final httpResponseEntity = ResponseEntity.fromJson(map);
@@ -94,8 +97,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
             child: GestureDetector(
               child: CachedNetworkImage(
                 imageUrl:
-                "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/video/thumbnail/${videoItem.id}/200/200"
-                    .replaceAll("storage/emulated/0/", ""),
+                "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/video/thumbnail/${videoItem.id}/200/200",
                 fit: BoxFit.cover,
                 width: 200,
                 height: 200,
@@ -137,5 +139,9 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
     }
 
     return false;
+  }
+
+  void updateBottomItemNum() {
+    eventBus.fire(UpdateBottomItemNum(_videos.length, _selectedVideos.length));
   }
 }
