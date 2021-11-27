@@ -122,7 +122,9 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
               maintainSize: false,
               visible: !_isLoadingCompleted,
             )
-          ]),
+          ],
+            fit: StackFit.expand,
+          ),
           onTap: () {
             _clearSelectedVideos();
           },
@@ -256,11 +258,14 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
     return Container(
       child: GridView.builder(
+        scrollDirection: Axis.vertical,
+        physics: ScrollPhysics(),
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 260,
             crossAxisSpacing: _IMAGE_SPACE,
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
+        controller: ScrollController(keepScrollOffset: true),
         itemBuilder: (BuildContext context, int index) {
           VideoFolderItem videoFolder = _videoFolders[index];
 

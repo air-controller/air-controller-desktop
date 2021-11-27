@@ -246,7 +246,6 @@ class VideoManagerState extends State<VideoManagerPage> {
         Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
         Expanded(
           child: PageView(
-            scrollDirection: Axis.vertical,
             physics: NeverScrollableScrollPhysics(),
             children: [
               _allVideoManagerPage,
