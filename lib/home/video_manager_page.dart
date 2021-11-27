@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
+import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
@@ -36,6 +37,8 @@ class VideoManagerState extends State<VideoManagerPage> {
   final _videoFolderManagerPage = VideoFolderManagerPage();
   int _allItemNum = 0;
   int _selectedItemNum = 0;
+  bool _isBackBtnDown = false;
+  bool _isBackBtnVisible = false;
 
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
 
@@ -101,6 +104,60 @@ class VideoManagerState extends State<VideoManagerPage> {
         Container(
           child: Stack(
             children: [
+              GestureDetector(
+                child: Visibility(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      child: Row(
+                        children: [
+                          Image.asset("icons/icon_right_arrow.png",
+                              width: 12, height: 12),
+                          Container(
+                            child: Text("返回",
+                                style: TextStyle(
+                                    color: Color(0xff5c5c62),
+                                    fontSize: 13,
+                                    inherit: false)),
+                            margin: EdgeInsets.only(left: 3),
+                          ),
+                        ],
+                      ),
+                      decoration: BoxDecoration(
+                          color: _isBackBtnDown
+                              ? Color(0xffe8e8e8)
+                              : Color(0xfff3f3f4),
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(3.0)),
+                          border: Border.all(
+                              color: Color(0xffdedede), width: 1.0)),
+                      height: 25,
+                      width: 50,
+                      margin: EdgeInsets.only(left: 15),
+                    ),
+                  ),
+                  visible: _isBackBtnVisible,
+                ),
+                onTap: () {
+                  _onBackPressed();
+                },
+                onTapDown: (detail) {
+                  setState(() {
+                    _isBackBtnDown = true;
+                  });
+                },
+                onTapCancel: () {
+                  setState(() {
+                    _isBackBtnDown = false;
+                  });
+                },
+                onTapUp: (detail) {
+                  setState(() {
+                    _isBackBtnDown = false;
+                  });
+                },
+              ),
+
               Align(
                   alignment: Alignment.center,
                   child: Container(
@@ -272,6 +329,10 @@ class VideoManagerState extends State<VideoManagerPage> {
         )
       ],
     );
+  }
+
+  void _onBackPressed() {
+    eventBus.fire(BackBtnPressed());
   }
 
   void updateBottomItemNumber(int allItemNum, int selectedItemNum) {

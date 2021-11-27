@@ -1,15 +1,20 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/model/video_folder_item.dart';
+import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/widget/video_flow_widget.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/ResponseEntity.dart';
@@ -47,38 +52,70 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
   late Function() _ctrlAPressedCallback;
 
-  bool _isPageVisible = false;
+  bool _isFolderPageVisible = false;
+  bool _isVideosInFolderPageVisible = false;
+  int _currentSortOrder = VideoFlowWidget.SORT_ORDER_CREATE_TIME;
+  bool _openVideosInFolderPage = false;
+
+  List<VideoItem> _videosInFolder = [];
+  List<VideoItem> _selectedVideosInFolder = [];
+  VideoFolderItem? _currentVideoFolder;
+
+  bool _isLoadingVideosInFolderCompleted = false;
+
+  StreamSubscription<BackBtnPressed>? _backBtnPressedStream;
 
   @override
   void initState() {
     super.initState();
 
+    _registerEventBus();
+
     _ctrlAPressedCallback = () {
-      if (_isPageVisible) {
-        _setAllSelected();
-      }
+      _setAllSelected();
 
       debugPrint("Ctrl + A pressed...");
     };
 
     _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
-    _getAllVideoFolders((videos) {
+    _getAllVideosFolder((videos) {
       setState(() {
         _videoFolders = videos;
       });
     }, (error) {
-
+      debugPrint("_getAllVideosFolder, error: $error");
     });
   }
 
   void _setAllSelected() {
-    setState(() {
-      _selectedVideoFolders.clear();
-      _selectedVideoFolders.addAll(_videoFolders);
-      updateBottomItemNum();
-      _setDeleteBtnEnabled(true);
+    if (_isFolderPageVisible) {
+      setState(() {
+        _selectedVideoFolders.clear();
+        _selectedVideoFolders.addAll(_videoFolders);
+        updateBottomItemNum();
+        _setDeleteBtnEnabled(true);
+      });
+    }
+
+    if (_isVideosInFolderPageVisible) {
+      setState(() {
+        _selectedVideosInFolder.clear();
+        _selectedVideosInFolder.addAll(_videosInFolder);
+        updateBottomItemNum();
+        _setDeleteBtnEnabled(true);
+      });
+    }
+  }
+
+  void _registerEventBus() {
+    _backBtnPressedStream = eventBus.on<BackBtnPressed>().listen((event) {
+      _backVideoFoldersPage();
     });
+  }
+
+  void _unRegisterEventBus() {
+    _backBtnPressedStream?.cancel();
   }
 
   bool _isControlDown() {
@@ -105,6 +142,10 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
+  void _setBackBtnVisible(bool visible) {
+    eventBus.fire(BackBtnVisibility(visible));
+  }
+
   @override
   Widget build(BuildContext context) {
     const color = Color(0xff85a8d0);
@@ -112,31 +153,89 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
     Widget content = _createGridContent();
 
-    return VisibilityDetector(
-        key: Key("video_folder_manager"),
-        child: GestureDetector(
-          child: Stack(children: [
-            content,
-            Visibility(
-              child: Container(child: spinKit, color: Colors.white),
-              maintainSize: false,
-              visible: !_isLoadingCompleted,
-            )
-          ],
-            fit: StackFit.expand,
+    Widget videosInFolderWidget = _createVideosWidget();
+
+    return Stack(
+      children: [
+        VisibilityDetector(
+            key: Key("video_folder_manager"),
+            child: GestureDetector(
+              child: Visibility(
+                child: Stack(children: [
+                  content,
+                  Visibility(
+                    child: Container(child: spinKit, color: Colors.white),
+                    maintainSize: false,
+                    visible: !_isLoadingCompleted,
+                  )
+                ],
+                  fit: StackFit.expand,
+                ),
+                visible: !_openVideosInFolderPage,
+              ),
+              onTap: () {
+                _clearSelectedVideos();
+              },
+            ),
+            onVisibilityChanged: (info) {
+              setState(() {
+                _isFolderPageVisible = info.visibleFraction * 100 >= 100;
+                if (_isFolderPageVisible) {
+                  updateBottomItemNum();
+                }
+              });
+            }),
+
+        Visibility(
+          child: Column(
+            children: [
+              Container(
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      child: Container(
+                        child: Text("视频文件夹", style: TextStyle(
+                            color: Color(0xff5b5c62),
+                            inherit: false,
+                            fontSize: 14
+                        )),
+                        padding: EdgeInsets.only(left: 10),
+                      ),
+                      onTap: () {
+                        _backVideoFoldersPage();
+                      },
+                    ),
+
+                    Image.asset("icons/ic_right_arrow.png", height: 20),
+                    Text(_currentVideoFolder?.name ?? "", style: TextStyle(
+                        color: Color(0xff5b5c62),
+                        inherit: false,
+                        fontSize: 14
+                    ))
+                  ],
+                ),
+                color: Color(0xfffafafa),
+                height: 30,
+              ),
+
+              Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+
+              Expanded(child: Stack(children: [
+                videosInFolderWidget,
+                Visibility(
+                  child: Container(child: spinKit, color: Colors.white),
+                  maintainSize: false,
+                  visible: !_isLoadingVideosInFolderCompleted,
+                )
+              ],
+                fit: StackFit.expand,
+              ))
+            ],
           ),
-          onTap: () {
-            _clearSelectedVideos();
-          },
-        ),
-        onVisibilityChanged: (info) {
-          setState(() {
-            _isPageVisible = info.visibleFraction * 100 >= 100;
-            if (_isPageVisible) {
-              updateBottomItemNum();
-            }
-          });
-        });
+          visible: _openVideosInFolderPage,
+        )
+      ],
+    );
   }
 
 
@@ -231,6 +330,106 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     updateBottomItemNum();
   }
 
+  bool _isContainsVideo(List<VideoItem> images, VideoItem current) {
+    for (VideoItem imageItem in images) {
+      if (imageItem.id == current.id) return true;
+    }
+
+    return false;
+  }
+
+  void _setVideoSelected(VideoItem video) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    if (!_isContainsVideo(_selectedVideosInFolder, video)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideosInFolder.add(video);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedVideosInFolder.length == 0) {
+          setState(() {
+            _selectedVideosInFolder.add(video);
+          });
+        } else if (_selectedVideosInFolder.length == 1) {
+          int index = _videosInFolder.indexOf(_selectedVideosInFolder[0]);
+
+          int current = _videosInFolder.indexOf(video);
+
+          if (current > index) {
+            setState(() {
+              _selectedVideosInFolder = _videosInFolder.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedVideosInFolder = _videosInFolder.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedVideosInFolder.length; i++) {
+            VideoItem current = _selectedVideosInFolder[i];
+            int index = _videosInFolder.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _videosInFolder.indexOf(video);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedVideosInFolder = _videosInFolder.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedVideosInFolder = _videosInFolder.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedVideosInFolder = _videosInFolder.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedVideosInFolder.clear();
+          _selectedVideosInFolder.add(video);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${video.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideosInFolder.remove(video);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedVideosInFolder.remove(video);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedVideosInFolder.length > 0);
+    updateBottomItemNum();
+  }
+
+
   void _clearSelectedVideos() {
     setState(() {
       _selectedVideoFolders.clear();
@@ -240,7 +439,15 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   }
 
   void updateBottomItemNum() {
-    eventBus.fire(UpdateBottomItemNum(_videoFolders.length, _selectedVideoFolders.length));
+    if (_isFolderPageVisible) {
+      eventBus.fire(UpdateBottomItemNum(
+          _videoFolders.length, _selectedVideoFolders.length));
+    }
+
+    if (_openVideosInFolderPage) {
+      eventBus.fire(UpdateBottomItemNum(
+          _videosInFolder.length, _selectedVideosInFolder.length));
+    }
   }
 
   void _setDeleteBtnEnabled(bool enable) {
@@ -342,8 +549,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                   });
                 },
                 onDoubleTap: () {
-                  // _currentAlbum = album;
-                  // _tryToOpenAlbumImages(album.id);
+                  _currentVideoFolder = videoFolder;
+                  _tryToOpenVideosInFolderPage(videoFolder);
                 },
               ),
               GestureDetector(
@@ -405,7 +612,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     return false;
   }
 
-  void _getAllVideoFolders(Function(List<VideoFolderItem> videos) onSuccess,
+  void _getAllVideosFolder(Function(List<VideoFolderItem> videos) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/video/folders");
     http.post(url,
@@ -439,11 +646,106 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
       onError.call(error.toString());
     });
   }
+
+  void _getVideosInFolder(String folderId, Function(List<VideoItem> videos) onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/video/videosInFolder");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"folderId" : folderId}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get all videos list, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => VideoItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  // 回到相册列表页面
+  void _backVideoFoldersPage() {
+    setState(() {
+      _openVideosInFolderPage = false;
+      _isLoadingVideosInFolderCompleted = false;
+      _videosInFolder = [];
+      _selectedVideosInFolder = [];
+      updateDeleteBtnStatus();
+      updateBottomItemNum();
+      _setBackBtnVisible(false);
+    });
+  }
+
+  void _clearSelectedVideosInFolder() {
+    setState(() {
+      _selectedVideosInFolder.clear();
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
+    });
+  }
+
+  Widget _createVideosWidget() {
+    return VideoFlowWidget(
+        videos: _videosInFolder,
+        selectedVideos: _selectedVideosInFolder,
+        sortOrder: _currentSortOrder,
+        onVideoTap: (video) {
+          _setVideoSelected(video);
+        },
+        onOutsideTap: () {
+          _clearSelectedVideosInFolder();
+        },
+        onVisibleChange: (totalVisible, partOfVisible) {
+          setState(() {
+            _isVideosInFolderPageVisible = totalVisible;
+            if (_isVideosInFolderPageVisible) {
+              updateBottomItemNum();
+            }
+          });
+        },
+        onVideoDoubleTap: (video) {
+
+        });
+  }
+
+  void _tryToOpenVideosInFolderPage(VideoFolderItem folder) {
+    setState(() {
+      _openVideosInFolderPage = true;
+      _setBackBtnVisible(true);
+      _getVideosInFolder(folder.id, (videos) {
+        _videosInFolder = videos;
+        _isLoadingVideosInFolderCompleted = true;
+      }, (error) {
+        debugPrint("_tryToOpenVideosInFolderPage, error: $error");
+        _isLoadingVideosInFolderCompleted = true;
+      });
+    });
+  }
   
   @override
   void dispose() {
     super.dispose();
 
+    _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
   }
 
