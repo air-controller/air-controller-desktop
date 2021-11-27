@@ -112,6 +112,7 @@ flutter:
      - icons/icon_about_image.png
      - icons/ic_android.jpg
      - icons/ic_right_arrow.png
+     - icons/ic_video_indictor.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

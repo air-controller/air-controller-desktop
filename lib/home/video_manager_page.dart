@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
+import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
 import '../event/update_bottom_item_num.dart';
@@ -13,11 +14,11 @@ class VideoManagerPage extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _VideoManagerState();
+    return VideoManagerState();
   }
 }
 
-class _VideoManagerState extends State<VideoManagerPage> {
+class VideoManagerState extends State<VideoManagerPage> {
   final _divider_line_color = Color(0xffe0e0e0);
 
   static final int INDEX_ALL_VIDEOS = 0;
@@ -167,6 +168,7 @@ class _VideoManagerState extends State<VideoManagerPage> {
                                 if (_sortOrder != SORT_ORDER_CREATE_TIME) {
                                   setState(() {
                                     _sortOrder = SORT_ORDER_CREATE_TIME;
+                                    eventBus.fire(UpdateVideoSortOrder(UpdateVideoSortOrder.TYPE_CREATE_TIME));
                                   });
                                 }
                               },
@@ -191,6 +193,7 @@ class _VideoManagerState extends State<VideoManagerPage> {
                                 if (_sortOrder != SORT_ORDER_SIZE) {
                                   setState(() {
                                     _sortOrder = SORT_ORDER_SIZE;
+                                    eventBus.fire(UpdateVideoSortOrder(UpdateVideoSortOrder.TYPE_VIDEO_SIZE));
                                   });
                                 }
                               },
