@@ -5,6 +5,8 @@ import 'package:mobile_assistant_client/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
@@ -41,15 +43,35 @@ class VideoManagerState extends State<VideoManagerPage> {
   bool _isBackBtnVisible = false;
 
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+  StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
+  StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
 
   void _registerEventBus() {
     _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
       updateBottomItemNumber(event.totalNum, event.selectedNum);
     });
+
+    _updateDeleteBtnStream = eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+      setDeleteBtnEnabled(event.isEnable);
+    });
+
+    _backBtnVisibilityStream = eventBus.on<BackBtnVisibility>().listen((event) {
+      setState(() {
+        _isBackBtnVisible = event.visible;
+      });
+    });
   }
 
   void _unRegisterEventBus() {
+    _updateDeleteBtnStream?.cancel();
     _updateBottomItemNumStream?.cancel();
+    _backBtnVisibilityStream?.cancel();
+  }
+
+  void setDeleteBtnEnabled(bool enable) {
+    setState(() {
+      _isDeleteBtnEnabled = enable;
+    });
   }
 
   @override
