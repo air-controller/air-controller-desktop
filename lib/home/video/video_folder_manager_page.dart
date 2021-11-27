@@ -5,10 +5,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/model/video_folder_item.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
 
 import '../../model/ResponseEntity.dart';
+import '../file_manager.dart';
 
 class VideoFolderManagerPage extends StatefulWidget {
   @override
@@ -17,7 +21,7 @@ class VideoFolderManagerPage extends StatefulWidget {
   }
 }
 
-class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
+class _VideoFolderManagerState extends State<VideoFolderManagerPage> with AutomaticKeepAliveClientMixin {
   bool _isLoadingCompleted = true;
 
   final _BACKGROUND_ALBUM_SELECTED = Color(0xffe6e6e6);
@@ -40,9 +44,19 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
 
   final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
+  late Function() _ctrlAPressedCallback;
+
   @override
   void initState() {
     super.initState();
+
+    _ctrlAPressedCallback = () {
+      _setAllSelected();
+
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllVideoFolders((videos) {
       setState(() {
@@ -53,6 +67,39 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
     });
   }
 
+  void _setAllSelected() {
+    setState(() {
+      _selectedVideoFolders.clear();
+      _selectedVideoFolders.addAll(_videoFolders);
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
+    });
+  }
+
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
   @override
   Widget build(BuildContext context) {
     const color = Color(0xff85a8d0);
@@ -60,14 +107,131 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
 
     Widget content = _createGridContent();
 
-    return Stack(children: [
-      content,
-      Visibility(
-        child: Container(child: spinKit, color: Colors.white),
-        maintainSize: false,
-        visible: !_isLoadingCompleted,
-      )
-    ]);
+    return GestureDetector(
+      child: Stack(children: [
+        content,
+        Visibility(
+          child: Container(child: spinKit, color: Colors.white),
+          maintainSize: false,
+          visible: !_isLoadingCompleted,
+        )
+      ]),
+      onTap: () {
+        _clearSelectedVideos();
+      },
+    );
+  }
+
+
+  void _setVideoFolderSelected(VideoFolderItem videoFolder) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    if (!_isContainsVideoFolder(_selectedVideoFolders, videoFolder)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideoFolders.add(videoFolder);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedVideoFolders.length == 0) {
+          setState(() {
+            _selectedVideoFolders.add(videoFolder);
+          });
+        } else if (_selectedVideoFolders.length == 1) {
+          int index = _videoFolders.indexOf(_selectedVideoFolders[0]);
+
+          int current = _videoFolders.indexOf(videoFolder);
+
+          if (current > index) {
+            setState(() {
+              _selectedVideoFolders = _videoFolders.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedVideoFolders = _videoFolders.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedVideoFolders.length; i++) {
+            VideoFolderItem current = _selectedVideoFolders[i];
+            int index = _videoFolders.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _videoFolders.indexOf(videoFolder);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedVideoFolders = _videoFolders.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedVideoFolders = _videoFolders.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedVideoFolders = _videoFolders.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedVideoFolders.clear();
+          _selectedVideoFolders.add(videoFolder);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${videoFolder.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideoFolders.remove(videoFolder);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedVideoFolders.remove(videoFolder);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedVideoFolders.length > 0);
+    updateBottomItemNum();
+  }
+
+  void _clearSelectedVideos() {
+    setState(() {
+      _selectedVideoFolders.clear();
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
+    });
+  }
+
+  void updateBottomItemNum() {
+    eventBus.fire(UpdateBottomItemNum(_videoFolders.length, _selectedVideoFolders.length));
+  }
+
+  void _setDeleteBtnEnabled(bool enable) {
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
+  }
+
+  void updateDeleteBtnStatus() {
+    _setDeleteBtnEnabled(_selectedVideoFolders.length > 0);
   }
 
   Widget _createGridContent() {
@@ -154,7 +318,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
                 ),
                 onTap: () {
                   setState(() {
-                    // _setAlbumSelected(album);
+                    _setVideoFolderSelected(videoFolder);
                   });
                 },
                 onDoubleTap: () {
@@ -255,5 +419,14 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> {
       onError.call(error.toString());
     });
   }
+  
+  @override
+  void dispose() {
+    super.dispose();
 
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

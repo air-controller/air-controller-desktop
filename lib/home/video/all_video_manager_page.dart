@@ -26,7 +26,7 @@ class AllVideoManagerPage extends StatefulWidget {
   }
 }
 
-class _AllVideoManagerState extends State<AllVideoManagerPage> {
+class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKeepAliveClientMixin {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
   List<VideoItem> _videos = [];
@@ -399,4 +399,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     _unRegisterEventBus();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
