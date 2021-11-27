@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
@@ -14,6 +15,8 @@ import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+
+import '../file_manager.dart';
 
 class AllVideoManagerPage extends StatefulWidget {
 
@@ -40,10 +43,19 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
   int _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
 
   StreamSubscription<UpdateVideoSortOrder>? _updateVideoSortOrderStream;
+  
+  late Function() _ctrlAPressedCallback;
 
   @override
   void initState() {
     super.initState();
+
+    _ctrlAPressedCallback = () {
+      _setAllSelected();
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _registerEventBus();
 
@@ -53,6 +65,19 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
     }, (error) {
       developer.log("_getAllVideos, error: $error");
     });
+  }
+
+  void _setAllSelected() {
+    setState(() {
+      _selectedVideos.clear();
+      _selectedVideos.addAll(_videos);
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
+    });
+  }
+
+  void _setDeleteBtnEnabled(bool enable) {
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
   }
 
   void _reSortVideos() {
@@ -130,10 +155,133 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
       onError.call(error.toString());
     });
   }
-  
+
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _setVideoSelected(VideoItem video) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    if (!_isContainsVideo(_selectedVideos, video)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideos.add(video);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedVideos.length == 0) {
+          setState(() {
+            _selectedVideos.add(video);
+          });
+        } else if (_selectedVideos.length == 1) {
+          int index = _videos.indexOf(_selectedVideos[0]);
+
+          int current = _videos.indexOf(video);
+
+          if (current > index) {
+            setState(() {
+              _selectedVideos = _videos.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedVideos = _videos.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedVideos.length; i++) {
+            VideoItem current = _selectedVideos[i];
+            int index = _videos.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _videos.indexOf(video);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedVideos = _videos.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedVideos = _videos.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedVideos = _videos.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedVideos.clear();
+          _selectedVideos.add(video);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${video.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedVideos.remove(video);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedVideos.remove(video);
+        });
+      }
+    }
+
+    _setDeleteBtnEnabled(_selectedVideos.length > 0);
+    updateBottomItemNum();
+  }
+
+  void _clearSelectedVideos() {
+    setState(() {
+      _selectedVideos.clear();
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget content = Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
@@ -159,6 +307,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
                     fadeInDuration: Duration.zero,
                   ),
                   onTap: () {
+                    _setVideoSelected(videoItem);
                   },
                   onDoubleTap: () {
                     debugPrint("双击");
@@ -206,6 +355,13 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+
+    return GestureDetector(
+      child: content,
+      onTap: () {
+        _clearSelectedVideos();
+      },
+    );
   }
 
   // 转换为更可读时间，单位：s
@@ -240,6 +396,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> {
   void dispose() {
     super.dispose();
 
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     _unRegisterEventBus();
   }
 }
