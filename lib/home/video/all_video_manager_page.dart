@@ -11,6 +11,7 @@ import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:http/http.dart' as http;
+import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
@@ -46,12 +47,16 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   
   late Function() _ctrlAPressedCallback;
 
+  bool _isPageVisible = false;
+
   @override
   void initState() {
     super.initState();
 
     _ctrlAPressedCallback = () {
-      _setAllSelected();
+      if (_isPageVisible) {
+        _setAllSelected();
+      }
       debugPrint("Ctrl + A pressed...");
     };
 
@@ -356,12 +361,21 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
 
-    return GestureDetector(
-      child: content,
-      onTap: () {
-        _clearSelectedVideos();
-      },
-    );
+    return VisibilityDetector(
+        key: Key("all_video_manager"),
+        child: GestureDetector(
+          child: content,
+          onTap: () {
+            _clearSelectedVideos();
+          },
+        ),
+        onVisibilityChanged: (info) {
+          _isPageVisible = info.visibleFraction >= 1.0;
+
+          if (_isPageVisible) {
+            updateBottomItemNum();
+          }
+        });
   }
 
   // 转换为更可读时间，单位：s

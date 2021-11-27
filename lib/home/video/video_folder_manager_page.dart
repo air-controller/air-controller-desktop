@@ -10,6 +10,7 @@ import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/model/video_folder_item.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/ResponseEntity.dart';
 import '../file_manager.dart';
@@ -46,12 +47,16 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
   late Function() _ctrlAPressedCallback;
 
+  bool _isPageVisible = false;
+
   @override
   void initState() {
     super.initState();
 
     _ctrlAPressedCallback = () {
-      _setAllSelected();
+      if (_isPageVisible) {
+        _setAllSelected();
+      }
 
       debugPrint("Ctrl + A pressed...");
     };
@@ -107,19 +112,29 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
     Widget content = _createGridContent();
 
-    return GestureDetector(
-      child: Stack(children: [
-        content,
-        Visibility(
-          child: Container(child: spinKit, color: Colors.white),
-          maintainSize: false,
-          visible: !_isLoadingCompleted,
-        )
-      ]),
-      onTap: () {
-        _clearSelectedVideos();
-      },
-    );
+    return VisibilityDetector(
+        key: Key("video_folder_manager"),
+        child: GestureDetector(
+          child: Stack(children: [
+            content,
+            Visibility(
+              child: Container(child: spinKit, color: Colors.white),
+              maintainSize: false,
+              visible: !_isLoadingCompleted,
+            )
+          ]),
+          onTap: () {
+            _clearSelectedVideos();
+          },
+        ),
+        onVisibilityChanged: (info) {
+          setState(() {
+            _isPageVisible = info.visibleFraction * 100 >= 100;
+            if (_isPageVisible) {
+              updateBottomItemNum();
+            }
+          });
+        });
   }
 
 
