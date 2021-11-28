@@ -28,6 +28,13 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
   final _downloadIconModePage = DownloadIconModePage();
   final _downloadListModePage = DownloadListModePage();
+  
+  static final PAGE_INDEX_ICON_MODE = 0;
+  static final PAGE_INDEX_LIST_MODE = 1;
+  
+  int _currentPageIndex = PAGE_INDEX_ICON_MODE;
+
+  PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -116,6 +123,38 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
     String itemNumStr = "共108项";
 
+    String getIconModeIcon() {
+      if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
+        return "icons/icon_image_text_selected.png";
+      }
+
+      return "icons/icon_image_text_normal.png";
+    }
+
+    String getListModeIcon() {
+      if (_currentPageIndex == PAGE_INDEX_LIST_MODE) {
+        return "icons/icon_list_selected.png";
+      }
+
+      return "icons/icon_list_normal.png";
+    }
+
+    Color getModeBtnBgColor(int pageIndex) {
+      if (pageIndex == PAGE_INDEX_ICON_MODE) {
+        if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
+          return Color(0xffc1c1c1);
+        }
+
+        return Color(0xfff5f6f5);
+      }
+
+      if (_currentPageIndex == PAGE_INDEX_LIST_MODE) {
+        return Color(0xffc1c1c1);
+      }
+
+      return Color(0xfff5f6f5);
+    }
+
     return Column(children: [
       Container(
           child: Stack(children: [
@@ -131,47 +170,64 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                 child: Container(
                     child: Row(
                         children: [
-                          Container(
-                              child: Image.asset(
-                                  "icons/icon_image_text_selected.png",
-                                  width: _icon_display_mode_size,
-                                  height: _icon_display_mode_size),
-                              decoration: BoxDecoration(
-                                  color: Color(0xffc1c1c1),
-                                  border: new Border.all(
-                                      color: Color(0xffababab), width: 1.0),
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(
-                                          _segment_control_radius),
-                                      bottomLeft: Radius.circular(
-                                          _segment_control_radius))),
-                              height: _segment_control_height,
-                              width: _segment_control_width,
-                              padding: EdgeInsets.fromLTRB(
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical,
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical)),
-                          Container(
-                              child: Image.asset("icons/icon_list_normal.png",
-                                  width: _icon_display_mode_size,
-                                  height: _icon_display_mode_size),
-                              decoration: BoxDecoration(
-                                  color: Color(0xfff5f6f5),
-                                  border: new Border.all(
-                                      color: Color(0xffdededd), width: 1.0),
-                                  borderRadius: BorderRadius.only(
-                                      topRight: Radius.circular(
-                                          _segment_control_radius),
-                                      bottomRight: Radius.circular(
-                                          _segment_control_radius))),
-                              height: _segment_control_height,
-                              width: _segment_control_width,
-                              padding: EdgeInsets.fromLTRB(
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical,
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical)),
+                          GestureDetector(
+                            child: Container(
+                                child: Image.asset(
+                                    getIconModeIcon(),
+                                    width: _icon_display_mode_size,
+                                    height: _icon_display_mode_size),
+                                decoration: BoxDecoration(
+                                    color: getModeBtnBgColor(PAGE_INDEX_ICON_MODE),
+                                    border: new Border.all(
+                                        color: Color(0xffababab), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(
+                                            _segment_control_radius),
+                                        bottomLeft: Radius.circular(
+                                            _segment_control_radius))),
+                                height: _segment_control_height,
+                                width: _segment_control_width,
+                                padding: EdgeInsets.fromLTRB(
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical,
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical)),
+                            onTap: () {
+                              if (_currentPageIndex != PAGE_INDEX_ICON_MODE) {
+                                _pageController.jumpToPage(
+                                    PAGE_INDEX_ICON_MODE);
+                              }
+                            },
+                          ),
+                          
+                          GestureDetector(
+                            child:  Container(
+                                child: Image.asset(getListModeIcon(),
+                                    width: _icon_display_mode_size,
+                                    height: _icon_display_mode_size),
+                                decoration: BoxDecoration(
+                                    color: getModeBtnBgColor(PAGE_INDEX_LIST_MODE),
+                                    border: new Border.all(
+                                        color: Color(0xffdededd), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(
+                                            _segment_control_radius),
+                                        bottomRight: Radius.circular(
+                                            _segment_control_radius))),
+                                height: _segment_control_height,
+                                width: _segment_control_width,
+                                padding: EdgeInsets.fromLTRB(
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical,
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical)),
+                            onTap: () {
+                                if (_currentPageIndex != PAGE_INDEX_LIST_MODE) {
+                                  _pageController.jumpToPage(PAGE_INDEX_LIST_MODE);
+                                }
+                            },
+                          ),
+                          
                           Container(
                               child: Image.asset("icons/icon_delete.png",
                                   width: _icon_delete_btn_size,
@@ -224,7 +280,6 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   }
 
   Widget _createPageView() {
-    PageController controller = PageController();
 
     return Expanded(
         child: PageView(
@@ -236,9 +291,11 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
       ],
       onPageChanged: (index) {
         debugPrint("onPageChanged, index: $index");
-        setState(() {});
+        setState(() {
+          _currentPageIndex = index;
+        });
       },
-      controller: controller,
+      controller: _pageController,
     ));
   }
 }
