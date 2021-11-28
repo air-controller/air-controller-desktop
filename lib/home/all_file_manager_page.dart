@@ -4,6 +4,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import '../ext/string-ext.dart';
 import '../constant.dart';
@@ -20,7 +21,7 @@ class AllFileManagerPage extends StatefulWidget {
   }
 }
 
-final _URL_SERVER = "http://192.168.0.101:8080";
+final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/";
 
 void _showTipsDialog(BuildContext context, String btnText, String message,
     bool cancelable, Function() onDismiss) {
@@ -81,6 +82,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
         (items) => {
               setState(() {
                 _isLoadingSuccess = true;
+                _fileItems = items;
                 fileItemDataSource
                     .setNewDatas(items.map((e) => FileItemVO(e, 0)).toList());
               })
@@ -371,6 +373,23 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                     ],
                   ))));
     } else {
+
+      String getFileTypeIcon(bool isDir, String extension) {
+        if (isDir) {
+          return "icons/ic_large_type_folder.png";
+        } else {
+          if (_isAudio(extension)) {
+            return "icons/ic_large_type_audio.png";
+          }
+
+          if (_isTextFile(extension)) {
+            return "icons/ic_large_type_txt.png";
+          }
+
+          return "icons/ic_large_type_doc.png";
+        }
+      }
+
       return Expanded(
           child: Column(children: [
         Container(
@@ -391,8 +410,30 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
             child: Container(
                 child: GridView.builder(
                   itemBuilder: (BuildContext context, int index) {
-                    final ws = getWidgetList();
-                    return ws[index];
+                    FileItem fileItem = _fileItems[index];
+
+                    bool isDir = fileItem.isDir;
+
+                    String name = fileItem.name;
+                    String extension = "";
+                    int pointIndex = name.lastIndexOf(".");
+                    if (pointIndex != -1) {
+                      extension = name.substring(pointIndex + 1);
+                    }
+
+                    String fileTypeIcon = getFileTypeIcon(isDir, extension);
+
+                    return Column(
+                        children: [
+                          Container(
+                            child: Image.asset(fileTypeIcon, width: 100, height: 100),
+                          ),
+                          Text(fileItem.name, style: TextStyle(
+                              inherit: false,
+                              fontSize: 14,
+                              color: Color(0xff515151)
+                          ))
+                        ]);
                   },
                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 200,
@@ -401,12 +442,34 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                     mainAxisSpacing: 10
                   ),
                   padding: EdgeInsets.all(10.0),
+                  itemCount: _fileItems.length,
                 ),
                 color: Colors.white)),
       ]));
     }
   }
 }
+
+bool _isAudio(String extension) {
+  if (extension.toLowerCase() == "mp3") return true;
+  if (extension.toLowerCase() == "wav") return true;
+
+  return false;
+}
+
+bool _isTextFile(String extension) {
+  if (extension.toLowerCase() == "txt") return true;
+
+  return false;
+}
+
+bool _isDoc(String extension) {
+  if (_isAudio(extension)) return false;
+  if (_isTextFile(extension)) return false;
+
+  return true;
+}
+
 
 void _getFileList(String? path, Function(List<FileItem> items) onSuccess,
     Function(String error) onError) {

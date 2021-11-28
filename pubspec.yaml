@@ -113,6 +113,10 @@ flutter:
      - icons/ic_android.jpg
      - icons/ic_right_arrow.png
      - icons/ic_video_indictor.png
+     - icons/ic_large_type_folder.png
+     - icons/ic_large_type_doc.png
+     - icons/ic_large_type_txt.png
+     - icons/ic_large_type_audio.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
