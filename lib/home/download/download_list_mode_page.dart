@@ -365,11 +365,11 @@ class FileNodeDataSource extends DataGridSource {
                 }
               }
 
-              if (e.columnName == "category") {
+              if (e.columnName == COLUMN_NAME_CATEGORY) {
                 text = _convertToCategory(fileItem);
               }
 
-              if (e.columnName == "changeDate") {
+              if (e.columnName == COLUMN_NAME_MODIFY_DATE) {
                 text = _formatChangeDate(fileItem.changeDate);
               }
 
@@ -543,17 +543,17 @@ class FileNodeDataSource extends DataGridSource {
 
   String _convertToReadableSize(int size) {
     if (size < _KB_BOUND) {
-      return "${size}Byte";
+      return "${size} bytes";
     }
     if (size >= _KB_BOUND && size < _MB_BOUND) {
-      return "${size ~/ 1024}KB";
+      return "${(size / 1024).toStringAsFixed(1)} KB";
     }
 
     if (size >= _MB_BOUND && size <= _GB_BOUND) {
-      return "${size / 1024 ~/ 1024}MB";
+      return "${(size / 1024 ~/ 1024).toStringAsFixed(1)} MB";
     }
 
-    return "${size / 1024 / 1024 ~/ 1024}GB";
+    return "${(size / 1024 / 1024 ~/ 1024).toStringAsFixed(1)} GB";
   }
 
   String _convertToCategory(FileItem item) {
