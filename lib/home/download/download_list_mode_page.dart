@@ -136,7 +136,9 @@ class _DownloadListModeState extends State<DownloadListModePage> {
                         minimumWidth: _minColumnWidth,
                         maximumWidth: _maxColumnWidth,
                         columnWidthMode: ColumnWidthMode.fill,
-                        allowEditing: false),
+                        allowEditing: false,
+                      allowSorting: false
+                    ),
                     GridColumn(
                         columnName: COLUMN_NAME_MODIFY_DATE,
                         // width: columnWidths['changeDate']!,
@@ -199,7 +201,7 @@ class FileNodeDataSource extends DataGridSource {
 
     developer.log("Detail, log: ${details.name}，sort direcation: ${details.sortDirection}");
 
-    if (details.name == COLUMN_NAME_NAME) {
+    if (_needSortOrder(details.name)) {
       List<DataGridRow> childRows = rows.where((row) {
         DataGridCell? cell = row.getCells().where((element) => element.columnName == COLUMN_NAME_NAME).first;
         return (cell.value as FileNode).parent == currentFileNode;
@@ -214,7 +216,7 @@ class FileNodeDataSource extends DataGridSource {
         FileItem fileItemA = nodeA.data;
         FileItem fileItemB = nodeB.data;
 
-        return _compareValues(details.sortDirection, fileItemA, fileItemB);
+        return _compareValues(details.sortDirection, details.name, fileItemA, fileItemB);
       });
 
       // 如果当前节点数量等于所有节点数量，即表示所有节点均未展开，无需进行如下处理
@@ -267,7 +269,7 @@ class FileNodeDataSource extends DataGridSource {
                 FileItem fileItemA = nodeA.data;
                 FileItem fileItemB = nodeB.data;
 
-                return _compareValues(details.sortDirection, fileItemA, fileItemB);
+                return _compareValues(details.sortDirection, details.name, fileItemA, fileItemB);
               });
 
               map[fileNode] = groupRows;
@@ -292,29 +294,60 @@ class FileNodeDataSource extends DataGridSource {
       for (int i = 0; i < childRows.length; i++) {
         rows[i] = childRows[i];
       }
-
-
-      developer.log("============================");
-      for (DataGridRow row in rows) {
-        developer.log("name => ${(row.getCells().where((element) => element.columnName == "name").first.value as FileNode).data.name}");
-      }
-      developer.log("============================");
     }
   }
 
-  int _compareValues(DataGridSortDirection direction, FileItem a, FileItem b) {
+  bool _needSortOrder(String columnName) {
+    if (columnName == COLUMN_NAME_NAME) return true;
+
+    if (columnName == COLUMN_NAME_SIZE) return true;
+
+    if (columnName == COLUMN_NAME_MODIFY_DATE) return true;
+
+    return false;
+  }
+
+  int _compareValues(DataGridSortDirection direction, String sortColumnName, FileItem a, FileItem b) {
     if (direction == DataGridSortDirection.ascending) {
-      if (a.isDir && !b.isDir) return -1;
+      if (COLUMN_NAME_NAME == sortColumnName) {
+        if (a.isDir && !b.isDir) return -1;
 
-      if (!a.isDir && b.isDir) return 1;
+        if (!a.isDir && b.isDir) return 1;
+      }
 
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      if (COLUMN_NAME_NAME == sortColumnName) {
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      }
+
+      if (COLUMN_NAME_SIZE == sortColumnName) {
+        return a.size.compareTo(b.size);
+      }
+
+      if (COLUMN_NAME_MODIFY_DATE == sortColumnName) {
+        return a.changeDate.compareTo(b.changeDate);
+      }
+
+      return 0;
     } else {
-      if (a.isDir && !b.isDir) return 1;
+      if (COLUMN_NAME_NAME == sortColumnName) {
+        if (a.isDir && !b.isDir) return 1;
 
-      if (!a.isDir && b.isDir) return -1;
+        if (!a.isDir && b.isDir) return -1;
+      }
 
-      return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+      if (COLUMN_NAME_NAME == sortColumnName) {
+        return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+      }
+
+      if (COLUMN_NAME_SIZE == sortColumnName) {
+        return b.size.compareTo(a.size);
+      }
+
+      if (COLUMN_NAME_MODIFY_DATE == sortColumnName) {
+        return b.changeDate.compareTo(a.changeDate);
+      }
+
+      return 0;
     }
   }
 
