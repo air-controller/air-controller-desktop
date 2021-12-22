@@ -4,6 +4,7 @@ import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
+import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 
 import '../file_manager.dart';
@@ -59,11 +60,11 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
 
   void _setAllSelected() {
     setState(() {
-      List<FileItem> selectedFiles =
+      List<FileNode> selectedFiles =
           DownloadFileManager.instance.selectedFiles();
       selectedFiles.clear();
 
-      List<FileItem> allFiles = DownloadFileManager.instance.allFiles();
+      List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
       selectedFiles.addAll(allFiles);
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
 
@@ -90,8 +91,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
       }
     }
 
-    List<FileItem> files = DownloadFileManager.instance.allFiles();
-    List<FileItem> selectedFiles = DownloadFileManager.instance.selectedFiles();
+    List<FileNode> files = DownloadFileManager.instance.allFiles();
+    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
 
     Widget content = Column(children: [
       Container(
@@ -109,11 +110,11 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
           child: Container(
               child: GridView.builder(
                 itemBuilder: (BuildContext context, int index) {
-                  FileItem fileItem = files[index];
+                  FileNode fileItem = files[index];
 
-                  bool isDir = fileItem.isDir;
+                  bool isDir = fileItem.data.isDir;
 
-                  String name = fileItem.name;
+                  String name = fileItem.data.name;
                   String extension = "";
                   int pointIndex = name.lastIndexOf(".");
                   if (pointIndex != -1) {
@@ -142,7 +143,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                     GestureDetector(
                       child: Container(
                         constraints: BoxConstraints(maxWidth: 150),
-                        child: Text(fileItem.name,
+                        child: Text(fileItem.data.name,
                               style: TextStyle(
                                   inherit: false,
                                   fontSize: 14,
@@ -190,7 +191,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
 
   void _clearSelectedFiles() {
     setState(() {
-      List<FileItem> selectedFiles = DownloadFileManager.instance.selectedFiles();
+      List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
       selectedFiles.clear();
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
 
@@ -227,12 +228,12 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
     fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
-  void _setFileSelected(FileItem fileItem) {
+  void _setFileSelected(FileNode fileItem) {
     debugPrint("Shift key down status: ${_isShiftDown()}");
     debugPrint("Control key down status: ${_isControlDown()}");
 
-    List<FileItem> allFiles = DownloadFileManager.instance.allFiles();
-    List<FileItem> selectedFiles = DownloadFileManager.instance.selectedFiles();
+    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
+    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
 
     if (!_isContainsFile(selectedFiles, fileItem)) {
       if (_isControlDown()) {
@@ -265,7 +266,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
           int minIndex = 0;
 
           for (int i = 0; i < selectedFiles.length; i++) {
-            FileItem current = selectedFiles[i];
+            FileNode current = selectedFiles[i];
             int index = allFiles.indexOf(current);
             if (index < 0) {
               debugPrint("Error image");
@@ -310,7 +311,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
         });
       }
     } else {
-      debugPrint("It's already contains this image, id: ${fileItem.name}");
+      debugPrint("It's already contains this image, id: ${fileItem.data.name}");
 
       if (_isControlDown()) {
         setState(() {
@@ -335,9 +336,9 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
     });
   }
 
-  bool _isContainsFile(List<FileItem> files, FileItem current) {
-    for (FileItem file in files) {
-      if (file.folder == current.folder && file.name == current.name) {
+  bool _isContainsFile(List<FileNode> files, FileNode current) {
+    for (FileNode file in files) {
+      if (file.data.folder == current.data.folder && file.data.name == current.data.name) {
         return true;
       }
     }
@@ -370,8 +371,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   void updateBottomItemNum() {
-    List<FileItem> allFiles = DownloadFileManager.instance.allFiles();
-    List<FileItem> selectedFiles = DownloadFileManager.instance.selectedFiles();
+    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
+    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
 
     eventBus.fire(UpdateBottomItemNum(allFiles.length, selectedFiles.length));
   }

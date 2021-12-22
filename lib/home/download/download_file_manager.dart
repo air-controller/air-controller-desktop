@@ -1,15 +1,16 @@
 import 'package:mobile_assistant_client/model/FileItem.dart';
+import 'package:mobile_assistant_client/model/FileNode.dart';
 
 abstract class DownloadFileManager {
   static final DownloadFileManager _instance = DownloadFileManagerImpl();
 
-  void updateFiles(List<FileItem> files);
+  void updateFiles(List<FileNode> files);
 
-  void updateSelectedFiles(List<FileItem> selectedFiles);
+  void updateSelectedFiles(List<FileNode> selectedFiles);
 
-  List<FileItem> allFiles();
+  List<FileNode> allFiles();
 
-  List<FileItem> selectedFiles();
+  List<FileNode> selectedFiles();
 
   void clear();
 
@@ -19,26 +20,26 @@ abstract class DownloadFileManager {
 }
 
 class DownloadFileManagerImpl extends DownloadFileManager {
-  List<FileItem> _allFiles = [];
-  List<FileItem> _selectedFiles = [];
+  List<FileNode> _allFiles = [];
+  List<FileNode> _selectedFiles = [];
 
   @override
-  void updateFiles(List<FileItem> files) {
+  void updateFiles(List<FileNode> files) {
     _allFiles = files;
   }
 
   @override
-  void updateSelectedFiles(List<FileItem> selectedFiles) {
+  void updateSelectedFiles(List<FileNode> selectedFiles) {
     _selectedFiles = selectedFiles;
   }
 
   @override
-  List<FileItem> allFiles() {
+  List<FileNode> allFiles() {
     return _allFiles;
   }
 
   @override
-  List<FileItem> selectedFiles() {
+  List<FileNode> selectedFiles() {
     return _selectedFiles;
   }
 

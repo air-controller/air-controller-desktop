@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 
@@ -13,6 +14,7 @@ import '../constant.dart';
 import '../ext/string-ext.dart';
 import 'download/download_icon_mode_page.dart';
 import 'download/download_list_mode_page.dart';
+import 'download/download_list_mode_page2.dart';
 
 class DownloadManagerPage extends StatefulWidget {
 
@@ -27,7 +29,7 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   final _downloadIconModePage = DownloadIconModePage();
-  final _downloadListModePage = DownloadListModePage();
+  final _downloadListModePage = DownloadListModePage2();
   
   static final PAGE_INDEX_ICON_MODE = 0;
   static final PAGE_INDEX_LIST_MODE = 1;
@@ -42,7 +44,7 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
     _getDownloadFiles((files) {
       setState(() {
-        DownloadFileManager.instance.updateFiles(files);
+        DownloadFileManager.instance.updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
         _downloadIconModePage.rebuild();
         // _downloadListModePage.reb
         _isLoadingCompleted = true;
