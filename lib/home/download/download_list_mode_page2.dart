@@ -13,6 +13,8 @@ import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 
+import '../file_manager.dart';
+
 class DownloadListModePage2 extends StatefulWidget {
   _DownloadListModeState? state;
 
@@ -54,9 +56,41 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
 
   FileNode? currentFileNode;
 
+  late Function() _ctrlAPressedCallback;
+
   @override
   void initState() {
     super.initState();
+
+    _ctrlAPressedCallback = () {
+      _setAllSelected();
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
+  }
+
+  void _setAllSelected() {
+    setState(() {
+      List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
+
+      List<FileNode> selectedFiles = [...allFiles];
+      DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
+      // updateBottomItemNum();
+      // _setDeleteBtnEnabled(true);
+    });
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
   }
 
   @override
@@ -456,18 +490,22 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
           onSelectChanged: (isSelected) {
             debugPrint("onSelectChanged: $isSelected");
 
-            if (isSelected == true) {
-              if (_isContains(selectedFileNode, fileNode)) {
-                _removeFileNodeFromSelected(fileNode);
-              } else {
-                _addFileNodeToSelected(fileNode);
-              }
-            } else {
-              _removeFileNodeFromSelected(fileNode);
-            }
+            // if (isSelected == true) {
+            //   if (_isContains(selectedFileNode, fileNode)) {
+            //     _removeFileNodeFromSelected(fileNode);
+            //   } else {
+            //     _addFileNodeToSelected(fileNode);
+            //   }
+            // } else {
+            //   _removeFileNodeFromSelected(fileNode);
+            // }
           },
-          onTap: () {},
-          onDoubleTap: () {},
+          onTap: () {
+            debugPrint("onTap: ${fileNode.data.name}");
+            _setFileSelected(fileNode);
+          },
+          onDoubleTap: () {
+          },
           color: MaterialStateColor.resolveWith((states) {
             if (states.contains(MaterialState.hovered)) {
               return Colors.red;
@@ -486,6 +524,100 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
     });
   }
 
+  bool _isControlDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    FileManagerPage? fileManagerPage =
+    context.findAncestorWidgetOfExactType<FileManagerPage>();
+    return fileManagerPage?.state?.isShiftDown() == true;
+  }
+
+  void _setFileSelected(FileNode fileNode) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
+
+    if (!_isContains(selectedFiles, fileNode)) {
+      if (_isControlDown()) {
+        selectedFiles.add(fileNode);
+      } else if (_isShiftDown()) {
+        if (selectedFiles.length == 0) {
+          selectedFiles.add(fileNode);
+        } else if (selectedFiles.length == 1) {
+          int index = allFiles.indexOf(selectedFiles[0]);
+
+          int current = allFiles.indexOf(fileNode);
+
+          if (current > index) {
+            selectedFiles = allFiles.sublist(index, current + 1);
+          } else {
+            selectedFiles = allFiles.sublist(current, index + 1);
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < selectedFiles.length; i++) {
+            FileNode current = selectedFiles[i];
+            int index = allFiles.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = allFiles.indexOf(fileNode);
+
+          if (current >= minIndex && current <= maxIndex) {
+            selectedFiles = allFiles.sublist(current, maxIndex + 1);
+          } else if (current < minIndex) {
+            selectedFiles = allFiles.sublist(current, maxIndex + 1);
+          } else if (current > maxIndex) {
+            selectedFiles = allFiles.sublist(minIndex, current + 1);
+          }
+        }
+      } else {
+        selectedFiles.clear();
+        selectedFiles.add(fileNode);
+      }
+    } else {
+      debugPrint("It's already contains this file, file: ${fileNode.data.name}");
+
+      if (_isControlDown()) {
+        selectedFiles.remove(fileNode);
+      } else if (_isShiftDown()) {
+        selectedFiles.remove(fileNode);
+      } else {
+        selectedFiles.clear();
+        selectedFiles.add(fileNode);
+      }
+    }
+
+    setState(() {
+      debugPrint("Selected files length: ${selectedFiles.length}");
+      DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
+    });
+
+    // _setDeleteBtnEnabled(_selectedImages.length > 0);
+    // updateBottomItemNum();
+  }
+  
   void _addFileNodeToSelected(FileNode node) {
     setState(() {
       List<FileNode> selectedFiles =
@@ -566,5 +698,11 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
   String _formatChangeDate(int changeDate) {
     final df = DateFormat("yyyy年M月d日 HH:mm");
     return df.format(new DateTime.fromMillisecondsSinceEpoch(changeDate));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
   }
 }
