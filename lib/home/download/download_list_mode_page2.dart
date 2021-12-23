@@ -7,11 +7,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
 
 import '../file_manager.dart';
 
@@ -30,7 +33,7 @@ final COLUMN_NAME_SIZE = "size";
 final COLUMN_NAME_CATEGORY = "category";
 final COLUMN_NAME_MODIFY_DATE = "modifyDate";
 
-class _DownloadListModeState extends State<DownloadListModePage2> {
+class _DownloadListModeState extends State<DownloadListModePage2>  with AutomaticKeepAliveClientMixin {
   final _headerTextStyle =
       TextStyle(color: Color(0xff5d5e63), fontSize: 14, inherit: false);
   final _minColumnWidth = 200.0;
@@ -76,9 +79,14 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
 
       List<FileNode> selectedFiles = [...allFiles];
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
-      // updateBottomItemNum();
-      // _setDeleteBtnEnabled(true);
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(true);
     });
+  }
+
+  void updateBottomItemNum() {
+    // 这里我们从缓存中获取数据，因此不需要传递真实数量
+    eventBus.fire(UpdateBottomItemNum(0, 0));
   }
 
   void _addCtrlAPressedCallback(Function() callback) {
@@ -614,28 +622,12 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
     });
 
-    // _setDeleteBtnEnabled(_selectedImages.length > 0);
-    // updateBottomItemNum();
-  }
-  
-  void _addFileNodeToSelected(FileNode node) {
-    setState(() {
-      List<FileNode> selectedFiles =
-          DownloadFileManager.instance.selectedFiles();
-      selectedFiles.add(node);
-      DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
-    });
+    _setDeleteBtnEnabled(false);
+    updateBottomItemNum();
   }
 
-  void _removeFileNodeFromSelected(FileNode node) {
-    setState(() {
-      List<FileNode> selectedFiles =
-          DownloadFileManager.instance.selectedFiles();
-      selectedFiles.removeWhere((element) =>
-          element.data.folder == node.data.folder &&
-          element.data.name == node.data.name);
-      DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
-    });
+  void _setDeleteBtnEnabled(bool enable) {
+    eventBus.fire(UpdateDeleteBtnStatus(enable));
   }
 
   bool _isContains(List<FileNode> nodes, FileNode node) {
@@ -703,6 +695,11 @@ class _DownloadListModeState extends State<DownloadListModePage2> {
   @override
   void dispose() {
     super.dispose();
+
+    debugPrint("DownloadListModePage dispose");
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

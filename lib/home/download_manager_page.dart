@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
 
 import '../constant.dart';
 import '../ext/string-ext.dart';
@@ -35,24 +39,48 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   static final PAGE_INDEX_LIST_MODE = 1;
   
   int _currentPageIndex = PAGE_INDEX_ICON_MODE;
-
   PageController _pageController = PageController();
+
+  // 标记删除按钮是否可以点击
+  bool _isDeleteBtnEnabled = false;
+
+  StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+  StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
 
   @override
   void initState() {
     super.initState();
 
+    _registerEventBus();
+
     _getDownloadFiles((files) {
       setState(() {
         DownloadFileManager.instance.updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
         _downloadIconModePage.rebuild();
-        // _downloadListModePage.reb
         _isLoadingCompleted = true;
       });
     }, (error) {
       _isLoadingCompleted = true;
       debugPrint("_getDownloadFiles, error: $error");
     });
+  }
+
+  void _registerEventBus() {
+    _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
+      // 这里调用setState刷新页面
+      setState(() {
+
+      });
+    });
+
+    _updateDeleteBtnStream = eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+      setDeleteBtnEnabled(event.isEnable);
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateBottomItemNumStream?.cancel();
+    _updateDeleteBtnStream?.cancel();
   }
 
   @override
@@ -123,7 +151,14 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     final _delete_btn_padding_vertical = 4.5;
     final _divider_line_color = Color(0xffe0e0e0);
 
-    String itemNumStr = "共108项";
+    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
+    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+
+    String itemNumStr = "共${allFiles.length}项";
+
+    if (selectedFiles.isNotEmpty) {
+      itemNumStr += "(选中${selectedFiles.length}项)";
+    }
 
     String getIconModeIcon() {
       if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
@@ -231,9 +266,12 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                           ),
                           
                           Container(
-                              child: Image.asset("icons/icon_delete.png",
-                                  width: _icon_delete_btn_size,
-                                  height: _icon_delete_btn_size),
+                              child: Opacity(
+                                opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                                child: Image.asset("icons/icon_delete.png",
+                                    width: _icon_delete_btn_size,
+                                    height: _icon_delete_btn_size),
+                              ),
                               decoration: BoxDecoration(
                                   color: Color(0xffcb6357),
                                   border: new Border.all(
@@ -282,7 +320,6 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   }
 
   Widget _createPageView() {
-
     return Expanded(
         child: PageView(
       scrollDirection: Axis.vertical,
@@ -299,5 +336,19 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
       },
       controller: _pageController,
     ));
+  }
+
+  void setDeleteBtnEnabled(bool enable) {
+    setState(() {
+      List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+      _isDeleteBtnEnabled = selectedFiles.length > 0;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _unRegisterEventBus();
   }
 }
