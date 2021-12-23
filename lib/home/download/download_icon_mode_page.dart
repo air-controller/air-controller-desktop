@@ -1,11 +1,17 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
+import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/util/stack.dart';
+import 'package:http/http.dart' as http;
 
 import '../file_manager.dart';
 
@@ -45,6 +51,9 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   final _BACKGROUND_FILE_NAME_SELECTED = Color(0xff5d87ed);
 
   late Function() _ctrlAPressedCallback;
+
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   @override
   void initState() {
@@ -94,13 +103,63 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
     List<FileNode> files = DownloadFileManager.instance.allFiles();
     List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
 
+    int dirStackLength = DownloadFileManager.instance.dirStackLength();
+
     Widget content = Column(children: [
       Container(
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text("手机存储",
-                style: TextStyle(
-                    color: Color(0xff5b5c61), fontSize: 12.0, inherit: false)),
+            child: Row(
+              children: [
+                Container(
+                  child: GestureDetector(
+                    child: Text("下载",
+                        style: TextStyle(
+                            color: Color(0xff5b5c61),
+                            fontSize: 12.0,
+                            inherit: false)),
+                    onTap: () {
+                      _backToRootDir();
+                    },
+                  ),
+                  margin: EdgeInsets.only(right: 10),
+                ),
+                ...List.generate(dirStackLength, (index) {
+                  List<FileNode> fileNodes = DownloadFileManager.instance.dirStackToList();
+                  FileNode fileNode = fileNodes[index];
+
+                  return GestureDetector(
+                    child: Row(
+                      children: [
+                        Image.asset("icons/ic_right_arrow.png", height: 20),
+                        Container(
+                          child: Text(fileNode.data.name,
+                              style: TextStyle(
+                                  color: Color(0xff5b5c61),
+                                  fontSize: 12.0,
+                                  inherit: false)),
+                          padding: EdgeInsets.only(right: 5),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _tryToOpenDirectory(fileNode, (files) {
+
+                        setState(() {
+                          DownloadFileManager.instance.popTo(fileNode);
+                          DownloadFileManager.instance.updateSelectedFiles([]);
+                          DownloadFileManager.instance.updateFiles(files);
+                          DownloadFileManager.instance.updateCurrentDir(fileNode);
+                          _updateBackBtnVisibility();
+                        });
+                      }, (error) {
+
+                      });
+                    },
+                  );
+                })
+              ],
+            ),
           ),
           color: Color(0xfffaf9fa),
           padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
@@ -125,38 +184,53 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
 
                   return Column(children: [
                     GestureDetector(
-                      child: Container(
-                        child:
-                        Image.asset(fileTypeIcon, width: 100, height: 100),
-                        decoration: BoxDecoration(
-                            color: _isContainsFile(selectedFiles, fileItem)
-                                ? _BACKGROUND_FILE_SELECTED
-                                : _BACKGROUND_FILE_NORMAL,
-                            borderRadius:
-                            BorderRadius.all(Radius.circular(4.0))),
-                        padding: EdgeInsets.all(8),
-                      ),
-                      onTap: () {
-                        _setFileSelected(fileItem);
-                      },
-                    ),
+                        child: Container(
+                          child: Image.asset(fileTypeIcon,
+                              width: 100, height: 100),
+                          decoration: BoxDecoration(
+                              color: _isContainsFile(selectedFiles, fileItem)
+                                  ? _BACKGROUND_FILE_SELECTED
+                                  : _BACKGROUND_FILE_NORMAL,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4.0))),
+                          padding: EdgeInsets.all(8),
+                        ),
+                        onTap: () {
+                          _setFileSelected(fileItem);
+                        },
+                        onDoubleTap: () {
+                          debugPrint(
+                              "_tryToOpenDirectory: ${fileItem.data.name}");
+
+                          _tryToOpenDirectory(fileItem, (files) {
+                            setState(() {
+                              DownloadFileManager.instance.updateSelectedFiles([]);
+                              DownloadFileManager.instance.updateFiles(files);
+                              DownloadFileManager.instance.updateCurrentDir(fileItem);
+                              DownloadFileManager.instance.pushToStack(fileItem);
+                              _updateBackBtnVisibility();
+                            });
+                          }, (error) {
+
+                          });
+                        }),
                     GestureDetector(
                       child: Container(
                         constraints: BoxConstraints(maxWidth: 150),
-                        child: Text(fileItem.data.name,
-                              style: TextStyle(
-                                  inherit: false,
-                                  fontSize: 14,
-                                  color:
-                                  _isContainsFile(selectedFiles, fileItem)
-                                      ? _FILE_NAME_TEXT_COLOR_SELECTED
-                                      : _FILE_NAME_TEXT_COLOR_NORMAL),
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
+                        child: Text(
+                          fileItem.data.name,
+                          style: TextStyle(
+                              inherit: false,
+                              fontSize: 14,
+                              color: _isContainsFile(selectedFiles, fileItem)
+                                  ? _FILE_NAME_TEXT_COLOR_SELECTED
+                                  : _FILE_NAME_TEXT_COLOR_NORMAL),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(3)),
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
                           color: _isContainsFile(selectedFiles, fileItem)
                               ? _BACKGROUND_FILE_NAME_SELECTED
                               : _BACKGROUND_FILE_NAME_NORMAL,
@@ -166,6 +240,22 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                       ),
                       onTap: () {
                         _setFileSelected(fileItem);
+                      },
+                      onDoubleTap: () {
+                        debugPrint(
+                            "_tryToOpenDirectory: ${fileItem.data.name}");
+
+                        _tryToOpenDirectory(fileItem, (files) {
+                          setState(() {
+                            DownloadFileManager.instance.updateSelectedFiles([]);
+                            DownloadFileManager.instance.updateFiles(files);
+                            DownloadFileManager.instance.updateCurrentDir(fileItem);
+                            DownloadFileManager.instance.pushToStack(fileItem);
+                            _updateBackBtnVisibility();
+                          });
+                        }, (error) {
+
+                        });
                       },
                     )
                   ]);
@@ -189,9 +279,119 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
     );
   }
 
+  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess, Function(String) onError) {
+    debugPrint("_tryToOpenDirectory, dir: ${dir.data.folder}/${dir.data.name}");
+    _getDownloadFiles("${dir.data.folder}/${dir.data.name}", (files) {
+      List<FileNode> allFiles =
+          files.map((e) => FileNode(dir, e, dir.level + 1)).toList();
+
+      onSuccess.call(allFiles);
+    }, (error) {
+      debugPrint("_tryToOpenDirectory, error: $error");
+
+      onError.call(error);
+    });
+  }
+
+  void _getDownloadRootFiles(Function(List<FileItem> files) onSuccess, Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/downloadedFiles");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get download file list, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+
+  void _backToRootDir() {
+    _getDownloadRootFiles((files) {
+      List<FileNode> allFiles =
+      files.map((e) => FileNode(null, e, 0)).toList();
+
+      setState(() {
+        DownloadFileManager.instance.updateSelectedFiles([]);
+        DownloadFileManager.instance.updateFiles(allFiles);
+        DownloadFileManager.instance.updateCurrentDir(null);
+        DownloadFileManager.instance.clearDirStack();
+        _updateBackBtnVisibility();
+      });
+    }, (error) {
+      debugPrint("_tryToOpenDirectory, error: $error");
+    });
+  }
+
+  void _updateBackBtnVisibility() {
+    // 这里直接传true，因为按钮可见性不收到这里的传参影响，直接使用回退栈里面的数据进行
+    // 判断
+    eventBus.fire(BackBtnVisibility(true));
+  }
+
+  void _getDownloadFiles(String dir, Function(List<FileItem> files) onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/list");
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({"path": dir}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get download file list, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
   void _clearSelectedFiles() {
     setState(() {
-      List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+      List<FileNode> selectedFiles =
+          DownloadFileManager.instance.selectedFiles();
       selectedFiles.clear();
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
 
@@ -338,7 +538,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
 
   bool _isContainsFile(List<FileNode> files, FileNode current) {
     for (FileNode file in files) {
-      if (file.data.folder == current.data.folder && file.data.name == current.data.name) {
+      if (file.data.folder == current.data.folder &&
+          file.data.name == current.data.name) {
         return true;
       }
     }

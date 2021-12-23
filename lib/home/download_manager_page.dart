@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
@@ -21,7 +22,6 @@ import 'download/download_list_mode_page.dart';
 import 'download/download_list_mode_page2.dart';
 
 class DownloadManagerPage extends StatefulWidget {
-
   @override
   State<StatefulWidget> createState() {
     return _DownloadManagerState();
@@ -30,22 +30,26 @@ class DownloadManagerPage extends StatefulWidget {
 
 class _DownloadManagerState extends State<DownloadManagerPage> {
   bool _isLoadingCompleted = false;
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   final _downloadIconModePage = DownloadIconModePage();
   final _downloadListModePage = DownloadListModePage2();
-  
+
   static final PAGE_INDEX_ICON_MODE = 0;
   static final PAGE_INDEX_LIST_MODE = 1;
-  
+
   int _currentPageIndex = PAGE_INDEX_ICON_MODE;
   PageController _pageController = PageController();
 
   // 标记删除按钮是否可以点击
   bool _isDeleteBtnEnabled = false;
 
+  bool _isBackBtnDown = false;
+
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
+  StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
 
   @override
   void initState() {
@@ -55,7 +59,8 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
     _getDownloadFiles((files) {
       setState(() {
-        DownloadFileManager.instance.updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
+        DownloadFileManager.instance
+            .updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
         _downloadIconModePage.rebuild();
         _isLoadingCompleted = true;
       });
@@ -66,21 +71,27 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   }
 
   void _registerEventBus() {
-    _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
+    _updateBottomItemNumStream =
+        eventBus.on<UpdateBottomItemNum>().listen((event) {
       // 这里调用setState刷新页面
-      setState(() {
-
-      });
+      setState(() {});
     });
 
-    _updateDeleteBtnStream = eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+    _updateDeleteBtnStream =
+        eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
       setDeleteBtnEnabled(event.isEnable);
+    });
+
+    _backBtnVisibilityStream = eventBus.on<BackBtnVisibility>().listen((event) {
+      setState(() {
+      });
     });
   }
 
   void _unRegisterEventBus() {
     _updateBottomItemNumStream?.cancel();
     _updateDeleteBtnStream?.cancel();
+    _backBtnVisibilityStream?.cancel();
   }
 
   @override
@@ -102,12 +113,51 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     );
   }
 
-  void _getDownloadFiles(Function(List<FileItem> files) onSuccess, Function(String error) onError) {
+  void _getDownloadFiles(Function(List<FileItem> files) onSuccess,
+      Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/file/downloadedFiles");
     http
         .post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({}))
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get download file list, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _getDownloadChildFiles(
+      String dir,
+      Function(List<FileItem> files) onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/list");
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({"path": dir}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -195,6 +245,58 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     return Column(children: [
       Container(
           child: Stack(children: [
+            GestureDetector(
+              child: Visibility(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    child: Row(
+                      children: [
+                        Image.asset("icons/icon_right_arrow.png",
+                            width: 12, height: 12),
+                        Container(
+                          child: Text("返回",
+                              style: TextStyle(
+                                  color: Color(0xff5c5c62),
+                                  fontSize: 13,
+                                  inherit: false)),
+                          margin: EdgeInsets.only(left: 3),
+                        ),
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                        color: _isBackBtnDown
+                            ? Color(0xffe8e8e8)
+                            : Color(0xfff3f3f4),
+                        borderRadius: BorderRadius.all(Radius.circular(3.0)),
+                        border:
+                            Border.all(color: Color(0xffdedede), width: 1.0)),
+                    height: 25,
+                    width: 50,
+                    margin: EdgeInsets.only(left: 15),
+                  ),
+                ),
+                visible: !DownloadFileManager.instance.isRoot(),
+              ),
+              onTap: () {
+                _onBackPressed();
+              },
+              onTapDown: (detail) {
+                setState(() {
+                  _isBackBtnDown = true;
+                });
+              },
+              onTapCancel: () {
+                setState(() {
+                  _isBackBtnDown = false;
+                });
+              },
+              onTapUp: (detail) {
+                setState(() {
+                  _isBackBtnDown = false;
+                });
+              },
+            ),
             Align(
                 alignment: Alignment.center,
                 child: Text("全部文件",
@@ -209,12 +311,12 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                         children: [
                           GestureDetector(
                             child: Container(
-                                child: Image.asset(
-                                    getIconModeIcon(),
+                                child: Image.asset(getIconModeIcon(),
                                     width: _icon_display_mode_size,
                                     height: _icon_display_mode_size),
                                 decoration: BoxDecoration(
-                                    color: getModeBtnBgColor(PAGE_INDEX_ICON_MODE),
+                                    color:
+                                        getModeBtnBgColor(PAGE_INDEX_ICON_MODE),
                                     border: new Border.all(
                                         color: Color(0xffababab), width: 1.0),
                                     borderRadius: BorderRadius.only(
@@ -231,19 +333,19 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                                     _segment_control_padding_vertical)),
                             onTap: () {
                               if (_currentPageIndex != PAGE_INDEX_ICON_MODE) {
-                                _pageController.jumpToPage(
-                                    PAGE_INDEX_ICON_MODE);
+                                _pageController
+                                    .jumpToPage(PAGE_INDEX_ICON_MODE);
                               }
                             },
                           ),
-                          
                           GestureDetector(
-                            child:  Container(
+                            child: Container(
                                 child: Image.asset(getListModeIcon(),
                                     width: _icon_display_mode_size,
                                     height: _icon_display_mode_size),
                                 decoration: BoxDecoration(
-                                    color: getModeBtnBgColor(PAGE_INDEX_LIST_MODE),
+                                    color:
+                                        getModeBtnBgColor(PAGE_INDEX_LIST_MODE),
                                     border: new Border.all(
                                         color: Color(0xffdededd), width: 1.0),
                                     borderRadius: BorderRadius.only(
@@ -259,12 +361,12 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                                     _segment_control_padding_hor,
                                     _segment_control_padding_vertical)),
                             onTap: () {
-                                if (_currentPageIndex != PAGE_INDEX_LIST_MODE) {
-                                  _pageController.jumpToPage(PAGE_INDEX_LIST_MODE);
-                                }
+                              if (_currentPageIndex != PAGE_INDEX_LIST_MODE) {
+                                _pageController
+                                    .jumpToPage(PAGE_INDEX_LIST_MODE);
+                              }
                             },
                           ),
-                          
                           Container(
                               child: Opacity(
                                 opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
@@ -319,15 +421,57 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     ], mainAxisSize: MainAxisSize.max);
   }
 
+  void _onBackPressed() {
+    FileNode? currentDir = DownloadFileManager.instance.currentDir();
+
+    if (null != currentDir) {
+      FileNode? dir = DownloadFileManager.instance.takeLast();
+
+      if (null != dir) {
+        _getDownloadChildFiles(
+            "${dir.data.folder}/${dir.data.name}", (files) {
+          setState(() {
+            List<FileNode> fileNodes = files.map((e) =>
+                FileNode(dir, e, dir.level + 1)).toList();
+
+            DownloadFileManager.instance.updateFiles(fileNodes);
+            DownloadFileManager.instance.updateSelectedFiles([]);
+            DownloadFileManager.instance.updateCurrentDir(dir);
+            DownloadFileManager.instance.pop();
+
+            _downloadIconModePage.rebuild();
+          });
+        }, (error) {
+
+        });
+      } else {
+        _getDownloadFiles((files) {
+          setState(() {
+            List<FileNode> fileNodes = files.map((e) =>
+                FileNode(null, e, 0)).toList();
+
+            DownloadFileManager.instance.updateFiles(fileNodes);
+            DownloadFileManager.instance.updateSelectedFiles([]);
+            DownloadFileManager.instance.updateCurrentDir(null);
+            DownloadFileManager.instance.pop();
+
+            _downloadIconModePage.rebuild();
+          });
+        }, (error) {
+
+        });
+      }
+    } else {
+      debugPrint("_onBackPressed: dir is null");
+    }
+  }
+
   Widget _createPageView() {
     return Expanded(
         child: PageView(
       scrollDirection: Axis.vertical,
       physics: NeverScrollableScrollPhysics(),
-      children: [
-        _downloadIconModePage,
-        _downloadListModePage
-      ],
+      children: [_downloadIconModePage, _downloadListModePage],
       onPageChanged: (index) {
         debugPrint("onPageChanged, index: $index");
         setState(() {
@@ -340,7 +484,8 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
   void setDeleteBtnEnabled(bool enable) {
     setState(() {
-      List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+      List<FileNode> selectedFiles =
+          DownloadFileManager.instance.selectedFiles();
       _isDeleteBtnEnabled = selectedFiles.length > 0;
     });
   }

@@ -1,5 +1,6 @@
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
+import 'package:mobile_assistant_client/util/stack.dart';
 
 abstract class DownloadFileManager {
   static final DownloadFileManager _instance = DownloadFileManagerImpl();
@@ -12,7 +13,27 @@ abstract class DownloadFileManager {
 
   List<FileNode> selectedFiles();
 
+  void updateCurrentDir(FileNode? current);
+
+  FileNode? currentDir();
+
+  void pushToStack(FileNode dir);
+
+  FileNode? takeLast();
+
+  FileNode? pop();
+
+  int dirStackLength();
+
+  List<FileNode> dirStackToList();
+
+  void popTo(FileNode dir);
+
+  bool isRoot();
+
   void clear();
+
+  void clearDirStack();
 
   static DownloadFileManager get instance {
     return _instance;
@@ -22,6 +43,8 @@ abstract class DownloadFileManager {
 class DownloadFileManagerImpl extends DownloadFileManager {
   List<FileNode> _allFiles = [];
   List<FileNode> _selectedFiles = [];
+  FileNode? _currentDir;
+  StackQueue<FileNode> _dirStack = StackQueue<FileNode>();
 
   @override
   void updateFiles(List<FileNode> files) {
@@ -47,5 +70,56 @@ class DownloadFileManagerImpl extends DownloadFileManager {
   void clear() {
     _allFiles.clear();
     _selectedFiles.clear();
+    _dirStack.clear();
+  }
+
+  @override
+  FileNode? currentDir() {
+    return _currentDir;
+  }
+
+  @override
+  void updateCurrentDir(FileNode? current) {
+    _currentDir = current;
+  }
+
+  @override
+  bool isRoot() {
+    return _dirStack.isEmpty;
+  }
+
+  @override
+  FileNode? pop() {
+    return _dirStack.pop();
+  }
+
+  @override
+  void popTo(FileNode dir) {
+    _dirStack.popTo(dir);
+  }
+
+  @override
+  FileNode? takeLast() {
+    return _dirStack.takeLast();
+  }
+
+  @override
+  int dirStackLength() {
+    return _dirStack.length;
+  }
+
+  @override
+  List<FileNode> dirStackToList() {
+    return _dirStack.toList();
+  }
+
+  @override
+  void pushToStack(FileNode dir) {
+    _dirStack.push(dir);
+  }
+
+  @override
+  void clearDirStack() {
+    _dirStack.clear();
   }
 }
