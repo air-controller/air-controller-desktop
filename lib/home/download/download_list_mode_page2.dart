@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
@@ -7,12 +8,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 
@@ -57,13 +61,15 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/";
 
-  FileNode? currentFileNode;
-
   late Function() _ctrlAPressedCallback;
+
+  StreamSubscription<RefreshDownloadFileList>? _refreshDownloadFileList;
 
   @override
   void initState() {
     super.initState();
+
+    _registerEventBus();
 
     _ctrlAPressedCallback = () {
       _setAllSelected();
@@ -71,9 +77,25 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
     };
 
     _addCtrlAPressedCallback(_ctrlAPressedCallback);
+    debugPrint("_DownloadListModeState: initState");
+  }
+
+  void _registerEventBus() {
+    _refreshDownloadFileList =
+        eventBus.on<RefreshDownloadFileList>().listen((event) {
+          setState(() {
+
+          });
+        });
+  }
+
+  void _unRegisterEventBus() {
+    _refreshDownloadFileList?.cancel();
   }
 
   void _setAllSelected() {
+    if (!mounted) return;
+
     setState(() {
       List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
 
@@ -98,7 +120,7 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
   void _removeCtrlAPressedCallback(Function() callback) {
     FileManagerPage? fileManagerPage =
     context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    fileManagerPage?.state?.removeCtrlAPressedCallback(callback);
   }
 
   @override
@@ -108,13 +130,6 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
     return Container(
         color: Colors.white,
         child: DataTable2(
-          // border: TableBorder(
-          //     // top: BorderSide(color: Colors.black),
-          //     // bottom: BorderSide(color: Colors.grey[300]!),
-          //     // left: BorderSide(color: Colors.grey[300]!),
-          //     // right: BorderSide(color: Colors.grey[300]!),
-          //     // verticalInside: BorderSide(color: Colors.grey[300]!),
-          //     horizontalInside: BorderSide(color: Colors.grey, width: 1)),
           dividerThickness: 1,
           bottomMargin: 10,
           columnSpacing: 0,
@@ -186,6 +201,8 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
 
   void _performSort(int sortColumnIndex, bool isSortAscending) {
     List<FileNode> allFileNodes = DownloadFileManager.instance.allFiles();
+
+    FileNode? currentFileNode = DownloadFileManager.instance.currentDir();
 
     // 1.找到当前节点下的所有节点
     List<FileNode> directedChildNodes = allFileNodes
@@ -310,11 +327,21 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
         : "icons/icon_right_arrow_normal.png";
     icon = Image.asset(iconPath, width: 20, height: 20);
 
+    FileNode? currentDir = DownloadFileManager.instance.currentDir();
+
+    double indent = 0;
+
+    if (null == currentDir) {
+      indent = fileItemVO.level * _INDENT_STEP;
+    } else {
+      indent = (fileItemVO.level - currentDir.level - 1) * _INDENT_STEP;
+    }
+
     return Visibility(
         child: GestureDetector(
             child: Container(
                 child: icon,
-                margin: EdgeInsets.only(left: fileItemVO.level * _INDENT_STEP)),
+                margin: EdgeInsets.only(left: indent)),
             onTap: () {
               debugPrint("Expand folder...");
               if (!fileItemVO.isExpand) {
@@ -513,6 +540,17 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
             _setFileSelected(fileNode);
           },
           onDoubleTap: () {
+            _tryToOpenDirectory(fileNode, (fileNodes) {
+              setState(() {
+                DownloadFileManager.instance.updateSelectedFiles([]);
+                DownloadFileManager.instance.updateFiles(fileNodes);
+                DownloadFileManager.instance.updateCurrentDir(fileNode);
+                DownloadFileManager.instance.pushToStack(fileNode);
+                _updateBackBtnVisibility();
+              });
+            }, (error) {
+
+            });
           },
           color: MaterialStateColor.resolveWith((states) {
             if (states.contains(MaterialState.hovered)) {
@@ -531,6 +569,26 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
           }));
     });
   }
+
+  void _updateBackBtnVisibility() {
+    var isRoot = DownloadFileManager.instance.isRoot();
+    eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
+  }
+
+  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess, Function(String) onError) {
+    debugPrint("_tryToOpenDirectory, dir: ${dir.data.folder}/${dir.data.name}");
+    _getFileList("${dir.data.folder}/${dir.data.name}", (files) {
+      List<FileNode> allFiles =
+      files.map((e) => FileNode(dir, e, dir.level + 1)).toList();
+
+      onSuccess.call(allFiles);
+    }, (error) {
+      debugPrint("_tryToOpenDirectory, error: $error");
+
+      onError.call(error);
+    });
+  }
+
 
   bool _isControlDown() {
     FileManagerPage? fileManagerPage =
@@ -696,10 +754,11 @@ class _DownloadListModeState extends State<DownloadListModePage2>  with Automati
   void dispose() {
     super.dispose();
 
-    debugPrint("DownloadListModePage dispose");
+    _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+    debugPrint("DownloadListModePage dispose");
   }
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 }

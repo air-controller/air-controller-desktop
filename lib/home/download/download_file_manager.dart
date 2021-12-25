@@ -9,6 +9,8 @@ abstract class DownloadFileManager {
 
   void updateSelectedFiles(List<FileNode> selectedFiles);
 
+  void clearSelectedFiles();
+
   List<FileNode> allFiles();
 
   List<FileNode> selectedFiles();
@@ -121,5 +123,10 @@ class DownloadFileManagerImpl extends DownloadFileManager {
   @override
   void clearDirStack() {
     _dirStack.clear();
+  }
+
+  @override
+  void clearSelectedFiles() {
+    _selectedFiles.clear();
   }
 }

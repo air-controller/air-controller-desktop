@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
@@ -12,6 +12,7 @@ import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 
@@ -43,6 +44,11 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
   // 标记删除按钮是否可以点击
   bool _isDeleteBtnEnabled = false;
+  // 标记删除按钮是否显示
+  bool _backBtnVisible = false;
+
+  int _allFileCount = 0;
+  int _selectedFileCount = 0;
 
   bool _isBackBtnDown = false;
 
@@ -58,9 +64,15 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
     _getDownloadFiles((files) {
       setState(() {
-        DownloadFileManager.instance
-            .updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
-        _downloadIconModePage.rebuild();
+        DownloadFileManager.instance.updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
+        DownloadFileManager.instance.updateCurrentDir(null);
+        DownloadFileManager.instance.clearDirStack();
+        DownloadFileManager.instance.updateSelectedFiles([]);
+
+        _allFileCount = files.length;
+        
+        eventBus.fire(RefreshDownloadFileList());
+
         _isLoadingCompleted = true;
       });
     }, (error) {
@@ -72,18 +84,29 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   void _registerEventBus() {
     _updateBottomItemNumStream =
         eventBus.on<UpdateBottomItemNum>().listen((event) {
-      // 这里调用setState刷新页面
-      setState(() {});
+          if (event.module == UIModule.Download) {
+            setState(() {
+              _allFileCount = event.totalNum;
+              _selectedFileCount = event.selectedNum;
+            });
+          }
     });
 
     _updateDeleteBtnStream =
         eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
-      setDeleteBtnEnabled(event.isEnable);
+          if (event.module == UIModule.Download) {
+            setState(() {
+              _isDeleteBtnEnabled = event.isEnable;
+            });
+          }
     });
 
     _backBtnVisibilityStream = eventBus.on<BackBtnVisibility>().listen((event) {
-      setState(() {
-      });
+      if (event.module == UIModule.Download) {
+        setState(() {
+          _backBtnVisible = event.visible;
+        });
+      }
     });
   }
 
@@ -200,13 +223,10 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     final _delete_btn_padding_vertical = 4.5;
     final _divider_line_color = Color(0xffe0e0e0);
 
-    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
-    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
+    String itemNumStr = "共${_allFileCount}项";
 
-    String itemNumStr = "共${allFiles.length}项";
-
-    if (selectedFiles.isNotEmpty) {
-      itemNumStr += "(选中${selectedFiles.length}项)";
+    if (_selectedFileCount > 0) {
+      itemNumStr += "(选中${_selectedFileCount}项)";
     }
 
     String getIconModeIcon() {
@@ -275,7 +295,7 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
                     margin: EdgeInsets.only(left: 15),
                   ),
                 ),
-                visible: !DownloadFileManager.instance.isRoot(),
+                visible: _backBtnVisible,
               ),
               onTap: () {
                 _onBackPressed();
@@ -438,7 +458,9 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
             DownloadFileManager.instance.updateCurrentDir(dir);
             DownloadFileManager.instance.pop();
 
-            _downloadIconModePage.rebuild();
+            _updateBackBtnVisibility();
+
+            eventBus.fire(RefreshDownloadFileList());
           });
         }, (error) {
 
@@ -454,7 +476,9 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
             DownloadFileManager.instance.updateCurrentDir(null);
             DownloadFileManager.instance.pop();
 
-            _downloadIconModePage.rebuild();
+            _updateBackBtnVisibility();
+
+            eventBus.fire(RefreshDownloadFileList());
           });
         }, (error) {
 
@@ -463,6 +487,11 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     } else {
       debugPrint("_onBackPressed: dir is null");
     }
+  }
+
+  void _updateBackBtnVisibility() {
+    var isRoot = DownloadFileManager.instance.isRoot();
+    eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
   Widget _createPageView() {

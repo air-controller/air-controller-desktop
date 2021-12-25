@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:mobile_assistant_client/util/stack.dart';
@@ -31,10 +34,6 @@ class DownloadIconModePage extends StatefulWidget {
   void setSelectedFiles(List<FileItem> files) {
     state?.updateSelectedFiles(files);
   }
-
-  void rebuild() {
-    state?.rebuild();
-  }
 }
 
 class _DownloadIconModeState extends State<DownloadIconModePage>
@@ -55,9 +54,13 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
+  StreamSubscription<RefreshDownloadFileList>? _refreshDownloadFileList;
+
   @override
   void initState() {
     super.initState();
+
+    _registerEventBus();
 
     _ctrlAPressedCallback = () {
       _setAllSelected();
@@ -65,9 +68,26 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
     };
 
     _addCtrlAPressedCallback(_ctrlAPressedCallback);
+
+    debugPrint("_DownloadIconModeState: initState");
+  }
+
+  void _registerEventBus() {
+    _refreshDownloadFileList =
+        eventBus.on<RefreshDownloadFileList>().listen((event) {
+          setState(() {
+
+          });
+        });
+  }
+
+  void _unRegisterEventBus() {
+    _refreshDownloadFileList?.cancel();
   }
 
   void _setAllSelected() {
+    if (!mounted) return;
+
     setState(() {
       List<FileNode> selectedFiles =
           DownloadFileManager.instance.selectedFiles();
@@ -347,9 +367,9 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   void _updateBackBtnVisibility() {
-    // 这里直接传true，因为按钮可见性不收到这里的传参影响，直接使用回退栈里面的数据进行
-    // 判断
-    eventBus.fire(BackBtnVisibility(true));
+    var isRoot = DownloadFileManager.instance.isRoot();
+    debugPrint("Icon mode, _updateBackBtnVisibility, isRoot: $isRoot");
+    eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
   void _getDownloadFiles(String dir, Function(List<FileItem> files) onSuccess,
@@ -425,7 +445,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   void _removeCtrlAPressedCallback(Function() callback) {
     FileManagerPage? fileManagerPage =
         context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    fileManagerPage?.state?.removeCtrlAPressedCallback(callback);
   }
 
   void _setFileSelected(FileNode fileItem) {
@@ -579,12 +599,14 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 
   @override
   void dispose() {
     super.dispose();
 
+    _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+    debugPrint("_DownloadIconModeState: dispose");
   }
 }
