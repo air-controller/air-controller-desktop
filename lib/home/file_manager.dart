@@ -9,7 +9,7 @@ import '../ext/string-ext.dart';
 import '../constant.dart';
 
 class FileManagerWidget extends StatelessWidget {
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,12 +18,14 @@ class FileManagerWidget extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: FileManagerPage(title: '手机助手PC端'),
+      home: FileManagerPage(key: FileManagerPage.fileManagerKey, title: '手机助手PC端'),
     );
   }
 }
 
 class FileManagerPage extends StatefulWidget {
+  static final GlobalKey<FileManagerState> fileManagerKey =  GlobalKey();
+
   FileManagerPage({Key? key, required this.title}) : super(key: key) {}
 
   FileManagerState? state;
@@ -60,7 +62,7 @@ class FileManagerState extends State<FileManagerPage> {
   bool _isShiftDown = false;
   
   List<Function()> _ctrlAPressedCallbacks = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -86,10 +88,12 @@ class FileManagerState extends State<FileManagerPage> {
   
   void addCtrlAPressedCallback(Function() callback) {
     _ctrlAPressedCallbacks.add(callback);
+    debugPrint("After addCtrlAPressedCallback, _ctrlAPressedCallbacks length: ${_ctrlAPressedCallbacks.length}");
   }
   
   void removeCtrlAPressedCallback(Function() callback) {
     _ctrlAPressedCallbacks.remove(callback);
+    debugPrint("After removeCtrlAPressedCallback, _ctrlAPressedCallbacks length: ${_ctrlAPressedCallbacks.length}");
   }
   
   bool isControlDown() => _isControlDown;

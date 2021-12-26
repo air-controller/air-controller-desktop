@@ -27,6 +27,7 @@ class DownloadListModePage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     state = _DownloadListModeState();
+    debugPrint("DownloadIconModePage, createState, instance: $this");
     return state!;
   }
 }
@@ -76,7 +77,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
     };
 
     _addCtrlAPressedCallback(_ctrlAPressedCallback);
-    debugPrint("_DownloadListModeState: initState");
+    debugPrint("_DownloadListModeState: initState, instance: $this");
   }
 
   void _registerEventBus() {
@@ -93,8 +94,6 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   }
 
   void _setAllSelected() {
-    if (!mounted) return;
-
     setState(() {
       List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
 
@@ -108,18 +107,6 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   void updateBottomItemNum() {
     // 这里我们从缓存中获取数据，因此不需要传递真实数量
     eventBus.fire(UpdateBottomItemNum(0, 0));
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.removeCtrlAPressedCallback(callback);
   }
 
   @override
@@ -588,17 +575,20 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
     });
   }
 
-
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
+    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage.fileManagerKey.currentState?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage.fileManagerKey.currentState?.removeCtrlAPressedCallback(callback);
   }
 
   void _setFileSelected(FileNode fileNode) {
@@ -750,12 +740,19 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   }
 
   @override
-  void dispose() {
-    super.dispose();
+  void deactivate() {
+    super.deactivate();
 
     _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
-    debugPrint("DownloadListModePage dispose");
+    debugPrint("DownloadListModePage deactivate, instance: $this");
+  }
+
+  @override
+  void dispose() {
+
+
+    super.dispose();
   }
 
   @override

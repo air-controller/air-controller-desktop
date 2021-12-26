@@ -24,6 +24,7 @@ class DownloadIconModePage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     state = _DownloadIconModeState();
+    debugPrint("DownloadIconModePage, createState, instance: $this");
     return state!;
   }
 
@@ -69,7 +70,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
 
     _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
-    debugPrint("_DownloadIconModeState: initState");
+    debugPrint("_DownloadIconModeState: initState, instance: $this");
   }
 
   void _registerEventBus() {
@@ -86,8 +87,6 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   void _setAllSelected() {
-    if (!mounted) return;
-
     setState(() {
       List<FileNode> selectedFiles =
           DownloadFileManager.instance.selectedFiles();
@@ -425,27 +424,19 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
+    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
   }
 
   void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState?.addCtrlAPressedCallback(callback);
   }
 
   void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.removeCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState?.removeCtrlAPressedCallback(callback);
   }
 
   void _setFileSelected(FileNode fileItem) {
@@ -602,11 +593,16 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   bool get wantKeepAlive => false;
 
   @override
-  void dispose() {
-    super.dispose();
+  void deactivate() {
+    super.deactivate();
 
     _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
-    debugPrint("_DownloadIconModeState: dispose");
+    debugPrint("_DownloadIconModeState: deactivate, instance: $this");
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
