@@ -19,7 +19,7 @@ import 'package:mobile_assistant_client/util/event_bus.dart';
 import '../constant.dart';
 import '../ext/string-ext.dart';
 import 'download/download_icon_mode_page.dart';
-import 'download/download_list_mode_page2.dart';
+import 'download/download_list_mode_page.dart';
 
 class DownloadManagerPage extends StatefulWidget {
   @override
