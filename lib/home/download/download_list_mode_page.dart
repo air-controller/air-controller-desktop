@@ -518,6 +518,8 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
                 DownloadFileManager.instance.updateCurrentDir(fileNode);
                 DownloadFileManager.instance.pushToStack(fileNode);
                 _updateBackBtnVisibility();
+                _setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
+                updateBottomItemNum();
               });
             }, (error) {
 

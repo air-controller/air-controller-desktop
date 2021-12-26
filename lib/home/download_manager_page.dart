@@ -459,6 +459,8 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
             DownloadFileManager.instance.pop();
 
             _updateBackBtnVisibility();
+            _refreshBottomFileCount();
+            _refreshDeleteBtnStatus();
 
             eventBus.fire(RefreshDownloadFileList());
           });
@@ -477,6 +479,8 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
             DownloadFileManager.instance.pop();
 
             _updateBackBtnVisibility();
+            _refreshBottomFileCount();
+            _refreshDeleteBtnStatus();
 
             eventBus.fire(RefreshDownloadFileList());
           });
@@ -487,6 +491,13 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
     } else {
       debugPrint("_onBackPressed: dir is null");
     }
+  }
+
+  void _refreshBottomFileCount() {
+    setState(() {
+      _selectedFileCount = DownloadFileManager.instance.selectedFileCount();
+      _allFileCount = DownloadFileManager.instance.totalFileCount();
+    });
   }
 
   void _updateBackBtnVisibility() {
@@ -512,10 +523,12 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
 
   void setDeleteBtnEnabled(bool enable) {
     setState(() {
-      List<FileNode> selectedFiles =
-          DownloadFileManager.instance.selectedFiles();
-      _isDeleteBtnEnabled = selectedFiles.length > 0;
+      _isDeleteBtnEnabled = enable;
     });
+  }
+
+  void _refreshDeleteBtnStatus() {
+    setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
   }
 
   @override

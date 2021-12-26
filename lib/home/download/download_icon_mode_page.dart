@@ -170,6 +170,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                           DownloadFileManager.instance.updateFiles(files);
                           DownloadFileManager.instance.updateCurrentDir(fileNode);
                           _updateBackBtnVisibility();
+                          _setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
+                          updateBottomItemNum();
                         });
                       }, (error) {
 
@@ -228,6 +230,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                               DownloadFileManager.instance.updateCurrentDir(fileItem);
                               DownloadFileManager.instance.pushToStack(fileItem);
                               _updateBackBtnVisibility();
+                              _setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
+                              updateBottomItemNum();
                             });
                           }, (error) {
 
@@ -359,6 +363,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
         DownloadFileManager.instance.updateCurrentDir(null);
         DownloadFileManager.instance.clearDirStack();
         _updateBackBtnVisibility();
+        _setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
+        updateBottomItemNum();
       });
     }, (error) {
       debugPrint("_tryToOpenDirectory, error: $error");
