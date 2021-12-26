@@ -583,10 +583,8 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   void updateBottomItemNum() {
-    List<FileNode> allFiles = DownloadFileManager.instance.allFiles();
-    List<FileNode> selectedFiles = DownloadFileManager.instance.selectedFiles();
-
-    eventBus.fire(UpdateBottomItemNum(allFiles.length, selectedFiles.length));
+    eventBus.fire(UpdateBottomItemNum(DownloadFileManager.instance.totalFileCount(),
+        DownloadFileManager.instance.selectedFileCount(), module: UIModule.Download));
   }
 
   @override

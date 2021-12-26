@@ -105,8 +105,8 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   }
 
   void updateBottomItemNum() {
-    // 这里我们从缓存中获取数据，因此不需要传递真实数量
-    eventBus.fire(UpdateBottomItemNum(0, 0));
+    eventBus.fire(UpdateBottomItemNum(DownloadFileManager.instance.totalFileCount(),
+        DownloadFileManager.instance.selectedFileCount(), module: UIModule.Download));
   }
 
   @override

@@ -15,6 +15,10 @@ abstract class DownloadFileManager {
 
   List<FileNode> selectedFiles();
 
+  int totalFileCount();
+
+  int selectedFileCount();
+
   bool isSelected(FileNode fileNode);
 
   void updateCurrentDir(FileNode? current);
@@ -135,5 +139,15 @@ class DownloadFileManagerImpl extends DownloadFileManager {
   @override
   bool isSelected(FileNode fileNode) {
     return _selectedFiles.contains(fileNode);
+  }
+
+  @override
+  int selectedFileCount() {
+    return _selectedFiles.length;
+  }
+
+  @override
+  int totalFileCount() {
+    return _allFiles.length;
   }
 }
