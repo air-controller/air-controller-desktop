@@ -34,7 +34,7 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   final _downloadIconModePage = DownloadIconModePage();
-  final _downloadListModePage = DownloadListModePage2();
+  final _downloadListModePage = DownloadListModePage();
 
   static final PAGE_INDEX_ICON_MODE = 0;
   static final PAGE_INDEX_LIST_MODE = 1;

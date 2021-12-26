@@ -4,7 +4,6 @@ import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:data_table_2/data_table_2.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -22,7 +21,7 @@ import 'package:mobile_assistant_client/util/event_bus.dart';
 
 import '../file_manager.dart';
 
-class DownloadListModePage2 extends StatefulWidget {
+class DownloadListModePage extends StatefulWidget {
   _DownloadListModeState? state;
 
   @override
@@ -37,7 +36,7 @@ final COLUMN_NAME_SIZE = "size";
 final COLUMN_NAME_CATEGORY = "category";
 final COLUMN_NAME_MODIFY_DATE = "modifyDate";
 
-class _DownloadListModeState extends State<DownloadListModePage2>  with AutomaticKeepAliveClientMixin {
+class _DownloadListModeState extends State<DownloadListModePage>  with AutomaticKeepAliveClientMixin {
   final _headerTextStyle =
       TextStyle(color: Color(0xff5d5e63), fontSize: 14, inherit: false);
   final _minColumnWidth = 200.0;

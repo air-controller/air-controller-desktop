@@ -277,5 +277,6 @@ class FileManagerState extends State<FileManagerPage> {
     super.dispose();
 
     _focusNode.dispose();
+    _ctrlAPressedCallbacks.clear();
   }
 }
