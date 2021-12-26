@@ -291,36 +291,33 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
     return 0;
   }
 
-  Visibility getRightArrowIcon(int index, FileNode fileItemVO) {
-    // debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
+  Visibility getRightArrowIcon(int index, FileNode node) {
+    String iconPath = "";
 
-    late Image icon;
+    if (DownloadFileManager.instance.isSelected(node)) {
+      if (node.isExpand) {
+        iconPath = "icons/icon_down_arrow_selected.png";
+      } else {
+        iconPath = "icons/icon_right_arrow_selected.png";
+      }
+    } else {
+      if (node.isExpand) {
+        iconPath = "icons/icon_down_arrow_normal.png";
+      } else {
+        iconPath = "icons/icon_right_arrow_normal.png";
+      }
+    }
 
-    // if (index == _selectedIndex) {
-    //   String iconPath = fileItemVO.isExpanded
-    //       ? "icons/icon_down_arrow_selected.png"
-    //       : "icons/icon_right_arrow_selected.png";
-    //   icon = Image.asset(iconPath, width: 20, height: 20);
-    // } else {
-    //   String iconPath = fileItemVO.isExpanded
-    //       ? "icons/icon_down_arrow_normal.png"
-    //       : "icons/icon_right_arrow_normal.png";
-    //   icon = Image.asset(iconPath, width: 20, height: 20);
-    // }
-
-    String iconPath = fileItemVO.isExpand
-        ? "icons/icon_down_arrow_normal.png"
-        : "icons/icon_right_arrow_normal.png";
-    icon = Image.asset(iconPath, width: 20, height: 20);
+    Image icon = Image.asset(iconPath, width: 20, height: 20);
 
     FileNode? currentDir = DownloadFileManager.instance.currentDir();
 
     double indent = 0;
 
     if (null == currentDir) {
-      indent = fileItemVO.level * _INDENT_STEP;
+      indent = node.level * _INDENT_STEP;
     } else {
-      indent = (fileItemVO.level - currentDir.level - 1) * _INDENT_STEP;
+      indent = (node.level - currentDir.level - 1) * _INDENT_STEP;
     }
 
     return Visibility(
@@ -330,16 +327,16 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
                 margin: EdgeInsets.only(left: indent)),
             onTap: () {
               debugPrint("Expand folder...");
-              if (!fileItemVO.isExpand) {
-                _expandFolder(fileItemVO);
+              if (!node.isExpand) {
+                _expandFolder(node);
               } else {
-                _foldUp(fileItemVO);
+                _foldUp(node);
               }
             }),
         maintainSize: true,
         maintainState: true,
         maintainAnimation: true,
-        visible: fileItemVO.data.isDir);
+        visible: node.data.isDir);
   }
 
   void _getFileList(String? path, Function(List<FileItem> items) onSuccess,
@@ -457,11 +454,13 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
 
   List<DataRow> _generateRows() {
     List<FileNode> allFileNode = DownloadFileManager.instance.allFiles();
-    List<FileNode> selectedFileNode =
-        DownloadFileManager.instance.selectedFiles();
+    List<FileNode> selectedFileNode = DownloadFileManager.instance.selectedFiles();
 
     return List<DataRow>.generate(allFileNode.length, (int index) {
       FileNode fileNode = allFileNode[index];
+
+      Color textColor = _isContains(selectedFileNode, fileNode) ? Colors.white : Color(0xff313237);
+      TextStyle textStyle = TextStyle(inherit: false, fontSize: 14, color: textColor);
 
       return DataRow2(
           cells: [
@@ -473,8 +472,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
                   child: Text(fileNode.data.name,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          inherit: false, fontSize: 14, color: Colors.black)))
+                      style: textStyle))
             ])),
             DataCell(Container(
               alignment: Alignment.centerLeft,
@@ -485,8 +483,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
                       : _convertToReadableSize(fileNode.data.size),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: TextStyle(
-                      inherit: false, fontSize: 14, color: Colors.black)),
+                  style: textStyle),
             )),
             DataCell(Container(
               alignment: Alignment.centerLeft,
@@ -494,8 +491,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
               child: Text(_convertToCategory(fileNode.data),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: TextStyle(
-                      inherit: false, fontSize: 14, color: Colors.black)),
+                  style: textStyle),
             )),
             DataCell(Container(
               alignment: Alignment.centerLeft,
@@ -503,23 +499,12 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
               child: Text(_formatChangeDate(fileNode.data.changeDate),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: TextStyle(
-                      inherit: false, fontSize: 14, color: Colors.black)),
+                  style: textStyle),
             )),
           ],
           selected: _isContains(selectedFileNode, fileNode),
           onSelectChanged: (isSelected) {
             debugPrint("onSelectChanged: $isSelected");
-
-            // if (isSelected == true) {
-            //   if (_isContains(selectedFileNode, fileNode)) {
-            //     _removeFileNodeFromSelected(fileNode);
-            //   } else {
-            //     _addFileNodeToSelected(fileNode);
-            //   }
-            // } else {
-            //   _removeFileNodeFromSelected(fileNode);
-            // }
           },
           onTap: () {
             debugPrint("onTap: ${fileNode.data.name}");
@@ -548,7 +533,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
             }
 
             if (states.contains(MaterialState.selected)) {
-              return Colors.yellowAccent;
+              return Color(0xff5e86ec);
             }
 
             return Colors.white;

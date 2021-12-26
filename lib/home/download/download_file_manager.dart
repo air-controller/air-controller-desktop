@@ -15,6 +15,8 @@ abstract class DownloadFileManager {
 
   List<FileNode> selectedFiles();
 
+  bool isSelected(FileNode fileNode);
+
   void updateCurrentDir(FileNode? current);
 
   FileNode? currentDir();
@@ -128,5 +130,10 @@ class DownloadFileManagerImpl extends DownloadFileManager {
   @override
   void clearSelectedFiles() {
     _selectedFiles.clear();
+  }
+
+  @override
+  bool isSelected(FileNode fileNode) {
+    return _selectedFiles.contains(fileNode);
   }
 }
