@@ -6,6 +6,7 @@ import 'package:mobile_assistant_client/model/AudioItem.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constant.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:http/http.dart' as http;
@@ -222,6 +223,9 @@ class _MusicManagerState extends State<MusicManagerPage> {
                     //       .setSelectedRow(_dataGridController.selectedIndex);
                     // });
                   },
+                  onCellDoubleTap: (details) {
+                    _openVideoWithSystemApp(_audioItems[details.rowColumnIndex.rowIndex]);
+                  },
                   columns: <GridColumn>[
                     GridColumn(
                         columnName: 'folder',
@@ -292,6 +296,20 @@ class _MusicManagerState extends State<MusicManagerPage> {
                   ],
                 ))));
   }
+
+  void _openVideoWithSystemApp(AudioItem audioItem) async {
+    String encodedPath = Uri.encodeComponent(audioItem.path);
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${encodedPath}";
+
+    if (!await launch(
+        videoUrl,
+        universalLinksOnly: true
+    )) {
+      debugPrint("Open video: $videoUrl fail");
+    } else {
+      debugPrint("Open video: $videoUrl success");
+    }
+  }
 }
 
 // 用于构建表格数据
@@ -303,6 +321,10 @@ class AudioItemDataSource extends DataGridSource {
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
   BuildContext context;
   List<AudioItem> audios = [];
+
+  final _ONE_HOUR = 60 * 60 * 1000;
+  final _ONE_MINUTE = 60 * 1000;
+  final _ONE_SECOND = 1000;
 
   AudioItemDataSource(this.context, this.audios) {
     setNewDatas(audios);
@@ -375,7 +397,7 @@ class AudioItemDataSource extends DataGridSource {
               break;
             }
             case "duration": {
-              itemValue = "${audioItem.duration}";
+              itemValue = _convertToReadableDuration(audioItem.duration);
               break;
             }
             case "size": {
@@ -405,9 +427,42 @@ class AudioItemDataSource extends DataGridSource {
         }).toList());
   }
 
-  String _formatChangeDate(int changeDate) {
-    final df = DateFormat("yyyy年M月d日 HH:mm");
-    return df.format(new DateTime.fromMillisecondsSinceEpoch(changeDate));
+  String _convertToReadableDuration(int duration) {
+    if (duration >= _ONE_HOUR) {
+      int hour = (duration / _ONE_HOUR).truncate();
+
+      String durStr = "${hour}小时";
+
+      if (duration - hour * _ONE_HOUR > 0) {
+        int min = ((duration - hour * _ONE_HOUR) / _ONE_MINUTE).truncate();
+
+        durStr = "${durStr}${min}分";
+
+        if (duration - hour * _ONE_HOUR - min * _ONE_MINUTE > 0) {
+          int sec = ((duration - hour * _ONE_HOUR - min * _ONE_MINUTE) / _ONE_SECOND).truncate();
+
+          durStr = "${durStr}${sec}秒";
+        }
+      }
+
+      return durStr;
+    } else if (duration < _ONE_HOUR && duration >= _ONE_MINUTE) {
+      int min = (duration / _ONE_MINUTE).truncate();
+
+      String durStr = "${min}分";
+
+      if (duration - min * _ONE_MINUTE > 0) {
+        int sec = ((duration - min * _ONE_MINUTE) / _ONE_SECOND).truncate();
+
+        durStr = "${durStr}${sec}秒";
+      }
+
+      return durStr;
+    } else {
+      int sec = (duration / _ONE_SECOND).truncate();
+
+      return "${sec}秒";
+    }
   }
 
   String _convertToReadableSize(int size) {
@@ -431,7 +486,66 @@ class AudioItemDataSource extends DataGridSource {
   }
 
   @override
-  int compare(DataGridRow? a, DataGridRow? b, SortColumnDetails sortColumn) {
-    return super.compare(a, b, sortColumn);
+  int compare(DataGridRow? a, DataGridRow? b, SortColumnDetails details) {
+    if (details.name == "folder") {
+      AudioItem audioItemA = a?.getCells().singleWhere((element) => element.columnName == "folder").value as AudioItem;
+      AudioItem audioItemB = b?.getCells().singleWhere((element) => element.columnName == "folder").value as AudioItem;
+
+      String folderA = audioItemA.folder;
+      String folderB = audioItemB.folder;
+
+      int lastIndexA = folderA.lastIndexOf("/");
+
+      if (lastIndexA != -1) {
+        folderA = folderA.substring(lastIndexA + 1);
+      }
+
+      int lastIndexB = folderB.lastIndexOf("/");
+
+      if (lastIndexB != -1) {
+        folderB = folderB.substring(lastIndexB + 1);
+      }
+
+      if (details.sortDirection == DataGridSortDirection.ascending) {
+        return folderA.toLowerCase().compareTo(folderB.toLowerCase());
+      } else {
+        return folderB.toLowerCase().compareTo(folderA.toLowerCase());
+      }
+    }
+
+    if (details.name == "name") {
+      AudioItem audioItemA = a?.getCells().singleWhere((element) => element.columnName == "name").value as AudioItem;
+      AudioItem audioItemB = b?.getCells().singleWhere((element) => element.columnName == "name").value as AudioItem;
+
+      if (details.sortDirection == DataGridSortDirection.ascending) {
+        return audioItemA.name.toLowerCase().compareTo(audioItemB.name.toLowerCase());
+      } else {
+        return audioItemB.name.toLowerCase().compareTo(audioItemA.name.toLowerCase());
+      }
+    }
+
+    if (details.name == "size") {
+      AudioItem audioItemA = a?.getCells().singleWhere((element) => element.columnName == "size").value as AudioItem;
+      AudioItem audioItemB = b?.getCells().singleWhere((element) => element.columnName == "size").value as AudioItem;
+
+      if (details.sortDirection == DataGridSortDirection.ascending) {
+        return audioItemA.size.compareTo(audioItemB.size);
+      } else {
+        return audioItemB.size.compareTo(audioItemA.size);
+      }
+    }
+
+    if (details.name == "duration") {
+      AudioItem audioItemA = a?.getCells().singleWhere((element) => element.columnName == "size").value as AudioItem;
+      AudioItem audioItemB = b?.getCells().singleWhere((element) => element.columnName == "size").value as AudioItem;
+
+      if (details.sortDirection == DataGridSortDirection.ascending) {
+        return audioItemA.duration.compareTo(audioItemB.duration);
+      } else {
+        return audioItemB.duration.compareTo(audioItemA.duration);
+      }
+    }
+
+    return 0;
   }
 }
