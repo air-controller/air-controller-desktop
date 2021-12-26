@@ -28,7 +28,7 @@ class DownloadManagerPage extends StatefulWidget {
   }
 }
 
-class _DownloadManagerState extends State<DownloadManagerPage> {
+class _DownloadManagerState extends State<DownloadManagerPage> with AutomaticKeepAliveClientMixin {
   bool _isLoadingCompleted = false;
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
@@ -530,6 +530,9 @@ class _DownloadManagerState extends State<DownloadManagerPage> {
   void _refreshDeleteBtnStatus() {
     setDeleteBtnEnabled(DownloadFileManager.instance.selectedFileCount() > 0);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
