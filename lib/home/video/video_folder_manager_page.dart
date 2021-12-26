@@ -15,6 +15,7 @@ import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:mobile_assistant_client/widget/video_flow_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/ResponseEntity.dart';
@@ -723,8 +724,22 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
           });
         },
         onVideoDoubleTap: (video) {
-
+          _openVideoWithSystemApp(video);
         });
+  }
+
+  void _openVideoWithSystemApp(VideoItem videoItem) async {
+    String encodedPath = Uri.encodeComponent(videoItem.path);
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${encodedPath}";
+
+    if (!await launch(
+        videoUrl,
+        universalLinksOnly: true
+    )) {
+      debugPrint("Open video: $videoUrl fail");
+    } else {
+      debugPrint("Open video: $videoUrl success");
+    }
   }
 
   void _tryToOpenVideosInFolderPage(VideoFolderItem folder) {

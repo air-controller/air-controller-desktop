@@ -11,6 +11,7 @@ import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
@@ -284,6 +285,20 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     });
   }
 
+  void _openVideoWithSystemApp(VideoItem videoItem) async {
+    String encodedPath = Uri.encodeComponent(videoItem.path);
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${encodedPath}";
+
+    if (!await launch(
+        videoUrl,
+      universalLinksOnly: true
+    )) {
+      debugPrint("Open video: $videoUrl fail");
+    } else {
+      debugPrint("Open video: $videoUrl success");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget content = Container(
@@ -316,6 +331,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
                   },
                   onDoubleTap: () {
                     debugPrint("双击");
+                    _openVideoWithSystemApp(videoItem);
                   },
                 ),
                 decoration: BoxDecoration(
