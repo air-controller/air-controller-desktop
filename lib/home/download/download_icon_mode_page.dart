@@ -420,7 +420,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    eventBus.fire(UpdateDeleteBtnStatus(enable));
+    eventBus.fire(UpdateDeleteBtnStatus(enable, module: UIModule.Download));
   }
 
   bool _isControlDown() {

@@ -100,7 +100,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
       List<FileNode> selectedFiles = [...allFiles];
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
       updateBottomItemNum();
-      _setDeleteBtnEnabled(true);
+      _setDeleteBtnEnabled(selectedFiles.length > 0);
     });
   }
 
@@ -654,12 +654,12 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
       DownloadFileManager.instance.updateSelectedFiles(selectedFiles);
     });
 
-    _setDeleteBtnEnabled(false);
+    _setDeleteBtnEnabled(selectedFiles.length > 0);
     updateBottomItemNum();
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    eventBus.fire(UpdateDeleteBtnStatus(enable));
+    eventBus.fire(UpdateDeleteBtnStatus(enable, module: UIModule.Download));
   }
 
   bool _isContains(List<FileNode> nodes, FileNode node) {
