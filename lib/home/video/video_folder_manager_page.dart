@@ -729,8 +729,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   }
 
   void _openVideoWithSystemApp(VideoItem videoItem) async {
-    String encodedPath = Uri.encodeComponent(videoItem.path);
-    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${encodedPath}";
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/video/item/${videoItem.id}";
 
     if (!await launch(
         videoUrl,
