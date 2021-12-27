@@ -7,9 +7,10 @@ class AudioItem {
   int size;
   int createTime;
   bool isMusic;
+  int modifyDate;
 
   AudioItem(this.id, this.name, this.folder, this.path, this.duration, this.size,
-      this.createTime, this.isMusic);
+      this.createTime, this.isMusic, this.modifyDate);
 
   factory AudioItem.fromJson(Map<String, dynamic> parsedJson) {
     return AudioItem(
@@ -20,7 +21,8 @@ class AudioItem {
         parsedJson["duration"],
         parsedJson["size"],
         parsedJson["createTime"],
-        parsedJson["isMusic"]
+        parsedJson["isMusic"],
+        parsedJson["modifyDate"]
     );
   }
 }
