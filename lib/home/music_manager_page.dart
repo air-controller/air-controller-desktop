@@ -209,7 +209,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
                   highlightRowOnHover: false,
                   controller: _dataGridController,
                   allowEditing: true,
-                  navigationMode: GridNavigationMode.cell,
+                  navigationMode: GridNavigationMode.row,
                   onColumnResizeUpdate: (ColumnResizeUpdateDetails details) {
                     setState(() {
                       columnWidths[details.column.columnName] = details.width;
@@ -224,7 +224,19 @@ class _MusicManagerState extends State<MusicManagerPage> {
                     // });
                   },
                   onCellDoubleTap: (details) {
-                    _openVideoWithSystemApp(_audioItems[details.rowColumnIndex.rowIndex]);
+                    var rc = details.rowColumnIndex;
+                    debugPrint("Row index: ${rc.rowIndex}, column index: ${rc.columnIndex}");
+
+                    int rowIndex = details.rowColumnIndex.rowIndex;
+
+                    if (rowIndex > 0) {
+                      AudioItem? audioItem = audioItemDataSource.getAudioItemAt(rowIndex - 1);
+                      if (null != audioItem) {
+                        _openVideoWithSystemApp(audioItem);
+                      } else {
+                        debugPrint("Warning: audioItem is null");
+                      }
+                    }
                   },
                   columns: <GridColumn>[
                     GridColumn(
@@ -298,16 +310,17 @@ class _MusicManagerState extends State<MusicManagerPage> {
   }
 
   void _openVideoWithSystemApp(AudioItem audioItem) async {
-    String encodedPath = Uri.encodeComponent(audioItem.path);
-    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${encodedPath}";
+    debugPrint("_openVideoWithSystemApp, path: ${audioItem.path}");
+
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/audio/item/${audioItem.id}";
 
     if (!await launch(
         videoUrl,
         universalLinksOnly: true
     )) {
-      debugPrint("Open video: $videoUrl fail");
+      debugPrint("Open audio: $videoUrl fail");
     } else {
-      debugPrint("Open video: $videoUrl success");
+      debugPrint("Open audio: $videoUrl success");
     }
   }
 }
@@ -547,5 +560,13 @@ class AudioItemDataSource extends DataGridSource {
     }
 
     return 0;
+  }
+
+  AudioItem? getAudioItemAt(int rowIndex) {
+    int length = effectiveRows.length;
+    if (rowIndex > length - 1) return null;
+    if (rowIndex < 0) return null;
+
+    return effectiveRows[rowIndex].getCells().first.value as AudioItem;
   }
 }
