@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -56,7 +57,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
-  StreamSubscription<RefreshDownloadFileList>? _refreshDownloadFileList;
+  StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
 
   @override
   void initState() {
@@ -76,7 +77,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _registerEventBus() {
     _refreshDownloadFileList =
-        eventBus.on<RefreshDownloadFileList>().listen((event) {
+        eventBus.on<RefreshAllFileList>().listen((event) {
           setState(() {
 
           });
@@ -133,7 +134,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
               children: [
                 Container(
                   child: GestureDetector(
-                    child: Text("下载",
+                    child: Text("手机存储",
                         style: TextStyle(
                             color: Color(0xff5b5c61),
                             fontSize: 12.0,
@@ -305,7 +306,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess, Function(String) onError) {
     debugPrint("_tryToOpenDirectory, dir: ${dir.data.folder}/${dir.data.name}");
-    _getDownloadFiles("${dir.data.folder}/${dir.data.name}", (files) {
+    _getFiles((files) {
       List<FileNode> allFiles =
           files.map((e) => FileNode(dir, e, dir.level + 1)).toList();
 
@@ -314,47 +315,11 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
       debugPrint("_tryToOpenDirectory, error: $error");
 
       onError.call(error);
-    });
+    }, path: "${dir.data.folder}/${dir.data.name}");
   }
-
-  void _getDownloadRootFiles(Function(List<FileItem> files) onSuccess, Function(String error) onError) {
-    var url = Uri.parse("${_URL_SERVER}/file/downloadedFiles");
-    http
-        .post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({}))
-        .then((response) {
-      if (response.statusCode != 200) {
-        onError.call(response.reasonPhrase != null
-            ? response.reasonPhrase!
-            : "Unknown error");
-      } else {
-        var body = response.body;
-        debugPrint("Get download file list, body: $body");
-
-        final map = jsonDecode(body);
-        final httpResponseEntity = ResponseEntity.fromJson(map);
-
-        if (httpResponseEntity.isSuccessful()) {
-          final data = httpResponseEntity.data as List<dynamic>;
-
-          onSuccess.call(data
-              .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
-              .toList());
-        } else {
-          onError.call(httpResponseEntity.msg == null
-              ? "Unknown error"
-              : httpResponseEntity.msg!);
-        }
-      }
-    }).catchError((error) {
-      onError.call(error.toString());
-    });
-  }
-
 
   void _backToRootDir() {
-    _getDownloadRootFiles((files) {
+    _getFiles((files) {
       List<FileNode> allFiles =
       files.map((e) => FileNode(null, e, 0)).toList();
 
@@ -378,13 +343,12 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
-  void _getDownloadFiles(String dir, Function(List<FileItem> files) onSuccess,
-      Function(String error) onError) {
+  void _getFiles(Function(List<FileItem> files) onSuccess,
+      Function(String error) onError, {String? path = null}) {
     var url = Uri.parse("${_URL_SERVER}/file/list");
-    http
-        .post(url,
-            headers: {"Content-Type": "application/json"},
-            body: json.encode({"path": dir}))
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"path": path == null ? "" : path}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null

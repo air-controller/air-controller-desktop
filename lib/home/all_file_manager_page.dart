@@ -1,18 +1,29 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
-import 'package:mobile_assistant_client/model/Device.dart';
-import 'package:mobile_assistant_client/model/ResponseEntity.dart';
-import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-import 'package:syncfusion_flutter_core/theme.dart';
-import '../ext/string-ext.dart';
-import '../constant.dart';
-import 'dart:convert';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
-import '../model/FileItem.dart';
-import '../model/FileItemVO.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
+import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
+import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
+import 'package:mobile_assistant_client/home/allfiles/all_file_icon_mode_page.dart';
+import 'package:mobile_assistant_client/home/allfiles/all_file_list_mode_page.dart';
+import 'package:mobile_assistant_client/home/allfiles/all_file_manager.dart';
+import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
+import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/model/FileNode.dart';
+import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
+
+import '../constant.dart';
+import '../ext/string-ext.dart';
+import 'download/download_icon_mode_page.dart';
+import 'download/download_list_mode_page.dart';
 
 class AllFileManagerPage extends StatefulWidget {
   @override
@@ -21,166 +32,336 @@ class AllFileManagerPage extends StatefulWidget {
   }
 }
 
-final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/";
+class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepAliveClientMixin {
+  bool _isLoadingCompleted = false;
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
-void _showTipsDialog(BuildContext context, String btnText, String message,
-    bool cancelable, Function() onDismiss) {
-  showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("提示"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              child: Text(btnText),
-              onPressed: () {
-                onDismiss();
-                Navigator.pop(context, 'OK');
-              },
-            )
-          ],
-        );
-      });
-}
+  final _downloadIconModePage = AllFileIconModePage();
+  final _downloadListModePage = AllFileListModePage();
 
-class _AllFileManagerState extends State<AllFileManagerPage> {
-  final _icon_display_mode_size = 10.0;
-  final _segment_control_radius = 4.0;
-  final _segment_control_height = 26.0;
-  final _segment_control_width = 32.0;
-  final _segment_control_padding_hor = 8.0;
-  final _segment_control_padding_vertical = 6.0;
-  final _icon_delete_btn_size = 10.0;
-  final _delete_btn_width = 40.0;
-  final _delete_btn_height = 25.0;
-  final _delete_btn_padding_hor = 8.0;
-  final _delete_btn_padding_vertical = 4.5;
-  final _divider_line_color = "#e0e0e0";
-  final _isListMode = false;
-  final _headerTextStyle = TextStyle(color: "#5d5e63".toColor(), fontSize: 14, inherit: false);
-  final _minColumnWidth = 200.0;
-  final _maxColumnWidth = 400.0;
-  final _headerPaddingStart = 15.0;
-  final DataGridController _dataGridController = DataGridController();
+  static final PAGE_INDEX_ICON_MODE = 0;
+  static final PAGE_INDEX_LIST_MODE = 1;
 
-  List<FileItem> _fileItems = <FileItem>[];
-  late FileItemDataSource fileItemDataSource;
+  int _currentPageIndex = PAGE_INDEX_ICON_MODE;
+  PageController _pageController = PageController();
 
-  var _isLoadingSuccess = true;
+  // 标记删除按钮是否可以点击
+  bool _isDeleteBtnEnabled = false;
+  // 标记删除按钮是否显示
+  bool _backBtnVisible = false;
+
+  int _allFileCount = 0;
+  int _selectedFileCount = 0;
+
+  bool _isBackBtnDown = false;
+
+  StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
+  StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
+  StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
 
   @override
   void initState() {
     super.initState();
-    fileItemDataSource = FileItemDataSource(this, context,
-        datas: _fileItems.map((e) => FileItemVO(e, 0)).toList());
 
-    _getFileList(
-        "",
-        (items) => {
-              setState(() {
-                _isLoadingSuccess = true;
-                _fileItems = items;
-                fileItemDataSource
-                    .setNewDatas(items.map((e) => FileItemVO(e, 0)).toList());
-              })
-            }, (error) {
-      debugPrint("Get root file list error: $error");
+    _registerEventBus();
 
-      _showTipsDialog(context, "确定", error, false, () {});
+    _getFiles((files) {
+      setState(() {
+        AllFileManager.instance.updateFiles(files.map((e) => FileNode(null, e, 0)).toList());
+        AllFileManager.instance.updateCurrentDir(null);
+        AllFileManager.instance.clearDirStack();
+        AllFileManager.instance.updateSelectedFiles([]);
+
+        _allFileCount = files.length;
+        
+        eventBus.fire(RefreshAllFileList());
+
+        _isLoadingCompleted = true;
+      });
+    }, (error) {
+      _isLoadingCompleted = true;
+      debugPrint("_getDownloadFiles, error: $error");
     });
+  }
+
+  void _registerEventBus() {
+    _updateBottomItemNumStream =
+        eventBus.on<UpdateBottomItemNum>().listen((event) {
+          if (event.module == UIModule.Download) {
+            setState(() {
+              _allFileCount = event.totalNum;
+              _selectedFileCount = event.selectedNum;
+            });
+          }
+    });
+
+    _updateDeleteBtnStream =
+        eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+          if (event.module == UIModule.Download) {
+            setState(() {
+              _isDeleteBtnEnabled = event.isEnable;
+            });
+          }
+    });
+
+    _backBtnVisibilityStream = eventBus.on<BackBtnVisibility>().listen((event) {
+      if (event.module == UIModule.Download) {
+        setState(() {
+          _backBtnVisible = event.visible;
+        });
+      }
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateBottomItemNumStream?.cancel();
+    _updateDeleteBtnStream?.cancel();
+    _backBtnVisibilityStream?.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xff85a8d0);
+    Widget content = _createContent();
 
+    const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
-    return Stack(children: [
-      _realContent(),
-      Visibility(
-        child: Container(child: spinKit, color: Colors.white),
-        maintainSize: false,
-        visible: !_isLoadingSuccess,
-      )
-    ]);
+    return Stack(
+      children: [
+        content,
+        Visibility(
+          child: Container(child: spinKit, color: Colors.white),
+          maintainSize: false,
+          visible: !_isLoadingCompleted,
+        )
+      ],
+    );
   }
 
-  Widget _realContent() {
-    int num = fileItemDataSource._datas.length;
+  void _getFiles(Function(List<FileItem> files) onSuccess,
+      Function(String error) onError, {String? path = null}) {
+    var url = Uri.parse("${_URL_SERVER}/file/list");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"path": path == null ? "" : path}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Get download file list, body: $body");
 
-    String itemNumStr = "共${num}项";
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
 
-    if (fileItemDataSource.selectedIndex() >= 0) {
-      itemNumStr = "选中1项（共${num}项目)";
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List<dynamic>;
+
+          onSuccess.call(data
+              .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+              .toList());
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  Widget _createContent() {
+    final _icon_display_mode_size = 10.0;
+    final _segment_control_radius = 4.0;
+    final _segment_control_height = 26.0;
+    final _segment_control_width = 32.0;
+    final _segment_control_padding_hor = 8.0;
+    final _segment_control_padding_vertical = 6.0;
+    final _icon_delete_btn_size = 10.0;
+    final _delete_btn_width = 40.0;
+    final _delete_btn_height = 25.0;
+    final _delete_btn_padding_hor = 8.0;
+    final _delete_btn_padding_vertical = 4.5;
+    final _divider_line_color = Color(0xffe0e0e0);
+
+    String itemNumStr = "共${_allFileCount}项";
+
+    if (_selectedFileCount > 0) {
+      itemNumStr += "(选中${_selectedFileCount}项)";
+    }
+
+    String getIconModeIcon() {
+      if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
+        return "icons/icon_image_text_selected.png";
+      }
+
+      return "icons/icon_image_text_normal.png";
+    }
+
+    String getListModeIcon() {
+      if (_currentPageIndex == PAGE_INDEX_LIST_MODE) {
+        return "icons/icon_list_selected.png";
+      }
+
+      return "icons/icon_list_normal.png";
+    }
+
+    Color getModeBtnBgColor(int pageIndex) {
+      if (pageIndex == PAGE_INDEX_ICON_MODE) {
+        if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
+          return Color(0xffc1c1c1);
+        }
+
+        return Color(0xfff5f6f5);
+      }
+
+      if (_currentPageIndex == PAGE_INDEX_LIST_MODE) {
+        return Color(0xffc1c1c1);
+      }
+
+      return Color(0xfff5f6f5);
     }
 
     return Column(children: [
       Container(
           child: Stack(children: [
+            GestureDetector(
+              child: Visibility(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    child: Row(
+                      children: [
+                        Image.asset("icons/icon_right_arrow.png",
+                            width: 12, height: 12),
+                        Container(
+                          child: Text("返回",
+                              style: TextStyle(
+                                  color: Color(0xff5c5c62),
+                                  fontSize: 13,
+                                  inherit: false)),
+                          margin: EdgeInsets.only(left: 3),
+                        ),
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                        color: _isBackBtnDown
+                            ? Color(0xffe8e8e8)
+                            : Color(0xfff3f3f4),
+                        borderRadius: BorderRadius.all(Radius.circular(3.0)),
+                        border:
+                            Border.all(color: Color(0xffdedede), width: 1.0)),
+                    height: 25,
+                    width: 50,
+                    margin: EdgeInsets.only(left: 15),
+                  ),
+                ),
+                visible: _backBtnVisible,
+              ),
+              onTap: () {
+                _onBackPressed();
+              },
+              onTapDown: (detail) {
+                setState(() {
+                  _isBackBtnDown = true;
+                });
+              },
+              onTapCancel: () {
+                setState(() {
+                  _isBackBtnDown = false;
+                });
+              },
+              onTapUp: (detail) {
+                setState(() {
+                  _isBackBtnDown = false;
+                });
+              },
+            ),
             Align(
                 alignment: Alignment.center,
                 child: Text("手机存储",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         inherit: false,
-                        color: "#616161".toColor(),
+                        color: Color(0xff616161),
                         fontSize: 16.0))),
             Align(
                 child: Container(
                     child: Row(
                         children: [
+                          GestureDetector(
+                            child: Container(
+                                child: Image.asset(getIconModeIcon(),
+                                    width: _icon_display_mode_size,
+                                    height: _icon_display_mode_size),
+                                decoration: BoxDecoration(
+                                    color:
+                                        getModeBtnBgColor(PAGE_INDEX_ICON_MODE),
+                                    border: new Border.all(
+                                        color: Color(0xffababab), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(
+                                            _segment_control_radius),
+                                        bottomLeft: Radius.circular(
+                                            _segment_control_radius))),
+                                height: _segment_control_height,
+                                width: _segment_control_width,
+                                padding: EdgeInsets.fromLTRB(
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical,
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical)),
+                            onTap: () {
+                              if (_currentPageIndex != PAGE_INDEX_ICON_MODE) {
+                                _pageController
+                                    .jumpToPage(PAGE_INDEX_ICON_MODE);
+                              }
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                                child: Image.asset(getListModeIcon(),
+                                    width: _icon_display_mode_size,
+                                    height: _icon_display_mode_size),
+                                decoration: BoxDecoration(
+                                    color:
+                                        getModeBtnBgColor(PAGE_INDEX_LIST_MODE),
+                                    border: new Border.all(
+                                        color: Color(0xffdededd), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(
+                                            _segment_control_radius),
+                                        bottomRight: Radius.circular(
+                                            _segment_control_radius))),
+                                height: _segment_control_height,
+                                width: _segment_control_width,
+                                padding: EdgeInsets.fromLTRB(
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical,
+                                    _segment_control_padding_hor,
+                                    _segment_control_padding_vertical)),
+                            onTap: () {
+                              if (_currentPageIndex != PAGE_INDEX_LIST_MODE) {
+                                _pageController
+                                    .jumpToPage(PAGE_INDEX_LIST_MODE);
+                              }
+                            },
+                          ),
                           Container(
-                              child: Image.asset(
-                                  "icons/icon_image_text_selected.png",
-                                  width: _icon_display_mode_size,
-                                  height: _icon_display_mode_size),
+                              child: Opacity(
+                                opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                                child: Image.asset("icons/icon_delete.png",
+                                    width: _icon_delete_btn_size,
+                                    height: _icon_delete_btn_size),
+                              ),
                               decoration: BoxDecoration(
-                                  color: "#c1c1c1".toColor(),
+                                  color: Color(0xffcb6357),
                                   border: new Border.all(
-                                      color: "#ababab".toColor(), width: 1.0),
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(
-                                          _segment_control_radius),
-                                      bottomLeft: Radius.circular(
-                                          _segment_control_radius))),
-                              height: _segment_control_height,
-                              width: _segment_control_width,
-                              padding: EdgeInsets.fromLTRB(
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical,
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical)),
-                          Container(
-                              child: Image.asset("icons/icon_list_normal.png",
-                                  width: _icon_display_mode_size,
-                                  height: _icon_display_mode_size),
-                              decoration: BoxDecoration(
-                                  color: "#f5f6f5".toColor(),
-                                  border: new Border.all(
-                                      color: "#dededd".toColor(), width: 1.0),
-                                  borderRadius: BorderRadius.only(
-                                      topRight: Radius.circular(
-                                          _segment_control_radius),
-                                      bottomRight: Radius.circular(
-                                          _segment_control_radius))),
-                              height: _segment_control_height,
-                              width: _segment_control_width,
-                              padding: EdgeInsets.fromLTRB(
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical,
-                                  _segment_control_padding_hor,
-                                  _segment_control_padding_vertical)),
-                          Container(
-                              child: Image.asset("icons/icon_delete.png",
-                                  width: _icon_delete_btn_size,
-                                  height: _icon_delete_btn_size),
-                              decoration: BoxDecoration(
-                                  color: "#cb6357".toColor(),
-                                  border: new Border.all(
-                                      color: "#b43f32".toColor(), width: 1.0),
+                                      color: Color(0xffb43f32), width: 1.0),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(4.0))),
                               width: _delete_btn_width,
@@ -194,23 +375,22 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                         ],
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center),
-                    width: 200),
+                    width: 125),
                 alignment: Alignment.centerRight)
           ]),
-          color: "#f4f4f4".toColor(),
+          color: Color(0xfff4f4f4),
           height: Constant.HOME_NAVI_BAR_HEIGHT),
       Divider(
-        color: _divider_line_color.toColor(),
+        color: _divider_line_color,
         height: 1.0,
         thickness: 1.0,
       ),
 
       /// 内容区域
-      _createContent(),
+      _createPageView(),
 
       /// 底部固定区域
-      Divider(
-          color: _divider_line_color.toColor(), height: 1.0, thickness: 1.0),
+      Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
       Container(
           child: Align(
               alignment: Alignment.center,
@@ -221,677 +401,107 @@ class _AllFileManagerState extends State<AllFileManagerPage> {
                       inherit: false))),
           height: 20,
           color: "#fafafa".toColor()),
-      Divider(
-          color: _divider_line_color.toColor(), height: 1.0, thickness: 1.0),
+      Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
     ], mainAxisSize: MainAxisSize.max);
   }
 
-  List<String> getDataList() {
-    List<String> list = [];
-    for (int i = 0; i < 100; i++) {
-      list.add(i.toString());
-    }
-    return list;
-  }
+  void _onBackPressed() {
+    FileNode? currentDir = AllFileManager.instance.currentDir();
 
-  List<Widget> getWidgetList() {
-    return getDataList().map((item) => getItemContainer(item)).toList();
-  }
+    if (null != currentDir) {
+      FileNode? dir = AllFileManager.instance.takeLast();
 
-  Widget getItemContainer(String item) {
-    return Container(
-      width: 100.0,
-      height: 100.0,
-      alignment: Alignment.center,
-      child: Text(
-        item,
-        style: TextStyle(color: Colors.white, fontSize: 40),
-      ),
-      color: Colors.blue,
-    );
-  }
+      if (null != dir) {
+        _getFiles((files) {
+          setState(() {
+            List<FileNode> fileNodes = files.map((e) =>
+                FileNode(dir, e, dir.level + 1)).toList();
 
-  late Map<String, double> columnWidths = {
-    'name': double.nan,
-    'size': double.nan,
-    'category': double.nan,
-    'changeDate': double.nan,
-    'empty': double.nan
-  };
+            AllFileManager.instance.updateFiles(fileNodes);
+            AllFileManager.instance.updateSelectedFiles([]);
+            AllFileManager.instance.updateCurrentDir(dir);
+            AllFileManager.instance.pop();
 
-  Widget _createContent() {
-    if (_isListMode) {
-      return Expanded(
-          child: Container(
-              color: Colors.white,
-              child: SfDataGridTheme(
-                  data: SfDataGridThemeData(
-                      gridLineColor: "#dddddd".toColor(),
-                      gridLineStrokeWidth: 1.0,
-                      headerColor: "#fcfcfc".toColor(),
-                      selectionColor: "#5a87ec".toColor(),
-                      brightness: Brightness.light,
-                      columnResizeIndicatorStrokeWidth: 0),
-                  child: SfDataGrid(
-                    source: fileItemDataSource,
-                    columnWidthMode: ColumnWidthMode.fill,
-                    columnResizeMode: ColumnResizeMode.onResize,
-                    gridLinesVisibility: GridLinesVisibility.none,
-                    headerGridLinesVisibility: GridLinesVisibility.both,
-                    allowColumnsResizing: true,
-                    showSortNumbers: true,
-                    allowSorting: false,
-                    headerRowHeight: 28,
-                    selectionMode: SelectionMode.single,
-                    rowHeight: 40,
-                    highlightRowOnHover: false,
-                    controller: _dataGridController,
-                    allowEditing: true,
-                    navigationMode: GridNavigationMode.cell,
-                    onColumnResizeUpdate: (ColumnResizeUpdateDetails details) {
-                      setState(() {
-                        columnWidths[details.column.columnName] = details.width;
-                      });
-                      return true;
-                    },
-                    onSelectionChanged: (List<DataGridRow> addedRows,
-                        List<DataGridRow> removedRows) {
-                      setState(() {
-                        fileItemDataSource
-                            .setSelectedRow(_dataGridController.selectedIndex);
-                      });
-                    },
-                    columns: <GridColumn>[
-                      GridColumn(
-                          columnName: 'name',
-                          label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '名称',
-                              style: _headerTextStyle,
-                            ),
-                            padding: EdgeInsets.fromLTRB(
-                                _headerPaddingStart, 0, 0, 0),
-                          ),
-                          columnWidthMode: ColumnWidthMode.fill,
-                          width: columnWidths['name']!,
-                          minimumWidth: 250.0,
-                          maximumWidth: _maxColumnWidth),
-                      GridColumn(
-                          columnName: 'size',
-                          width: columnWidths['size']!,
-                          label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text('大小', style: _headerTextStyle),
-                            padding: EdgeInsets.fromLTRB(
-                                _headerPaddingStart, 0, 0, 0),
-                          ),
-                          minimumWidth: _minColumnWidth,
-                          maximumWidth: _maxColumnWidth,
-                          columnWidthMode: ColumnWidthMode.fill,
-                          allowEditing: false),
-                      GridColumn(
-                          columnName: 'category',
-                          width: columnWidths['category']!,
-                          label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '种类',
-                              style: _headerTextStyle,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            padding: EdgeInsets.fromLTRB(
-                                _headerPaddingStart, 0, 0, 0),
-                          ),
-                          minimumWidth: _minColumnWidth,
-                          maximumWidth: _maxColumnWidth,
-                          columnWidthMode: ColumnWidthMode.fill,
-                          allowEditing: false),
-                      GridColumn(
-                          columnName: 'changeDate',
-                          width: columnWidths['changeDate']!,
-                          label: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Text('修改日期', style: _headerTextStyle),
-                            padding: EdgeInsets.fromLTRB(
-                                _headerPaddingStart, 0, 0, 0),
-                          ),
-                          minimumWidth: _minColumnWidth,
-                          maximumWidth: _maxColumnWidth,
-                          columnWidthMode: ColumnWidthMode.fill,
-                          allowEditing: false),
-                      GridColumn(
-                          columnName: '',
-                          width: columnWidths['empty']!,
-                          label: Container(
-                              alignment: Alignment.centerLeft,
-                              child: Text('', style: _headerTextStyle)),
-                          minimumWidth: 80,
-                          columnWidthMode: ColumnWidthMode.none,
-                          allowEditing: false),
-                    ],
-                  ))));
-    } else {
+            _updateBackBtnVisibility();
+            _refreshBottomFileCount();
+            _refreshDeleteBtnStatus();
 
-      String getFileTypeIcon(bool isDir, String extension) {
-        if (isDir) {
-          return "icons/ic_large_type_folder.png";
-        } else {
-          if (_isAudio(extension)) {
-            return "icons/ic_large_type_audio.png";
-          }
+            eventBus.fire(RefreshAllFileList());
+          });
+        }, (error) {
 
-          if (_isTextFile(extension)) {
-            return "icons/ic_large_type_txt.png";
-          }
-
-          return "icons/ic_large_type_doc.png";
-        }
-      }
-
-      return Expanded(
-          child: Column(children: [
-        Container(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text("手机存储",
-                  style: TextStyle(
-                      color: "#5b5c61".toColor(),
-                      fontSize: 12.0,
-                      inherit: false)),
-            ),
-            color: "#faf9fa".toColor(),
-            padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-            height: 30),
-        Divider(
-            color: _divider_line_color.toColor(), height: 1.0, thickness: 1.0),
-        Expanded(
-            child: Container(
-                child: GridView.builder(
-                  itemBuilder: (BuildContext context, int index) {
-                    FileItem fileItem = _fileItems[index];
-
-                    bool isDir = fileItem.isDir;
-
-                    String name = fileItem.name;
-                    String extension = "";
-                    int pointIndex = name.lastIndexOf(".");
-                    if (pointIndex != -1) {
-                      extension = name.substring(pointIndex + 1);
-                    }
-
-                    String fileTypeIcon = getFileTypeIcon(isDir, extension);
-
-                    return Column(
-                        children: [
-                          Container(
-                            child: Image.asset(fileTypeIcon, width: 100, height: 100),
-                          ),
-                          Text(fileItem.name, style: TextStyle(
-                              inherit: false,
-                              fontSize: 14,
-                              color: Color(0xff515151)
-                          ))
-                        ]);
-                  },
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.0,
-                    mainAxisSpacing: 10
-                  ),
-                  padding: EdgeInsets.all(10.0),
-                  itemCount: _fileItems.length,
-                ),
-                color: Colors.white)),
-      ]));
-    }
-  }
-}
-
-bool _isAudio(String extension) {
-  if (extension.toLowerCase() == "mp3") return true;
-  if (extension.toLowerCase() == "wav") return true;
-
-  return false;
-}
-
-bool _isTextFile(String extension) {
-  if (extension.toLowerCase() == "txt") return true;
-
-  return false;
-}
-
-bool _isDoc(String extension) {
-  if (_isAudio(extension)) return false;
-  if (_isTextFile(extension)) return false;
-
-  return true;
-}
-
-
-void _getFileList(String? path, Function(List<FileItem> items) onSuccess,
-    Function(String error) onError) {
-  var url = Uri.parse("${_URL_SERVER}/file/list");
-  http
-      .post(url,
-          headers: {"Content-Type": "application/json"},
-          body: json.encode({"path": path == null ? "" : path}))
-      .then((response) {
-    if (response.statusCode != 200) {
-      onError.call(response.reasonPhrase != null
-          ? response.reasonPhrase!
-          : "Unknown error");
-    } else {
-      var body = response.body;
-      debugPrint("getFileList, body: $body");
-
-      final map = jsonDecode(body);
-      final httpResponseEntity = ResponseEntity.fromJson(map);
-
-      if (httpResponseEntity.isSuccessful()) {
-        final data = httpResponseEntity.data as List<dynamic>;
-
-        onSuccess.call(data
-            .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
-            .toList());
+        }, path: "${dir.data.folder}/${dir.data.name}");
       } else {
-        onError.call(httpResponseEntity.msg == null
-            ? "Unknown error"
-            : httpResponseEntity.msg!);
+        _getFiles((files) {
+          setState(() {
+            List<FileNode> fileNodes = files.map((e) =>
+                FileNode(null, e, 0)).toList();
+
+            AllFileManager.instance.updateFiles(fileNodes);
+            AllFileManager.instance.updateSelectedFiles([]);
+            AllFileManager.instance.updateCurrentDir(null);
+            AllFileManager.instance.pop();
+
+            _updateBackBtnVisibility();
+            _refreshBottomFileCount();
+            _refreshDeleteBtnStatus();
+
+            eventBus.fire(RefreshAllFileList());
+          });
+        }, (error) {
+
+        });
       }
-    }
-  }).catchError((error) {
-    onError.call(error.toString());
-  });
-}
-
-// 用于构建表格数据
-class FileItemDataSource extends DataGridSource {
-  List<DataGridRow> _dataGridRows = [];
-  int _selectedIndex = -1;
-  final _KB_BOUND = 1 * 1024;
-  final _MB_BOUND = 1 * 1024 * 1024;
-  final _GB_BOUND = 1 * 1024 * 1024 * 1024;
-  BuildContext context;
-  List<FileItemVO> _datas = [];
-  final _INDENT_STEP = 10.0;
-  _AllFileManagerState allFileManagerState;
-
-  FileItemDataSource(this.allFileManagerState, this.context,
-      {required List<FileItemVO> datas}) {
-    setNewDatas(datas);
-  }
-
-  void setNewDatas(List<FileItemVO> datas) {
-    _datas = datas;
-    _dataGridRows = datas
-        .map<DataGridRow>((e) => DataGridRow(cells: [
-              DataGridCell<FileItemVO>(columnName: 'name', value: e),
-              DataGridCell<FileItemVO>(columnName: 'size', value: e),
-              DataGridCell<FileItemVO>(columnName: 'category', value: e),
-              DataGridCell<FileItemVO>(columnName: 'changeDate', value: e),
-              DataGridCell<String>(columnName: 'empty', value: ""),
-            ]))
-        .toList();
-    notifyListeners();
-    allFileManagerState.setState(() {});
-  }
-
-  void setSelectedRow(int index) {
-    _selectedIndex = index;
-    notifyListeners();
-  }
-
-  int selectedIndex() {
-    return _selectedIndex;
-  }
-
-  String _convertToCategory(FileItem item) {
-    if (item.isDir) {
-      return "文件夹";
     } else {
-      String name = item.name.toLowerCase();
-      if (name.trim() == "") return "--";
-
-      if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
-        return "JPEG图像";
-      }
-
-      if (name.endsWith(".png")) {
-        return "PNG图像";
-      }
-
-      if (name.endsWith(".raw")) {
-        return "Panasonic raw图像";
-      }
-
-      if (name.endsWith(".mp3")) {
-        return "MP3音频";
-      }
-
-      if (name.endsWith(".txt")) {
-        return "文本";
-      }
-
-      return "文档";
+      debugPrint("_onBackPressed: dir is null");
     }
   }
 
-  @override
-  List<DataGridRow> get rows => _dataGridRows;
-
-  void _expandFolder(FileItemVO fileItemVO) {
-    _getFileList("${fileItemVO.item.folder}/${fileItemVO.item.name}", (items) {
-      int index = _datas.indexWhere((element) =>
-          "${element.item.folder}/${element.item.name}" ==
-          "${fileItemVO.item.folder}/${fileItemVO.item.name}");
-
-      if (index >= 0) {
-        _datas.insertAll(index + 1, items.map((e) {
-          FileItemVO newFileItemVO = FileItemVO(e, fileItemVO.indentLevel + 1);
-          newFileItemVO
-              .addAncestor("${fileItemVO.item.folder}/${fileItemVO.item.name}");
-
-          newFileItemVO.parent = fileItemVO;
-          return newFileItemVO;
-        }));
-        setNewDatas(_datas);
-      }
-    }, (error) {
-      _showTipsDialog(context, "确定", error, false, () {});
+  void _refreshBottomFileCount() {
+    setState(() {
+      _selectedFileCount = AllFileManager.instance.selectedFileCount();
+      _allFileCount = AllFileManager.instance.totalFileCount();
     });
-
-    fileItemVO.isExpanded = true;
   }
 
-  bool _isChild(FileItemVO parent, FileItemVO second) {
-    FileItemVO? currentFolder = second.parent;
-
-    debugPrint("second: ${second.item.name}");
-
-    while (currentFolder != null) {
-      debugPrint(
-          "current folder: ${currentFolder.item.folder}/${currentFolder.item.name}");
-      if (currentFolder.item.folder == parent.item.folder &&
-          currentFolder.item.name == parent.item.name) {
-        debugPrint("_isChild condition true, file: ${second.item.name}");
-        return true;
-      }
-      currentFolder = currentFolder.parent;
-    }
-
-    return false;
+  void _updateBackBtnVisibility() {
+    var isRoot = AllFileManager.instance.isRoot();
+    eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
-  void _foldUp(FileItemVO fileItemVO) {
-    _datas.removeWhere((element) => _isChild(fileItemVO, element));
-
-    setNewDatas(_datas);
-    fileItemVO.isExpanded = false;
+  Widget _createPageView() {
+    return Expanded(
+        child: PageView(
+      scrollDirection: Axis.vertical,
+      physics: NeverScrollableScrollPhysics(),
+      children: [_downloadIconModePage, _downloadListModePage],
+      onPageChanged: (index) {
+        debugPrint("onPageChanged, index: $index");
+        setState(() {
+          _currentPageIndex = index;
+        });
+      },
+      controller: _pageController,
+    ));
   }
 
-  Visibility getRightArrowIcon(int index, FileItemVO fileItemVO) {
-    debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
-
-    late Image icon;
-
-    if (index == _selectedIndex) {
-      String iconPath = fileItemVO.isExpanded
-          ? "icons/icon_down_arrow_selected.png"
-          : "icons/icon_right_arrow_selected.png";
-      icon = Image.asset(iconPath, width: 20, height: 20);
-    } else {
-      String iconPath = fileItemVO.isExpanded
-          ? "icons/icon_down_arrow_normal.png"
-          : "icons/icon_right_arrow_normal.png";
-      icon = Image.asset(iconPath, width: 20, height: 20);
-    }
-
-    return Visibility(
-        child: GestureDetector(
-            child: Container(
-                child: icon,
-                margin: EdgeInsets.only(
-                    left: fileItemVO.indentLevel * _INDENT_STEP)),
-            onTap: () {
-              debugPrint("Expand folder...");
-              if (!fileItemVO.isExpanded) {
-                _expandFolder(fileItemVO);
-              } else {
-                _foldUp(fileItemVO);
-              }
-            }),
-        maintainSize: true,
-        maintainState: true,
-        maintainAnimation: true,
-        visible: fileItemVO.item.isDir);
+  void setDeleteBtnEnabled(bool enable) {
+    setState(() {
+      _isDeleteBtnEnabled = enable;
+    });
   }
 
-  Image getFileTypeIcon(FileItem fileItem) {
-    if (fileItem.isDir) {
-      return Image.asset("icons/icon_folder.png", width: 20, height: 20);
-    }
-
-    String name = fileItem.name.toLowerCase();
-
-    if (name.endsWith(".jpg") ||
-        name.endsWith(".jpeg") ||
-        name.endsWith(".png")) {
-      return Image.asset("icons/icon_file_type_image.png",
-          width: 20, height: 20);
-    }
-
-    if (name.endsWith(".mp3")) {
-      return Image.asset("icons/icon_file_type_audio.png",
-          width: 20, height: 20);
-    }
-
-    if (name.endsWith(".txt")) {
-      return Image.asset("icons/icon_file_type_text.png",
-          width: 20, height: 20);
-    }
-
-    return Image.asset("icons/icon_file_type_doc.png", width: 20, height: 20);
-  }
-
-  Color getTextColor(FileItemVO fileItemVO) {
-    int index = _datas.indexOf(fileItemVO);
-    debugPrint("getTextColor, index: $index, selectedIndex: $_selectedIndex");
-
-    if (index == _selectedIndex) {
-      return Colors.white;
-    } else {
-      return "#323237".toColor();
-    }
+  void _refreshDeleteBtnStatus() {
+    setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
   }
 
   @override
-  DataGridRowAdapter buildRow(DataGridRow row) {
-    Color getRowBackgroundColor() {
-      int index = rows.indexOf(row);
-      debugPrint("Row index: $index");
-
-      if (index % 2 == 0) {
-        return Colors.white;
-      } else {
-        return "#f7f7f7".toColor();
-      }
-    }
-
-    return DataGridRowAdapter(
-        color: getRowBackgroundColor(),
-        cells: row.getCells().map<Widget>((e) {
-          dynamic value = e.value;
-          if (value is FileItemVO) {
-            final fileItemVO = e.value as FileItemVO;
-
-            if (e.columnName == "name") {
-              return Row(children: [
-                getRightArrowIcon(_datas.indexOf(fileItemVO), fileItemVO),
-                getFileTypeIcon(fileItemVO.item),
-                SizedBox(width: 10.0),
-                Flexible(
-                    child: Text(fileItemVO.item.name,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            inherit: false,
-                            fontSize: 14,
-                            color: getTextColor(fileItemVO))))
-              ]);
-            } else {
-              String text = value.toString();
-
-              if (e.columnName == "size") {
-                if (fileItemVO.item.isDir) {
-                  text = "--";
-                } else {
-                  text = _convertToReadableSize(fileItemVO.item.size);
-                }
-              }
-
-              if (e.columnName == "category") {
-                text = _convertToCategory(fileItemVO.item);
-              }
-
-              if (e.columnName == "changeDate") {
-                text = _formatChangeDate(fileItemVO.item.changeDate);
-              }
-
-              return Container(
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                child: Text(text,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                    style: TextStyle(
-                        inherit: false,
-                        fontSize: 14,
-                        color: getTextColor(fileItemVO))),
-              );
-            }
-          } else {
-            return Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text("",
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: TextStyle(
-                      inherit: false, fontSize: 14, color: Colors.black87)),
-            );
-          }
-        }).toList());
-  }
-
-  String _formatChangeDate(int changeDate) {
-    final df = DateFormat("yyyy年M月d日 HH:mm");
-    return df.format(new DateTime.fromMillisecondsSinceEpoch(changeDate));
-  }
-
-  String _convertToReadableSize(int size) {
-    if (size < _KB_BOUND) {
-      return "${size}Byte";
-    }
-    if (size >= _KB_BOUND && size < _MB_BOUND) {
-      return "${size ~/ 1024}KB";
-    }
-
-    if (size >= _MB_BOUND && size <= _GB_BOUND) {
-      return "${size / 1024 ~/ 1024}MB";
-    }
-
-    return "${size / 1024 / 1024 ~/ 1024}GB";
-  }
+  bool get wantKeepAlive => true;
 
   @override
-  bool shouldRecalculateColumnWidths() {
-    return true;
-  }
+  void dispose() {
+    super.dispose();
 
-  @override
-  int compare(DataGridRow? a, DataGridRow? b, SortColumnDetails sortColumn) {
-    FileItemVO itemA = a
-        ?.getCells()
-        .firstWhere((element) => element.columnName == sortColumn.name)
-        .value;
-    FileItemVO itemB = b
-        ?.getCells()
-        .firstWhere((element) => element.columnName == sortColumn.name)
-        .value;
-
-    if (sortColumn.name == "name" || sortColumn.name == "category") {
-      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
-        return itemA.item.name.compareTo(itemB.item.name);
-      } else {
-        return itemB.item.name.compareTo(itemA.item.name);
-      }
-    }
-
-    if (sortColumn.name == "size") {
-      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
-        return itemA.item.size.compareTo(itemB.item.size);
-      } else {
-        return itemB.item.size.compareTo(itemA.item.size);
-      }
-    }
-
-    if (sortColumn.name == "changeDate") {
-      if (sortColumn.sortDirection == DataGridSortDirection.descending) {
-        return itemA.item.changeDate.compareTo(itemB.item.changeDate);
-      } else {
-        return itemB.item.changeDate.compareTo(itemA.item.changeDate);
-      }
-    }
-
-    return super.compare(a, b, sortColumn);
-  }
-
-  @override
-  Widget? buildEditWidget(DataGridRow dataGridRow,
-      RowColumnIndex rowColumnIndex, GridColumn column, CellSubmit submitCell) {
-    if (column.columnName == "name") {
-      FileItemVO fileItemVO = dataGridRow.getCells().first.value as FileItemVO;
-
-      TextEditingController controller = new TextEditingController(text: fileItemVO.item.name);
-
-      return Row(children: [
-        getRightArrowIcon(_datas.indexOf(fileItemVO), fileItemVO),
-        getFileTypeIcon(fileItemVO.item),
-        SizedBox(width: 10.0),
-        Flexible(
-            child: Material(
-                child: Container(
-                    child: Flexible(
-                      child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                              hintText: "请输入新名称",
-                              border: InputBorder.none,
-                              isDense: true,
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 5, vertical: 6)
-                          ),
-                          textAlign: TextAlign.left,
-                          autofocus: true,
-                          textAlignVertical: TextAlignVertical.center,
-                          maxLines: 5,
-                          minLines: 1,
-                          keyboardType: TextInputType.multiline,
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xff333333)
-                          )
-                      ),
-                    ),
-                    width: 180, height: 32, alignment: Alignment.centerLeft,)
-            )
-        )
-      ]);
-    } else {
-      return null;
-    }
+    _unRegisterEventBus();
   }
 }

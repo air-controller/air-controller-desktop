@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -64,7 +65,7 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
 
   late Function() _ctrlAPressedCallback;
 
-  StreamSubscription<RefreshDownloadFileList>? _refreshDownloadFileList;
+  StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
 
   @override
   void initState() {
@@ -83,7 +84,7 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
 
   void _registerEventBus() {
     _refreshDownloadFileList =
-        eventBus.on<RefreshDownloadFileList>().listen((event) {
+        eventBus.on<RefreshAllFileList>().listen((event) {
           setState(() {
 
           });
