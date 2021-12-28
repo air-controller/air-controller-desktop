@@ -1,18 +1,16 @@
 import 'package:data_table_2/data_table_2.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/model/AudioItem.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constant.dart';
-import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
+
+import 'file_manager.dart';
 
 class MusicManagerPage extends StatefulWidget {
   @override
@@ -21,7 +19,7 @@ class MusicManagerPage extends StatefulWidget {
   }
 }
 
-class _MusicManagerState extends State<MusicManagerPage> {
+class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAliveClientMixin {
   var _isLoadingSuccess = false;
   final _icon_delete_btn_size = 10.0;
   final _delete_btn_width = 40.0;
@@ -51,9 +49,20 @@ class _MusicManagerState extends State<MusicManagerPage> {
   final _MB_BOUND = 1 * 1024 * 1024;
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
+  late Function() _ctrlAPressedCallback;
+
+  bool _isDeleteBtnEnabled = false;
+
   @override
   void initState() {
     super.initState();
+
+    _ctrlAPressedCallback = () {
+      _setAllSelected();
+      debugPrint("Ctrl + A pressed...");
+    };
+
+    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllAudios((audios) {
       setState(() {
@@ -65,6 +74,20 @@ class _MusicManagerState extends State<MusicManagerPage> {
       setState(() {
         _isLoadingSuccess = true;
       });
+    });
+  }
+
+  void _setAllSelected() {
+    setState(() {
+      _selectedAudioItems.clear();
+      _selectedAudioItems.addAll(_audioItems);
+      _updateDeleteBtnStatus();
+    });
+  }
+
+  void _updateDeleteBtnStatus() {
+    setState(() {
+      _isDeleteBtnEnabled = _selectedAudioItems.length > 0;
     });
   }
 
@@ -126,7 +149,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
     String itemNumStr = "共${_audioItems.length}项";
 
     if (_selectedAudioItems.length > 0) {
-      itemNumStr = "选中1项（共${_selectedAudioItems.length}项目)";
+      itemNumStr = "选中${_selectedAudioItems.length}项（共${_audioItems.length}项目)";
     }
 
     return Column(children: [
@@ -142,9 +165,12 @@ class _MusicManagerState extends State<MusicManagerPage> {
                         fontSize: 16.0))),
             Align(
                 child: Container(
-                    child: Image.asset("icons/icon_delete.png",
-                        width: _icon_delete_btn_size,
-                        height: _icon_delete_btn_size),
+                    child: Opacity(
+                      opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                      child: Image.asset("icons/icon_delete.png",
+                          width: _icon_delete_btn_size,
+                          height: _icon_delete_btn_size),
+                    ),
                     decoration: BoxDecoration(
                         color: Color(0xffcb6357),
                         border: new Border.all(
@@ -169,7 +195,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
       ),
 
       /// 内容区域
-      _createContent2(),
+      _createContent(),
 
       /// 底部固定区域
       Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
@@ -198,8 +224,8 @@ class _MusicManagerState extends State<MusicManagerPage> {
 
         if (duration - hour * _ONE_HOUR - min * _ONE_MINUTE > 0) {
           int sec =
-          ((duration - hour * _ONE_HOUR - min * _ONE_MINUTE) / _ONE_SECOND)
-              .truncate();
+              ((duration - hour * _ONE_HOUR - min * _ONE_MINUTE) / _ONE_SECOND)
+                  .truncate();
 
           durStr = "${durStr}${sec}秒";
         }
@@ -240,7 +266,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
     return "${size / 1024 / 1024 ~/ 1024}GB";
   }
 
-  Widget _createContent2() {
+  Widget _createContent() {
     TextStyle headerStyle =
         TextStyle(inherit: false, fontSize: 14, color: Colors.black);
 
@@ -347,8 +373,10 @@ class _MusicManagerState extends State<MusicManagerPage> {
     return List<DataRow>.generate(_audioItems.length, (index) {
       AudioItem audioItem = _audioItems[index];
 
-      Color textColor = _isSelected(audioItem) ? Colors.white : Color(0xff313237);
-      TextStyle textStyle = TextStyle(inherit: false, fontSize: 14, color: textColor);
+      Color textColor =
+          _isSelected(audioItem) ? Colors.white : Color(0xff313237);
+      TextStyle textStyle =
+          TextStyle(inherit: false, fontSize: 14, color: textColor);
 
       String folderName = audioItem.folder;
       int pointIndex0 = folderName.lastIndexOf("/");
@@ -368,8 +396,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
             DataCell(Container(
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(
-                  folderName,
+              child: Text(folderName,
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: textStyle),
@@ -377,8 +404,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
             DataCell(Container(
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(
-                  audioItem.name,
+              child: Text(audioItem.name,
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
                   style: textStyle),
@@ -421,6 +447,7 @@ class _MusicManagerState extends State<MusicManagerPage> {
             debugPrint("onSelectChanged: $isSelected");
           },
           onTap: () {
+            _setAudioSelected(audioItem);
           },
           onDoubleTap: () {
             _openVideoWithSystemApp(audioItem);
@@ -443,9 +470,123 @@ class _MusicManagerState extends State<MusicManagerPage> {
     });
   }
 
+  void _setAudioSelected(AudioItem audio) {
+    debugPrint("Shift key down status: ${_isShiftDown()}");
+    debugPrint("Control key down status: ${_isControlDown()}");
+
+    if (!_isSelected(audio)) {
+      if (_isControlDown()) {
+        setState(() {
+          _selectedAudioItems.add(audio);
+        });
+      } else if (_isShiftDown()) {
+        if (_selectedAudioItems.length == 0) {
+          setState(() {
+            _selectedAudioItems.add(audio);
+          });
+        } else if (_selectedAudioItems.length == 1) {
+          int index = _audioItems.indexOf(_selectedAudioItems[0]);
+
+          int current = _audioItems.indexOf(audio);
+
+          if (current > index) {
+            setState(() {
+              _selectedAudioItems = _audioItems.sublist(index, current + 1);
+            });
+          } else {
+            setState(() {
+              _selectedAudioItems = _audioItems.sublist(current, index + 1);
+            });
+          }
+        } else {
+          int maxIndex = 0;
+          int minIndex = 0;
+
+          for (int i = 0; i < _selectedAudioItems.length; i++) {
+            AudioItem current = _selectedAudioItems[i];
+            int index = _audioItems.indexOf(current);
+            if (index < 0) {
+              debugPrint("Error image");
+              continue;
+            }
+
+            if (index > maxIndex) {
+              maxIndex = index;
+            }
+
+            if (index < minIndex) {
+              minIndex = index;
+            }
+          }
+
+          debugPrint("minIndex: $minIndex, maxIndex: $maxIndex");
+
+          int current = _audioItems.indexOf(audio);
+
+          if (current >= minIndex && current <= maxIndex) {
+            setState(() {
+              _selectedAudioItems = _audioItems.sublist(current, maxIndex + 1);
+            });
+          } else if (current < minIndex) {
+            setState(() {
+              _selectedAudioItems = _audioItems.sublist(current, maxIndex + 1);
+            });
+          } else if (current > maxIndex) {
+            setState(() {
+              _selectedAudioItems = _audioItems.sublist(minIndex, current + 1);
+            });
+          }
+        }
+      } else {
+        setState(() {
+          _selectedAudioItems.clear();
+          _selectedAudioItems.add(audio);
+        });
+      }
+    } else {
+      debugPrint("It's already contains this image, id: ${audio.id}");
+
+      if (_isControlDown()) {
+        setState(() {
+          _selectedAudioItems.remove(audio);
+        });
+      } else if (_isShiftDown()) {
+        setState(() {
+          _selectedAudioItems.remove(audio);
+        });
+      } else {
+        setState(() {
+          _selectedAudioItems.clear();
+          _selectedAudioItems.add(audio);
+        });
+      }
+    }
+
+    _updateDeleteBtnStatus();
+  }
+
+  bool _isControlDown() {
+    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
+  }
+
+  bool _isShiftDown() {
+    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
+  }
+
+  void _addCtrlAPressedCallback(Function() callback) {
+    FileManagerPage.fileManagerKey.currentState
+        ?.addCtrlAPressedCallback(callback);
+  }
+
+  void _removeCtrlAPressedCallback(Function() callback) {
+    FileManagerPage.fileManagerKey.currentState
+        ?.removeCtrlAPressedCallback(callback);
+  }
+
   String _formatChangeDate(int changeDate) {
     final df = DateFormat("yyyy年M月d日 HH:mm");
-    return df.format(new DateTime.fromMillisecondsSinceEpoch(changeDate * 1000));
+    return df
+        .format(new DateTime.fromMillisecondsSinceEpoch(changeDate * 1000));
   }
 
   bool _isSelected(AudioItem audioItem) {
@@ -454,32 +595,32 @@ class _MusicManagerState extends State<MusicManagerPage> {
 
   void _performSort(int sortColumnIndex, bool isSortAscending) {
     if (sortColumnIndex == _COLUMN_INDEX_FOLDER) {
-       _audioItems.sort((itemA, itemB) {
-         String folderA = itemA.folder;
-         String folderB = itemB.folder;
+      _audioItems.sort((itemA, itemB) {
+        String folderA = itemA.folder;
+        String folderB = itemB.folder;
 
-         int lastIndexA = folderA.lastIndexOf("/");
+        int lastIndexA = folderA.lastIndexOf("/");
 
-         if (lastIndexA != -1) {
-           folderA = folderA.substring(lastIndexA + 1);
-         }
+        if (lastIndexA != -1) {
+          folderA = folderA.substring(lastIndexA + 1);
+        }
 
-         int lastIndexB = folderB.lastIndexOf("/");
+        int lastIndexB = folderB.lastIndexOf("/");
 
-         if (lastIndexB != -1) {
-           folderB = folderB.substring(lastIndexB + 1);
-         }
+        if (lastIndexB != -1) {
+          folderB = folderB.substring(lastIndexB + 1);
+        }
 
-         if (isSortAscending) {
-           return folderA.toLowerCase().compareTo(folderB.toLowerCase());
-         } else {
-           return folderB.toLowerCase().compareTo(folderA.toLowerCase());
-         }
-       });
-       setState(() {
-         _sortColumnIndex = sortColumnIndex;
-         _isAscending = isSortAscending;
-       });
+        if (isSortAscending) {
+          return folderA.toLowerCase().compareTo(folderB.toLowerCase());
+        } else {
+          return folderB.toLowerCase().compareTo(folderA.toLowerCase());
+        }
+      });
+      setState(() {
+        _sortColumnIndex = sortColumnIndex;
+        _isAscending = isSortAscending;
+      });
     }
 
     if (sortColumnIndex == _COLUMN_INDEX_NAME) {
@@ -551,4 +692,14 @@ class _MusicManagerState extends State<MusicManagerPage> {
       debugPrint("Open audio: $videoUrl success");
     }
   }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }
