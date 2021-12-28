@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile_assistant_client/home/all_file_manager_page.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import '../ext/string-ext.dart';
 import '../constant.dart';
+import 'all_file_manager_page2.dart';
 
 class FileManagerWidget extends StatelessWidget {
 
