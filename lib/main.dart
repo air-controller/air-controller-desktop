@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
+import 'package:mobile_assistant_client/model/cmd.dart';
+import 'package:mobile_assistant_client/model/mobile_info.dart';
+import 'package:mobile_assistant_client/network/cmd_client.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/network/device_discover_manager.dart';
+import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:window_size/window_size.dart';
@@ -219,8 +224,20 @@ class _WifiState extends State<MyHomePage> {
               final device = _devices[index];
 
               DeviceConnectionManager.instance.currentDevice = device;
+              CmdClient.getInstance().connect(device.ip);
+              CmdClient.getInstance().onCmdReceive((data) {
+                debugPrint("onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
+                _processCmd(data);
+              });
+              CmdClient.getInstance().onConnected(() {
+                debugPrint("onConnected, ip: ${device.ip}");
+              });
+              CmdClient.getInstance().onDisconnected(() {
+                debugPrint("onDisconnected, ip: ${device.ip}");
+              });
+              
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return FileManagerWidget();
+                return FileManagerPage();
               }));
             }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
       }))
@@ -230,6 +247,17 @@ class _WifiState extends State<MyHomePage> {
   double _randomDouble(double start, double end) {
     final random = Random();
     return random.nextDouble() * (end - start) + start;
+  }
+
+  void _processCmd(Cmd<dynamic> cmd) {
+    if (cmd.cmd == Cmd.CMD_UPDATE_MOBILE_INFO) {
+      MobileInfo mobileInfo = MobileInfo.fromJson(cmd.data);
+      UpdateMobileInfo updateMobileInfo = UpdateMobileInfo(mobileInfo);
+      eventBus.fire(updateMobileInfo);
+
+      debugPrint("BatteryLevel: ${mobileInfo.batteryLevel}, totalSize: ${mobileInfo.storageSize.totalSize}, "
+          "availableSize: ${mobileInfo.storageSize.availableSize}");
+    }
   }
 
   @override

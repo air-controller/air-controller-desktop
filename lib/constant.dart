@@ -3,6 +3,9 @@
 class Constant {
   static const int PORT_SEARCH = 20000;
 
+  static const int PORT_CMD = 20001;
+
+
   static const String CMD_SEARCH_PREFIX = "search#";
 
   static const String CMD_SEARCH_RES_PREFIX = "search_msg_received#";

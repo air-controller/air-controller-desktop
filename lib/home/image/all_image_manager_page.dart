@@ -711,13 +711,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   void deactivate() {
     super.deactivate();
 
+    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+
     debugPrint("所有图片：deactivate");
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
-  }
 }
