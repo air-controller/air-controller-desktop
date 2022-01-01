@@ -9,6 +9,7 @@ import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import 'package:mobile_assistant_client/main.dart';
 import 'package:mobile_assistant_client/model/mobile_info.dart';
+import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import '../ext/string-ext.dart';
 import '../constant.dart';
@@ -164,7 +165,7 @@ class FileManagerState extends State<FileManagerPage> {
                     Container(
                         child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text("MIX 2S",
+                            child: Text("${DeviceConnectionManager.instance.currentDevice?.name}",
                                 style: TextStyle(
                                     inherit: false,
                                     color: "#656565".toColor()))),
@@ -303,7 +304,7 @@ class FileManagerState extends State<FileManagerPage> {
                           children: [
                             Container(
                               child: Text(
-                                "MIX 2S",
+                                "${DeviceConnectionManager.instance.currentDevice?.name}",
                                 style: TextStyle(
                                     inherit: false,
                                     fontSize: 16,
