@@ -24,4 +24,7 @@ class Constant {
   static const int PLATFORM_MACOS = 1;
 
   static const int PLATFORM_UBUNTU = 2;
+
+  /// 图片最大放大倍数（1表示原始大小）
+  static const int IMAGE_MAX_SCALE = 4;
 }

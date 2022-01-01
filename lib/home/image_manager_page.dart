@@ -585,12 +585,11 @@ class ImageManagerState extends State<ImageManagerPage> {
                                   debugPrint("Current value: $value");
                                   setState(() {
                                     _imageSizeSliderValue = value;
-                                    _currentImageScale =
-                                        1.0 + _imageSizeSliderValue / 100;
+                                    _currentImageScale = _imageSizeSliderValue / 100 + 1.0;
                                   });
                                 },
                                 min: 0,
-                                max: 100,
+                                max: 100.0 * Constant.IMAGE_MAX_SCALE - 100.0,
                               ),
                             )),
                         width: 80,
@@ -681,8 +680,8 @@ class ImageManagerState extends State<ImageManagerPage> {
                   return GestureConfig(
                       minScale: 1.0,
                       animationMinScale: 1.0,
-                      maxScale: 2.0,
-                      animationMaxScale: 2.0,
+                      maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
+                      animationMaxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
                       speed: 1.0,
                       inertialSpeed: 100.0,
                       initialScale: _currentImageScale,
@@ -732,29 +731,68 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   void _setImageScale(bool isEnlarge) {
-    if (isEnlarge) {
-      if (_currentImageScale < 1.5) {
-        setState(() {
-          _currentImageScale = 1.5;
-        });
-      } else if (_currentImageScale < 2.0) {
-        setState(() {
-          _currentImageScale = 2.0;
-        });
-      }
-    } else {
-      if (_currentImageScale <= 1.5) {
-        setState(() {
-          _currentImageScale = 1.0;
-        });
-      } else {
-        setState(() {
-          _currentImageScale = 1.5;
-        });
-      }
-    }
+    // if (isEnlarge) {
+    //   if (_currentImageScale < 1.5) {
+    //     setState(() {
+    //       _currentImageScale = 1.5;
+    //     });
+    //   } else if (_currentImageScale < 2.0) {
+    //     setState(() {
+    //       _currentImageScale = 2.0;
+    //     });
+    //   }
+    // } else {
+    //   if (_currentImageScale <= 1.5) {
+    //     setState(() {
+    //       _currentImageScale = 1.0;
+    //     });
+    //   } else {
+    //     setState(() {
+    //       _currentImageScale = 1.5;
+    //     });
+    //   }
+    // }
+
+    _seekClosestSize(isEnlarge);
 
     _updateImageSliderValue();
+  }
+
+  // 寻找最接近的图片Scale，以0.5为一个档位
+  void _seekClosestSize(bool isEnlarge) {
+    if (isEnlarge) {
+      double targetScale = 1.5;
+      for (int i = 0; i <= Constant.IMAGE_MAX_SCALE ~/ 0.5; i++) {
+        double value = Constant.IMAGE_MAX_SCALE - 0.5 * i;
+
+        debugPrint("value: $value, _currentImageScale: $_currentImageScale");
+
+        if (value - _currentImageScale <= 0.5) {
+          targetScale = value;
+
+          if (targetScale < 1.5) targetScale = 1.5;
+
+          break;
+        }
+      }
+
+      setState(() {
+        _currentImageScale = targetScale;
+      });
+    } else {
+      double targetScale = 1.0;
+      for (int i = 0; i <= Constant.IMAGE_MAX_SCALE ~/ 0.5; i++) {
+        double value = i * 0.5 + 1.0;
+        if (_currentImageScale - value <= 0.5) {
+          targetScale = value;
+          break;
+        }
+      }
+
+      setState(() {
+        _currentImageScale = targetScale;
+      });
+    }
   }
 
   void _updateImageSliderValue() {
