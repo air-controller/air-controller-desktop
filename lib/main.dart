@@ -9,6 +9,7 @@ import 'package:mobile_assistant_client/model/mobile_info.dart';
 import 'package:mobile_assistant_client/network/cmd_client.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/network/device_discover_manager.dart';
+import 'package:mobile_assistant_client/network/heartbeat_service.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
@@ -235,7 +236,17 @@ class _WifiState extends State<MyHomePage> {
               CmdClient.getInstance().onDisconnected(() {
                 debugPrint("onDisconnected, ip: ${device.ip}");
               });
-              
+
+              HeartbeatService.instance.connectToServer(device.ip);
+
+              HeartbeatService.instance.onHeartbeatInterrupt(() {
+                debugPrint("HeartbeatService, onHeartbeatInterrupt");
+              });
+
+              HeartbeatService.instance.onHeartbeatTimeout(() {
+                debugPrint("HeartbeatService, onHeartbeatTimeout");
+              });
+
               Navigator.push(context, MaterialPageRoute(builder: (context) {
                 return FileManagerPage();
               }));

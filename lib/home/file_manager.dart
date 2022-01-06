@@ -9,7 +9,9 @@ import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import 'package:mobile_assistant_client/main.dart';
 import 'package:mobile_assistant_client/model/mobile_info.dart';
+import 'package:mobile_assistant_client/network/cmd_client.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/network/heartbeat_service.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import '../ext/string-ext.dart';
 import '../constant.dart';
@@ -328,7 +330,7 @@ class FileManagerState extends State<FileManagerPage> {
                                 // color: Colors.yellow,
                               ),
                               onTap: () {
-                                Navigator.pop(context);
+                                _exitFileManager();
 
                                 setState(() {
                                   _isPopupIconDown = false;
@@ -410,6 +412,13 @@ class FileManagerState extends State<FileManagerPage> {
                   },
                   controller: pageController))
         ]);
+  }
+
+  void _exitFileManager() {
+    DeviceConnectionManager.instance.currentDevice = null;
+    CmdClient.getInstance().disconnect();
+    HeartbeatService.instance.cancel();
+    Navigator.pop(context);
   }
 
   int selectedTabIndex() {

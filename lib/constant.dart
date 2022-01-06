@@ -5,6 +5,7 @@ class Constant {
 
   static const int PORT_CMD = 20001;
 
+  static const int PORT_HEARTBEAT = 20002;
 
   static const String CMD_SEARCH_PREFIX = "search#";
 
