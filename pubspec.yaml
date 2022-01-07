@@ -58,6 +58,7 @@ dependencies:
   flutter_smart_dialog: ^3.0.2
   data_table_2: ^2.2.0
   url_launcher: ^6.0.17
+  neat_periodic_task: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -121,6 +122,7 @@ flutter:
      - icons/ic_large_type_audio.png
      - icons/icon_list_selected.png
      - icons/ic_popup.png
+     - icons/error_wrong.tiff
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

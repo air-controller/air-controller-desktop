@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/event/update_mobile_info.dart';
+import 'package:mobile_assistant_client/home/connection_disconnected_page.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/model/Device.dart';
 import 'package:mobile_assistant_client/model/cmd.dart';
@@ -19,6 +20,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'network/device_discover_manager.dart';
 import 'dart:math';
+import 'package:neat_periodic_task/neat_periodic_task.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,9 +61,10 @@ class _WifiState extends State<MyHomePage> {
   var subscription = null;
   String? _wifiName = "Unknown-ssid";
 
-  var _randomLeft = 0;
-  var _randomTop = 0;
   final _devices = <Device>[];
+  NeatPeriodicTaskScheduler? _refreshDeviceScheduler;
+  // 记录上一次设备显示坐标位置（Key为设备IP）
+  Map<String, Rect> _deviceRectMap = Map();
 
   @override
   void initState() {
@@ -82,6 +85,30 @@ class _WifiState extends State<MyHomePage> {
         updateWifiStatus(false);
       }
     });
+    _startRefreshDeviceScheduler();
+  }
+
+  void _startRefreshDeviceScheduler() {
+    if (null == _refreshDeviceScheduler) {
+      _refreshDeviceScheduler = NeatPeriodicTaskScheduler(
+        interval: Duration(seconds: 3),
+        name: 'refreshDeviceScheduler',
+        timeout: Duration(seconds: 5),
+        task: () async => _refreshDevices(),
+        minCycle: Duration(seconds: 1),
+      );
+      _refreshDeviceScheduler?.start();
+    }
+  }
+
+  void _refreshDevices() {
+    setState(() {
+      _devices.clear();
+    });
+  }
+
+  void _stopRefreshDeviceScheduler() async {
+    await _refreshDeviceScheduler?.stop();
   }
 
   void initWifiState() async {
@@ -215,11 +242,33 @@ class _WifiState extends State<MyHomePage> {
           color: Colors.white),
       Stack(
           children: List.generate(_devices.length, (index) {
-            var width = MediaQuery.of(context).size.width - 80;
-            var height = MediaQuery.of(context).size.height - 30;
+            Device device = _devices[index];
 
-            final left = _randomDouble(0, width);
-            final top = _randomDouble(0, height);
+            debugPrint("List.generate => Device ip: ${device.ip}");
+
+            Rect? rect = _deviceRectMap[device.ip];
+
+            double left = 0;
+            double top = 0;
+
+            if (null == rect) {
+              var width = MediaQuery
+                  .of(context)
+                  .size
+                  .width - 80;
+              var height = MediaQuery
+                  .of(context)
+                  .size
+                  .height - 30;
+
+              left = _randomDouble(0, width);
+              top = _randomDouble(0, height);
+
+              _deviceRectMap[device.ip] = Rect.fromLTRB(left, top, 0, 0);
+            } else {
+              left = rect.left;
+              top = rect.top;
+            }
         return Positioned(
             child: ElevatedButton(onPressed: () {
               final device = _devices[index];
@@ -241,10 +290,12 @@ class _WifiState extends State<MyHomePage> {
 
               HeartbeatService.instance.onHeartbeatInterrupt(() {
                 debugPrint("HeartbeatService, onHeartbeatInterrupt");
+                _pushToErrorPage();
               });
 
               HeartbeatService.instance.onHeartbeatTimeout(() {
                 debugPrint("HeartbeatService, onHeartbeatTimeout");
+                _pushToErrorPage();
               });
 
               Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -253,6 +304,12 @@ class _WifiState extends State<MyHomePage> {
             }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
       }))
     ]);
+  }
+
+  void _pushToErrorPage() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return ConnectionDisconnectedPage();
+    }));
   }
 
   double _randomDouble(double start, double end) {
@@ -276,5 +333,6 @@ class _WifiState extends State<MyHomePage> {
     super.dispose();
 
     subscription?.cancel();
+    _stopRefreshDeviceScheduler();
   }
 }

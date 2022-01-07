@@ -127,6 +127,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.2.0"
+  convert:
+    dependency: transitive
+    description:
+      name: convert
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.1"
   crypto:
     dependency: transitive
     description:
@@ -380,6 +387,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.3"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.4.0"
+  logging:
+    dependency: transitive
+    description:
+      name: logging
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.2"
   matcher:
     dependency: transitive
     description:
@@ -401,6 +422,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.7.0"
+  neat_periodic_task:
+    dependency: "direct main"
+    description:
+      name: neat_periodic_task
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.0"
   nested:
     dependency: transitive
     description:
@@ -590,6 +618,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.1+1"
+  retry:
+    dependency: transitive
+    description:
+      name: retry
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.1.0"
   rflutter_alert:
     dependency: "direct main"
     description:
@@ -623,6 +658,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
+  slugid:
+    dependency: transitive
+    description:
+      name: slugid
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.1.0"
   source_span:
     dependency: transitive
     description:
