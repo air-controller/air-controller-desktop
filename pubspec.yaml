@@ -59,6 +59,10 @@ dependencies:
   data_table_2: ^2.2.0
   url_launcher: ^6.0.17
   neat_periodic_task: ^2.0.0
+  file_picker: ^4.3.1
+  flowder:
+    git:
+      url: git@github.com:yuanhoujun/flowder.git
 
 dev_dependencies:
   flutter_test:

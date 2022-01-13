@@ -1,8 +1,13 @@
 import 'dart:collection';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
@@ -61,6 +66,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   late Function() _ctrlAPressedCallback;
   // 标记当前页面是否可见
   bool _isVisible = false;
+
+  DownloaderCore? _downloaderCore;
 
   _AllImageManagerPageState();
 
@@ -194,24 +201,35 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         itemBuilder: (BuildContext context, int index) {
           ImageItem image = _allImages[index];
           return Container(
-            child: GestureDetector(
-              child: CachedNetworkImage(
-                imageUrl:
-                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                        .replaceAll("storage/emulated/0/", ""),
-                fit: BoxFit.cover,
-                width: 200,
-                height: 200,
-                memCacheWidth: 400,
-                fadeOutDuration: Duration.zero,
-                fadeInDuration: Duration.zero,
+            child: Listener(
+              child: GestureDetector(
+                child: CachedNetworkImage(
+                  imageUrl:
+                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                      .replaceAll("storage/emulated/0/", ""),
+                  fit: BoxFit.cover,
+                  width: 200,
+                  height: 200,
+                  memCacheWidth: 400,
+                  fadeOutDuration: Duration.zero,
+                  fadeInDuration: Duration.zero,
+                ),
+                onTap: () {
+                  _setImageSelected(image);
+                },
+                onDoubleTap: () {
+                  debugPrint("双击");
+                  _openImageDetail(_allImages, image);
+                },
               ),
-              onTap: () {
+              onPointerDown: (event) {
+                debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, image);
+                }
+
                 _setImageSelected(image);
-              },
-              onDoubleTap: () {
-                debugPrint("双击");
-                _openImageDetail(_allImages, image);
               },
             ),
             decoration: BoxDecoration(
@@ -234,6 +252,82 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+  }
+
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse && event.buttons == kSecondaryMouseButton;
+  }
+
+  void _openMenu(Offset position, ImageItem imageItem) {
+    // 为什么这样可以？值得思考
+    RenderBox? overlay = Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(Rect.fromLTRB(position.dx, position.dy, 0, 0), overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(child: Text("打开"), onTap: () {
+            _openImageDetail(_allImages, imageItem);
+          }),
+          PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
+            _openFilePicker(imageItem);
+          }),
+          PopupMenuItem(child: Text("删除")),
+        ]
+    );
+  }
+
+  void _openFilePicker(ImageItem imageItem) async {
+    String? dir = await FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      SmartDialog.showLoading(msg: "请稍后");
+
+      _downloadImage(imageItem, dir, () {
+        SmartDialog.dismiss();
+        // SmartDialog.showToast("图片已保存至${dir}");
+      }, (error) {
+        SmartDialog.dismiss();
+        SmartDialog.showToast(error);
+      }, (current, total) {
+
+      });
+    }
+  }
+
+  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(), void onError(String error), void onDownload(current, total)) async {
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${imageItem.path} done");
+          onSuccess.call();
+        }, progressCallback: (current, total) {
+      debugPrint(
+          "Downloading ${imageItem.path}, percent: ${current / total}");
+      onDownload.call(current, total);
+    });
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(
+          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    } else {
+      _downloaderCore?.download("${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    }
   }
 
   bool _isContainsImage(List<ImageItem> images, ImageItem current) {
@@ -309,23 +403,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
                       return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                        child: Listener(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              _setImageSelected(image);
+                            },
+                            onDoubleTap: () {
+                              _openImageDetail(_allImages, image);
+                            },
                           ),
-                          onTap: () {
-                            _setImageSelected(image);
-                          },
-                          onDoubleTap: () {
-                            _openImageDetail(_allImages, image);
+                          onPointerDown: (event) {
+                            debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+                            if (_isMouseRightClicked(event)) {
+                              _openMenu(event.position, image);
+                            }
                           },
                         ),
                         decoration: BoxDecoration(
@@ -420,23 +523,32 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
                       return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 80,
-                            height: 80,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                        child: Listener(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              _setImageSelected(image);
+                            },
+                            onDoubleTap: () {
+                              _openImageDetail(_allImages, image);
+                            },
                           ),
-                          onTap: () {
-                            _setImageSelected(image);
-                          },
-                          onDoubleTap: () {
-                            _openImageDetail(_allImages, image);
+                          onPointerDown: (event) {
+                            debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+                            if (_isMouseRightClicked(event)) {
+                              _openMenu(event.position, image);
+                            }
                           },
                         ),
                         decoration: BoxDecoration(
@@ -716,4 +828,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     debugPrint("所有图片：deactivate");
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    _downloaderCore?.cancel();
+  }
 }
