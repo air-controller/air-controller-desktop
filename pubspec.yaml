@@ -127,6 +127,7 @@ flutter:
      - icons/icon_list_selected.png
      - icons/ic_popup.png
      - icons/error_wrong.tiff
+     - icons/brokenImage.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

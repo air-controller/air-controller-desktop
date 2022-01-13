@@ -215,16 +215,29 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                       Image.asset(fileTypeIcon, width: 100, height: 100);
 
                   if (_isImageFile(extension)) {
+                    String encodedPath = Uri.encodeFull("${fileItem.data.folder}/${fileItem.data.name}");
                     String imageUrl =
-                        "${_URL_SERVER}/stream/image/thumbnail2?path=${fileItem.data.folder}/${fileItem.data.name}&width=400&height=400";
-                    icon = CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      width: 100,
-                      height: 100,
-                      memCacheWidth: 400,
-                      fadeOutDuration: Duration.zero,
-                      fadeInDuration: Duration.zero,
+                        "${_URL_SERVER}/stream/image/thumbnail2?path=${encodedPath}&width=400&height=400";
+                    icon = Container(
+                      child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
+                          memCacheWidth: 400,
+                          fadeOutDuration: Duration.zero,
+                          fadeInDuration: Duration.zero,
+                          errorWidget: (context, url, error) {
+                            return Image.asset("icons/brokenImage.png", width: 100, height: 100);
+                          }
+                      ),
+                        decoration: BoxDecoration(
+                            border: new Border.all(
+                                color: Color(0xffdedede),
+                                width: 1),
+                            borderRadius: new BorderRadius.all(Radius.circular(2.0))
+                        ),
+                      padding: EdgeInsets.all(6),
                     );
                   }
 
@@ -340,7 +353,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                       debugPrint("All file icon mode page: onPointerDown");
 
                       if (_isMouseRightClicked(e)) {
-                        _openMenu(e.position, fileItem.data);
+                        _openMenu(e.position, fileItem);
                       }
 
                       _setFileSelected(fileItem);
@@ -366,12 +379,12 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     );
   }
 
-  void _openMenu(Offset position, FileItem fileItem) {
+  void _openMenu(Offset position, FileNode fileNode) {
     // 为什么这样可以？值得思考
     RenderBox? overlay =
         Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
-    String name = fileItem.name;
+    String name = fileNode.data.name;
 
     showMenu(
         context: context,
@@ -382,15 +395,37 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           PopupMenuItem(
               child: Text("打开"),
               onTap: () {
-                // _openImageDetail(_allImages, imageItem);
+                _openFile(fileNode);
               }),
           PopupMenuItem(
               child: Text("拷贝$name到电脑"),
               onTap: () {
-                _openFilePicker(fileItem);
+                _openFilePicker(fileNode.data);
               }),
           PopupMenuItem(child: Text("删除")),
         ]);
+  }
+
+  void _openFile(FileNode file) {
+    if (file.data.isDir) {
+      _tryToOpenDirectory(file, (files) {
+        setState(() {
+          AllFileManager.instance.updateSelectedFiles(
+              []);
+          AllFileManager.instance.updateFiles(files);
+          AllFileManager.instance
+              .updateCurrentDir(file);
+          AllFileManager.instance.pushToStack(file);
+          _updateBackBtnVisibility();
+          _setDeleteBtnEnabled(AllFileManager.instance
+              .selectedFileCount() >
+              0);
+          updateBottomItemNum();
+        });
+      }, (error) {});
+    } else {
+      _openWithSystemApp(file.data);
+    }
   }
 
   void _openFilePicker(FileItem fileItem) async {

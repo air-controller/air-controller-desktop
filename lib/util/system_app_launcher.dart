@@ -30,8 +30,9 @@ class SystemAppLauncher {
   }
 
   static void openFile(FileItem item) async {
+    String encodedPath = Uri.encodeFull("${item.folder}/${item.name}");
     String url =
-        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=${item.folder}/${item.name}";
+        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/file?path=$encodedPath";
 
     if (!await launch(url, universalLinksOnly: true)) {
       debugPrint("Open file: $url fail");
