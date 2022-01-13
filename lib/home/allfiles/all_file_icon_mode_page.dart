@@ -1,7 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
@@ -59,6 +65,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
 
+  DownloaderCore? _downloaderCore;
+
   @override
   void initState() {
     super.initState();
@@ -78,10 +86,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   void _registerEventBus() {
     _refreshDownloadFileList =
         eventBus.on<RefreshAllFileList>().listen((event) {
-          setState(() {
-
-          });
-        });
+      setState(() {});
+    });
   }
 
   void _unRegisterEventBus() {
@@ -90,8 +96,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _setAllSelected() {
     setState(() {
-      List<FileNode> selectedFiles =
-      AllFileManager.instance.selectedFiles();
+      List<FileNode> selectedFiles = AllFileManager.instance.selectedFiles();
       selectedFiles.clear();
 
       List<FileNode> allFiles = AllFileManager.instance.allFiles();
@@ -146,7 +151,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                   margin: EdgeInsets.only(right: 10),
                 ),
                 ...List.generate(dirStackLength, (index) {
-                  List<FileNode> fileNodes = AllFileManager.instance.dirStackToList();
+                  List<FileNode> fileNodes =
+                      AllFileManager.instance.dirStackToList();
                   FileNode fileNode = fileNodes[index];
 
                   return GestureDetector(
@@ -165,19 +171,17 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                     ),
                     onTap: () {
                       _tryToOpenDirectory(fileNode, (files) {
-
                         setState(() {
                           AllFileManager.instance.popTo(fileNode);
                           AllFileManager.instance.updateSelectedFiles([]);
                           AllFileManager.instance.updateFiles(files);
                           AllFileManager.instance.updateCurrentDir(fileNode);
                           _updateBackBtnVisibility();
-                          _setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
+                          _setDeleteBtnEnabled(
+                              AllFileManager.instance.selectedFileCount() > 0);
                           updateBottomItemNum();
                         });
-                      }, (error) {
-
-                      });
+                      }, (error) {});
                     },
                   );
                 })
@@ -205,18 +209,81 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
                   String fileTypeIcon = getFileTypeIcon(isDir, extension);
 
-                  return Column(children: [
-                    GestureDetector(
+                  Widget icon =
+                      Image.asset(fileTypeIcon, width: 100, height: 100);
+
+                  if (_isImageFile(extension)) {
+                    String imageUrl =
+                        "${_URL_SERVER}/stream/image/thumbnail2?path=${fileItem.data.folder}/${fileItem.data.name}&width=400&height=400";
+                    icon = CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.contain,
+                      width: 100,
+                      height: 100,
+                      memCacheWidth: 400,
+                      fadeOutDuration: Duration.zero,
+                      fadeInDuration: Duration.zero,
+                    );
+                  }
+
+                  return Listener(
+                    child: Column(children: [
+                      GestureDetector(
+                          child: Container(
+                            child: icon,
+                            decoration: BoxDecoration(
+                                color: _isContainsFile(selectedFiles, fileItem)
+                                    ? _BACKGROUND_FILE_SELECTED
+                                    : _BACKGROUND_FILE_NORMAL,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(4.0))),
+                            padding: EdgeInsets.all(8),
+                          ),
+                          onTap: () {
+                            _setFileSelected(fileItem);
+                          },
+                          onDoubleTap: () {
+                            debugPrint(
+                                "_tryToOpenDirectory: ${fileItem.data.name}");
+
+                            _tryToOpenDirectory(fileItem, (files) {
+                              setState(() {
+                                AllFileManager.instance.updateSelectedFiles([]);
+                                AllFileManager.instance.updateFiles(files);
+                                AllFileManager.instance
+                                    .updateCurrentDir(fileItem);
+                                AllFileManager.instance.pushToStack(fileItem);
+                                _updateBackBtnVisibility();
+                                _setDeleteBtnEnabled(AllFileManager.instance
+                                        .selectedFileCount() >
+                                    0);
+                                updateBottomItemNum();
+                              });
+                            }, (error) {});
+                          }),
+                      GestureDetector(
                         child: Container(
-                          child: Image.asset(fileTypeIcon,
-                              width: 100, height: 100),
+                          constraints: BoxConstraints(maxWidth: 150),
+                          child: Text(
+                            fileItem.data.name,
+                            style: TextStyle(
+                                inherit: false,
+                                fontSize: 14,
+                                color: _isContainsFile(selectedFiles, fileItem)
+                                    ? _FILE_NAME_TEXT_COLOR_SELECTED
+                                    : _FILE_NAME_TEXT_COLOR_NORMAL),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                           decoration: BoxDecoration(
-                              color: _isContainsFile(selectedFiles, fileItem)
-                                  ? _BACKGROUND_FILE_SELECTED
-                                  : _BACKGROUND_FILE_NORMAL,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(4.0))),
-                          padding: EdgeInsets.all(8),
+                            borderRadius: BorderRadius.all(Radius.circular(3)),
+                            color: _isContainsFile(selectedFiles, fileItem)
+                                ? _BACKGROUND_FILE_NAME_SELECTED
+                                : _BACKGROUND_FILE_NAME_NORMAL,
+                          ),
+                          margin: EdgeInsets.only(top: 10),
+                          padding: EdgeInsets.fromLTRB(5, 3, 5, 3),
                         ),
                         onTap: () {
                           _setFileSelected(fileItem);
@@ -229,61 +296,25 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                             setState(() {
                               AllFileManager.instance.updateSelectedFiles([]);
                               AllFileManager.instance.updateFiles(files);
-                              AllFileManager.instance.updateCurrentDir(fileItem);
+                              AllFileManager.instance
+                                  .updateCurrentDir(fileItem);
                               AllFileManager.instance.pushToStack(fileItem);
                               _updateBackBtnVisibility();
-                              _setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
-                              updateBottomItemNum();
                             });
-                          }, (error) {
+                          }, (error) {});
+                        },
+                      )
+                    ]),
+                    onPointerDown: (e) {
+                      debugPrint("All file icon mode page: onPointerDown");
 
-                          });
-                        }),
-                    GestureDetector(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: 150),
-                        child: Text(
-                          fileItem.data.name,
-                          style: TextStyle(
-                              inherit: false,
-                              fontSize: 14,
-                              color: _isContainsFile(selectedFiles, fileItem)
-                                  ? _FILE_NAME_TEXT_COLOR_SELECTED
-                                  : _FILE_NAME_TEXT_COLOR_NORMAL),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(3)),
-                          color: _isContainsFile(selectedFiles, fileItem)
-                              ? _BACKGROUND_FILE_NAME_SELECTED
-                              : _BACKGROUND_FILE_NAME_NORMAL,
-                        ),
-                        margin: EdgeInsets.only(top: 10),
-                        padding: EdgeInsets.fromLTRB(5, 3, 5, 3),
-                      ),
-                      onTap: () {
-                        _setFileSelected(fileItem);
-                      },
-                      onDoubleTap: () {
-                        debugPrint(
-                            "_tryToOpenDirectory: ${fileItem.data.name}");
+                      if (_isMouseRightClicked(e)) {
+                        _openMenu(e.position, fileItem.data);
+                      }
 
-                        _tryToOpenDirectory(fileItem, (files) {
-                          setState(() {
-                            AllFileManager.instance.updateSelectedFiles([]);
-                            AllFileManager.instance.updateFiles(files);
-                            AllFileManager.instance.updateCurrentDir(fileItem);
-                            AllFileManager.instance.pushToStack(fileItem);
-                            _updateBackBtnVisibility();
-                          });
-                        }, (error) {
-
-                        });
-                      },
-                    )
-                  ]);
+                      _setFileSelected(fileItem);
+                    },
+                  );
                 },
                 gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 200,
@@ -304,7 +335,95 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     );
   }
 
-  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess, Function(String) onError) {
+  void _openMenu(Offset position, FileItem fileItem) {
+    // 为什么这样可以？值得思考
+    RenderBox? overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = fileItem.name;
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(
+              child: Text("打开"),
+              onTap: () {
+                // _openImageDetail(_allImages, imageItem);
+              }),
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(fileItem);
+              }),
+          PopupMenuItem(child: Text("删除")),
+        ]);
+  }
+
+  void _openFilePicker(FileItem fileItem) async {
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      SmartDialog.showLoading(msg: "请稍后");
+
+      _downloadFile(fileItem, dir, () {
+        SmartDialog.dismiss();
+        // SmartDialog.showToast("图片已保存至${dir}");
+      }, (error) {
+        SmartDialog.dismiss();
+        SmartDialog.showToast(error);
+      }, (current, total) {});
+    }
+  }
+
+  void _downloadFile(FileItem fileItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = fileItem.name;
+
+    if (fileItem.isDir) {
+      name = "${name}.zip";
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${fileItem.name} done");
+          onSuccess.call();
+        },
+        progressCallback: (current, total) {
+          debugPrint(
+              "Downloading ${fileItem.name}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
+
+    String api =
+        "${_URL_SERVER}/stream/file?path=${fileItem.folder}/${fileItem.name}";
+
+    if (fileItem.isDir) {
+      api =
+          "${_URL_SERVER}/stream/dir?path=${fileItem.folder}/${fileItem.name}";
+    }
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(api, options);
+    } else {
+      _downloaderCore?.download(api, options);
+    }
+  }
+
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
+  }
+
+  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess,
+      Function(String) onError) {
     debugPrint("_tryToOpenDirectory, dir: ${dir.data.folder}/${dir.data.name}");
     _getFiles((files) {
       List<FileNode> allFiles =
@@ -320,8 +439,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _backToRootDir() {
     _getFiles((files) {
-      List<FileNode> allFiles =
-      files.map((e) => FileNode(null, e, 0)).toList();
+      List<FileNode> allFiles = files.map((e) => FileNode(null, e, 0)).toList();
 
       setState(() {
         AllFileManager.instance.updateSelectedFiles([]);
@@ -343,12 +461,14 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
-  void _getFiles(Function(List<FileItem> files) onSuccess,
-      Function(String error) onError, {String? path = null}) {
+  void _getFiles(
+      Function(List<FileItem> files) onSuccess, Function(String error) onError,
+      {String? path = null}) {
     var url = Uri.parse("${_URL_SERVER}/file/list");
-    http.post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"path": path == null ? "" : path}))
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({"path": path == null ? "" : path}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -380,8 +500,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _clearSelectedFiles() {
     setState(() {
-      List<FileNode> selectedFiles =
-          AllFileManager.instance.selectedFiles();
+      List<FileNode> selectedFiles = AllFileManager.instance.selectedFiles();
       selectedFiles.clear();
       AllFileManager.instance.updateSelectedFiles(selectedFiles);
 
@@ -403,11 +522,13 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   }
 
   void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState?.addCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState
+        ?.addCtrlAPressedCallback(callback);
   }
 
   void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState?.removeCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState
+        ?.removeCtrlAPressedCallback(callback);
   }
 
   void _setFileSelected(FileNode fileItem) {
@@ -546,6 +667,14 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     return false;
   }
 
+  bool _isImageFile(String extension) {
+    if (extension.toLowerCase() == "jpg") return true;
+    if (extension.toLowerCase() == "jpeg") return true;
+    if (extension.toLowerCase() == "png") return true;
+
+    return false;
+  }
+
   bool _isDoc(String extension) {
     if (_isAudio(extension)) return false;
     if (_isTextFile(extension)) return false;
@@ -555,7 +684,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void updateBottomItemNum() {
     eventBus.fire(UpdateBottomItemNum(AllFileManager.instance.totalFileCount(),
-        AllFileManager.instance.selectedFileCount(), module: UIModule.Download));
+        AllFileManager.instance.selectedFileCount(),
+        module: UIModule.Download));
   }
 
   @override
