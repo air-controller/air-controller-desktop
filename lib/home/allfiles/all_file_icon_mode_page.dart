@@ -20,8 +20,10 @@ import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/util/file_util.dart';
 import 'package:mobile_assistant_client/util/stack.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 
 import '../file_manager.dart';
 import 'all_file_manager.dart';
@@ -217,12 +219,36 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                         "${_URL_SERVER}/stream/image/thumbnail2?path=${fileItem.data.folder}/${fileItem.data.name}&width=400&height=400";
                     icon = CachedNetworkImage(
                       imageUrl: imageUrl,
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
                       width: 100,
                       height: 100,
                       memCacheWidth: 400,
                       fadeOutDuration: Duration.zero,
                       fadeInDuration: Duration.zero,
+                    );
+                  }
+
+                  if (FileUtil.isVideo(fileItem.data)) {
+                    String videoThumbnail =
+                        "${_URL_SERVER}/stream/video/thumbnail2?path=${fileItem.data.folder}/${fileItem.data.name}&width=400&height=400";
+                    icon = Stack(
+                      children: [
+                        CachedNetworkImage(
+                          imageUrl: videoThumbnail,
+                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
+                          memCacheWidth: 400,
+                          fadeOutDuration: Duration.zero,
+                          fadeInDuration: Duration.zero,
+                        ),
+
+                        Positioned(
+                            child: Image.asset("icons/ic_video_indictor.png", width: 20, height: 20),
+                          left: 15,
+                          bottom: 8,
+                        )
+                      ],
                     );
                   }
 
@@ -243,23 +269,28 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                             _setFileSelected(fileItem);
                           },
                           onDoubleTap: () {
-                            debugPrint(
-                                "_tryToOpenDirectory: ${fileItem.data.name}");
+                            if (fileItem.data.isDir) {
+                              debugPrint(
+                                  "_tryToOpenDirectory: ${fileItem.data.name}");
 
-                            _tryToOpenDirectory(fileItem, (files) {
-                              setState(() {
-                                AllFileManager.instance.updateSelectedFiles([]);
-                                AllFileManager.instance.updateFiles(files);
-                                AllFileManager.instance
-                                    .updateCurrentDir(fileItem);
-                                AllFileManager.instance.pushToStack(fileItem);
-                                _updateBackBtnVisibility();
-                                _setDeleteBtnEnabled(AllFileManager.instance
-                                        .selectedFileCount() >
-                                    0);
-                                updateBottomItemNum();
-                              });
-                            }, (error) {});
+                              _tryToOpenDirectory(fileItem, (files) {
+                                setState(() {
+                                  AllFileManager.instance.updateSelectedFiles(
+                                      []);
+                                  AllFileManager.instance.updateFiles(files);
+                                  AllFileManager.instance
+                                      .updateCurrentDir(fileItem);
+                                  AllFileManager.instance.pushToStack(fileItem);
+                                  _updateBackBtnVisibility();
+                                  _setDeleteBtnEnabled(AllFileManager.instance
+                                      .selectedFileCount() >
+                                      0);
+                                  updateBottomItemNum();
+                                });
+                              }, (error) {});
+                            } else {
+                              _openWithSystemApp(fileItem.data);
+                            }
                           }),
                       GestureDetector(
                         child: Container(
@@ -435,6 +466,10 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
       onError.call(error);
     }, path: "${dir.data.folder}/${dir.data.name}");
+  }
+
+  void _openWithSystemApp(FileItem fileItem) {
+    SystemAppLauncher.openFile(fileItem);
   }
 
   void _backToRootDir() {
