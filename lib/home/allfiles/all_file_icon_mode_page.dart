@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
@@ -24,6 +25,7 @@ import 'package:mobile_assistant_client/util/file_util.dart';
 import 'package:mobile_assistant_client/util/stack.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
 import '../file_manager.dart';
@@ -67,6 +69,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
+
 
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
@@ -96,6 +100,15 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
         eventBus.on<RefreshAllFileList>().listen((event) {
       setState(() {});
     });
+
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      List<FileNode> selectedNodes = AllFileManager.instance.selectedFiles();
+      if (selectedNodes.length <= 0) {
+        debugPrint("Warning: selectedNodes is empty!!!");
+      } else {
+        _tryToDeleteFiles(selectedNodes);
+      }
+    });
   }
 
   void _unRegisterEventBus() {
@@ -104,10 +117,9 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _setAllSelected() {
     setState(() {
-      List<FileNode> selectedFiles = AllFileManager.instance.selectedFiles();
-      selectedFiles.clear();
-
       List<FileNode> allFiles = AllFileManager.instance.allFiles();
+
+      List<FileNode> selectedFiles = [];
       selectedFiles.addAll(allFiles);
       AllFileManager.instance.updateSelectedFiles(selectedFiles);
 
@@ -285,6 +297,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                             padding: EdgeInsets.all(8),
                           ),
                           onTap: () {
+                            debugPrint("All file icon mode page: icon#onTap");
+
                             _setFileSelected(fileItem);
                           },
                           onDoubleTap: () {
@@ -336,6 +350,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                           padding: EdgeInsets.fromLTRB(5, 3, 5, 3),
                         ),
                         onTap: () {
+                          debugPrint("All file icon mode page: text#onTap");
                           _setFileSelected(fileItem);
                         },
                         onDoubleTap: () {
@@ -360,9 +375,11 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
                       if (_isMouseRightClicked(e)) {
                         _openMenu(e.position, fileItem);
-                      }
 
-                      _setFileSelected(fileItem);
+                        if (!AllFileManager.instance.isSelected(fileItem)) {
+                          _setFileSelected(fileItem);
+                        }
+                      }
                     },
                   );
                 },
@@ -407,7 +424,12 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
               onTap: () {
                 _openFilePicker(fileNode.data);
               }),
-          PopupMenuItem(child: Text("删除")),
+          PopupMenuItem(child: Text("删除"), onTap: () {
+            Future<void>.delayed(
+              const Duration(),
+                () => _tryToDeleteFiles(AllFileManager.instance.selectedFiles())
+            );
+          }),
         ]);
   }
 
@@ -676,10 +698,12 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           if (current > index) {
             setState(() {
               selectedFiles = allFiles.sublist(index, current + 1);
+              AllFileManager.instance.updateSelectedFiles(selectedFiles);
             });
           } else {
             setState(() {
               selectedFiles = allFiles.sublist(current, index + 1);
+              AllFileManager.instance.updateSelectedFiles(selectedFiles);
             });
           }
         } else {
@@ -744,11 +768,102 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           selectedFiles.remove(fileItem);
           AllFileManager.instance.updateSelectedFiles(selectedFiles);
         });
+      } else {
+        setState(() {
+          selectedFiles.clear();
+          selectedFiles.add(fileItem);
+          AllFileManager.instance.updateSelectedFiles(selectedFiles);
+        });
       }
     }
 
     _setDeleteBtnEnabled(selectedFiles.length > 0);
     updateBottomItemNum();
+  }
+
+  void _deleteFiles(List<FileNode> files, Function() onSuccess, Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"paths": files.map((node) => "${node.data.folder}/${node.data.name}").toList()}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_deleteFiles, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+  
+  void _tryToDeleteFiles(List<FileNode> files) {
+    _showConfirmDialog("确定删除这${files.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+
+      SmartDialog.showLoading();
+
+      _deleteFiles(files, () {
+        SmartDialog.dismiss();
+
+        setState(() {
+          List<FileNode> allFiles = AllFileManager.instance.allFiles();
+          files.forEach((file) {
+            if (allFiles.contains(file)) {
+              allFiles.remove(file);
+            }
+          });
+          AllFileManager.instance.updateFiles(allFiles);
+          AllFileManager.instance.clearSelectedFiles();
+        });
+
+      }, (error) {
+        SmartDialog.dismiss();
+
+        SmartDialog.showToast(error);
+      });
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
   }
 
   void rebuild() {

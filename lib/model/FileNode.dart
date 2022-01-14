@@ -15,4 +15,15 @@ class FileNode extends Comparable<FileNode> {
   int compareTo(FileNode other) {
     return this.data.name.compareTo(other.data.name);
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is FileNode) {
+      if (other.data.folder == this.data.folder && other.data.name == this.data.name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

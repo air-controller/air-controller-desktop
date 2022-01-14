@@ -299,7 +299,7 @@ class _WifiState extends State<MyHomePage> {
               });
 
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return FileManagerPage();
+                return FileManagerPage(key: FileManagerPage.fileManagerKey);
               }));
             }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
       }))
