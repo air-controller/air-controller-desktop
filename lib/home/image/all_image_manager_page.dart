@@ -69,6 +69,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
   DownloaderCore? _downloaderCore;
 
+  final _IMAGE_SIZE = 400;
+
   _AllImageManagerPageState();
 
   @override
@@ -205,7 +207,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
               child: GestureDetector(
                 child: CachedNetworkImage(
                   imageUrl:
-                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
                       .replaceAll("storage/emulated/0/", ""),
                   fit: BoxFit.cover,
                   width: 200,
@@ -407,7 +409,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                           child: GestureDetector(
                             child: CachedNetworkImage(
                               imageUrl:
-                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
                                   .replaceAll("storage/emulated/0/", ""),
                               fit: BoxFit.cover,
                               width: 100,
@@ -527,7 +529,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                           child: GestureDetector(
                             child: CachedNetworkImage(
                               imageUrl:
-                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
                                   .replaceAll("storage/emulated/0/", ""),
                               fit: BoxFit.cover,
                               width: 80,
