@@ -24,6 +24,7 @@ import 'package:mobile_assistant_client/util/file_util.dart';
 import 'package:mobile_assistant_client/util/stack.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
+import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
 import '../file_manager.dart';
 import 'all_file_manager.dart';
@@ -68,6 +69,11 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
 
   DownloaderCore? _downloaderCore;
+  ProgressIndicatorDialog? _progressIndicatorDialog;
+
+  final _KB_BOUND = 1 * 1024;
+  final _MB_BOUND = 1 * 1024 * 1024;
+  final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
   @override
   void initState() {
@@ -380,7 +386,6 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   }
 
   void _openMenu(Offset position, FileNode fileNode) {
-    // 为什么这样可以？值得思考
     RenderBox? overlay =
         Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
@@ -435,16 +440,59 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     if (null != dir) {
       debugPrint("Select directory: $dir");
 
-      SmartDialog.showLoading(msg: "请稍后");
+      _showDownloadProgressDialog(fileItem);
 
       _downloadFile(fileItem, dir, () {
-        SmartDialog.dismiss();
-        // SmartDialog.showToast("图片已保存至${dir}");
+        _progressIndicatorDialog?.dismiss();
       }, (error) {
-        SmartDialog.dismiss();
         SmartDialog.showToast(error);
-      }, (current, total) {});
+      }, (current, total) {
+        if (_progressIndicatorDialog?.isShowing == true) {
+          if (current > 0) {
+            setState(() {
+              _progressIndicatorDialog?.title = "正在导出文件夹 ${fileItem.name}";
+            });
+          }
+
+          setState(() {
+            _progressIndicatorDialog?.subtitle = "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            _progressIndicatorDialog?.updateProgress(current / total);
+          });
+        }
+      });
     }
+  }
+
+  void _showDownloadProgressDialog(FileItem fileItem) {
+    if (null == _progressIndicatorDialog) {
+      _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
+      _progressIndicatorDialog?.onCancelClick(() {
+        _downloaderCore?.cancel();
+        _progressIndicatorDialog?.dismiss();
+      });
+    }
+
+    String title = fileItem.isDir ? "正在压缩中，请稍后..." : "正在准备中，请稍后...";
+    _progressIndicatorDialog?.title = title;
+
+    if (!_progressIndicatorDialog!.isShowing) {
+      _progressIndicatorDialog!.show();
+    }
+  }
+
+  String _convertToReadableSize(int size) {
+    if (size < _KB_BOUND) {
+      return "${size} bytes";
+    }
+    if (size >= _KB_BOUND && size < _MB_BOUND) {
+      return "${(size / 1024).toStringAsFixed(1)} KB";
+    }
+
+    if (size >= _MB_BOUND && size <= _GB_BOUND) {
+      return "${(size / 1024 / 1024).toStringAsFixed(1)} MB";
+    }
+
+    return "${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB";
   }
 
   void _downloadFile(FileItem fileItem, String dir, void onSuccess(),
@@ -463,8 +511,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           onSuccess.call();
         },
         progressCallback: (current, total) {
-          debugPrint(
-              "Downloading ${fileItem.name}, percent: ${current / total}");
+          debugPrint("total: $total");
+          debugPrint("Downloading ${fileItem.name}, percent: ${current / total}");
           onDownload.call(current, total);
         });
 
@@ -773,5 +821,6 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   @override
   void dispose() {
     super.dispose();
+    _downloaderCore?.cancel();
   }
 }
