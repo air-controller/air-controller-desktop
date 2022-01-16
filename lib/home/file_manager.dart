@@ -70,23 +70,23 @@ class FileManagerState extends State<FileManagerPage> {
 
     _registerEventBus();
 
-    _focusNode = FocusNode(debugLabel: 'All image page');
-    _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
-      _isControlDown = event.isControlPressed;
-      _isShiftDown = event.isShiftPressed;
-
-      bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
-      if (_isControlDown && isKeyAPressed) {
-        debugPrint("Ctrl + A pressed...");
-
-        for (Function() callback in _ctrlAPressedCallbacks) {
-          callback.call();
-        }
-      }
-
-      return KeyEventResult.handled;
-    });
-    _focusNode.requestFocus();
+    // _focusNode = FocusNode(debugLabel: 'All image page');
+    // _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
+    //   _isControlDown = event.isControlPressed;
+    //   _isShiftDown = event.isShiftPressed;
+    //
+    //   bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
+    //   if (_isControlDown && isKeyAPressed) {
+    //     debugPrint("Ctrl + A pressed...");
+    //
+    //     for (Function() callback in _ctrlAPressedCallbacks) {
+    //       callback.call();
+    //     }
+    //   }
+    //
+    //   return KeyEventResult.handled;
+    // });
+    // _focusNode.requestFocus();
   }
 
   void _registerEventBus() {
@@ -119,7 +119,7 @@ class FileManagerState extends State<FileManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    _nodeAttachment.reparent();
+    // _nodeAttachment.reparent();
 
     final pageController = PageController(initialPage: _selectedPageIndex);
 

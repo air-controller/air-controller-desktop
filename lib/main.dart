@@ -38,6 +38,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
+        textSelectionTheme: TextSelectionThemeData(
+          selectionColor: Color(0xffe0e0e0)
+        )
       ),
       home: MyHomePage(title: '手机助手PC端'),
       navigatorObservers: [FlutterSmartDialog.observer],

@@ -7,14 +7,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flowder/flowder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
-import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
-import 'package:mobile_assistant_client/home/download/download_file_manager.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
 import 'package:mobile_assistant_client/model/FileNode.dart';
 import 'package:mobile_assistant_client/model/ResponseEntity.dart';
@@ -22,13 +22,10 @@ import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:mobile_assistant_client/util/file_util.dart';
-import 'package:mobile_assistant_client/util/stack.dart';
-import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
-import '../file_manager.dart';
 import 'all_file_manager.dart';
 
 class AllFileIconModePage extends StatefulWidget {
@@ -63,14 +60,11 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   final _BACKGROUND_FILE_NAME_NORMAL = Colors.white;
   final _BACKGROUND_FILE_NAME_SELECTED = Color(0xff5d87ed);
 
-  late Function() _ctrlAPressedCallback;
-
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
   StreamSubscription<DeleteOp>? _deleteOpSubscription;
-
 
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
@@ -79,18 +73,17 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   final _MB_BOUND = 1 * 1024 * 1024;
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
+  int _renamingFileIndex = -1;
+  String? _newFileName = null;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
   @override
   void initState() {
     super.initState();
 
     _registerEventBus();
-
-    _ctrlAPressedCallback = () {
-      _setAllSelected();
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     debugPrint("_DownloadIconModeState: initState, instance: $this");
   }
@@ -113,6 +106,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
   void _unRegisterEventBus() {
     _refreshDownloadFileList?.cancel();
+    _deleteOpSubscription?.cancel();
   }
 
   void _setAllSelected() {
@@ -233,7 +227,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                       Image.asset(fileTypeIcon, width: 100, height: 100);
 
                   if (_isImageFile(extension)) {
-                    String encodedPath = Uri.encodeFull("${fileItem.data.folder}/${fileItem.data.name}");
+                    String encodedPath = Uri.encodeFull(
+                        "${fileItem.data.folder}/${fileItem.data.name}");
                     String imageUrl =
                         "${_URL_SERVER}/stream/image/thumbnail2?path=${encodedPath}&width=400&height=400";
                     icon = Container(
@@ -246,15 +241,14 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                           fadeOutDuration: Duration.zero,
                           fadeInDuration: Duration.zero,
                           errorWidget: (context, url, error) {
-                            return Image.asset("icons/brokenImage.png", width: 100, height: 100);
-                          }
-                      ),
-                        decoration: BoxDecoration(
-                            border: new Border.all(
-                                color: Color(0xffdedede),
-                                width: 1),
-                            borderRadius: new BorderRadius.all(Radius.circular(2.0))
-                        ),
+                            return Image.asset("icons/brokenImage.png",
+                                width: 100, height: 100);
+                          }),
+                      decoration: BoxDecoration(
+                          border: new Border.all(
+                              color: Color(0xffdedede), width: 1),
+                          borderRadius:
+                              new BorderRadius.all(Radius.circular(2.0))),
                       padding: EdgeInsets.all(6),
                     );
                   }
@@ -273,15 +267,29 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                           fadeOutDuration: Duration.zero,
                           fadeInDuration: Duration.zero,
                         ),
-
                         Positioned(
-                            child: Image.asset("icons/ic_video_indictor.png", width: 20, height: 20),
+                          child: Image.asset("icons/ic_video_indictor.png",
+                              width: 20, height: 20),
                           left: 15,
                           bottom: 8,
                         )
                       ],
                     );
                   }
+
+                  final inputController = TextEditingController();
+
+                  inputController.text = fileItem.data.name;
+
+                  final focusNode = FocusNode();
+
+                  focusNode.addListener(() {
+                    if (focusNode.hasFocus) {
+                      inputController.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: inputController.text.length);
+                    }
+                  });
 
                   return Listener(
                     child: Column(children: [
@@ -308,15 +316,15 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
                               _tryToOpenDirectory(fileItem, (files) {
                                 setState(() {
-                                  AllFileManager.instance.updateSelectedFiles(
-                                      []);
+                                  AllFileManager.instance
+                                      .updateSelectedFiles([]);
                                   AllFileManager.instance.updateFiles(files);
                                   AllFileManager.instance
                                       .updateCurrentDir(fileItem);
                                   AllFileManager.instance.pushToStack(fileItem);
                                   _updateBackBtnVisibility();
                                   _setDeleteBtnEnabled(AllFileManager.instance
-                                      .selectedFileCount() >
+                                          .selectedFileCount() >
                                       0);
                                   updateBottomItemNum();
                                 });
@@ -328,21 +336,77 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                       GestureDetector(
                         child: Container(
                           constraints: BoxConstraints(maxWidth: 150),
-                          child: Text(
-                            fileItem.data.name,
-                            style: TextStyle(
-                                inherit: false,
-                                fontSize: 14,
-                                color: _isContainsFile(selectedFiles, fileItem)
-                                    ? _FILE_NAME_TEXT_COLOR_SELECTED
-                                    : _FILE_NAME_TEXT_COLOR_NORMAL),
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                          child: Stack(
+                            children: [
+                              Visibility(
+                                child: Text(
+                                  fileItem.data.name,
+                                  style: TextStyle(
+                                      inherit: false,
+                                      fontSize: 14,
+                                      color: _isContainsFile(
+                                                  selectedFiles, fileItem) &&
+                                              index != _renamingFileIndex
+                                          ? _FILE_NAME_TEXT_COLOR_SELECTED
+                                          : _FILE_NAME_TEXT_COLOR_NORMAL),
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                                visible: (index != _renamingFileIndex),
+                              ),
+                              Visibility(
+                                child: Container(
+                                  child: IntrinsicWidth(
+                                    child: TextField(
+                                      controller: inputController,
+                                      focusNode: index == _renamingFileIndex
+                                          ? focusNode
+                                          : null,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffcccbcd),
+                                                  width: 3,
+                                                  style: BorderStyle.solid)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffcccbcd),
+                                                  width: 3,
+                                                  style: BorderStyle.solid),
+                                              borderRadius:
+                                                  BorderRadius.circular(4)),
+                                          focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Color(0xffcccbcd),
+                                                  width: 4,
+                                                  style: BorderStyle.solid),
+                                              borderRadius:
+                                                  BorderRadius.circular(4)),
+                                          contentPadding:
+                                              EdgeInsets.fromLTRB(8, 3, 8, 3)),
+                                      cursorColor: Color(0xff333333),
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xff333333)),
+                                      onChanged: (value) {
+                                        debugPrint("onChange, $value");
+                                        _newFileName = value;
+                                      },
+                                    ),
+                                  ),
+                                  height: 30,
+                                ),
+                                visible: index == _renamingFileIndex,
+                                maintainState: false,
+                                maintainSize: false,
+                              )
+                            ],
                           ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.all(Radius.circular(3)),
-                            color: _isContainsFile(selectedFiles, fileItem)
+                            color: _isContainsFile(selectedFiles, fileItem) &&
+                                    index != _renamingFileIndex
                                 ? _BACKGROUND_FILE_NAME_SELECTED
                                 : _BACKGROUND_FILE_NAME_NORMAL,
                           ),
@@ -394,12 +458,84 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
               color: Colors.white)),
     ]);
 
-    return GestureDetector(
-      child: content,
-      onTap: () {
-        _clearSelectedFiles();
+    return Focus(
+      autofocus: true,
+      canRequestFocus: true,
+      child: GestureDetector(
+        child: content,
+        onTap: () {
+          _clearSelectedFiles();
+          _resetRenamingFileIndex();
+        },
+      ),
+      onKey: (node, event) {
+        debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+        _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+        _isShiftPressed = event.isShiftPressed;
+
+        if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+          _onEnterKeyPressed();
+          return KeyEventResult.handled;
+        }
+
+        if (Platform.isMacOS) {
+          if (event.isMetaPressed &&
+              event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+            _onControlAndAPressed();
+            return KeyEventResult.handled;
+          }
+        } else {
+          if (event.isControlPressed &&
+              event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+            _onControlAndAPressed();
+            return KeyEventResult.handled;
+          }
+        }
+
+        return KeyEventResult.ignored;
       },
     );
+  }
+
+  void _onEnterKeyPressed() {
+    debugPrint("_onEnterKeyPressed.");
+    if (_renamingFileIndex == -1) {
+      if (_isSingleFileSelected()) {
+        FileNode fileNode = AllFileManager.instance.selectedFiles().single;
+        setState(() {
+          _renamingFileIndex = AllFileManager.instance.indexOf(fileNode);
+        });
+      }
+    } else {
+      if (_isSingleFileSelected()) {
+        FileNode fileNode = AllFileManager.instance
+            .selectedFiles()
+            .single;
+        String oldFileName = fileNode.data.name;
+        if (_newFileName != null && _newFileName?.trim() != "" && oldFileName != _newFileName) {
+          _rename(fileNode, _newFileName!, () {
+            setState(() {
+              fileNode.data.name = _newFileName!;
+              _resetRenamingFileIndex();
+            });
+          }, (error) {
+            SmartDialog.showToast("文件重命名失败！");
+          });
+        }
+      }
+
+    }
+  }
+
+  bool _isSingleFileSelected() {
+    var selectedFiles = AllFileManager.instance.selectedFiles();
+    return selectedFiles.length == 1;
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
   }
 
   void _openMenu(Offset position, FileNode fileNode) {
@@ -420,16 +556,26 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                 _openFile(fileNode);
               }),
           PopupMenuItem(
+              child: Text("重命名"),
+              onTap: () {
+                setState(() {
+                  List<FileNode> allFiles = AllFileManager.instance.allFiles();
+                  _renamingFileIndex = allFiles.indexOf(fileNode);
+                });
+              }),
+          PopupMenuItem(
               child: Text("拷贝$name到电脑"),
               onTap: () {
                 _openFilePicker(fileNode.data);
               }),
-          PopupMenuItem(child: Text("删除"), onTap: () {
-            Future<void>.delayed(
-              const Duration(),
-                () => _tryToDeleteFiles(AllFileManager.instance.selectedFiles())
-            );
-          }),
+          PopupMenuItem(
+              child: Text("删除"),
+              onTap: () {
+                Future<void>.delayed(
+                    const Duration(),
+                    () => _tryToDeleteFiles(
+                        AllFileManager.instance.selectedFiles()));
+              }),
         ]);
   }
 
@@ -437,16 +583,12 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     if (file.data.isDir) {
       _tryToOpenDirectory(file, (files) {
         setState(() {
-          AllFileManager.instance.updateSelectedFiles(
-              []);
+          AllFileManager.instance.updateSelectedFiles([]);
           AllFileManager.instance.updateFiles(files);
-          AllFileManager.instance
-              .updateCurrentDir(file);
+          AllFileManager.instance.updateCurrentDir(file);
           AllFileManager.instance.pushToStack(file);
           _updateBackBtnVisibility();
-          _setDeleteBtnEnabled(AllFileManager.instance
-              .selectedFileCount() >
-              0);
+          _setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
           updateBottomItemNum();
         });
       }, (error) {});
@@ -477,7 +619,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           }
 
           setState(() {
-            _progressIndicatorDialog?.subtitle = "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            _progressIndicatorDialog?.subtitle =
+                "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
             _progressIndicatorDialog?.updateProgress(current / total);
           });
         }
@@ -534,7 +677,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
         },
         progressCallback: (current, total) {
           debugPrint("total: $total");
-          debugPrint("Downloading ${fileItem.name}, percent: ${current / total}");
+          debugPrint(
+              "Downloading ${fileItem.name}, percent: ${current / total}");
           onDownload.call(current, total);
         });
 
@@ -654,21 +798,11 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   }
 
   bool _isControlDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.removeCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   void _setFileSelected(FileNode fileItem) {
@@ -779,14 +913,68 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
     _setDeleteBtnEnabled(selectedFiles.length > 0);
     updateBottomItemNum();
+
+    int currentIndex = AllFileManager.instance.indexOf(fileItem);
+    if (currentIndex != _renamingFileIndex && _renamingFileIndex != -1) {
+      _resetRenamingFileIndex();
+    }
   }
 
-  void _deleteFiles(List<FileNode> files, Function() onSuccess, Function(String error) onError) {
+  void _rename(FileNode file, String newName, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/rename");
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({
+              "folder": file.data.folder,
+              "file": file.data.name,
+              "newName": newName,
+              "isDir": file.data.isDir
+            }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_rename, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _resetRenamingFileIndex() {
+    setState(() {
+      _renamingFileIndex = -1;
+      _newFileName = null;
+    });
+  }
+
+  void _deleteFiles(List<FileNode> files, Function() onSuccess,
+      Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
     http
         .post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"paths": files.map((node) => "${node.data.folder}/${node.data.name}").toList()}))
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({
+              "paths": files
+                  .map((node) => "${node.data.folder}/${node.data.name}")
+                  .toList()
+            }))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -835,9 +1023,10 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
         },
         barrierDismissible: false);
   }
-  
+
   void _tryToDeleteFiles(List<FileNode> files) {
-    _showConfirmDialog("确定删除这${files.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+    _showConfirmDialog("确定删除这${files.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       SmartDialog.showLoading();
@@ -855,7 +1044,6 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           AllFileManager.instance.updateFiles(allFiles);
           AllFileManager.instance.clearSelectedFiles();
         });
-
       }, (error) {
         SmartDialog.dismiss();
 
@@ -929,7 +1117,6 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
     super.deactivate();
 
     _unRegisterEventBus();
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     debugPrint("_DownloadIconModeState: deactivate, instance: $this");
   }
 
