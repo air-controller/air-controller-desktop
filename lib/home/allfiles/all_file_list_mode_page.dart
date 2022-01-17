@@ -2,12 +2,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
+import 'dart:ui';
+import 'dart:io';
 
 import 'package:data_table_2/data_table_2.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
@@ -19,6 +27,9 @@ import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/util/system_app_launcher.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
 import '../file_manager.dart';
 import 'all_file_manager.dart';
@@ -39,7 +50,8 @@ final COLUMN_NAME_SIZE = "size";
 final COLUMN_NAME_CATEGORY = "category";
 final COLUMN_NAME_MODIFY_DATE = "modifyDate";
 
-class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticKeepAliveClientMixin {
+class _DownloadListModeState extends State<AllFileListModePage>
+    with AutomaticKeepAliveClientMixin {
   final _headerTextStyle =
       TextStyle(color: Color(0xff5d5e63), fontSize: 14, inherit: false);
   final _minColumnWidth = 200.0;
@@ -66,6 +78,18 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
   late Function() _ctrlAPressedCallback;
 
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
+
+  FocusNode? _rootFocusNode;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
+  FileNode? _renamingFileNode = null;
+  String? _newFileName = null;
+
+  DownloaderCore? _downloaderCore;
+  ProgressIndicatorDialog? _progressIndicatorDialog;
 
   @override
   void initState() {
@@ -85,14 +109,22 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
   void _registerEventBus() {
     _refreshDownloadFileList =
         eventBus.on<RefreshAllFileList>().listen((event) {
-          setState(() {
+      setState(() {});
+    });
 
-          });
-        });
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      List<FileNode> selectedNodes = AllFileManager.instance.selectedFiles();
+      if (selectedNodes.length <= 0) {
+        debugPrint("Warning: selectedNodes is empty!!!");
+      } else {
+        _tryToDeleteFiles(selectedNodes);
+      }
+    });
   }
 
   void _unRegisterEventBus() {
     _refreshDownloadFileList?.cancel();
+    _deleteOpSubscription?.cancel();
   }
 
   void _setAllSelected() {
@@ -108,83 +140,212 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
 
   void updateBottomItemNum() {
     eventBus.fire(UpdateBottomItemNum(AllFileManager.instance.totalFileCount(),
-        AllFileManager.instance.selectedFileCount(), module: UIModule.Download));
+        AllFileManager.instance.selectedFileCount(),
+        module: UIModule.Download));
   }
 
   @override
   Widget build(BuildContext context) {
     TextStyle headerStyle =
         TextStyle(inherit: false, fontSize: 14, color: Colors.black);
-    return Container(
-        color: Colors.white,
-        child: DataTable2(
-          dividerThickness: 1,
-          bottomMargin: 10,
-          columnSpacing: 0,
-          sortColumnIndex: _sortColumnIndex,
-          sortAscending: _isAscending,
-          showCheckboxColumn: false,
-          showBottomBorder: false,
-          columns: [
-            DataColumn2(
-                label: Container(
-                  child: Text(
-                    "名称",
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                onSort: (sortColumnIndex, isSortAscending) {
-                  _performSort(sortColumnIndex, isSortAscending);
-                  debugPrint(
-                      "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                },
-                size: ColumnSize.L),
-            DataColumn2(
-                label: Container(
-                    child: Text(
-                      "大小",
-                      textAlign: TextAlign.center,
+
+    _rootFocusNode = FocusNode();
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
+    return Focus(
+        autofocus: true,
+        focusNode: _rootFocusNode,
+        child: Container(
+            color: Colors.white,
+            child: DataTable2(
+              dividerThickness: 1,
+              bottomMargin: 10,
+              columnSpacing: 0,
+              sortColumnIndex: _sortColumnIndex,
+              sortAscending: _isAscending,
+              showCheckboxColumn: false,
+              showBottomBorder: false,
+              columns: [
+                DataColumn2(
+                    label: Container(
+                      child: Text(
+                        "名称",
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    padding: EdgeInsets.only(left: 15)),
-                onSort: (sortColumnIndex, isSortAscending) {
-                  _performSort(sortColumnIndex, isSortAscending);
-                  debugPrint(
-                      "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                }),
-            DataColumn2(
-                label: Container(
+                    onSort: (sortColumnIndex, isSortAscending) {
+                      _performSort(sortColumnIndex, isSortAscending);
+                      debugPrint(
+                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                    },
+                    size: ColumnSize.L),
+                DataColumn2(
+                    label: Container(
+                        child: Text(
+                          "大小",
+                          textAlign: TextAlign.center,
+                        ),
+                        padding: EdgeInsets.only(left: 15)),
+                    onSort: (sortColumnIndex, isSortAscending) {
+                      _performSort(sortColumnIndex, isSortAscending);
+                      debugPrint(
+                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                    }),
+                DataColumn2(
+                    label: Container(
                   child: Text(
                     "种类",
                     textAlign: TextAlign.center,
                   ),
                   padding: EdgeInsets.only(left: 15),
                 )),
-            DataColumn2(
-                label: Container(
-                  child: Text(
-                    "修改日期",
-                    textAlign: TextAlign.center,
-                  ),
-                  padding: EdgeInsets.only(left: 15),
+                DataColumn2(
+                    label: Container(
+                      child: Text(
+                        "修改日期",
+                        textAlign: TextAlign.center,
+                      ),
+                      padding: EdgeInsets.only(left: 15),
+                    ),
+                    onSort: (sortColumnIndex, isSortAscending) {
+                      _performSort(sortColumnIndex, isSortAscending);
+                      debugPrint(
+                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                    })
+              ],
+              rows: _generateRows(),
+              headingRowHeight: 40,
+              headingTextStyle: headerStyle,
+              onSelectAll: (val) {},
+              empty: Center(
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  color: Colors.green[200],
+                  child: Text("No download files"),
                 ),
-                onSort: (sortColumnIndex, isSortAscending) {
-                  _performSort(sortColumnIndex, isSortAscending);
-                  debugPrint(
-                      "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                })
-          ],
-          rows: _generateRows(),
-          headingRowHeight: 40,
-          headingTextStyle: headerStyle,
-          onSelectAll: (val) {},
-          empty: Center(
-            child: Container(
-              padding: EdgeInsets.all(20),
-              color: Colors.green[200],
-              child: Text("No download files"),
-            ),
-          ),
-        ));
+              ),
+            )),
+        onFocusChange: (value) {
+          debugPrint("All file list mode, onFocusChange: $value");
+        },
+        onKey: (node, event) {
+          debugPrint(
+              "Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+          _isControlPressed =
+              Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+          _isShiftPressed = event.isShiftPressed;
+
+          if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+            _onEnterKeyPressed();
+            return KeyEventResult.handled;
+          }
+
+          if (Platform.isMacOS) {
+            if (event.isMetaPressed &&
+                event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+              _onControlAndAPressed();
+              return KeyEventResult.handled;
+            }
+          } else {
+            if (event.isControlPressed &&
+                event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+              _onControlAndAPressed();
+              return KeyEventResult.handled;
+            }
+          }
+
+          return KeyEventResult.ignored;
+        });
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
+  }
+
+  void _onEnterKeyPressed() {
+    debugPrint("_onEnterKeyPressed.");
+    if (_renamingFileNode == null) {
+      if (_isSingleFileSelected()) {
+        FileNode fileNode = AllFileManager.instance.selectedFiles().single;
+        setState(() {
+          _newFileName = fileNode.data.name;
+          _renamingFileNode = fileNode;
+        });
+      }
+    } else {
+      if (_isSingleFileSelected()) {
+        FileNode fileNode = AllFileManager.instance
+            .selectedFiles()
+            .single;
+        String oldFileName = fileNode.data.name;
+        if (_newFileName != null && _newFileName?.trim() != "") {
+          if (_newFileName != oldFileName) {
+            _rename(fileNode, _newFileName!, () {
+              setState(() {
+                fileNode.data.name = _newFileName!;
+                _resetRenamingFileNode();
+              });
+            }, (error) {
+              SmartDialog.showToast("文件重命名失败！");
+            });
+          } else {
+            _resetRenamingFileNode();
+          }
+        }
+      }
+    }
+  }
+
+  void _rename(FileNode file, String newName, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/rename");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "folder": file.data.folder,
+          "file": file.data.name,
+          "newName": newName,
+          "isDir": file.data.isDir
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_rename, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _resetRenamingFileNode() {
+    setState(() {
+      _renamingFileNode = null;
+      _newFileName = null;
+    });
+  }
+
+  bool _isSingleFileSelected() {
+    var selectedFiles = AllFileManager.instance.selectedFiles();
+    return selectedFiles.length == 1;
   }
 
   void _performSort(int sortColumnIndex, bool isSortAscending) {
@@ -324,9 +485,8 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
 
     return Visibility(
         child: GestureDetector(
-            child: Container(
-                child: icon,
-                margin: EdgeInsets.only(left: indent)),
+            child:
+                Container(child: icon, margin: EdgeInsets.only(left: indent)),
             onTap: () {
               debugPrint("Expand folder...");
               if (!node.isExpand) {
@@ -461,47 +621,161 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
     return List<DataRow>.generate(allFileNode.length, (int index) {
       FileNode fileNode = allFileNode[index];
 
-      Color textColor = _isContains(selectedFileNode, fileNode) ? Colors.white : Color(0xff313237);
-      TextStyle textStyle = TextStyle(inherit: false, fontSize: 14, color: textColor);
+      Color textColor = _isContains(selectedFileNode, fileNode)
+          ? Colors.white
+          : Color(0xff313237);
+      TextStyle textStyle =
+          TextStyle(inherit: false, fontSize: 14, color: textColor);
+
+      final inputController = TextEditingController();
+
+      inputController.text = fileNode.data.name;
+
+      final focusNode = FocusNode();
+
+      focusNode.addListener(() {
+        if (focusNode.hasFocus) {
+          inputController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: inputController.text.length);
+        }
+      });
 
       return DataRow2(
           cells: [
-            DataCell(Row(children: [
-              getRightArrowIcon(0, fileNode),
-              getFileTypeIcon(fileNode.data),
-              SizedBox(width: 10.0),
-              Flexible(
-                  child: Text(fileNode.data.name,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: textStyle))
-            ])),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(
-                  fileNode.data.isDir
-                      ? "--"
-                      : _convertToReadableSize(fileNode.data.size),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                child: Row(children: [
+                  getRightArrowIcon(0, fileNode),
+                  getFileTypeIcon(fileNode.data),
+                  SizedBox(width: 10.0),
+                  Flexible(
+                    child: Stack(
+                      children: [
+                        Visibility(
+                          child: Text(fileNode.data.name,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: textStyle),
+                          visible: (fileNode != _renamingFileNode),
+                        ),
+                        Visibility(
+                          child: Container(
+                            child: IntrinsicWidth(
+                              child: TextField(
+                                controller: inputController,
+                                focusNode: fileNode != _renamingFileNode
+                                    ? focusNode
+                                    : null,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(0xffcccbcd),
+                                            width: 3,
+                                            style: BorderStyle.solid)),
+                                    enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(0xffcccbcd),
+                                            width: 3,
+                                            style: BorderStyle.solid),
+                                        borderRadius: BorderRadius.circular(4)),
+                                    focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(0xffcccbcd),
+                                            width: 4,
+                                            style: BorderStyle.solid),
+                                        borderRadius: BorderRadius.circular(4)),
+                                    contentPadding:
+                                        EdgeInsets.fromLTRB(8, 3, 8, 3)),
+                                cursorColor: Color(0xff333333),
+                                style: TextStyle(
+                                    fontSize: 14, color: Color(0xff333333)),
+                                onChanged: (value) {
+                                  debugPrint("onChange, $value");
+                                  _newFileName = value;
+                                },
+                              ),
+                            ),
+                            height: 30,
+                            color: Colors.white,
+                          ),
+                          visible: fileNode == _renamingFileNode,
+                          maintainState: false,
+                          maintainSize: false,
+                        )
+                      ],
+                    ),
+                  )
+                ]),
+                color: Colors.transparent,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+              onPointerDown: (e) {
+                debugPrint("Cell name, ${e.kind.index}");
+                if (_isMouseRightClicked(e)) {
+                  _openMenu(e.position, fileNode);
+
+                  _setFileSelected(fileNode);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(_convertToCategory(fileNode.data),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(
+                    fileNode.data.isDir
+                        ? "--"
+                        : _convertToReadableSize(fileNode.data.size),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (e) {
+                debugPrint("Cell size, ${e.kind.index}");
+
+                if (_isMouseRightClicked(e)) {
+                  _openMenu(e.position, fileNode);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(_formatChangeDate(fileNode.data.changeDate),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(_convertToCategory(fileNode.data),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (e) {
+                debugPrint("Cell data, ${e.kind.index}");
+
+                if (_isMouseRightClicked(e)) {
+                  _openMenu(e.position, fileNode);
+                }
+              },
+            )),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(_formatChangeDate(fileNode.data.changeDate),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (e) {
+                debugPrint("Cell changeDate, ${e.kind.index}");
+
+                if (_isMouseRightClicked(e)) {
+                  _openMenu(e.position, fileNode);
+                }
+              },
             )),
           ],
           selected: _isContains(selectedFileNode, fileNode),
@@ -513,19 +787,7 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
             _setFileSelected(fileNode);
           },
           onDoubleTap: () {
-            _tryToOpenDirectory(fileNode, (fileNodes) {
-              setState(() {
-                AllFileManager.instance.updateSelectedFiles([]);
-                AllFileManager.instance.updateFiles(fileNodes);
-                AllFileManager.instance.updateCurrentDir(fileNode);
-                AllFileManager.instance.pushToStack(fileNode);
-                _updateBackBtnVisibility();
-                _setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
-                updateBottomItemNum();
-              });
-            }, (error) {
-
-            });
+            _openFile(fileNode);
           },
           color: MaterialStateColor.resolveWith((states) {
             if (states.contains(MaterialState.hovered)) {
@@ -545,16 +807,260 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
     });
   }
 
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
+  }
+
+  void _openMenu(Offset position, FileNode fileNode) {
+    RenderBox? overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = fileNode.data.name;
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(
+              child: Text("打开"),
+              onTap: () {
+                _openFile(fileNode);
+              }),
+          PopupMenuItem(
+              child: Text("重命名"),
+              onTap: () {
+                setState(() {
+                  _renamingFileNode = fileNode;
+                  _newFileName = fileNode.data.name;
+                });
+              }),
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(fileNode.data);
+              }),
+          PopupMenuItem(
+              child: Text("删除"),
+              onTap: () {
+                Future<void>.delayed(
+                    const Duration(),
+                    () => _tryToDeleteFiles(
+                        AllFileManager.instance.selectedFiles()));
+              }),
+        ]);
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+
+  void _deleteFiles(List<FileNode> files, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({
+              "paths": files
+                  .map((node) => "${node.data.folder}/${node.data.name}")
+                  .toList()
+            }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_deleteFiles, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _tryToDeleteFiles(List<FileNode> files) {
+    _showConfirmDialog("确定删除这${files.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+
+      SmartDialog.showLoading();
+
+      _deleteFiles(files, () {
+        SmartDialog.dismiss();
+
+        setState(() {
+          List<FileNode> allFiles = AllFileManager.instance.allFiles();
+          files.forEach((file) {
+            if (allFiles.contains(file)) {
+              allFiles.remove(file);
+            }
+          });
+          AllFileManager.instance.updateFiles(allFiles);
+          AllFileManager.instance.clearSelectedFiles();
+        });
+      }, (error) {
+        SmartDialog.dismiss();
+
+        SmartDialog.showToast(error);
+      });
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
+  }
+
+  void _openFile(FileNode file) {
+    if (file.data.isDir) {
+      _tryToOpenDirectory(file, (files) {
+        setState(() {
+          AllFileManager.instance.updateSelectedFiles([]);
+          AllFileManager.instance.updateFiles(files);
+          AllFileManager.instance.updateCurrentDir(file);
+          AllFileManager.instance.pushToStack(file);
+          _updateBackBtnVisibility();
+          _setDeleteBtnEnabled(AllFileManager.instance.selectedFileCount() > 0);
+          updateBottomItemNum();
+        });
+      }, (error) {});
+    } else {
+      _openWithSystemApp(file.data);
+    }
+  }
+
+  void _openFilePicker(FileItem fileItem) async {
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      _showDownloadProgressDialog(fileItem);
+
+      _downloadFile(fileItem, dir, () {
+        _progressIndicatorDialog?.dismiss();
+      }, (error) {
+        SmartDialog.showToast(error);
+      }, (current, total) {
+        if (_progressIndicatorDialog?.isShowing == true) {
+          if (current > 0) {
+            setState(() {
+              _progressIndicatorDialog?.title = "正在导出文件夹 ${fileItem.name}";
+            });
+          }
+
+          setState(() {
+            _progressIndicatorDialog?.subtitle =
+                "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            _progressIndicatorDialog?.updateProgress(current / total);
+          });
+        }
+      });
+    }
+  }
+
+  void _downloadFile(FileItem fileItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = fileItem.name;
+
+    if (fileItem.isDir) {
+      name = "${name}.zip";
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${fileItem.name} done");
+          onSuccess.call();
+        },
+        progressCallback: (current, total) {
+          debugPrint("total: $total");
+          debugPrint(
+              "Downloading ${fileItem.name}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
+
+    String api =
+        "${_URL_SERVER}/stream/file?path=${fileItem.folder}/${fileItem.name}";
+
+    if (fileItem.isDir) {
+      api =
+          "${_URL_SERVER}/stream/dir?path=${fileItem.folder}/${fileItem.name}";
+    }
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(api, options);
+    } else {
+      _downloaderCore?.download(api, options);
+    }
+  }
+
+  void _showDownloadProgressDialog(FileItem fileItem) {
+    if (null == _progressIndicatorDialog) {
+      _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
+      _progressIndicatorDialog?.onCancelClick(() {
+        _downloaderCore?.cancel();
+        _progressIndicatorDialog?.dismiss();
+      });
+    }
+
+    String title = fileItem.isDir ? "正在压缩中，请稍后..." : "正在准备中，请稍后...";
+    _progressIndicatorDialog?.title = title;
+
+    if (!_progressIndicatorDialog!.isShowing) {
+      _progressIndicatorDialog!.show();
+    }
+  }
+
+  void _openWithSystemApp(FileItem fileItem) {
+    SystemAppLauncher.openFile(fileItem);
+  }
+
   void _updateBackBtnVisibility() {
     var isRoot = AllFileManager.instance.isRoot();
     eventBus.fire(BackBtnVisibility(!isRoot, module: UIModule.Download));
   }
 
-  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess, Function(String) onError) {
+  void _tryToOpenDirectory(FileNode dir, Function(List<FileNode>) onSuccess,
+      Function(String) onError) {
     debugPrint("_tryToOpenDirectory, dir: ${dir.data.folder}/${dir.data.name}");
     _getFileList("${dir.data.folder}/${dir.data.name}", (files) {
       List<FileNode> allFiles =
-      files.map((e) => FileNode(dir, e, dir.level + 1)).toList();
+          files.map((e) => FileNode(dir, e, dir.level + 1)).toList();
 
       onSuccess.call(allFiles);
     }, (error) {
@@ -565,19 +1071,21 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
   }
 
   bool _isControlDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
+    return _isShiftPressed;
   }
 
   void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState?.addCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState
+        ?.addCtrlAPressedCallback(callback);
   }
 
   void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState?.removeCtrlAPressedCallback(callback);
+    FileManagerPage.fileManagerKey.currentState
+        ?.removeCtrlAPressedCallback(callback);
   }
 
   void _setFileSelected(FileNode fileNode) {
@@ -641,7 +1149,8 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
         selectedFiles.add(fileNode);
       }
     } else {
-      debugPrint("It's already contains this file, file: ${fileNode.data.name}");
+      debugPrint(
+          "It's already contains this file, file: ${fileNode.data.name}");
 
       if (_isControlDown()) {
         selectedFiles.remove(fileNode);
@@ -660,6 +1169,10 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
 
     _setDeleteBtnEnabled(selectedFiles.length > 0);
     updateBottomItemNum();
+
+    if (null != _renamingFileNode && fileNode != _renamingFileNode) {
+      _resetRenamingFileNode();
+    }
   }
 
   void _setDeleteBtnEnabled(bool enable) {
@@ -735,12 +1248,18 @@ class _DownloadListModeState extends State<AllFileListModePage>  with AutomaticK
     _unRegisterEventBus();
     _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     debugPrint("DownloadListModePage deactivate, instance: $this");
+    _rootFocusNode?.unfocus();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+
+    _rootFocusNode?.requestFocus();
   }
 
   @override
   void dispose() {
-
-
     super.dispose();
   }
 
