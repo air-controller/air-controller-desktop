@@ -519,6 +519,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
         FileNode fileNode = AllFileManager.instance.selectedFiles().single;
         setState(() {
           _renamingFileIndex = AllFileManager.instance.indexOf(fileNode);
+          _newFileName = fileNode.data.name;
         });
       }
     } else {
@@ -527,15 +528,19 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
             .selectedFiles()
             .single;
         String oldFileName = fileNode.data.name;
-        if (_newFileName != null && _newFileName?.trim() != "" && oldFileName != _newFileName) {
-          _rename(fileNode, _newFileName!, () {
-            setState(() {
-              fileNode.data.name = _newFileName!;
-              _resetRenamingFileIndex();
+        if (_newFileName != null && _newFileName?.trim() != "") {
+          if (_newFileName != oldFileName) {
+            _rename(fileNode, _newFileName!, () {
+              setState(() {
+                fileNode.data.name = _newFileName!;
+                _resetRenamingFileIndex();
+              });
+            }, (error) {
+              SmartDialog.showToast("文件重命名失败！");
             });
-          }, (error) {
-            SmartDialog.showToast("文件重命名失败！");
-          });
+          } else {
+            _resetRenamingFileIndex();
+          }
         }
       }
 
