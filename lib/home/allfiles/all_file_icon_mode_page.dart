@@ -79,6 +79,8 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
 
+  FocusNode? _rootFocusNode = null;
+
   @override
   void initState() {
     super.initState();
@@ -91,7 +93,10 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   void _registerEventBus() {
     _refreshDownloadFileList =
         eventBus.on<RefreshAllFileList>().listen((event) {
-      setState(() {});
+      setState(() {
+        // FocusManager.instance.primaryFocus?.requestFocus();
+        debugPrint("Event bus RefreshAllFileList received...");
+      });
     });
 
     _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
@@ -458,7 +463,13 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
               color: Colors.white)),
     ]);
 
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
     return Focus(
+      focusNode: _rootFocusNode,
       autofocus: true,
       canRequestFocus: true,
       child: GestureDetector(
@@ -468,6 +479,9 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
           _resetRenamingFileIndex();
         },
       ),
+      onFocusChange: (value) {
+        debugPrint("All file icon page => onFocusChange: $value");
+      },
       onKey: (node, event) {
         debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
 
@@ -1118,6 +1132,15 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
 
     _unRegisterEventBus();
     debugPrint("_DownloadIconModeState: deactivate, instance: $this");
+
+    _rootFocusNode?.unfocus();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+
+    _rootFocusNode?.requestFocus();
   }
 
   @override
