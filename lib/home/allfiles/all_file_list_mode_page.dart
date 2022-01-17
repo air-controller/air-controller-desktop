@@ -156,76 +156,82 @@ class _DownloadListModeState extends State<AllFileListModePage>
     return Focus(
         autofocus: true,
         focusNode: _rootFocusNode,
-        child: Container(
-            color: Colors.white,
-            child: DataTable2(
-              dividerThickness: 1,
-              bottomMargin: 10,
-              columnSpacing: 0,
-              sortColumnIndex: _sortColumnIndex,
-              sortAscending: _isAscending,
-              showCheckboxColumn: false,
-              showBottomBorder: false,
-              columns: [
-                DataColumn2(
-                    label: Container(
-                      child: Text(
-                        "名称",
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    onSort: (sortColumnIndex, isSortAscending) {
-                      _performSort(sortColumnIndex, isSortAscending);
-                      debugPrint(
-                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                    },
-                    size: ColumnSize.L),
-                DataColumn2(
-                    label: Container(
+        child: GestureDetector(
+          child: Container(
+              color: Colors.white,
+              child: DataTable2(
+                dividerThickness: 1,
+                bottomMargin: 10,
+                columnSpacing: 0,
+                sortColumnIndex: _sortColumnIndex,
+                sortAscending: _isAscending,
+                showCheckboxColumn: false,
+                showBottomBorder: false,
+                columns: [
+                  DataColumn2(
+                      label: Container(
                         child: Text(
-                          "大小",
+                          "名称",
                           textAlign: TextAlign.center,
                         ),
-                        padding: EdgeInsets.only(left: 15)),
-                    onSort: (sortColumnIndex, isSortAscending) {
-                      _performSort(sortColumnIndex, isSortAscending);
-                      debugPrint(
-                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                    }),
-                DataColumn2(
-                    label: Container(
-                  child: Text(
-                    "种类",
-                    textAlign: TextAlign.center,
-                  ),
-                  padding: EdgeInsets.only(left: 15),
-                )),
-                DataColumn2(
-                    label: Container(
-                      child: Text(
-                        "修改日期",
-                        textAlign: TextAlign.center,
                       ),
-                      padding: EdgeInsets.only(left: 15),
-                    ),
-                    onSort: (sortColumnIndex, isSortAscending) {
-                      _performSort(sortColumnIndex, isSortAscending);
-                      debugPrint(
-                          "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
-                    })
-              ],
-              rows: _generateRows(),
-              headingRowHeight: 40,
-              headingTextStyle: headerStyle,
-              onSelectAll: (val) {},
-              empty: Center(
-                child: Container(
-                  padding: EdgeInsets.all(20),
-                  color: Colors.green[200],
-                  child: Text("No download files"),
+                      onSort: (sortColumnIndex, isSortAscending) {
+                        _performSort(sortColumnIndex, isSortAscending);
+                        debugPrint(
+                            "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                      },
+                      size: ColumnSize.L),
+                  DataColumn2(
+                      label: Container(
+                          child: Text(
+                            "大小",
+                            textAlign: TextAlign.center,
+                          ),
+                          padding: EdgeInsets.only(left: 15)),
+                      onSort: (sortColumnIndex, isSortAscending) {
+                        _performSort(sortColumnIndex, isSortAscending);
+                        debugPrint(
+                            "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                      }),
+                  DataColumn2(
+                      label: Container(
+                        child: Text(
+                          "种类",
+                          textAlign: TextAlign.center,
+                        ),
+                        padding: EdgeInsets.only(left: 15),
+                      )),
+                  DataColumn2(
+                      label: Container(
+                        child: Text(
+                          "修改日期",
+                          textAlign: TextAlign.center,
+                        ),
+                        padding: EdgeInsets.only(left: 15),
+                      ),
+                      onSort: (sortColumnIndex, isSortAscending) {
+                        _performSort(sortColumnIndex, isSortAscending);
+                        debugPrint(
+                            "sortColumnIndex: $sortColumnIndex, isSortAscending: $isSortAscending");
+                      })
+                ],
+                rows: _generateRows(),
+                headingRowHeight: 40,
+                headingTextStyle: headerStyle,
+                onSelectAll: (val) {},
+                empty: Center(
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    color: Colors.green[200],
+                    child: Text("No download files"),
+                  ),
                 ),
-              ),
-            )),
+              )),
+          onTap: () {
+            _clearSelectedFiles();
+            _resetRenamingFileNode();
+          },
+        ),
         onFocusChange: (value) {
           debugPrint("All file list mode, onFocusChange: $value");
         },
@@ -258,6 +264,17 @@ class _DownloadListModeState extends State<AllFileListModePage>
 
           return KeyEventResult.ignored;
         });
+  }
+
+  void _clearSelectedFiles() {
+    setState(() {
+      List<FileNode> selectedFiles = AllFileManager.instance.selectedFiles();
+      selectedFiles.clear();
+      AllFileManager.instance.updateSelectedFiles(selectedFiles);
+
+      updateBottomItemNum();
+      _setDeleteBtnEnabled(false);
+    });
   }
 
   void _onControlAndAPressed() {
