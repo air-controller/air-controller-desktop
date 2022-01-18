@@ -28,4 +28,6 @@ class Constant {
 
   /// 图片最大放大倍数（1表示原始大小）
   static const int IMAGE_MAX_SCALE = 4;
+
+  static const String APP_NAME = "AirController";
 }

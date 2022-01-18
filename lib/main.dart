@@ -223,7 +223,7 @@ class _WifiState extends State<MyHomePage> {
               ),
               Container(
                   child: Text(
-                    "请确保手机和电脑处理同一无线网络，并在手机端打开HandShaker应用",
+                    "请确保手机和电脑处理同一无线网络，并在手机端打开${Constant.APP_NAME}应用",
                     style: TextStyle(
                         color: "#a1a1a1".toColor(),
                         fontSize: 16,
@@ -233,7 +233,7 @@ class _WifiState extends State<MyHomePage> {
                   ),
                   margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
               Spacer(),
-              Text("如手机上尚未安装HandShaker应用，请扫描二维码下载。",
+              Text("如手机上尚未安装${Constant.APP_NAME}应用，请扫描二维码下载。",
                   style: TextStyle(
                       color: "#949494".toColor(),
                       fontSize: 16,
