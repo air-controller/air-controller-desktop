@@ -311,7 +311,10 @@ class FileManagerState extends State<FileManagerPage> {
                                     inherit: false,
                                     fontSize: 16,
                                     color: Color(0xff656568)),
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.left,
                               ),
+                              width: 100,
                               // color: Colors.blue,
                             ),
 
@@ -321,7 +324,7 @@ class FileManagerState extends State<FileManagerPage> {
                                     width: 13, height: 13),
                                 // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
                                 // 方式进行处理
-                                margin: EdgeInsets.only(left: 100),
+                                margin: EdgeInsets.only(left: 30),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.all(Radius.circular(2)),
                                   color: hoverIconBgColor
