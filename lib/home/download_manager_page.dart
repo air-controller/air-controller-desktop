@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/refresh_download_file_list.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -386,27 +387,34 @@ class _DownloadManagerState extends State<DownloadManagerPage> with AutomaticKee
                               }
                             },
                           ),
-                          Container(
-                              child: Opacity(
-                                opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
-                                child: Image.asset("icons/icon_delete.png",
-                                    width: _icon_delete_btn_size,
-                                    height: _icon_delete_btn_size),
-                              ),
-                              decoration: BoxDecoration(
-                                  color: Color(0xffcb6357),
-                                  border: new Border.all(
-                                      color: Color(0xffb43f32), width: 1.0),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0))),
-                              width: _delete_btn_width,
-                              height: _delete_btn_height,
-                              padding: EdgeInsets.fromLTRB(
-                                  _delete_btn_padding_hor,
-                                  _delete_btn_padding_vertical,
-                                  _delete_btn_padding_hor,
-                                  _delete_btn_padding_vertical),
-                              margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
+                          GestureDetector(
+                            child: Container(
+                                child: Opacity(
+                                  opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                                  child: Image.asset("icons/icon_delete.png",
+                                      width: _icon_delete_btn_size,
+                                      height: _icon_delete_btn_size),
+                                ),
+                                decoration: BoxDecoration(
+                                    color: Color(0xffcb6357),
+                                    border: new Border.all(
+                                        color: Color(0xffb43f32), width: 1.0),
+                                    borderRadius:
+                                    BorderRadius.all(Radius.circular(4.0))),
+                                width: _delete_btn_width,
+                                height: _delete_btn_height,
+                                padding: EdgeInsets.fromLTRB(
+                                    _delete_btn_padding_hor,
+                                    _delete_btn_padding_vertical,
+                                    _delete_btn_padding_hor,
+                                    _delete_btn_padding_vertical),
+                                margin: EdgeInsets.fromLTRB(10, 0, 0, 0)),
+                            onTap: () {
+                              if (_isDeleteBtnEnabled) {
+                                eventBus.fire(DeleteOp(UIModule.Download));
+                              }
+                            },
+                          )
                         ],
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center),
