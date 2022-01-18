@@ -9,6 +9,7 @@ import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
@@ -64,18 +65,14 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
 
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
+  FocusNode? _rootFocusNode = null;
+
   @override
   void initState() {
     super.initState();
-
-    _ctrlAPressedCallback = () {
-      if (_isPageVisible) {
-        _setAllSelected();
-      }
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _registerEventBus();
 
@@ -177,27 +174,11 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   void _setVideoSelected(VideoItem video) {
@@ -423,12 +404,47 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
 
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
     return VisibilityDetector(
         key: Key("all_video_manager"),
-        child: GestureDetector(
-          child: content,
-          onTap: () {
-            _clearSelectedVideos();
+        child: Focus(
+          autofocus: true,
+          focusNode: _rootFocusNode,
+          canRequestFocus: true,
+          child: GestureDetector(
+            child: content,
+            onTap: () {
+              _clearSelectedVideos();
+            },
+          ),
+          onFocusChange: (value) {
+            debugPrint("All video manager page: $value");
+          },
+          onKey: (node, event) {
+            debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+            _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+            _isShiftPressed = event.isShiftPressed;
+
+            if (Platform.isMacOS) {
+              if (event.isMetaPressed &&
+                  event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                _onControlAndAPressed();
+                return KeyEventResult.handled;
+              }
+            } else {
+              if (event.isControlPressed &&
+                  event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                _onControlAndAPressed();
+                return KeyEventResult.handled;
+              }
+            }
+
+            return KeyEventResult.ignored;
           },
         ),
         onVisibilityChanged: (info) {
@@ -438,6 +454,11 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
             updateBottomItemNum();
           }
         });
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
   }
 
   bool _isSelected(VideoItem videoItem) {
@@ -596,11 +617,23 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   }
 
   @override
+  void activate() {
+    super.activate();
+    _rootFocusNode?.requestFocus();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _rootFocusNode?.unfocus();
+  }
+
+  @override
   void dispose() {
     super.dispose();
 
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     _unRegisterEventBus();
+    _downloaderCore?.cancel();
   }
 
   @override
