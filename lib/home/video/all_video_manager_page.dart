@@ -30,7 +30,7 @@ class AllVideoManagerPage extends StatefulWidget {
 
 class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKeepAliveClientMixin {
   final _OUT_PADDING = 20.0;
-  final _IMAGE_SPACE = 15.0;
+  final _IMAGE_SPACE = 10.0;
   List<VideoItem> _videos = [];
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
   final _IMAGE_GRID_RADIUS = 1.0;
@@ -303,7 +303,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     Widget content = Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
+            maxCrossAxisExtent: 160,
             crossAxisSpacing: _IMAGE_SPACE,
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
@@ -319,11 +319,21 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
                     imageUrl:
                     "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/video/thumbnail/${videoItem.id}/200/200",
                     fit: BoxFit.cover,
-                    width: 200,
-                    height: 200,
+                    width: 160,
+                    height: 160,
                     memCacheWidth: 400,
                     fadeOutDuration: Duration.zero,
                     fadeInDuration: Duration.zero,
+                    errorWidget: (context, url, _) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Color(0xffe1e1e1),
+                          ),
+                          color: Color(0xfff9f9f9),
+                        ),
+                      );
+                    },
                   ),
                   onTap: () {
                     _setVideoSelected(videoItem);
@@ -356,7 +366,14 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
                         child: Text(duration, style: TextStyle(
                             inherit: false,
                             fontSize: 14,
-                            color: Colors.white
+                            color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 0),
+                              blurRadius: 3.0,
+                              color: Colors.black
+                            )
+                          ]
                         )),
                         margin: EdgeInsets.only(left: 5),
                       )
