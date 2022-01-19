@@ -183,6 +183,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                 _isFolderPageVisible = info.visibleFraction * 100 >= 100;
                 if (_isFolderPageVisible) {
                   updateBottomItemNum();
+                  _setDeleteBtnEnabled(_selectedVideoFolders.length > 0);
                 }
               });
             }),
@@ -754,7 +755,17 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
       });
     });
   }
-  
+
+  @override
+  void deactivate() {
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+  }
+
   @override
   void dispose() {
     super.dispose();

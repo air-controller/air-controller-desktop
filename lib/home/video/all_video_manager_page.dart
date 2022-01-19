@@ -472,6 +472,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
 
           if (_isPageVisible) {
             updateBottomItemNum();
+            _setDeleteBtnEnabled(_selectedVideos.length > 0);
           }
         });
   }
