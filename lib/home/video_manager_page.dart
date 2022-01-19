@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import '../event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 
@@ -307,7 +309,7 @@ class VideoManagerState extends State<VideoManagerPage> {
                               debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
 
                               if (_isDeleteBtnEnabled) {
-
+                                eventBus.fire(DeleteOp(UIModule.Video));
                               }
                             },
                           ),

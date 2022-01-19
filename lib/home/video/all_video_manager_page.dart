@@ -11,9 +11,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -58,7 +60,8 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   int _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
 
   StreamSubscription<UpdateVideoSortOrder>? _updateVideoSortOrderStream;
-  
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
+
   late Function() _ctrlAPressedCallback;
 
   bool _isPageVisible = false;
@@ -95,7 +98,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   }
 
   void _setDeleteBtnEnabled(bool enable) {
-    eventBus.fire(UpdateDeleteBtnStatus(enable));
+    eventBus.fire(UpdateDeleteBtnStatus(enable, module: UIModule.Video));
   }
 
   void _reSortVideos() {
@@ -115,10 +118,21 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
       }
       _reSortVideos();
     });
+
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      if (event.module == UIModule.Video) {
+        if (_selectedVideos.length <= 0) {
+          debugPrint("Warning: selectedVideos is empty!!!");
+        } else {
+          _tryToDeleteVideos(_selectedVideos);
+        }
+      }
+    });
   }
 
   void _unRegisterEventBus() {
     _updateVideoSortOrderStream?.cancel();
+    _deleteOpSubscription?.cancel();
   }
   
   void _updateVideos(List<VideoItem> videos) {
@@ -572,6 +586,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
             setState(() {
               _videos.removeWhere((element) => videos.contains(element));
               _selectedVideos.clear();
+              _setDeleteBtnEnabled(false);
             });
           }, (error) {
             SmartDialog.dismiss();

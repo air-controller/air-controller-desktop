@@ -16,4 +16,12 @@ class VideoItem {
         parsedJson["path"], parsedJson["duration"], parsedJson["size"], parsedJson["createTime"],
         parsedJson["lastModifyTime"]);
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is VideoItem) {
+      return other.id == this.id || other.path == this.path;
+    }
+    return super == other;
+  }
 }
