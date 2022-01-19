@@ -8,7 +8,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 class VideoFlowWidget extends StatelessWidget {
   final _OUT_PADDING = 20.0;
-  final _IMAGE_SPACE = 15.0;
+  final _IMAGE_SPACE = 10.0;
   List<VideoItem> _videos = [];
   final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
   final _IMAGE_GRID_RADIUS = 1.0;
@@ -68,7 +68,7 @@ class VideoFlowWidget extends StatelessWidget {
     Widget content = Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
+            maxCrossAxisExtent: 160,
             crossAxisSpacing: _IMAGE_SPACE,
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
@@ -85,8 +85,8 @@ class VideoFlowWidget extends StatelessWidget {
                       imageUrl:
                       "${_URL_SERVER}/stream/video/thumbnail/${videoItem.id}/200/200",
                       fit: BoxFit.cover,
-                      width: 200,
-                      height: 200,
+                      width: 160,
+                      height: 160,
                       memCacheWidth: 400,
                       fadeOutDuration: Duration.zero,
                       fadeInDuration: Duration.zero,
@@ -122,7 +122,14 @@ class VideoFlowWidget extends StatelessWidget {
                           child: Text(duration, style: TextStyle(
                               inherit: false,
                               fontSize: 14,
-                              color: Colors.white
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                    offset: Offset(0, 0),
+                                    blurRadius: 3.0,
+                                    color: Colors.black
+                                )
+                              ]
                           )),
                           margin: EdgeInsets.only(left: 5),
                         )
