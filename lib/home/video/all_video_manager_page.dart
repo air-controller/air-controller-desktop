@@ -270,7 +270,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
         });
       }
     } else {
-      debugPrint("It's already contains this image, id: ${video.id}");
+      debugPrint("It's already contains this video, id: ${video.id}");
 
       if (_isControlDown()) {
         setState(() {
@@ -279,6 +279,11 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
       } else if (_isShiftDown()) {
         setState(() {
           _selectedVideos.remove(video);
+        });
+      } else {
+        setState(() {
+          _selectedVideos.clear();
+          _selectedVideos.add(video);
         });
       }
     }
