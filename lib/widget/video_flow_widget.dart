@@ -26,6 +26,7 @@ class VideoFlowWidget extends StatelessWidget {
   Function()? _onOutsideTap;
   Function(bool isTotalVisible, bool isPartOfVisible)? _onVisibleChange;
   Function(VideoItem video)? _onVideoDoubleTap;
+  Function(PointerDownEvent event, VideoItem videoItem)? _onPointerDown;
 
   static final SORT_ORDER_CREATE_TIME = 1;
   static final SORT_ORDER_DURATION = 2;
@@ -37,7 +38,8 @@ class VideoFlowWidget extends StatelessWidget {
     required Function(VideoItem video)? onVideoTap,
     required Function()? onOutsideTap,
     required Function(bool isTotalVisible, bool isPartOfVisible)? onVisibleChange,
-    required Function(VideoItem video)? onVideoDoubleTap
+    required Function(VideoItem video)? onVideoDoubleTap,
+    required Function(PointerDownEvent event, VideoItem videoItem) onPointerDown
 }) {
     _videos = videos;
     _selectedVideos = selectedVideos;
@@ -46,6 +48,7 @@ class VideoFlowWidget extends StatelessWidget {
     _onOutsideTap = onOutsideTap;
     _onVisibleChange = onVisibleChange;
     _onVideoDoubleTap = onVideoDoubleTap;
+    _onPointerDown = onPointerDown;
   }
 
   @override
@@ -73,62 +76,67 @@ class VideoFlowWidget extends StatelessWidget {
           VideoItem videoItem = sortedVideos[index];
           String duration = _convertToReadableTime(videoItem.duration);
 
-          return Stack(
-            children: [
-              Container(
-                child: GestureDetector(
-                  child: CachedNetworkImage(
-                    imageUrl:
-                    "${_URL_SERVER}/stream/video/thumbnail/${videoItem.id}/200/200",
-                    fit: BoxFit.cover,
-                    width: 200,
-                    height: 200,
-                    memCacheWidth: 400,
-                    fadeOutDuration: Duration.zero,
-                    fadeInDuration: Duration.zero,
+          return Listener(
+            child: Stack(
+              children: [
+                Container(
+                  child: GestureDetector(
+                    child: CachedNetworkImage(
+                      imageUrl:
+                      "${_URL_SERVER}/stream/video/thumbnail/${videoItem.id}/200/200",
+                      fit: BoxFit.cover,
+                      width: 200,
+                      height: 200,
+                      memCacheWidth: 400,
+                      fadeOutDuration: Duration.zero,
+                      fadeInDuration: Duration.zero,
+                    ),
+                    onTap: () {
+                      _onVideoTap?.call(videoItem);
+                    },
+                    onDoubleTap: () {
+                      debugPrint("双击");
+                      _onVideoDoubleTap?.call(videoItem);
+                    },
                   ),
-                  onTap: () {
-                    _onVideoTap?.call(videoItem);
-                  },
-                  onDoubleTap: () {
-                    debugPrint("双击");
-                    _onVideoDoubleTap?.call(videoItem);
-                  },
+                  decoration: BoxDecoration(
+                      border: new Border.all(
+                          color: _isContainsVideo(_selectedVideos, videoItem)
+                              ? Color(0xff5d86ec)
+                              : Color(0xffdedede),
+                          width: _isContainsVideo(_selectedVideos, videoItem)
+                              ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                              : _IMAGE_GRID_BORDER_WIDTH),
+                      borderRadius: new BorderRadius.all(Radius.circular(
+                          _isContainsVideo(_selectedVideos, videoItem)
+                              ? _IMAGE_GRID_RADIUS_SELECTED
+                              : _IMAGE_GRID_RADIUS))),
                 ),
-                decoration: BoxDecoration(
-                    border: new Border.all(
-                        color: _isContainsVideo(_selectedVideos, videoItem)
-                            ? Color(0xff5d86ec)
-                            : Color(0xffdedede),
-                        width: _isContainsVideo(_selectedVideos, videoItem)
-                            ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                            : _IMAGE_GRID_BORDER_WIDTH),
-                    borderRadius: new BorderRadius.all(Radius.circular(
-                        _isContainsVideo(_selectedVideos, videoItem)
-                            ? _IMAGE_GRID_RADIUS_SELECTED
-                            : _IMAGE_GRID_RADIUS))),
-              ),
-              Container(
-                child: Align(
-                  child: Row(
-                    children: [
-                      Image.asset("icons/ic_video_indictor.png", width: 20, height: 20),
+                Container(
+                  child: Align(
+                    child: Row(
+                      children: [
+                        Image.asset("icons/ic_video_indictor.png", width: 20, height: 20),
 
-                      Container(
-                        child: Text(duration, style: TextStyle(
-                            inherit: false,
-                            fontSize: 14,
-                            color: Colors.white
-                        )),
-                        margin: EdgeInsets.only(left: 5),
-                      )
-                    ],
+                        Container(
+                          child: Text(duration, style: TextStyle(
+                              inherit: false,
+                              fontSize: 14,
+                              color: Colors.white
+                          )),
+                          margin: EdgeInsets.only(left: 5),
+                        )
+                      ],
+                    ),
+                    alignment: Alignment.bottomLeft,
                   ),
-                  alignment: Alignment.bottomLeft,
-                ),
-                margin: EdgeInsets.only(left: 10, bottom: 10),
-              )
-            ],
+                  margin: EdgeInsets.only(left: 10, bottom: 10),
+                )
+              ],
+            ),
+            onPointerDown: (event) {
+              _onPointerDown?.call(event, videoItem);
+            },
           );
         },
         itemCount: sortedVideos.length,
