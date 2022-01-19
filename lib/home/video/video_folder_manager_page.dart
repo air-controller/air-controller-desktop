@@ -17,6 +17,8 @@ import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
+import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
+import 'package:mobile_assistant_client/event/video_sort_menu_visibility.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/model/video_folder_item.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
@@ -30,6 +32,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../model/ResponseEntity.dart';
 import '../file_manager.dart';
+import '../video_manager_page.dart';
 
 class VideoFolderManagerPage extends StatefulWidget {
   @override
@@ -80,6 +83,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
   StreamSubscription<BackBtnPressed>? _backBtnPressedStream;
   StreamSubscription<DeleteOp>? _deleteOpSubscription;
+  StreamSubscription<UpdateVideoSortOrder>? _updateVideoSortOrderStream;
 
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
@@ -151,10 +155,42 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         }
       }
     });
+
+    _updateVideoSortOrderStream = eventBus.on<UpdateVideoSortOrder>().listen((event) {
+      if (event.type == UpdateVideoSortOrder.TYPE_CREATE_TIME) {
+        setState(() {
+          _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
+        });
+      } else {
+        setState(() {
+          _currentSortOrder = VideoManagerState.SORT_ORDER_SIZE;
+        });
+      }
+      _reSortVideos();
+    });
+  }
+
+  void _reSortVideos() {
+    var sortedVideos = _videosInFolder;
+
+    if (_currentSortOrder == VideoManagerState.SORT_ORDER_CREATE_TIME) {
+      sortedVideos.sort((a, b) {
+        return b.createTime - a.createTime;
+      });
+    } else {
+      sortedVideos.sort((a, b) {
+        return b.duration - a.duration;
+      });
+    }
+
+    setState(() {
+      _videosInFolder = sortedVideos;
+    });
   }
 
   void _unRegisterEventBus() {
     _backBtnPressedStream?.cancel();
+    _deleteOpSubscription?.cancel();
     _deleteOpSubscription?.cancel();
   }
 
@@ -224,6 +260,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                 if (_isFolderPageVisible) {
                   updateBottomItemNum();
                   _setDeleteBtnEnabled(_selectedVideoFolders.length > 0);
+                  _setSortMenuVisible(false);
+                  _setBackBtnVisible(false);
                 }
               });
             }),
@@ -286,6 +324,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                 if (_isVideosInFolderPageVisible) {
                   updateBottomItemNum();
                   _setDeleteBtnEnabled(_selectedVideosInFolder.length > 0);
+                  _setSortMenuVisible(true);
+                  _setBackBtnVisible(true);
                 }
               });
             })
@@ -293,6 +333,9 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     );
   }
 
+  void _setSortMenuVisible(bool visible) {
+    eventBus.fire(VideoSortMenuVisibility(visible));
+  }
 
   void _setVideoFolderSelected(VideoFolderItem videoFolder) {
     debugPrint("Shift key down status: ${_isShiftDown()}");

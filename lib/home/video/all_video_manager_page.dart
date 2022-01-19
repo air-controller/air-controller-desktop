@@ -11,9 +11,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
+import 'package:mobile_assistant_client/event/video_sort_menu_visibility.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
@@ -473,8 +475,18 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
           if (_isPageVisible) {
             updateBottomItemNum();
             _setDeleteBtnEnabled(_selectedVideos.length > 0);
+            _setSortMenuVisible(true);
+            _setBackBtnVisible(false);
           }
         });
+  }
+
+  void _setBackBtnVisible(bool visible) {
+    eventBus.fire(BackBtnVisibility(visible));
+  }
+
+  void _setSortMenuVisible(bool visible) {
+    eventBus.fire(VideoSortMenuVisibility(visible));
   }
 
   void _onControlAndAPressed() {

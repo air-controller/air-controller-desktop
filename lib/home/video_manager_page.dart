@@ -9,6 +9,7 @@ import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_video_sort_order.dart';
+import 'package:mobile_assistant_client/event/video_sort_menu_visibility.dart';
 import 'package:mobile_assistant_client/home/video/all_video_manager_page.dart';
 import 'package:mobile_assistant_client/home/video/video_folder_manager_page.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
@@ -43,10 +44,13 @@ class VideoManagerState extends State<VideoManagerPage> {
   int _selectedItemNum = 0;
   bool _isBackBtnDown = false;
   bool _isBackBtnVisible = false;
+  // 排序类型菜单可见性
+  bool _videoSortTypeVisible = true;
 
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
+  StreamSubscription<VideoSortMenuVisibility>? _videoSortMenuVisibilityStream;
 
   void _registerEventBus() {
     _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
@@ -62,12 +66,18 @@ class VideoManagerState extends State<VideoManagerPage> {
         _isBackBtnVisible = event.visible;
       });
     });
+    _videoSortMenuVisibilityStream = eventBus.on<VideoSortMenuVisibility>().listen((event) {
+      setState(() {
+        _videoSortTypeVisible = event.visible;
+      });
+    });
   }
 
   void _unRegisterEventBus() {
     _updateDeleteBtnStream?.cancel();
     _updateBottomItemNumStream?.cancel();
     _backBtnVisibilityStream?.cancel();
+    _videoSortMenuVisibilityStream?.cancel();
   }
 
   void setDeleteBtnEnabled(bool enable) {
@@ -284,7 +294,7 @@ class VideoManagerState extends State<VideoManagerPage> {
                         maintainSize: true,
                         maintainState: true,
                         maintainAnimation: true,
-                        visible: _currentIndex != INDEX_VIDEO_FOLDERS
+                        visible: _videoSortTypeVisible
                       ),
                       Container(
                           child: GestureDetector(
