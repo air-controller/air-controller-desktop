@@ -18,6 +18,7 @@ import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -490,12 +491,96 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
           PopupMenuItem(
               child: Text("删除"),
               onTap: () {
-                // Future<void>.delayed(
-                //     const Duration(),
-                //         () => _tryToDeleteFiles(
-                //         AllFileManager.instance.selectedFiles()));
+                Future<void>.delayed(
+                    const Duration(),
+                        () => _tryToDeleteVideos(_selectedVideos));
               }),
         ]);
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+
+
+  void _deleteVideos(List<VideoItem> videos, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "paths": videos
+              .map((node) => node.path)
+              .toList()
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_deleteFiles, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _tryToDeleteVideos(List<VideoItem> videos) {
+    _showConfirmDialog("确定删除这${videos.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+            (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          SmartDialog.showLoading();
+
+          _deleteVideos(videos, () {
+            SmartDialog.dismiss();
+
+            setState(() {
+              _videos.removeWhere((element) => videos.contains(element));
+              _selectedVideos.clear();
+            });
+          }, (error) {
+            SmartDialog.dismiss();
+
+            SmartDialog.showToast(error);
+          });
+        }, (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+        });
   }
 
   void _showDownloadProgressDialog(VideoItem videoItem) {
