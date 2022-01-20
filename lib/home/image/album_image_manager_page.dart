@@ -66,7 +66,12 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   bool _isVisible = false;
 
   DownloaderCore? _downloaderCore;
-  
+
+  FocusNode? _rootFocusNode = null;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
   StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
 
   _AlbumImageManagerPageState();
@@ -126,27 +131,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   void updateDeleteBtnStatus() {
@@ -162,11 +151,42 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
 
     Widget content = _createContent(_arrangeMode);
 
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
     return VisibilityDetector(
         key: Key("album_image_manager"),
         child: GestureDetector(
           child: Stack(children: [
-            content,
+            Focus(
+              autofocus: true,
+                focusNode: _rootFocusNode,
+                child: content,
+                onKey: (node, event) {
+                  debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+                  _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                  _isShiftPressed = event.isShiftPressed;
+
+                  if (Platform.isMacOS) {
+                    if (event.isMetaPressed &&
+                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                      _onControlAndAPressed();
+                      return KeyEventResult.handled;
+                    }
+                  } else {
+                    if (event.isControlPressed &&
+                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                      _onControlAndAPressed();
+                      return KeyEventResult.handled;
+                    }
+                  }
+
+                  return KeyEventResult.ignored;
+                }
+            ),
             Visibility(
               child: Container(child: spinKit, color: Colors.white),
               maintainSize: false,
@@ -182,6 +202,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
             _isVisible = info.visibleFraction * 100 >= 100.0;
           });
         });
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
   }
 
   bool _isContainsImage(List<ImageItem> images, ImageItem current) {
@@ -279,6 +304,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
       } else if (_isShiftDown()) {
         setState(() {
           _selectedImages.remove(image);
+        });
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
         });
       }
     }
