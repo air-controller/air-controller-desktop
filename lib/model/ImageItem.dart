@@ -17,4 +17,12 @@ class ImageItem {
         parsedJson["path"], parsedJson["width"], parsedJson["height"],
         parsedJson["modifyTime"], parsedJson["createTime"]);
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is ImageItem) {
+      return this.id == other.id || this.path == other.path;
+    }
+    return super == other;
+  }
 }

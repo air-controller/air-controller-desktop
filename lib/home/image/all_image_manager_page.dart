@@ -1,30 +1,29 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flowder/flowder.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
-import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+
 import '../../model/ImageItem.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../model/ResponseEntity.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../util/event_bus.dart';
 
 class AllImageManagerPage extends StatefulWidget {
@@ -63,7 +62,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
   bool _isLoadingCompleted = false;
 
-  late Function() _ctrlAPressedCallback;
   // 标记当前页面是否可见
   bool _isVisible = false;
 
@@ -71,20 +69,16 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
   final _IMAGE_SIZE = 400;
 
+  FocusNode? _rootFocusNode = null;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
   _AllImageManagerPageState();
 
   @override
   void initState() {
     super.initState();
-
-    _ctrlAPressedCallback = () {
-      if (_isFront()) {
-        _setAllSelected();
-      }
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllImages((images) {
       setState(() {
@@ -102,27 +96,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-        context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   void _setAllSelected() {
@@ -149,11 +127,42 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
     Widget content = _createContent(_arrangeMode);
 
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
     return VisibilityDetector(
         key: Key("all_image_manager_page"),
         child: GestureDetector(
           child: Stack(children: [
-            content,
+            Focus(
+              autofocus: true,
+                focusNode: _rootFocusNode,
+                child: content,
+                onKey: (node, event) {
+                  debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+                  _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                  _isShiftPressed = event.isShiftPressed;
+
+                  if (Platform.isMacOS) {
+                    if (event.isMetaPressed &&
+                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                      _onControlAndAPressed();
+                      return KeyEventResult.handled;
+                    }
+                  } else {
+                    if (event.isControlPressed &&
+                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                      _onControlAndAPressed();
+                      return KeyEventResult.handled;
+                    }
+                  }
+
+                  return KeyEventResult.ignored;
+                }
+            ),
             Visibility(
               child: Container(child: spinKit, color: Colors.white),
               maintainSize: false,
@@ -170,6 +179,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
             _isVisible = info.visibleFraction * 100 >= 100;
           });
         });
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
   }
 
   void _clearSelectedImages() {
@@ -229,9 +243,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
                 if (_isMouseRightClicked(event)) {
                   _openMenu(event.position, image);
-                }
 
-                _setImageSelected(image);
+                  if (!_selectedImages.contains(image)) {
+                    _setImageSelected(image);
+                  }
+                }
               },
             ),
             decoration: BoxDecoration(
@@ -700,6 +716,11 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         setState(() {
           _selectedImages.remove(image);
         });
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
+        });
       }
     }
 
@@ -822,12 +843,15 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   @override
+  void activate() {
+    super.activate();
+    _rootFocusNode?.requestFocus();
+  }
+
+  @override
   void deactivate() {
     super.deactivate();
-
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
-
-    debugPrint("所有图片：deactivate");
+    _rootFocusNode?.unfocus();
   }
 
   @override
