@@ -9,6 +9,7 @@ import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
@@ -68,8 +69,6 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
   final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
-  late Function() _ctrlAPressedCallback;
-
   bool _isFolderPageVisible = false;
   bool _isVideosInFolderPageVisible = false;
   int _currentSortOrder = VideoFlowWidget.SORT_ORDER_CREATE_TIME;
@@ -88,19 +87,17 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
 
+  FocusNode? _rootFocus1;
+  FocusNode? _rootFocus2;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
+
   @override
   void initState() {
     super.initState();
 
     _registerEventBus();
-
-    _ctrlAPressedCallback = () {
-      _setAllSelected();
-
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllVideosFolder((videos) {
       setState(() {
@@ -195,27 +192,11 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   void _setBackBtnVisible(bool visible) {
@@ -231,27 +212,63 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
     Widget videosInFolderWidget = _createVideosWidget();
 
+    _rootFocus1 = FocusNode();
+    _rootFocus1?.canRequestFocus = true;
+    _rootFocus1?.requestFocus();
+
+    _rootFocus2 = FocusNode();
+    _rootFocus2?.canRequestFocus = true;
+
     return Stack(
       children: [
         // 视频文件夹页面
         VisibilityDetector(
             key: Key("video_folder_manager"),
-            child: GestureDetector(
-              child: Visibility(
-                child: Stack(children: [
-                  content,
-                  Visibility(
-                    child: Container(child: spinKit, color: Colors.white),
-                    maintainSize: false,
-                    visible: !_isLoadingCompleted,
-                  )
-                ],
-                  fit: StackFit.expand,
+            child: Focus(
+              autofocus: true,
+              focusNode: _rootFocus1,
+              child: GestureDetector(
+                child: Visibility(
+                  child: Stack(children: [
+                    content,
+                    Visibility(
+                      child: Container(child: spinKit, color: Colors.white),
+                      maintainSize: false,
+                      visible: !_isLoadingCompleted,
+                    )
+                  ],
+                    fit: StackFit.expand,
+                  ),
+                  visible: !_openVideosInFolderPage,
                 ),
-                visible: !_openVideosInFolderPage,
+                onTap: () {
+                  _clearSelectedVideos();
+                },
               ),
-              onTap: () {
-                _clearSelectedVideos();
+              onFocusChange: (value) {
+
+              },
+              onKey: (node, event) {
+                debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+                _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                _isShiftPressed = event.isShiftPressed;
+
+                if (Platform.isMacOS) {
+                  if (event.isMetaPressed &&
+                      event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                    _onControlAndAPressed();
+                    return KeyEventResult.handled;
+                  }
+                } else {
+                  if (event.isControlPressed &&
+                      event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                    _onControlAndAPressed();
+                    return KeyEventResult.handled;
+                  }
+                }
+
+                return KeyEventResult.ignored;
               },
             ),
             onVisibilityChanged: (info) {
@@ -262,6 +279,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                   _setDeleteBtnEnabled(_selectedVideoFolders.length > 0);
                   _setSortMenuVisible(false);
                   _setBackBtnVisible(false);
+                  _rootFocus1?.requestFocus();
                 }
               });
             }),
@@ -269,53 +287,82 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         // 文件夹内视频页面
         VisibilityDetector(
             key: Key("videos_in_folder"),
-            child: Visibility(
-              child: Column(
-                children: [
-                  Container(
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          child: Container(
-                            child: Text("视频文件夹", style: TextStyle(
-                                color: Color(0xff5b5c62),
-                                inherit: false,
-                                fontSize: 14
-                            )),
-                            padding: EdgeInsets.only(left: 10),
+            child: Focus(
+              autofocus: true,
+              focusNode: _rootFocus2,
+              child: Visibility(
+                child: Column(
+                  children: [
+                    Container(
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              child: Text("视频文件夹", style: TextStyle(
+                                  color: Color(0xff5b5c62),
+                                  inherit: false,
+                                  fontSize: 14
+                              )),
+                              padding: EdgeInsets.only(left: 10),
+                            ),
+                            onTap: () {
+                              _backVideoFoldersPage();
+                            },
                           ),
-                          onTap: () {
-                            _backVideoFoldersPage();
-                          },
-                        ),
 
-                        Image.asset("icons/ic_right_arrow.png", height: 20),
-                        Text(_currentVideoFolder?.name ?? "", style: TextStyle(
-                            color: Color(0xff5b5c62),
-                            inherit: false,
-                            fontSize: 14
-                        ))
-                      ],
+                          Image.asset("icons/ic_right_arrow.png", height: 20),
+                          Text(_currentVideoFolder?.name ?? "", style: TextStyle(
+                              color: Color(0xff5b5c62),
+                              inherit: false,
+                              fontSize: 14
+                          ))
+                        ],
+                      ),
+                      color: Color(0xfffafafa),
+                      height: 30,
                     ),
-                    color: Color(0xfffafafa),
-                    height: 30,
-                  ),
 
-                  Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+                    Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
 
-                  Expanded(child: Stack(children: [
-                    videosInFolderWidget,
-                    Visibility(
-                      child: Container(child: spinKit, color: Colors.white),
-                      maintainSize: false,
-                      visible: !_isLoadingVideosInFolderCompleted,
-                    )
+                    Expanded(child: Stack(children: [
+                      videosInFolderWidget,
+                      Visibility(
+                        child: Container(child: spinKit, color: Colors.white),
+                        maintainSize: false,
+                        visible: !_isLoadingVideosInFolderCompleted,
+                      )
+                    ],
+                      fit: StackFit.expand,
+                    ))
                   ],
-                    fit: StackFit.expand,
-                  ))
-                ],
+                ),
+                visible: _openVideosInFolderPage,
               ),
-              visible: _openVideosInFolderPage,
+              onFocusChange: (value) {
+
+              },
+              onKey: (node, event) {
+                debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+                _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                _isShiftPressed = event.isShiftPressed;
+
+                if (Platform.isMacOS) {
+                  if (event.isMetaPressed &&
+                      event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                    _onControlAndAPressed();
+                    return KeyEventResult.handled;
+                  }
+                } else {
+                  if (event.isControlPressed &&
+                      event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                    _onControlAndAPressed();
+                    return KeyEventResult.handled;
+                  }
+                }
+
+                return KeyEventResult.ignored;
+              },
             ),
             onVisibilityChanged: (info) {
               setState(() {
@@ -326,11 +373,17 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                   _setDeleteBtnEnabled(_selectedVideosInFolder.length > 0);
                   _setSortMenuVisible(true);
                   _setBackBtnVisible(true);
+                  _rootFocus2?.requestFocus();
                 }
               });
             })
       ],
     );
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
   }
 
   void _setSortMenuVisible(bool visible) {
@@ -421,6 +474,11 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         setState(() {
           _selectedVideoFolders.remove(videoFolder);
         });
+      } else {
+        setState(() {
+          _selectedVideoFolders.clear();
+          _selectedVideoFolders.add(videoFolder);
+        });
       }
     }
 
@@ -510,7 +568,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         });
       }
     } else {
-      debugPrint("It's already contains this image, id: ${video.id}");
+      debugPrint("It's already contains this video, id: ${video.id}");
 
       if (_isControlDown()) {
         setState(() {
@@ -519,6 +577,11 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
       } else if (_isShiftDown()) {
         setState(() {
           _selectedVideosInFolder.remove(video);
+        });
+      } else {
+        setState(() {
+          _selectedVideosInFolder.clear();
+          _selectedVideosInFolder.add(video);
         });
       }
     }
@@ -1185,11 +1248,13 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   @override
   void deactivate() {
     super.deactivate();
+    _rootFocus1?.unfocus();
   }
 
   @override
   void activate() {
     super.activate();
+    _rootFocus1?.requestFocus();
   }
 
   @override
@@ -1197,7 +1262,9 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     super.dispose();
 
     _unRegisterEventBus();
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+
+    _rootFocus1?.requestFocus();
+    _rootFocus2?.requestFocus();
   }
 
   @override
