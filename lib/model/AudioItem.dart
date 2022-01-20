@@ -25,4 +25,12 @@ class AudioItem {
         parsedJson["modifyDate"]
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is AudioItem) {
+      return this.id == other.id || this.path == other.path;
+    }
+    return super == other;
+  }
 }

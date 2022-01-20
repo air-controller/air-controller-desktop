@@ -1,9 +1,20 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:data_table_2/data_table_2.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/model/AudioItem.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/util/system_app_launcher.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constant.dart';
 import 'package:http/http.dart' as http;
@@ -49,20 +60,24 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
   final _MB_BOUND = 1 * 1024 * 1024;
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
-  late Function() _ctrlAPressedCallback;
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   bool _isDeleteBtnEnabled = false;
+
+  DownloaderCore? _downloaderCore;
+  ProgressIndicatorDialog? _progressIndicatorDialog;
+
+  AudioItem? _renamingAudioFile;
+  String? _newFileName;
+
+  FocusNode? _rootFocusNode;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
 
   @override
   void initState() {
     super.initState();
-
-    _ctrlAPressedCallback = () {
-      _setAllSelected();
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllAudios((audios) {
       setState(() {
@@ -129,20 +144,359 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
     });
   }
 
+  void _openMenu(Offset position, AudioItem audioItem) {
+    RenderBox? overlay =
+    Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = audioItem.name;
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(
+              child: Text("打开"),
+              onTap: () {
+                SystemAppLauncher.openAudio(audioItem);
+              }),
+          PopupMenuItem(
+              child: Text("重命名"),
+              onTap: () {
+                setState(() {
+                  _renamingAudioFile = audioItem;
+                  _newFileName = audioItem.name;
+                });
+              }),
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(audioItem);
+              }),
+          PopupMenuItem(
+              child: Text("删除"),
+              onTap: () {
+                Future<void>.delayed(const Duration(),
+                        () => _tryToDeleteFiles(_selectedAudioItems));
+              }),
+        ]);
+  }
+
+  void _rename(AudioItem audio, String newName, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/rename");
+
+    var folder = audio.path;
+    int index = folder.lastIndexOf("/");
+
+    if (index != -1) {
+      folder = folder.substring(0, index);
+    }
+
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "folder": folder,
+          "file": audio.name,
+          "newName": newName,
+          "isDir": false
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_rename, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _tryToDeleteFiles(List<AudioItem> audios) {
+    _showConfirmDialog("确定删除这${audios.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+            (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          SmartDialog.showLoading();
+
+          _deleteFiles(audios, () {
+            SmartDialog.dismiss();
+
+            setState(() {
+              _audioItems.removeWhere((audio) => audios.contains(audio));
+              _selectedAudioItems.clear();
+              _isDeleteBtnEnabled = false;
+            });
+          }, (error) {
+            SmartDialog.dismiss();
+
+            SmartDialog.showToast(error);
+          });
+        }, (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+        });
+  }
+
+
+  void _deleteFiles(List<AudioItem> audios, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "paths": audios
+              .map((audio) => audio.path)
+              .toList()
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_deleteFiles, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+  
+  void _openFilePicker(AudioItem item) async {
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      _showDownloadProgressDialog(item);
+
+      _downloadFile(item, dir, () {
+        _progressIndicatorDialog?.dismiss();
+      }, (error) {
+        SmartDialog.showToast(error);
+      }, (current, total) {
+        if (_progressIndicatorDialog?.isShowing == true) {
+          if (current > 0) {
+            setState(() {
+              _progressIndicatorDialog?.title = "正在导出音频 ${item.name}";
+            });
+          }
+
+          setState(() {
+            _progressIndicatorDialog?.subtitle =
+            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            _progressIndicatorDialog?.updateProgress(current / total);
+          });
+        }
+      });
+    }
+  }
+
+  void _downloadFile(AudioItem fileItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = fileItem.name;
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${fileItem.name} done");
+          onSuccess.call();
+        },
+        progressCallback: (current, total) {
+          debugPrint("total: $total");
+          debugPrint(
+              "Downloading ${fileItem.name}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
+
+    String api = "${_URL_SERVER}/stream/file?path=${fileItem.folder}/${fileItem.name}";
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(api, options);
+    } else {
+      _downloaderCore?.download(api, options);
+    }
+  }
+
+  void _showDownloadProgressDialog(AudioItem audioItem) {
+    if (null == _progressIndicatorDialog) {
+      _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
+      _progressIndicatorDialog?.onCancelClick(() {
+        _downloaderCore?.cancel();
+        _progressIndicatorDialog?.dismiss();
+      });
+    }
+
+    String title = "正在准备中，请稍后...";
+    _progressIndicatorDialog?.title = title;
+
+    if (!_progressIndicatorDialog!.isShowing) {
+      _progressIndicatorDialog!.show();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const color = Color(0xff85a8d0);
 
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
     return Stack(children: [
-      _realContent(),
+      Focus(
+        autofocus: true,
+        focusNode: _rootFocusNode,
+        child: GestureDetector(
+          child: _realContent(),
+          onTap: () {
+            _clearSelectedAudios();
+            _resetRenamingAudioFile();
+            _isDeleteBtnEnabled = false;
+          },
+        ),
+        onFocusChange: (value) {
+
+        },
+        onKey: (node, event) {
+          debugPrint(
+              "Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+
+          _isControlPressed =
+          Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+          _isShiftPressed = event.isShiftPressed;
+
+          if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+            _onEnterKeyPressed();
+            return KeyEventResult.handled;
+          }
+
+          if (Platform.isMacOS) {
+            if (event.isMetaPressed &&
+                event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+              _onControlAndAPressed();
+              return KeyEventResult.handled;
+            }
+          } else {
+            if (event.isControlPressed &&
+                event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+              _onControlAndAPressed();
+              return KeyEventResult.handled;
+            }
+          }
+
+          return KeyEventResult.ignored;
+        },
+      ),
       Visibility(
         child: Container(child: spinKit, color: Colors.white),
         maintainSize: false,
         visible: !_isLoadingSuccess,
       )
     ]);
+  }
+
+  void _clearSelectedAudios() {
+    setState(() {
+      _selectedAudioItems.clear();
+    });
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
+  }
+
+  void _onEnterKeyPressed() {
+    debugPrint("_onEnterKeyPressed.");
+    if (_renamingAudioFile == null) {
+      if (_isSingleFileSelected()) {
+        AudioItem audio = _selectedAudioItems.single;
+        setState(() {
+          _newFileName = audio.name;
+          _renamingAudioFile = audio;
+        });
+      }
+    } else {
+      if (_isSingleFileSelected()) {
+        AudioItem audio = _selectedAudioItems.single;
+        String oldFileName = audio.name;
+        if (_newFileName != null && _newFileName?.trim() != "") {
+          if (_newFileName != oldFileName) {
+            _rename(audio, _newFileName!, () {
+              setState(() {
+                audio.name = _newFileName!;
+                _resetRenamingAudioFile();
+              });
+            }, (error) {
+              SmartDialog.showToast("文件重命名失败！");
+            });
+          } else {
+            _resetRenamingAudioFile();
+          }
+        }
+      }
+    }
+  }
+
+  bool _isSingleFileSelected() {
+    return _selectedAudioItems.length == 1;
   }
 
   Widget _realContent() {
@@ -164,26 +518,33 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                         color: Color(0xff616161),
                         fontSize: 16.0))),
             Align(
-                child: Container(
-                    child: Opacity(
-                      opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
-                      child: Image.asset("icons/icon_delete.png",
-                          width: _icon_delete_btn_size,
-                          height: _icon_delete_btn_size),
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffcb6357),
-                        border: new Border.all(
-                            color: Color(0xffb43f32), width: 1.0),
-                        borderRadius: BorderRadius.all(Radius.circular(4.0))),
-                    width: _delete_btn_width,
-                    height: _delete_btn_height,
-                    padding: EdgeInsets.fromLTRB(
-                        _delete_btn_padding_hor,
-                        _delete_btn_padding_vertical,
-                        _delete_btn_padding_hor,
-                        _delete_btn_padding_vertical),
-                    margin: EdgeInsets.fromLTRB(0, 0, 10, 0)),
+                child: GestureDetector(
+                  child: Container(
+                      child: Opacity(
+                        opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                        child: Image.asset("icons/icon_delete.png",
+                            width: _icon_delete_btn_size,
+                            height: _icon_delete_btn_size),
+                      ),
+                      decoration: BoxDecoration(
+                          color: Color(0xffcb6357),
+                          border: new Border.all(
+                              color: Color(0xffb43f32), width: 1.0),
+                          borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                      width: _delete_btn_width,
+                      height: _delete_btn_height,
+                      padding: EdgeInsets.fromLTRB(
+                          _delete_btn_padding_hor,
+                          _delete_btn_padding_vertical,
+                          _delete_btn_padding_hor,
+                          _delete_btn_padding_vertical),
+                      margin: EdgeInsets.fromLTRB(0, 0, 10, 0)),
+                  onTap: () {
+                    if (_isDeleteBtnEnabled) {
+                      _tryToDeleteFiles(_selectedAudioItems);
+                    }
+                  },
+                ),
                 alignment: Alignment.centerRight)
           ]),
           color: Color(0xfff4f4f4),
@@ -366,7 +727,9 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                   child: Text("No download files"),
                 ),
               ),
-            )));
+            ),
+          padding: EdgeInsets.only(bottom: 10),
+        ));
   }
 
   List<DataRow> _generateRows() {
@@ -391,55 +754,172 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
         type = name.substring(pointIndex + 1);
       }
 
+      final inputController = TextEditingController();
+
+      inputController.text = audioItem.name;
+
+      final focusNode = FocusNode();
+
+      focusNode.addListener(() {
+        if (focusNode.hasFocus) {
+          inputController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: inputController.text.length);
+        }
+      });
+
       return DataRow2(
           cells: [
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(folderName,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(folderName,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(audioItem.name,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Stack(
+                  children: [
+                    Visibility(
+                      child: Text(audioItem.name,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: textStyle),
+                      visible: audioItem != _renamingAudioFile,
+                    ),
+                    Visibility(
+                      child: Container(
+                        child: IntrinsicWidth(
+                          child: TextField(
+                            controller: inputController,
+                            focusNode: audioItem != _renamingAudioFile
+                                ? focusNode
+                                : null,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xffcccbcd),
+                                        width: 3,
+                                        style: BorderStyle.solid)),
+                                enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xffcccbcd),
+                                        width: 3,
+                                        style: BorderStyle.solid),
+                                    borderRadius: BorderRadius.circular(4)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Color(0xffcccbcd),
+                                        width: 4,
+                                        style: BorderStyle.solid),
+                                    borderRadius: BorderRadius.circular(4)),
+                                contentPadding:
+                                EdgeInsets.fromLTRB(8, 3, 8, 3)),
+                            cursorColor: Color(0xff333333),
+                            style: TextStyle(
+                                fontSize: 14, color: Color(0xff333333)),
+                            onChanged: (value) {
+                              debugPrint("onChange, $value");
+                              _newFileName = value;
+                            },
+                          ),
+                        ),
+                        height: 30,
+                        color: Colors.white,
+                      ),
+                      visible: audioItem == _renamingAudioFile,
+                      maintainState: false,
+                      maintainSize: false,
+                    )
+                  ],
+                ),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(type,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(type,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(_convertToReadableDuration(audioItem.duration),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(_convertToReadableDuration(audioItem.duration),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(_convertToReadableSize(audioItem.size),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(_convertToReadableSize(audioItem.size),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+                }
+              },
             )),
-            DataCell(Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(_formatChangeDate(audioItem.modifyDate),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
+            DataCell(Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                child: Text(_formatChangeDate(audioItem.modifyDate),
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: textStyle),
+                color: Colors.transparent,
+              ),
+              onPointerDown: (event) {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, audioItem);
+                }
+              },
             )),
           ],
           selected: _isSelected(audioItem),
@@ -468,6 +948,11 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
             return Colors.white;
           }));
     });
+  }
+
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
   }
 
   void _setAudioSelected(AudioItem audio) {
@@ -562,25 +1047,35 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
       }
     }
 
+
+    if (null != _renamingAudioFile && audio != _renamingAudioFile) {
+      _rename(_renamingAudioFile!, _newFileName!, () {
+        setState(() {
+          _renamingAudioFile!.name = _newFileName!;
+          _resetRenamingAudioFile();
+        });
+      }, (error) {
+        SmartDialog.showToast(error ?? "文件重命名失败！");
+        _resetRenamingAudioFile();
+      });
+    }
+    
     _updateDeleteBtnStatus();
   }
 
+  void _resetRenamingAudioFile() {
+    setState(() {
+      _renamingAudioFile = null;
+      _newFileName = null;
+    });
+  }
+  
   bool _isControlDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    return FileManagerPage.fileManagerKey.currentState?.isShiftDown() == true;
-  }
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.removeCtrlAPressedCallback(callback);
+    return _isShiftPressed;
   }
 
   String _formatChangeDate(int changeDate) {
@@ -696,8 +1191,6 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
   @override
   void deactivate() {
     super.deactivate();
-
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
   }
 
   @override
