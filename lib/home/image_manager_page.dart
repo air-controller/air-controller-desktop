@@ -10,6 +10,7 @@ import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
+import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_image_manager_page.dart';
@@ -132,28 +133,16 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   void _updateArrangeMode(int rangeModeIndex) {
     switch (rangeModeIndex) {
-      case _ARRANGE_MODE_DAILY:
-        {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
-          _albumImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY);
+      case _ARRANGE_MODE_DAILY: {
+          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY));
           break;
         }
-      case _ARRANGE_MODE_MONTHLY:
-        {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
-          _albumImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY);
+      case _ARRANGE_MODE_MONTHLY: {
+          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY));
           break;
         }
-      default:
-        {
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
-          _allImageManagerPage
-              .setArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID);
+      default: {
+          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID));
         }
     }
   }

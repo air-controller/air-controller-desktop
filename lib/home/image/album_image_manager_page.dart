@@ -1,12 +1,19 @@
+import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
+import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -32,7 +39,7 @@ class AlbumImageManagerPage extends StatefulWidget {
   }
 
   void setArrangeMode(int arrangeMode) {
-    state?.setArrangeMode(arrangeMode);
+    state?._setArrangeMode(arrangeMode);
   }
 }
 
@@ -41,8 +48,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   List<ImageItem> _allImages = [];
 
@@ -56,24 +62,20 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
   bool _isLoadingCompleted = false;
 
-  late Function() _ctrlAPressedCallback;
   // 标记当前页面是否可见
   bool _isVisible = false;
+
+  DownloaderCore? _downloaderCore;
+  
+  StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
 
   _AlbumImageManagerPageState();
 
   @override
   void initState() {
     super.initState();
-
-    _ctrlAPressedCallback = () {
-      if (_isFront()) {
-        _setAllSelected();
-      }
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
+    
+    _registerEventBus();
 
     _getAlbumImages((images) {
       setState(() {
@@ -90,7 +92,17 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     updateDeleteBtnStatus();
   }
 
-  void setArrangeMode(int arrangeMode) {
+  void _registerEventBus() {
+    _updateArrangeModeSubscription = eventBus.on<UpdateImageArrangeMode>().listen((event) {
+        _setArrangeMode(event.mode);
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateArrangeModeSubscription?.cancel();
+  }
+
+  void _setArrangeMode(int arrangeMode) {
     setState(() {
       _arrangeMode = arrangeMode;
     });
@@ -297,41 +309,54 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
             mainAxisSpacing: _IMAGE_SPACE),
         itemBuilder: (BuildContext context, int index) {
           ImageItem image = _allImages[index];
-          return Container(
-            child: GestureDetector(
-              child: CachedNetworkImage(
-                imageUrl:
-                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                        .replaceAll("storage/emulated/0/", ""),
-                fit: BoxFit.cover,
-                width: 200,
-                height: 200,
-                memCacheWidth: 400,
-                fadeOutDuration: Duration.zero,
-                fadeInDuration: Duration.zero,
+          return Listener(
+            child: Container(
+              child: GestureDetector(
+                child: CachedNetworkImage(
+                  imageUrl:
+                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                      .replaceAll("storage/emulated/0/", ""),
+                  fit: BoxFit.cover,
+                  width: 200,
+                  height: 200,
+                  memCacheWidth: 400,
+                  fadeOutDuration: Duration.zero,
+                  fadeInDuration: Duration.zero,
+                ),
+                onTap: () {
+                  setState(() {
+                    _setImageSelected(image);
+                  });
+                },
+                onDoubleTap: () {
+                  debugPrint("双击");
+                  _openImageDetail(_allImages, image);
+                },
               ),
-              onTap: () {
-                setState(() {
-                  _setImageSelected(image);
-                });
-              },
-              onDoubleTap: () {
-                debugPrint("双击");
-                _openImageDetail(_allImages, image);
-              },
+              decoration: BoxDecoration(
+                  border: new Border.all(
+                      color: _isContainsImage(_selectedImages, image)
+                          ? Color(0xff5d86ec)
+                          : Color(0xffdedede),
+                      width: _isContainsImage(_selectedImages, image)
+                          ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                          : _IMAGE_GRID_BORDER_WIDTH),
+                  borderRadius: new BorderRadius.all(Radius.circular(
+                      _isContainsImage(_selectedImages, image)
+                          ? _IMAGE_GRID_RADIUS_SELECTED
+                          : _IMAGE_GRID_RADIUS))),
             ),
-            decoration: BoxDecoration(
-                border: new Border.all(
-                    color: _isContainsImage(_selectedImages, image)
-                        ? Color(0xff5d86ec)
-                        : Color(0xffdedede),
-                    width: _isContainsImage(_selectedImages, image)
-                        ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                        : _IMAGE_GRID_BORDER_WIDTH),
-                borderRadius: new BorderRadius.all(Radius.circular(
-                    _isContainsImage(_selectedImages, image)
-                        ? _IMAGE_GRID_RADIUS_SELECTED
-                        : _IMAGE_GRID_RADIUS))),
+            onPointerDown: (event) {
+              debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+              if (_isMouseRightClicked(event)) {
+                _openMenu(event.position, image);
+
+                if (!_selectedImages.contains(image)) {
+                  _setImageSelected(image);
+                }
+              }
+            }
           );
         },
         itemCount: _allImages.length,
@@ -340,6 +365,10 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+  }
+
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse && event.buttons == kSecondaryMouseButton;
   }
 
   Widget _createDailyContent() {
@@ -406,40 +435,53 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                         mainAxisSpacing: _IMAGE_SPACE),
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
-                      return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                      return Listener(
+                        child: Container(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _setImageSelected(image);
+                              });
+                            },
+                            onDoubleTap: () {
+                              _openImageDetail(_allImages, image);
+                            },
                           ),
-                          onTap: () {
-                            setState(() {
-                              _setImageSelected(image);
-                            });
-                          },
-                          onDoubleTap: () {
-                            _openImageDetail(_allImages, image);
-                          },
+                          decoration: BoxDecoration(
+                              border: new Border.all(
+                                  color: _isContainsImage(_selectedImages, image)
+                                      ? Color(0xff5d86ec)
+                                      : Color(0xffdedede),
+                                  width: _isContainsImage(_selectedImages, image)
+                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                      : _IMAGE_GRID_BORDER_WIDTH),
+                              borderRadius: new BorderRadius.all(Radius.circular(
+                                  _isContainsImage(_selectedImages, image)
+                                      ? _IMAGE_GRID_RADIUS_SELECTED
+                                      : _IMAGE_GRID_RADIUS))),
                         ),
-                        decoration: BoxDecoration(
-                            border: new Border.all(
-                                color: _isContainsImage(_selectedImages, image)
-                                    ? Color(0xff5d86ec)
-                                    : Color(0xffdedede),
-                                width: _isContainsImage(_selectedImages, image)
-                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                    : _IMAGE_GRID_BORDER_WIDTH),
-                            borderRadius: new BorderRadius.all(Radius.circular(
-                                _isContainsImage(_selectedImages, image)
-                                    ? _IMAGE_GRID_RADIUS_SELECTED
-                                    : _IMAGE_GRID_RADIUS))),
+                        onPointerDown: (event) {
+                          debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+                          if (_isMouseRightClicked(event)) {
+                            _openMenu(event.position, image);
+
+                            if (!_selectedImages.contains(image)) {
+                              _setImageSelected(image);
+                            }
+                          }
+                        }
                       );
                     },
                     itemCount: images.length,
@@ -519,40 +561,53 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                         mainAxisSpacing: _IMAGE_SPACE),
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
-                      return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 80,
-                            height: 80,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                      return Listener(
+                        child: Container(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _setImageSelected(image);
+                              });
+                            },
+                            onDoubleTap: () {
+                              _openImageDetail(_allImages, image);
+                            },
                           ),
-                          onTap: () {
-                            setState(() {
-                              _setImageSelected(image);
-                            });
-                          },
-                          onDoubleTap: () {
-                            _openImageDetail(_allImages, image);
-                          },
+                          decoration: BoxDecoration(
+                              border: new Border.all(
+                                  color: _isContainsImage(_selectedImages, image)
+                                      ? Color(0xff5d86ec)
+                                      : Color(0xffdedede),
+                                  width: _isContainsImage(_selectedImages, image)
+                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                      : _IMAGE_GRID_BORDER_WIDTH),
+                              borderRadius: new BorderRadius.all(Radius.circular(
+                                  _isContainsImage(_selectedImages, image)
+                                      ? _IMAGE_GRID_RADIUS_SELECTED
+                                      : _IMAGE_GRID_RADIUS))),
                         ),
-                        decoration: BoxDecoration(
-                            border: new Border.all(
-                                color: _isContainsImage(_selectedImages, image)
-                                    ? Color(0xff5d86ec)
-                                    : Color(0xffdedede),
-                                width: _isContainsImage(_selectedImages, image)
-                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                    : _IMAGE_GRID_BORDER_WIDTH),
-                            borderRadius: new BorderRadius.all(Radius.circular(
-                                _isContainsImage(_selectedImages, image)
-                                    ? _IMAGE_GRID_RADIUS_SELECTED
-                                    : _IMAGE_GRID_RADIUS))),
+                        onPointerDown: (event) {
+                          debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+
+                          if (_isMouseRightClicked(event)) {
+                            _openMenu(event.position, image);
+
+                            if (!_selectedImages.contains(image)) {
+                              _setImageSelected(image);
+                            }
+                          }
+                        }
                       );
                     },
                     itemCount: images.length,
@@ -566,6 +621,78 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
       },
       itemCount: map.length,
     );
+  }
+
+  void _openMenu(Offset position, ImageItem imageItem) {
+    // 为什么这样可以？值得思考
+    RenderBox? overlay = Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(Rect.fromLTRB(position.dx, position.dy, 0, 0), overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(child: Text("打开"), onTap: () {
+            _openImageDetail(_allImages, imageItem);
+          }),
+          PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
+            _openFilePicker(imageItem);
+          }),
+          PopupMenuItem(child: Text("删除")),
+        ]
+    );
+  }
+
+  void _openFilePicker(ImageItem imageItem) async {
+    String? dir = await FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      SmartDialog.showLoading(msg: "请稍后");
+
+      _downloadImage(imageItem, dir, () {
+        SmartDialog.dismiss();
+        // SmartDialog.showToast("图片已保存至${dir}");
+      }, (error) {
+        SmartDialog.dismiss();
+        SmartDialog.showToast(error);
+      }, (current, total) {
+
+      });
+    }
+  }
+
+  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(), void onError(String error), void onDownload(current, total)) async {
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${imageItem.path} done");
+          onSuccess.call();
+        }, progressCallback: (current, total) {
+      debugPrint(
+          "Downloading ${imageItem.path}, percent: ${current / total}");
+      onDownload.call(current, total);
+    });
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(
+          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    } else {
+      _downloaderCore?.download("${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    }
   }
 
   void _getAlbumImages(Function(List<ImageItem> images) onSuccess,
@@ -624,6 +751,6 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   void dispose() {
     super.dispose();
 
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
+    _unRegisterEventBus();
   }
 }
