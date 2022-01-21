@@ -8,6 +8,7 @@ import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -15,6 +16,7 @@ import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_image_manager_page.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import '../event/update_bottom_item_num.dart';
@@ -432,7 +434,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
                               if (_isDeleteBtnEnabled) {
                                 if (_currentIndex == INDEX_ALL_IMAGE) {
-                                  _allImageManagerPage.state?.deleteImage();
+                                  eventBus.fire(DeleteOp(UIModule.Image));
                                   return;
                                 }
                               }

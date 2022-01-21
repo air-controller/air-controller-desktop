@@ -14,6 +14,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -75,6 +76,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   bool _isShiftPressed = false;
 
   StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
 
   _AllImageManagerPageState();
 
@@ -103,10 +105,17 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     _updateArrangeModeSubscription = eventBus.on<UpdateImageArrangeMode>().listen((event) {
       _setArrangeMode(event.mode);
     });
+
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      if (event.module == UIModule.Image) {
+        _deleteImage();
+      }
+    });
   }
 
   void _unRegisterEventBus() {
     _updateArrangeModeSubscription?.cancel();
+    _deleteOpSubscription?.cancel();
   }
 
   bool _isControlDown() {
@@ -318,7 +327,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
           PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
             _openFilePicker(imageItem);
           }),
-          PopupMenuItem(child: Text("删除")),
+          PopupMenuItem(child: Text("删除"), onTap: () {
+            Future<void>.delayed(const Duration(), () => _deleteImage());
+          }),
         ]
     );
   }
@@ -786,8 +797,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         barrierDismissible: false);
   }
 
-  void deleteImage() {
-    _showConfirmDialog("确定删除该图片吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+  void _deleteImage() {
+    _showConfirmDialog("确定删除这${_selectedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
       Navigator.of(context, rootNavigator: true).pop();
       _tryToDeleteImages();
     }, (context) {
