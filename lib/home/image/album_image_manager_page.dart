@@ -12,6 +12,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
@@ -19,6 +20,8 @@ import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../../model/ImageItem.dart';
@@ -75,6 +78,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   bool _isShiftPressed = false;
 
   StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
 
   _AlbumImageManagerPageState();
 
@@ -103,10 +107,17 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     _updateArrangeModeSubscription = eventBus.on<UpdateImageArrangeMode>().listen((event) {
         _setArrangeMode(event.mode);
     });
+
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      if (event.module == UIModule.Image && _isVisible) {
+        _deleteImage();
+      }
+    });
   }
 
   void _unRegisterEventBus() {
     _updateArrangeModeSubscription?.cancel();
+    _deleteOpSubscription?.cancel();
   }
 
   void _setArrangeMode(int arrangeMode) {
@@ -683,9 +694,100 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
           PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
             _openFilePicker(imageItem);
           }),
-          PopupMenuItem(child: Text("删除")),
+          PopupMenuItem(child: Text("删除"), onTap: () {
+            Future<void>.delayed(const Duration(), () => _deleteImage());
+          }),
         ]
     );
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+
+  void _deleteImage() {
+    _showConfirmDialog("确定删除这${_selectedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+      _tryToDeleteImages();
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
+  }
+
+  void _tryToDeleteImages() {
+    if (_selectedImages.isEmpty) {
+      debugPrint("Selected images is empty");
+      return;
+    }
+
+    var url = Uri.parse("${_URL_SERVER}/image/delete");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(
+            {"paths": _selectedImages.map((image) => image.path).toList()}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        _showErrorDialog(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Delete image: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          setState(() {
+            _allImages.removeWhere((image) =>
+                _selectedImages.any((element) => element.id == image.id));
+            _clearSelectedImages();
+          });
+        } else {
+          _showErrorDialog(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      _showErrorDialog(error.toString());
+    });
+  }
+
+  void _showErrorDialog(String error) {
+    Alert alert =
+    Alert(context: context, type: AlertType.error, desc: error, buttons: [
+      DialogButton(
+          child: Text(
+            "我知道了",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+          })
+    ]);
+
+    alert.show();
   }
 
   void _openFilePicker(ImageItem imageItem) async {

@@ -14,6 +14,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
@@ -23,6 +24,7 @@ import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -95,6 +97,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
 
   StreamSubscription<BackBtnPressed>? _backBtnPressedStream;
   StreamSubscription<UpdateImageArrangeMode>? _updateImageArrangeModeStream;
+  StreamSubscription<DeleteOp>? _deleteOpSubscription;
 
   FocusNode? _rootFocusNode = null;
 
@@ -133,11 +136,24 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
         _arrangeMode = event.mode;
       });
     });
+
+    _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
+      if (event.module == UIModule.Image) {
+        if (_isAlbumPageVisible) {
+          _tryToDeleteAlbums();
+        }
+
+        if (_openAlbumImagesPage) {
+          _tryToDeleteImages();
+        }
+      }
+    });
   }
 
   void _unRegisterEventBus() {
     _backBtnPressedStream?.cancel();
     _updateImageArrangeModeStream?.cancel();
+    _deleteOpSubscription?.cancel();
   }
 
   void _setAllAlbumSelected() {
@@ -162,6 +178,114 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
     setState(() {
       _arrangeMode = arrangeMode;
     });
+  }
+
+  void _tryToDeleteAlbums() {
+    _showConfirmDialog("确定删除这${_selectedAlbums.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+            (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          SmartDialog.showLoading();
+
+          _deleteFiles(_selectedAlbums.map((album) => album.path).toList(), () {
+            SmartDialog.dismiss();
+
+            setState(() {
+              _allAlbums.removeWhere((album) => _selectedAlbums.contains(album));
+              _selectedAlbums.clear();
+              _setDeleteBtnEnabled(false);
+            });
+          }, (error) {
+            SmartDialog.dismiss();
+
+            SmartDialog.showToast(error);
+          });
+        }, (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+        });
+  }
+
+  void _tryToDeleteImages() {
+    _showConfirmDialog("确定删除这${_selectedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+            (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          SmartDialog.showLoading();
+
+          _deleteFiles(_selectedImages.map((album) => album.path).toList(), () {
+            SmartDialog.dismiss();
+
+            setState(() {
+              _allImages.removeWhere((album) => _selectedImages.contains(album));
+              _selectedImages.clear();
+              _setDeleteBtnEnabled(false);
+            });
+          }, (error) {
+            SmartDialog.dismiss();
+
+            SmartDialog.showToast(error);
+          });
+        }, (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+        });
+  }
+
+  void _deleteFiles(List<String> paths, Function() onSuccess,
+      Function(String error) onError) {
+    var url = Uri.parse("${_URL_SERVER}/file/deleteMulti");
+    http
+        .post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "paths": paths
+        }))
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError.call(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("_deleteFiles, body: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess.call();
+        } else {
+          onError.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      onError.call(error.toString());
+    });
+  }
+  
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
   }
 
   @override
@@ -372,7 +496,17 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
               onTap: () {
                 _openFilePicker(item);
               }),
-          PopupMenuItem(child: Text("删除")),
+          PopupMenuItem(child: Text("删除"), onTap: () {
+            Future<void>.delayed(const Duration(), () {
+              if (_isAlbumPageVisible) {
+                _tryToDeleteAlbums();
+              }
+
+              if (_openAlbumImagesPage) {
+                _tryToDeleteImages();
+              }
+            });
+          }),
         ]);
   }
 

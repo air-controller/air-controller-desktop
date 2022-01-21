@@ -433,10 +433,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                               debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
 
                               if (_isDeleteBtnEnabled) {
-                                if (_currentIndex == INDEX_ALL_IMAGE) {
-                                  eventBus.fire(DeleteOp(UIModule.Image));
-                                  return;
-                                }
+                                eventBus.fire(DeleteOp(UIModule.Image));
                               }
                             },
                           ),

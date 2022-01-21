@@ -107,7 +107,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     });
 
     _deleteOpSubscription = eventBus.on<DeleteOp>().listen((event) {
-      if (event.module == UIModule.Image) {
+      if (event.module == UIModule.Image && _isVisible) {
         _deleteImage();
       }
     });
