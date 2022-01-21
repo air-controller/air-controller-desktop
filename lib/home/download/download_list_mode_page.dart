@@ -30,6 +30,7 @@ import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
+import '../../constant.dart';
 import '../file_manager.dart';
 
 class DownloadListModePage extends StatefulWidget {
@@ -70,7 +71,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   bool _isAscending = true;
 
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/";
 
   late Function() _ctrlAPressedCallback;
 

@@ -64,7 +64,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   bool _openImageDetail = false;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   double _currentImageScale = 1.0;
   // 标记删除按钮是否可以点击

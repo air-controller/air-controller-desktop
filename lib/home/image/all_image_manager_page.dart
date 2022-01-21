@@ -28,6 +28,7 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../../constant.dart';
 import '../../model/ImageItem.dart';
 import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
@@ -50,7 +51,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   final _IMAGE_SPACE = 15.0;
 
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   List<ImageItem> _allImages = [];
 

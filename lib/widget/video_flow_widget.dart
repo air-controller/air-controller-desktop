@@ -6,6 +6,8 @@ import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../constant.dart';
+
 class VideoFlowWidget extends StatelessWidget {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
@@ -17,7 +19,7 @@ class VideoFlowWidget extends StatelessWidget {
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
 
   List<VideoItem> _selectedVideos = [];
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   // 当前排序方式
   int _currentSortOrder = SORT_ORDER_CREATE_TIME;

@@ -25,6 +25,7 @@ import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import '../../constant.dart';
 import '../../model/ImageItem.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -54,7 +55,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   List<ImageItem> _allImages = [];
 

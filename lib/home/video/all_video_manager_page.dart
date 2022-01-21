@@ -26,6 +26,7 @@ import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import '../../constant.dart';
 import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
@@ -56,7 +57,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
   List<VideoItem> _selectedVideos = [];
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   // 当前排序方式
   int _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
@@ -303,7 +304,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
   }
 
   void _openVideoWithSystemApp(VideoItem videoItem) async {
-    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/video/item/${videoItem.id}";
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/video/item/${videoItem.id}";
 
     if (!await launch(
         videoUrl,
@@ -340,7 +341,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
                   child: GestureDetector(
                     child: CachedNetworkImage(
                       imageUrl:
-                      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/stream/video/thumbnail/${videoItem.id}/200/200",
+                      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/stream/video/thumbnail/${videoItem.id}/200/200",
                       fit: BoxFit.cover,
                       width: 160,
                       height: 160,

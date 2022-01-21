@@ -32,7 +32,7 @@ class DownloadManagerPage extends StatefulWidget {
 class _DownloadManagerState extends State<DownloadManagerPage> with AutomaticKeepAliveClientMixin {
   bool _isLoadingCompleted = false;
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   final _downloadIconModePage = DownloadIconModePage();
   final _downloadListModePage = DownloadListModePage();

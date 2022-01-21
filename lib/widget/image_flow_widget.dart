@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import '../constant.dart';
+
 /**
  * 图片瀑布流，用于首页不同类型排列图片列表展示.
  *
@@ -28,7 +30,7 @@ class ImageFlowWidget extends StatelessWidget {
   final _IMAGE_SPACE = 10.0;
 
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   List<ImageItem> selectedImages = [];
 

@@ -29,6 +29,7 @@ import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
+import '../../constant.dart';
 import '../file_manager.dart';
 
 class DownloadIconModePage extends StatefulWidget {
@@ -64,7 +65,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   final _BACKGROUND_FILE_NAME_SELECTED = Color(0xff5d87ed);
 
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   final _KB_BOUND = 1 * 1024;
   final _MB_BOUND = 1 * 1024 * 1024;

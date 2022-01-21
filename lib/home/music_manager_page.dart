@@ -60,7 +60,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
   final _MB_BOUND = 1 * 1024 * 1024;
   final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   bool _isDeleteBtnEnabled = false;
 
@@ -110,7 +110,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
   void _getAllAudios(Function(List<AudioItem> audios) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse(
-        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/audio/all");
+        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/audio/all");
     http
         .post(url,
             headers: {"Content-Type": "application/json"},
@@ -1179,7 +1179,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
     debugPrint("_openVideoWithSystemApp, path: ${audioItem.path}");
 
     String videoUrl =
-        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/audio/item/${audioItem.id}";
+        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/audio/item/${audioItem.id}";
 
     if (!await launch(videoUrl, universalLinksOnly: true)) {
       debugPrint("Open audio: $videoUrl fail");

@@ -31,6 +31,7 @@ import 'package:mobile_assistant_client/widget/video_flow_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../../constant.dart';
 import '../../model/ResponseEntity.dart';
 import '../file_manager.dart';
 import '../video_manager_page.dart';
@@ -67,7 +68,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   List<VideoFolderItem> _selectedVideoFolders = [];
   List<VideoFolderItem> _videoFolders = [];
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   bool _isFolderPageVisible = false;
   bool _isVideosInFolderPageVisible = false;
@@ -1219,7 +1220,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   }
 
   void _openVideoWithSystemApp(VideoItem videoItem) async {
-    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080/video/item/${videoItem.id}";
+    String videoUrl = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/video/item/${videoItem.id}";
 
     if (!await launch(
         videoUrl,

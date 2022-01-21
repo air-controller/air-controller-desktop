@@ -36,7 +36,7 @@ class AllFileManagerPage extends StatefulWidget {
 class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepAliveClientMixin {
   bool _isLoadingCompleted = false;
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   final _downloadIconModePage = AllFileIconModePage();
   final _downloadListModePage = AllFileListModePage();

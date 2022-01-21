@@ -28,6 +28,7 @@ import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../../constant.dart';
 import '../../model/AlbumItem.dart';
 import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
@@ -54,7 +55,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
   final _IMAGE_SPACE = 15.0;
 
   final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   List<AlbumItem> _allAlbums = [];
 
