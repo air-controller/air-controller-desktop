@@ -13,6 +13,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
+import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
@@ -220,9 +221,14 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
 
             if (_isVisible) {
               _setBackBtnVisible(false);
+              _updateRangeMenuVisibility(true);
             }
           });
         });
+  }
+
+  void _updateRangeMenuVisibility(bool visible) {
+    eventBus.fire(ImageRangeModeVisibility(visible));
   }
 
   void _onControlAndAPressed() {

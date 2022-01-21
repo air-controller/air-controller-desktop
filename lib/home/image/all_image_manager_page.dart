@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
+import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -83,7 +84,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   @override
   void initState() {
     super.initState();
-    
+
     _registerEventBus();
 
     _getAllImages((images) {
@@ -100,9 +101,10 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     });
     updateDeleteBtnStatus();
   }
-  
+
   void _registerEventBus() {
-    _updateArrangeModeSubscription = eventBus.on<UpdateImageArrangeMode>().listen((event) {
+    _updateArrangeModeSubscription =
+        eventBus.on<UpdateImageArrangeMode>().listen((event) {
       _setArrangeMode(event.mode);
     });
 
@@ -164,13 +166,16 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         child: GestureDetector(
           child: Stack(children: [
             Focus(
-              autofocus: true,
+                autofocus: true,
                 focusNode: _rootFocusNode,
                 child: content,
                 onKey: (node, event) {
-                  debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+                  debugPrint(
+                      "Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
 
-                  _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                  _isControlPressed = Platform.isMacOS
+                      ? event.isMetaPressed
+                      : event.isControlPressed;
                   _isShiftPressed = event.isShiftPressed;
 
                   if (Platform.isMacOS) {
@@ -188,8 +193,7 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                   }
 
                   return KeyEventResult.ignored;
-                }
-            ),
+                }),
             Visibility(
               child: Container(child: spinKit, color: Colors.white),
               maintainSize: false,
@@ -207,9 +211,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
             if (_isVisible) {
               _setBackBtnVisible(false);
+              _updateRangeMenuVisibility(true);
             }
           });
         });
+  }
+
+  void _updateRangeMenuVisibility(bool visible) {
+    eventBus.fire(ImageRangeModeVisibility(visible));
   }
 
   void _onControlAndAPressed() {
@@ -251,16 +260,24 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
             child: Listener(
               child: GestureDetector(
                 child: CachedNetworkImage(
-                  imageUrl:
-                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
-                      .replaceAll("storage/emulated/0/", ""),
-                  fit: BoxFit.cover,
-                  width: 200,
-                  height: 200,
-                  memCacheWidth: 400,
-                  fadeOutDuration: Duration.zero,
-                  fadeInDuration: Duration.zero,
-                ),
+                    imageUrl:
+                        "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
+                            .replaceAll("storage/emulated/0/", ""),
+                    fit: BoxFit.cover,
+                    width: 200,
+                    height: 200,
+                    memCacheWidth: 400,
+                    fadeOutDuration: Duration.zero,
+                    fadeInDuration: Duration.zero,
+                    errorWidget: (context, url, error) {
+                      return Container(
+                        child: Image.asset("icons/brokenImage.png",
+                            width: 50, height: 50),
+                        width: 200,
+                        height: 200,
+                        padding: EdgeInsets.all(30),
+                      );
+                    }),
                 onTap: () {
                   _setImageSelected(image);
                 },
@@ -270,7 +287,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                 },
               ),
               onPointerDown: (event) {
-                debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+                debugPrint(
+                    "Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                 if (_isMouseRightClicked(event)) {
                   _openMenu(event.position, image);
@@ -304,12 +322,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   bool _isMouseRightClicked(PointerDownEvent event) {
-    return event.kind == PointerDeviceKind.mouse && event.buttons == kSecondaryMouseButton;
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
   }
 
   void _openMenu(Offset position, ImageItem imageItem) {
     // 为什么这样可以？值得思考
-    RenderBox? overlay = Overlay.of(context)?.context.findRenderObject() as RenderBox;
+    RenderBox? overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
     String name = imageItem.path;
     int index = name.lastIndexOf("/");
@@ -319,23 +339,31 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
 
     showMenu(
         context: context,
-        position: RelativeRect.fromSize(Rect.fromLTRB(position.dx, position.dy, 0, 0), overlay.size ?? Size(0, 0)),
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
         items: [
-          PopupMenuItem(child: Text("打开"), onTap: () {
-            _openImageDetail(_allImages, imageItem);
-          }),
-          PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
-            _openFilePicker(imageItem);
-          }),
-          PopupMenuItem(child: Text("删除"), onTap: () {
-            Future<void>.delayed(const Duration(), () => _deleteImage());
-          }),
-        ]
-    );
+          PopupMenuItem(
+              child: Text("打开"),
+              onTap: () {
+                _openImageDetail(_allImages, imageItem);
+              }),
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(imageItem);
+              }),
+          PopupMenuItem(
+              child: Text("删除"),
+              onTap: () {
+                Future<void>.delayed(const Duration(), () => _deleteImage());
+              }),
+        ]);
   }
 
   void _openFilePicker(ImageItem imageItem) async {
-    String? dir = await FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
 
     if (null != dir) {
       debugPrint("Select directory: $dir");
@@ -348,13 +376,12 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
       }, (error) {
         SmartDialog.dismiss();
         SmartDialog.showToast(error);
-      }, (current, total) {
-
-      });
+      }, (current, total) {});
     }
   }
 
-  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(), void onError(String error), void onDownload(current, total)) async {
+  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
     String name = imageItem.path;
     int index = name.lastIndexOf("/");
     if (index != -1) {
@@ -367,17 +394,19 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
         onDone: () {
           debugPrint("Download ${imageItem.path} done");
           onSuccess.call();
-        }, progressCallback: (current, total) {
-      debugPrint(
-          "Downloading ${imageItem.path}, percent: ${current / total}");
-      onDownload.call(current, total);
-    });
+        },
+        progressCallback: (current, total) {
+          debugPrint(
+              "Downloading ${imageItem.path}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
 
     if (null == _downloaderCore) {
       _downloaderCore = await Flowder.download(
           "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
     } else {
-      _downloaderCore?.download("${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+      _downloaderCore?.download(
+          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
     }
   }
 
@@ -457,16 +486,24 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                         child: Listener(
                           child: GestureDetector(
                             child: CachedNetworkImage(
-                              imageUrl:
-                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
-                                  .replaceAll("storage/emulated/0/", ""),
-                              fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
-                              memCacheWidth: 200,
-                              fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero,
-                            ),
+                                imageUrl:
+                                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
+                                        .replaceAll("storage/emulated/0/", ""),
+                                fit: BoxFit.cover,
+                                width: 100,
+                                height: 100,
+                                memCacheWidth: 200,
+                                fadeOutDuration: Duration.zero,
+                                fadeInDuration: Duration.zero,
+                                errorWidget: (context, url, error) {
+                                  return Container(
+                                    child: Image.asset("icons/brokenImage.png",
+                                        width: 50, height: 50),
+                                    width: 100,
+                                    height: 100,
+                                    padding: EdgeInsets.all(20),
+                                  );
+                                }),
                             onTap: () {
                               _setImageSelected(image);
                             },
@@ -475,7 +512,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                             },
                           ),
                           onPointerDown: (event) {
-                            debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+                            debugPrint(
+                                "Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                             if (_isMouseRightClicked(event)) {
                               _openMenu(event.position, image);
@@ -577,16 +615,24 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                         child: Listener(
                           child: GestureDetector(
                             child: CachedNetworkImage(
-                              imageUrl:
-                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
-                                  .replaceAll("storage/emulated/0/", ""),
-                              fit: BoxFit.cover,
-                              width: 80,
-                              height: 80,
-                              memCacheWidth: 200,
-                              fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero,
-                            ),
+                                imageUrl:
+                                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/${_IMAGE_SIZE}/${_IMAGE_SIZE}"
+                                        .replaceAll("storage/emulated/0/", ""),
+                                fit: BoxFit.cover,
+                                width: 80,
+                                height: 80,
+                                memCacheWidth: 200,
+                                fadeOutDuration: Duration.zero,
+                                fadeInDuration: Duration.zero,
+                                errorWidget: (context, url, error) {
+                                  return Container(
+                                    child: Image.asset("icons/brokenImage.png",
+                                        width: 80, height: 80),
+                                    width: 80,
+                                    height: 80,
+                                    padding: EdgeInsets.all(10),
+                                  );
+                                }),
                             onTap: () {
                               _setImageSelected(image);
                             },
@@ -595,7 +641,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                             },
                           ),
                           onPointerDown: (event) {
-                            debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
+                            debugPrint(
+                                "Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                             if (_isMouseRightClicked(event)) {
                               _openMenu(event.position, image);
@@ -798,7 +845,9 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   }
 
   void _deleteImage() {
-    _showConfirmDialog("确定删除这${_selectedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+    _showConfirmDialog(
+        "确定删除这${_selectedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        (context) {
       Navigator.of(context, rootNavigator: true).pop();
       _tryToDeleteImages();
     }, (context) {
@@ -867,7 +916,8 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   bool get wantKeepAlive => true;
 
   void updateBottomItemNum() {
-    eventBus.fire(UpdateBottomItemNum(_allImages.length, _selectedImages.length));
+    eventBus
+        .fire(UpdateBottomItemNum(_allImages.length, _selectedImages.length));
   }
 
   // 判断当前页面是否在前台显示
