@@ -114,6 +114,9 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
     _getAllAlbums((images) {
       setState(() {
         _allAlbums = images;
+        _allAlbums.sort((albumA, albumB) {
+          return albumA.name.toLowerCase().compareTo(albumB.name.toLowerCase());
+        });
         _isLoadingCompleted = true;
       });
       updateBottomItemNum();
