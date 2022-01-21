@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
@@ -12,10 +13,13 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
+import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -35,10 +39,6 @@ class AllImageManagerPage extends StatefulWidget {
   State<StatefulWidget> createState() {
     state = _AllImageManagerPageState();
     return state!;
-  }
-
-  void setArrangeMode(int arrangeMode) {
-    state?.setArrangeMode(arrangeMode);
   }
 }
 
@@ -74,11 +74,15 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
 
+  StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
+
   _AllImageManagerPageState();
 
   @override
   void initState() {
     super.initState();
+    
+    _registerEventBus();
 
     _getAllImages((images) {
       setState(() {
@@ -93,6 +97,16 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
       });
     });
     updateDeleteBtnStatus();
+  }
+  
+  void _registerEventBus() {
+    _updateArrangeModeSubscription = eventBus.on<UpdateImageArrangeMode>().listen((event) {
+      _setArrangeMode(event.mode);
+    });
+  }
+
+  void _unRegisterEventBus() {
+    _updateArrangeModeSubscription?.cancel();
   }
 
   bool _isControlDown() {
@@ -112,10 +126,14 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
     });
   }
 
-  void setArrangeMode(int arrangeMode) {
+  void _setArrangeMode(int arrangeMode) {
     setState(() {
       _arrangeMode = arrangeMode;
     });
+  }
+
+  void _setBackBtnVisible(bool visible) {
+    eventBus.fire(BackBtnVisibility(visible, module: UIModule.Image));
   }
 
   @override
@@ -174,9 +192,13 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
           },
         ),
         onVisibilityChanged: (info) {
-          debugPrint("当前页面是否可见：${info.visibleFraction * 100}");
+          debugPrint("当前页面是否可见：${info.visibleFraction}");
           setState(() {
-            _isVisible = info.visibleFraction * 100 >= 100;
+            _isVisible = info.visibleFraction >= 1.0;
+
+            if (_isVisible) {
+              _setBackBtnVisible(false);
+            }
           });
         });
   }
@@ -858,5 +880,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
   void dispose() {
     super.dispose();
     _downloaderCore?.cancel();
+    _unRegisterEventBus();
   }
 }

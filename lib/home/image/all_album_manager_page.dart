@@ -1,31 +1,33 @@
-import 'dart:collection';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
-import 'package:mobile_assistant_client/home/file_manager.dart';
-import 'package:mobile_assistant_client/home/image_manager_page.dart';
+import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
-import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+
 import '../../model/AlbumItem.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../model/ResponseEntity.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../image_preview/image_preview_page.dart';
 import '../../util/event_bus.dart';
 
 class AllAlbumManagerPage extends StatefulWidget {
@@ -44,16 +46,18 @@ class AllAlbumManagerPage extends StatefulWidget {
   }
 }
 
-class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with AutomaticKeepAliveClientMixin {
+class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
+    with AutomaticKeepAliveClientMixin {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
 
   List<AlbumItem> _allAlbums = [];
 
   List<AlbumItem> _selectedAlbums = [];
-  
+
   bool _isLoadingCompleted = false;
 
   final _BACKGROUND_ALBUM_SELECTED = Color(0xffe6e6e6);
@@ -68,34 +72,40 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   final _BACKGROUND_ALBUM_NAME_NORMAL = Colors.white;
   final _BACKGROUND_ALBUM_NAME_SELECTED = Color(0xff5d87ed);
 
-  late Function() _ctrlAPressedCallback;
   // 标记当前页面是否可见
-  bool _isVisible = false;
+  bool _isAlbumPageVisible = false;
   int _arrangeMode = ImageFlowWidget.ARRANGE_MODE_GRID;
+
   // 标记是否进入专辑图片列表页
   bool _openAlbumImagesPage = false;
+
   // 标记是否进入图片详情页
   bool _openImageDetailPage = false;
+
   // 当前专辑图片列表
   List<ImageItem> _allImages = [];
+
   // 当前专辑图片列表页选中的图片
   List<ImageItem> _selectedImages = [];
+
   // 当前专辑
   AlbumItem? _currentAlbum;
+
+  DownloaderCore? _downloaderCore;
+
   StreamSubscription<BackBtnPressed>? _backBtnPressedStream;
+  StreamSubscription<UpdateImageArrangeMode>? _updateImageArrangeModeStream;
+
+  FocusNode? _rootFocusNode = null;
+
+  bool _isControlPressed = false;
+  bool _isShiftPressed = false;
 
   _AllAlbumManagerPageState();
 
   @override
   void initState() {
     super.initState();
-
-    _ctrlAPressedCallback = () {
-      _setAllAlbumSelected();
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
 
     _getAllAlbums((images) {
       setState(() {
@@ -104,7 +114,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       });
       updateBottomItemNum();
     }, (error) {
-      print("Get all images error: $error");
+      print("Get all albums error: $error");
       setState(() {
         _isLoadingCompleted = true;
       });
@@ -113,15 +123,21 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     _registerEventBus();
   }
 
-
   void _registerEventBus() {
     _backBtnPressedStream = eventBus.on<BackBtnPressed>().listen((event) {
       _backToAlbumListPage();
+    });
+
+    _updateImageArrangeModeStream = eventBus.on<UpdateImageArrangeMode>().listen((event) {
+      setState(() {
+        _arrangeMode = event.mode;
+      });
     });
   }
 
   void _unRegisterEventBus() {
     _backBtnPressedStream?.cancel();
+    _updateImageArrangeModeStream?.cancel();
   }
 
   void _setAllAlbumSelected() {
@@ -159,9 +175,17 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
     Widget albumImagesWidget = _createAlbumImagesWidget();
 
-    return Stack(
-      children: [
-        Visibility(
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+    _rootFocusNode?.requestFocus();
+
+    return Focus(
+      autofocus: true,
+      focusNode: _rootFocusNode,
+      child: Stack(
+        children: [
+          Visibility(
             child: VisibilityDetector(
                 key: Key("all_album_manager"),
                 child: GestureDetector(
@@ -179,53 +203,116 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
                 ),
                 onVisibilityChanged: (info) {
                   setState(() {
-                    _isVisible = info.visibleFraction * 100 >= 100.0;
+                    _isAlbumPageVisible = info.visibleFraction >= 1.0;
+
+                    debugPrint("_isAlbumPageVisible: $_isAlbumPageVisible");
+
+                    if (_isAlbumPageVisible) {
+                      _rootFocusNode?.requestFocus();
+                      _updateRangeMenuVisibility(false);
+                    }
                   });
                 }),
-          visible: !_openAlbumImagesPage && !_openImageDetailPage,
-        ),
-
-        Visibility(
-            child: Column(
-              children: [
-                Container(
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        child: Container(
-                          child: Text("所有相册", style: TextStyle(
-                              color: Color(0xff5b5c62),
-                              inherit: false,
-                              fontSize: 14
-                          )),
-                          padding: EdgeInsets.only(left: 10),
+            visible: !_openAlbumImagesPage && !_openImageDetailPage,
+          ),
+          Visibility(
+            child: VisibilityDetector(
+              key: Key("videos_in_album_page"),
+              child: Column(
+                children: [
+                  Container(
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          child: Container(
+                            child: Text("所有相册",
+                                style: TextStyle(
+                                    color: Color(0xff5b5c62),
+                                    inherit: false,
+                                    fontSize: 14)),
+                            padding: EdgeInsets.only(left: 10),
+                          ),
+                          onTap: () {
+                            _backToAlbumListPage();
+                          },
                         ),
-                        onTap: () {
-                          _backToAlbumListPage();
-                        },
-                      ),
-
-                      Image.asset("icons/ic_right_arrow.png", height: 20),
-                      Text(_currentAlbum?.name ?? "", style: TextStyle(
-                          color: Color(0xff5b5c62),
-                          inherit: false,
-                          fontSize: 14
-                      ))
-                    ],
+                        Image.asset("icons/ic_right_arrow.png", height: 20),
+                        Text(_currentAlbum?.name ?? "",
+                            style: TextStyle(
+                                color: Color(0xff5b5c62),
+                                inherit: false,
+                                fontSize: 14))
+                      ],
+                    ),
+                    color: Color(0xfffafafa),
+                    height: 30,
                   ),
-                  color: Color(0xfffafafa),
-                  height: 30,
-                ),
-
-                Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
-
-                Expanded(child: albumImagesWidget)
-              ],
+                  Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+                  Expanded(child: Container(
+                    child: albumImagesWidget,
+                    color: Colors.white,
+                  ))
+                ],
+              ),
+              onVisibilityChanged: (info) {
+                if (info.visibleFraction >= 1.0) {
+                  _rootFocusNode?.requestFocus();
+                  _updateRangeMenuVisibility(true);
+                  _setBackBtnVisible(true);
+                }
+              },
             ),
-          visible: _openAlbumImagesPage,
-        )
-      ],
+            visible: _openAlbumImagesPage,
+          )
+        ],
+      ),
+      onKey: (node, event) {
+        _isControlPressed =
+            Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+        _isShiftPressed = event.isShiftPressed;
+
+        if (Platform.isMacOS) {
+          if (event.isMetaPressed &&
+              event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+            _onControlAndAPressed();
+            return KeyEventResult.handled;
+          }
+        } else {
+          if (event.isControlPressed &&
+              event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+            _onControlAndAPressed();
+            return KeyEventResult.handled;
+          }
+        }
+
+        return KeyEventResult.ignored;
+      },
     );
+  }
+
+  void _updateRangeMenuVisibility(bool visible) {
+    eventBus.fire(ImageRangeModeVisibility(visible));
+  }
+
+  void _onControlAndAPressed() {
+    debugPrint("_onControlAndAPressed.");
+    _setAllSelected();
+  }
+
+  void _setAllSelected() {
+    if (_openAlbumImagesPage) {
+      setState(() {
+        _selectedImages.clear();
+        _selectedImages.addAll(_allImages);
+      });
+    }
+    
+    if (_isAlbumPageVisible) {
+      setState(() {
+        _selectedAlbums.clear();
+        _selectedAlbums.addAll(_allAlbums);
+      });
+    }
   }
 
   // 回到相册列表页面
@@ -244,19 +331,114 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     eventBus.fire(OpenImageDetail(images, current));
   }
 
+  void _openMenu(Offset position, dynamic item) {
+    if (item! is AlbumItem && item! is ImageItem) {
+      throw "item must be one of AlbumItem's instance or ImageItem's instance";
+    }
+
+    // 为什么这样可以？值得思考
+    RenderBox? overlay =
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = "";
+    if (item is ImageItem) {
+      name = item.path;
+      int index = name.lastIndexOf("/");
+      if (index != -1) {
+        name = name.substring(index + 1);
+      }
+    } else {
+      name = item.name;
+    }
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(
+              child: Text("打开"),
+              onTap: () {
+                if (item is AlbumItem) {
+                  _currentAlbum = item;
+                  _tryToOpenAlbumImages(item.id);
+                } else {
+                  _openImageDetail(_selectedImages, item);
+                }
+              }),
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(item);
+              }),
+          PopupMenuItem(child: Text("删除")),
+        ]);
+  }
+
+  void _openFilePicker(AlbumItem albumItem) async {
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      SmartDialog.showLoading(msg: "请稍后");
+
+      _download(albumItem, dir, () {
+        SmartDialog.dismiss();
+        // SmartDialog.showToast("图片已保存至${dir}");
+      }, (error) {
+        SmartDialog.dismiss();
+        SmartDialog.showToast(error);
+      }, (current, total) {});
+    }
+  }
+
+  void _download(AlbumItem albumItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = "${albumItem.name}.zip";
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${albumItem.path} done");
+          onSuccess.call();
+        },
+        progressCallback: (current, total) {
+          debugPrint(
+              "Downloading ${albumItem.path}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(
+          "${_URL_SERVER}/stream/dir?path=${albumItem.path}", options);
+    } else {
+      _downloaderCore?.download(
+          "${_URL_SERVER}/stream/file?path=${albumItem.path}", options);
+    }
+  }
+
   Widget _createAlbumImagesWidget() {
     return ImageFlowWidget(
-        arrangeMode: _arrangeMode,
-        images: _allImages,
-        selectedImages: _selectedImages,
-        onImageDoubleTap: (image) {
-          _openImageDetail(_allImages, image);
-        },
-        onImageSelected: (image) {
-          _setImageSelected(image);
-        },
+      arrangeMode: _arrangeMode,
+      images: _allImages,
+      selectedImages: _selectedImages,
+      onImageDoubleTap: (image) {
+        _openImageDetail(_allImages, image);
+      },
+      onImageSelected: (image) {
+        _setImageSelected(image);
+      },
       onOutsideTap: () {
-          _clearSelectedImages();
+        _clearSelectedImages();
+      },
+      onPointerDown: (event, image) {
+        if (_isMouseRightClicked(event)) {
+          _openMenu(event.position, image);
+        }
       },
     );
   }
@@ -268,7 +450,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
 
     return false;
   }
-  
+
   void _setImageSelected(ImageItem image) {
     debugPrint("Shift key down status: ${_isShiftDown()}");
     debugPrint("Control key down status: ${_isControlDown()}");
@@ -353,13 +535,18 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
         setState(() {
           _selectedImages.remove(image);
         });
+      } else {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.add(image);
+        });
       }
     }
 
     _setDeleteBtnEnabled(_selectedImages.length > 0);
     updateBottomItemNum();
   }
-  
+
   void _tryToOpenAlbumImages(String albumId) {
     SmartDialog.showLoading(background: Colors.red);
     _getImagesOfAlbum(albumId, (images) {
@@ -397,15 +584,13 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   void updateDeleteBtnStatus() {
     if (!_openAlbumImagesPage && !_openImageDetailPage) {
       debugPrint(
-          "All album page: updateDeleteBtnStatus, ${_selectedAlbums.length >
-              0}");
+          "All album page: updateDeleteBtnStatus, ${_selectedAlbums.length > 0}");
       _setDeleteBtnEnabled(_selectedAlbums.length > 0);
     }
 
     if (_openAlbumImagesPage) {
       debugPrint(
-          "All album page: updateDeleteBtnStatus, ${_selectedImages.length >
-              0}");
+          "All album page: updateDeleteBtnStatus, ${_selectedImages.length > 0}");
       _setDeleteBtnEnabled(_selectedImages.length > 0);
     }
   }
@@ -429,124 +614,139 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
         itemBuilder: (BuildContext context, int index) {
           AlbumItem album = _allAlbums[index];
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                child:  Container(
-                  child: Stack(
-                    children: [
-                      Visibility(
-                        child: RotationTransition(
-                            turns: AlwaysStoppedAnimation(5 / 360),
-                            child: Container(
-                              width: imageWidth,
-                              height: imageHeight,
-                              padding: EdgeInsets.all(imagePadding),
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(color: Color(0xffdddddd), width: 1.0),
-                                  borderRadius: BorderRadius.all(Radius.circular(3.0))
-                              ),
-                            )
-                        ),
-                        visible: album.photoNum > 1 ? true : false,
-                      ),
-
-                      Visibility(
-                        child: RotationTransition(
-                            turns: AlwaysStoppedAnimation(-5 / 360),
-                            child: Container(
-                              width: imageWidth,
-                              height: imageHeight,
-                              padding: EdgeInsets.all(imagePadding),
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(color: Color(0xffdddddd), width: 1.0),
-                                  borderRadius: BorderRadius.all(Radius.circular(3.0))
-                              ),
-                            )
-                        ),
-                        visible: album.photoNum > 2 ? true : false,
-                      ),
-
-                      Container(
-                        child: CachedNetworkImage(
-                            imageUrl: "${_URL_SERVER}/stream/image/thumbnail/${album.coverImageId}/400/400"
-                                .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: imageWidth,
-                            height: imageWidth,
-                            memCacheWidth: 400,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero
-                        ),
-                        padding: EdgeInsets.all(imagePadding),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: Color(0xffdddddd), width: 1.0),
-                            borderRadius: BorderRadius.all(Radius.circular(3.0))
-                        ),
-                      )
-                    ],
-                  ),
-                  decoration: BoxDecoration(
-                      color:  _isContainsAlbum(_selectedAlbums, album) ? _BACKGROUND_ALBUM_SELECTED : _BACKGROUND_ALBUM_NORMAL,
-                      borderRadius: BorderRadius.all(Radius.circular(4.0))
-                  ),
-                  padding: EdgeInsets.all(8),
-                ),
-                onTap: () {
-                  setState(() {
-                    _setAlbumSelected(album);
-                  });
-                },
-                onDoubleTap: () {
-                  _currentAlbum = album;
-                  _tryToOpenAlbumImages(album.id);
-                },
-              ),
-
-              GestureDetector(
-                child: Container(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        album.name,
-                        style: TextStyle(
-                            inherit: false,
-                            color: _isContainsAlbum(_selectedAlbums, album) ? _ALBUM_NAME_TEXT_COLOR_SELECTED : _ALBUM_NAME_TEXT_COLOR_NORMAL
-                        ),
-                      ),
-                      Container(
-                        child: Text(
-                          "(${album.photoNum})",
-                          style: TextStyle(
-                              inherit: false,
-                              color: _isContainsAlbum(_selectedAlbums, album) ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL
+          return Listener(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    child: Container(
+                      child: Stack(
+                        children: [
+                          Visibility(
+                            child: RotationTransition(
+                                turns: AlwaysStoppedAnimation(5 / 360),
+                                child: Container(
+                                  width: imageWidth,
+                                  height: imageHeight,
+                                  padding: EdgeInsets.all(imagePadding),
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                          color: Color(0xffdddddd), width: 1.0),
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(3.0))),
+                                )),
+                            visible: album.photoNum > 1 ? true : false,
                           ),
-                        ),
-                        margin: EdgeInsets.only(left: 3),
-                      )
-                    ],
+                          Visibility(
+                            child: RotationTransition(
+                                turns: AlwaysStoppedAnimation(-5 / 360),
+                                child: Container(
+                                  width: imageWidth,
+                                  height: imageHeight,
+                                  padding: EdgeInsets.all(imagePadding),
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                          color: Color(0xffdddddd), width: 1.0),
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(3.0))),
+                                )),
+                            visible: album.photoNum > 2 ? true : false,
+                          ),
+                          Container(
+                            child: CachedNetworkImage(
+                                imageUrl:
+                                    "${_URL_SERVER}/stream/image/thumbnail/${album.coverImageId}/400/400"
+                                        .replaceAll("storage/emulated/0/", ""),
+                                fit: BoxFit.cover,
+                                width: imageWidth,
+                                height: imageWidth,
+                                memCacheWidth: 400,
+                                fadeOutDuration: Duration.zero,
+                                fadeInDuration: Duration.zero),
+                            padding: EdgeInsets.all(imagePadding),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: Color(0xffdddddd), width: 1.0),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(3.0))),
+                          )
+                        ],
+                      ),
+                      decoration: BoxDecoration(
+                          color: _isContainsAlbum(_selectedAlbums, album)
+                              ? _BACKGROUND_ALBUM_SELECTED
+                              : _BACKGROUND_ALBUM_NORMAL,
+                          borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                      padding: EdgeInsets.all(8),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _setAlbumSelected(album);
+                      });
+                    },
+                    onDoubleTap: () {
+                      _currentAlbum = album;
+                      _tryToOpenAlbumImages(album.id);
+                    },
                   ),
-                  margin: EdgeInsets.only(top: 10),
+                  GestureDetector(
+                    child: Container(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            album.name,
+                            style: TextStyle(
+                                inherit: false,
+                                color: _isContainsAlbum(_selectedAlbums, album)
+                                    ? _ALBUM_NAME_TEXT_COLOR_SELECTED
+                                    : _ALBUM_NAME_TEXT_COLOR_NORMAL),
+                          ),
+                          Container(
+                            child: Text(
+                              "(${album.photoNum})",
+                              style: TextStyle(
+                                  inherit: false,
+                                  color:
+                                      _isContainsAlbum(_selectedAlbums, album)
+                                          ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED
+                                          : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL),
+                            ),
+                            margin: EdgeInsets.only(left: 3),
+                          )
+                        ],
+                      ),
+                      margin: EdgeInsets.only(top: 10),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
+                          color: _isContainsAlbum(_selectedAlbums, album)
+                              ? _BACKGROUND_ALBUM_NAME_SELECTED
+                              : _BACKGROUND_ALBUM_NAME_NORMAL),
+                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _setAlbumSelected(album);
+                      });
+                    },
+                  )
+                ],
+              ),
+              onPointerDown: (event) {
+                debugPrint(
+                    "Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(3)),
-                      color: _isContainsAlbum(_selectedAlbums, album) ? _BACKGROUND_ALBUM_NAME_SELECTED : _BACKGROUND_ALBUM_NAME_NORMAL
-                  ),
-                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                ),
-                onTap: () {
-                  setState(() {
+                if (_isMouseRightClicked(event)) {
+                  _openMenu(event.position, album);
+
+                  if (!_selectedAlbums.contains(album)) {
                     _setAlbumSelected(album);
-                  });
-                },
-              )
-            ],
-          );
+                  }
+                }
+              });
         },
         itemCount: _allAlbums.length,
         shrinkWrap: true,
@@ -554,6 +754,11 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
+  }
+
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
   }
 
   void _setAlbumSelected(AlbumItem album) {
@@ -660,15 +865,11 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   bool _isControlDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isControlDown() == true;
+    return _isControlPressed;
   }
 
   bool _isShiftDown() {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    return fileManagerPage?.state?.isShiftDown() == true;
+    return _isShiftPressed;
   }
 
   void _getAllAlbums(Function(List<AlbumItem> albums) onSuccess,
@@ -676,8 +877,8 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     var url = Uri.parse("${_URL_SERVER}/image/albums");
     http
         .post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({}))
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -708,13 +909,15 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   }
 
   // 获取相册图片列表
-  void _getImagesOfAlbum(String albumId, Function(List<ImageItem> images) onSuccess,
+  void _getImagesOfAlbum(
+      String albumId,
+      Function(List<ImageItem> images) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/image/imagesOfAlbum");
     http
         .post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({ "id" : albumId}))
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({"id": albumId}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -744,38 +947,25 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
     });
   }
 
-
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage? fileManagerPage =
-    context.findAncestorWidgetOfExactType<FileManagerPage>();
-    fileManagerPage?.state?.addCtrlAPressedCallback(callback);
-  }
-
   void updateBottomItemNum() {
     if (!_openAlbumImagesPage && !_openImageDetailPage) {
-      eventBus.fire(
-          UpdateBottomItemNum(_allAlbums.length, _selectedAlbums.length));
+      eventBus
+          .fire(UpdateBottomItemNum(_allAlbums.length, _selectedAlbums.length));
     }
 
     if (_openAlbumImagesPage) {
-      eventBus.fire(
-          UpdateBottomItemNum(_allImages.length, _selectedImages.length));
+      eventBus
+          .fire(UpdateBottomItemNum(_allImages.length, _selectedImages.length));
     }
   }
 
   void _setBackBtnVisible(bool visible) {
-    eventBus.fire(BackBtnVisibility(visible));
+    eventBus.fire(BackBtnVisibility(visible, module: UIModule.Image));
   }
 
   // 判断当前页面是否在前台显示
   bool _isFront() {
-    return _isVisible;
+    return _isAlbumPageVisible;
   }
 
   @override
@@ -785,7 +975,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage> with Automati
   void dispose() {
     super.dispose();
 
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
     _unRegisterEventBus();
   }
 }

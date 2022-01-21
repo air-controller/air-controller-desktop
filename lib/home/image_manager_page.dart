@@ -8,6 +8,7 @@ import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
+import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
 import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
@@ -69,12 +70,14 @@ class ImageManagerState extends State<ImageManagerPage> {
   int _allItemNum = 0;
   int _selectedItemNum = 0;
   bool _isBackBtnVisible = false;
+  // 排列方式按钮可见性
+  bool _rangeModeVisibility = true;
 
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<OpenImageDetail>? _openImageDetailStream;
   StreamSubscription<BackBtnVisibility>? _backBtnVisibilityStream;
-
+  StreamSubscription<ImageRangeModeVisibility>? _imageRangeModeVisibilityStream;
 
   @override
   void initState() {
@@ -100,6 +103,13 @@ class ImageManagerState extends State<ImageManagerPage> {
         _isBackBtnVisible = event.visible;
       });
     });
+
+    _imageRangeModeVisibilityStream = eventBus.on<ImageRangeModeVisibility>().listen((event) {
+      setState(() {
+        _rangeModeVisibility = event.visible;
+        debugPrint("Event bus _rangeModeVisibility: $_rangeModeVisibility");
+      });
+    });
   }
 
   void _unRegisterEventBus() {
@@ -107,6 +117,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     _updateBottomItemNumStream?.cancel();
     _openImageDetailStream?.cancel();
     _backBtnVisibilityStream?.cancel();
+    _imageRangeModeVisibilityStream?.cancel();
   }
 
   @override
@@ -395,7 +406,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                         maintainSize: true,
                         maintainState: true,
                         maintainAnimation: true,
-                        visible: _currentIndex != INDEX_ALL_ALBUM,
+                        visible: _rangeModeVisibility,
                       ),
                       Container(
                           child: GestureDetector(

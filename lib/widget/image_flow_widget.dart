@@ -25,7 +25,7 @@ class ImageFlowWidget extends StatelessWidget {
   Function() onOutsideTap;
 
   final _OUT_PADDING = 20.0;
-  final _IMAGE_SPACE = 15.0;
+  final _IMAGE_SPACE = 10.0;
 
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:8080";
@@ -38,9 +38,11 @@ class ImageFlowWidget extends StatelessWidget {
   final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
   final _IMAGE_GRID_BORDER_WIDTH = 1.0;
 
+  Function(PointerDownEvent event, ImageItem imageItem)? onPointerDown;
+
   ImageFlowWidget({required this.arrangeMode, required this.images,
     required this.selectedImages, required this.onImageDoubleTap,
-    required this.onImageSelected, required this.onOutsideTap});
+    required this.onImageSelected, required this.onOutsideTap, this.onPointerDown});
 
   Widget _createContent(int arrangeMode) {
     if (arrangeMode == ARRANGE_MODE_DAILY) {
@@ -118,38 +120,43 @@ class ImageFlowWidget extends StatelessWidget {
                         mainAxisSpacing: _IMAGE_SPACE),
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
-                      return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                      return Listener(
+                        child: Container(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              onImageSelected.call(image);
+                            },
+                            onDoubleTap: () {
+                              onImageDoubleTap.call(image);
+                            },
                           ),
-                          onTap: () {
-                            onImageSelected.call(image);
-                          },
-                          onDoubleTap: () {
-                            onImageDoubleTap.call(image);
-                          },
+                          decoration: BoxDecoration(
+                              border: new Border.all(
+                                  color: _isContainsImage(selectedImages, image)
+                                      ? Color(0xff5d86ec)
+                                      : Color(0xffdedede),
+                                  width: _isContainsImage(selectedImages, image)
+                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                      : _IMAGE_GRID_BORDER_WIDTH),
+                              borderRadius: new BorderRadius.all(Radius.circular(
+                                  _isContainsImage(selectedImages, image)
+                                      ? _IMAGE_GRID_RADIUS_SELECTED
+                                      : _IMAGE_GRID_RADIUS))),
                         ),
-                        decoration: BoxDecoration(
-                            border: new Border.all(
-                                color: _isContainsImage(selectedImages, image)
-                                    ? Color(0xff5d86ec)
-                                    : Color(0xffdedede),
-                                width: _isContainsImage(selectedImages, image)
-                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                    : _IMAGE_GRID_BORDER_WIDTH),
-                            borderRadius: new BorderRadius.all(Radius.circular(
-                                _isContainsImage(selectedImages, image)
-                                    ? _IMAGE_GRID_RADIUS_SELECTED
-                                    : _IMAGE_GRID_RADIUS))),
+                        onPointerDown: (event) {
+                          onPointerDown?.call(event, image);
+                        },
                       );
                     },
                     itemCount: images.length,
@@ -229,38 +236,43 @@ class ImageFlowWidget extends StatelessWidget {
                         mainAxisSpacing: _IMAGE_SPACE),
                     itemBuilder: (BuildContext context, int index) {
                       ImageItem image = images[index];
-                      return Container(
-                        child: GestureDetector(
-                          child: CachedNetworkImage(
-                            imageUrl:
-                                "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                                    .replaceAll("storage/emulated/0/", ""),
-                            fit: BoxFit.cover,
-                            width: 80,
-                            height: 80,
-                            memCacheWidth: 200,
-                            fadeOutDuration: Duration.zero,
-                            fadeInDuration: Duration.zero,
+                      return Listener(
+                        child: Container(
+                          child: GestureDetector(
+                            child: CachedNetworkImage(
+                              imageUrl:
+                              "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
+                                  .replaceAll("storage/emulated/0/", ""),
+                              fit: BoxFit.cover,
+                              width: 80,
+                              height: 80,
+                              memCacheWidth: 200,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero,
+                            ),
+                            onTap: () {
+                              onImageSelected.call(image);
+                            },
+                            onDoubleTap: () {
+                              onImageDoubleTap.call(image);
+                            },
                           ),
-                          onTap: () {
-                            onImageSelected.call(image);
-                          },
-                          onDoubleTap: () {
-                            onImageDoubleTap.call(image);
-                          },
+                          decoration: BoxDecoration(
+                              border: new Border.all(
+                                  color: _isContainsImage(selectedImages, image)
+                                      ? Color(0xff5d86ec)
+                                      : Color(0xffdedede),
+                                  width: _isContainsImage(selectedImages, image)
+                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                      : _IMAGE_GRID_BORDER_WIDTH),
+                              borderRadius: new BorderRadius.all(Radius.circular(
+                                  _isContainsImage(selectedImages, image)
+                                      ? _IMAGE_GRID_RADIUS_SELECTED
+                                      : _IMAGE_GRID_RADIUS))),
                         ),
-                        decoration: BoxDecoration(
-                            border: new Border.all(
-                                color: _isContainsImage(selectedImages, image)
-                                    ? Color(0xff5d86ec)
-                                    : Color(0xffdedede),
-                                width: _isContainsImage(selectedImages, image)
-                                    ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                    : _IMAGE_GRID_BORDER_WIDTH),
-                            borderRadius: new BorderRadius.all(Radius.circular(
-                                _isContainsImage(selectedImages, image)
-                                    ? _IMAGE_GRID_RADIUS_SELECTED
-                                    : _IMAGE_GRID_RADIUS))),
+                        onPointerDown: (event) {
+                          onPointerDown?.call(event, image);
+                        },
                       );
                     },
                     itemCount: images.length,
@@ -280,44 +292,49 @@ class ImageFlowWidget extends StatelessWidget {
     return Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
+            maxCrossAxisExtent: 160,
             crossAxisSpacing: _IMAGE_SPACE,
             childAspectRatio: 1.0,
             mainAxisSpacing: _IMAGE_SPACE),
         itemBuilder: (BuildContext context, int index) {
           ImageItem image = images[index];
-          return Container(
-            child: GestureDetector(
-              child: CachedNetworkImage(
-                imageUrl:
-                    "${_URL_SERVER}/stream/image/thumbnail/${image.id}/200/200"
-                        .replaceAll("storage/emulated/0/", ""),
-                fit: BoxFit.cover,
-                width: 200,
-                height: 200,
-                memCacheWidth: 400,
-                fadeOutDuration: Duration.zero,
-                fadeInDuration: Duration.zero,
+          return Listener(
+            child: Container(
+              child: GestureDetector(
+                child: CachedNetworkImage(
+                  imageUrl:
+                  "${_URL_SERVER}/stream/image/thumbnail/${image.id}/400/400"
+                      .replaceAll("storage/emulated/0/", ""),
+                  fit: BoxFit.cover,
+                  width: 160,
+                  height: 160,
+                  memCacheWidth: 400,
+                  fadeOutDuration: Duration.zero,
+                  fadeInDuration: Duration.zero,
+                ),
+                onTap: () {
+                  onImageSelected.call(image);
+                },
+                onDoubleTap: () {
+                  onImageDoubleTap.call(image);
+                },
               ),
-              onTap: () {
-                onImageSelected.call(image);
-              },
-              onDoubleTap: () {
-                onImageDoubleTap.call(image);
-              },
+              decoration: BoxDecoration(
+                  border: new Border.all(
+                      color: _isContainsImage(selectedImages, image)
+                          ? Color(0xff5d86ec)
+                          : Color(0xffdedede),
+                      width: _isContainsImage(selectedImages, image)
+                          ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                          : _IMAGE_GRID_BORDER_WIDTH),
+                  borderRadius: new BorderRadius.all(Radius.circular(
+                      _isContainsImage(selectedImages, image)
+                          ? _IMAGE_GRID_RADIUS_SELECTED
+                          : _IMAGE_GRID_RADIUS))),
             ),
-            decoration: BoxDecoration(
-                border: new Border.all(
-                    color: _isContainsImage(selectedImages, image)
-                        ? Color(0xff5d86ec)
-                        : Color(0xffdedede),
-                    width: _isContainsImage(selectedImages, image)
-                        ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                        : _IMAGE_GRID_BORDER_WIDTH),
-                borderRadius: new BorderRadius.all(Radius.circular(
-                    _isContainsImage(selectedImages, image)
-                        ? _IMAGE_GRID_RADIUS_SELECTED
-                        : _IMAGE_GRID_RADIUS))),
+            onPointerDown: (event) {
+              onPointerDown?.call(event, image);
+            },
           );
         },
         itemCount: images.length,

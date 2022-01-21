@@ -11,11 +11,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
+import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -142,6 +144,10 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     _setDeleteBtnEnabled(_selectedImages.length > 0);
   }
 
+  void _setBackBtnVisible(bool visible) {
+    eventBus.fire(BackBtnVisibility(visible, module: UIModule.Image));
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -199,7 +205,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
         ),
         onVisibilityChanged: (info) {
           setState(() {
-            _isVisible = info.visibleFraction * 100 >= 100.0;
+            _isVisible = info.visibleFraction >= 1.0;
+
+            if (_isVisible) {
+              _setBackBtnVisible(false);
+            }
           });
         });
   }
