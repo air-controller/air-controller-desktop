@@ -162,9 +162,10 @@ class HeartbeatService {
 
   void cancel() {
     _isConnected = false;
-    _socket?.destroy();
     _stopTimer();
     _stopDelayTimer();
+    _socket?.close();
+    _socket = null;
   }
 
   void onHeartbeatTimeout(void callback()) {
