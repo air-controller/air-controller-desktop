@@ -647,6 +647,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                       child: Text(
                         "文件夹",
                         textAlign: TextAlign.center,
+                        style: TextStyle(
+                          inherit: true,
+                          fontFamily: 'NotoSansSC'
+                        ),
                       ),
                     ),
                     onSort: (sortColumnIndex, isSortAscending) {
@@ -660,6 +664,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                         child: Text(
                           "名称",
                           textAlign: TextAlign.center,
+                          style: TextStyle(
+                              inherit: true,
+                              fontFamily: 'NotoSansSC'
+                          ),
                         ),
                         padding: EdgeInsets.only(left: 15)),
                     onSort: (sortColumnIndex, isSortAscending) {
@@ -672,6 +680,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                   child: Text(
                     "类型",
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                        inherit: true,
+                        fontFamily: 'NotoSansSC'
+                    ),
                   ),
                   padding: EdgeInsets.only(left: 15),
                 )),
@@ -680,6 +692,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                       child: Text(
                         "时长",
                         textAlign: TextAlign.center,
+                        style: TextStyle(
+                            inherit: true,
+                            fontFamily: 'NotoSansSC'
+                        ),
                       ),
                       padding: EdgeInsets.only(left: 15),
                     ),
@@ -693,6 +709,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                       child: Text(
                         "大小",
                         textAlign: TextAlign.center,
+                        style: TextStyle(
+                            inherit: true,
+                            fontFamily: 'NotoSansSC'
+                        ),
                       ),
                       padding: EdgeInsets.only(left: 15),
                     ),
@@ -706,6 +726,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                       child: Text(
                         "修改日期",
                         textAlign: TextAlign.center,
+                        style: TextStyle(
+                            inherit: true,
+                            fontFamily: 'NotoSansSC'
+                        ),
                       ),
                       padding: EdgeInsets.only(left: 15),
                     ),
