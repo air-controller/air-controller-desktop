@@ -469,7 +469,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                 header: Container(
                   child: Text(dateTime,
                       style: TextStyle(
-                          inherit: false,
                           fontSize: 14,
                           color: Color(0xff515151))),
                   color: Colors.white,
@@ -598,7 +597,6 @@ class _AllImageManagerPageState extends State<AllImageManagerPage>
                 header: Container(
                   child: Text(dateTime,
                       style: TextStyle(
-                          inherit: false,
                           fontSize: 14,
                           color: Color(0xff515151))),
                   color: Colors.white,

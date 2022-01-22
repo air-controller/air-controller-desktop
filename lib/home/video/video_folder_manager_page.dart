@@ -301,7 +301,6 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                             child: Container(
                               child: Text("视频文件夹", style: TextStyle(
                                   color: Color(0xff5b5c62),
-                                  inherit: false,
                                   fontSize: 14
                               )),
                               padding: EdgeInsets.only(left: 10),
@@ -314,7 +313,6 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                           Image.asset("icons/ic_right_arrow.png", height: 20),
                           Text(_currentVideoFolder?.name ?? "", style: TextStyle(
                               color: Color(0xff5b5c62),
-                              inherit: false,
                               fontSize: 14
                           ))
                         ],
@@ -724,7 +722,6 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                         Text(
                           videoFolder.name,
                           style: TextStyle(
-                              inherit: false,
                               color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
                                   ? _ALBUM_NAME_TEXT_COLOR_SELECTED
                                   : _ALBUM_NAME_TEXT_COLOR_NORMAL),
@@ -733,7 +730,6 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                           child: Text(
                             "(${videoFolder.videoCount})",
                             style: TextStyle(
-                                inherit: false,
                                 color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
                                     ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED
                                     : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL),

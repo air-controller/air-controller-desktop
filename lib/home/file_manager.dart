@@ -169,7 +169,6 @@ class FileManagerState extends State<FileManagerPage> {
                             alignment: Alignment.centerLeft,
                             child: Text("${DeviceConnectionManager.instance.currentDevice?.name}",
                                 style: TextStyle(
-                                    inherit: false,
                                     color: "#656565".toColor()))),
                         height: 40.0,
                         padding: EdgeInsets.fromLTRB(10, 0, 0, 0)),
@@ -186,8 +185,7 @@ class FileManagerState extends State<FileManagerPage> {
                                       0, _icon_margin_hor, 0)),
                               Text("图片",
                                   style: TextStyle(
-                                      inherit: false,
-                                      color: "#636363".toColor(),
+                                      color: Color(0xff636363),
                                       fontSize: _tab_font_size))
                             ]),
                         height: _tab_height,
@@ -211,7 +209,6 @@ class FileManagerState extends State<FileManagerPage> {
                                       0, _icon_margin_hor, 0)),
                               Text("音乐",
                                   style: TextStyle(
-                                      inherit: false,
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
                             ]),
@@ -235,7 +232,6 @@ class FileManagerState extends State<FileManagerPage> {
                                       0, _icon_margin_hor, 0)),
                               Text("视频",
                                   style: TextStyle(
-                                      inherit: false,
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
                             ]),
@@ -259,7 +255,6 @@ class FileManagerState extends State<FileManagerPage> {
                                       0, _icon_margin_hor, 0)),
                               Text("下载",
                                   style: TextStyle(
-                                      inherit: false,
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
                             ]),
@@ -283,7 +278,6 @@ class FileManagerState extends State<FileManagerPage> {
                                       0, _icon_margin_hor, 0)),
                               Text("全部文件",
                                   style: TextStyle(
-                                      inherit: false,
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
                             ]),
@@ -308,7 +302,6 @@ class FileManagerState extends State<FileManagerPage> {
                               child: Text(
                                 "${DeviceConnectionManager.instance.currentDevice?.name}",
                                 style: TextStyle(
-                                    inherit: false,
                                     fontSize: 16,
                                     color: Color(0xff656568)),
                                 overflow: TextOverflow.ellipsis,
@@ -368,7 +361,6 @@ class FileManagerState extends State<FileManagerPage> {
                           child: Text(
                             batteryInfo,
                             style: TextStyle(
-                                inherit: false,
                                 color: Color(0xff8b8b8e),
                                 fontSize: 13),
                           ),
@@ -378,7 +370,6 @@ class FileManagerState extends State<FileManagerPage> {
                           child: Text(
                             storageInfo,
                             style: TextStyle(
-                                inherit: false,
                                 color: Color(0xff8b8b8e),
                                 fontSize: 13),
                           ),

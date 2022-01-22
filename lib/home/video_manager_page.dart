@@ -151,8 +151,7 @@ class VideoManagerState extends State<VideoManagerPage> {
                             child: Text("返回",
                                 style: TextStyle(
                                     color: Color(0xff5c5c62),
-                                    fontSize: 13,
-                                    inherit: false)),
+                                    fontSize: 13)),
                             margin: EdgeInsets.only(left: 3),
                           ),
                         ],
@@ -200,7 +199,6 @@ class VideoManagerState extends State<VideoManagerPage> {
                         INDEX_ALL_VIDEOS: Container(
                           child: Text("所有视频",
                               style: TextStyle(
-                                  inherit: false,
                                   fontSize: 12,
                                   color: getSegmentBtnColor(INDEX_ALL_VIDEOS))),
                           padding: EdgeInsets.only(left: 10, right: 10),
@@ -208,7 +206,6 @@ class VideoManagerState extends State<VideoManagerPage> {
                         INDEX_VIDEO_FOLDERS: Container(
                           child: Text("视频文件夹",
                               style: TextStyle(
-                                  inherit: false,
                                   fontSize: 12,
                                   color:
                                   getSegmentBtnColor(INDEX_VIDEO_FOLDERS))),
@@ -356,7 +353,7 @@ class VideoManagerState extends State<VideoManagerPage> {
             alignment: Alignment.center,
             child: Text(itemNumStr,
                 style: TextStyle(
-                    inherit: false, fontSize: 12, color: Color(0xff646464))),
+                    fontSize: 12, color: Color(0xff646464))),
           ),
           height: 20,
           color: Color(0xfffafafa),

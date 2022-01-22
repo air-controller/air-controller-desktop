@@ -243,8 +243,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
                           child: Text("返回",
                               style: TextStyle(
                                   color: Color(0xff5c5c62),
-                                  fontSize: 13,
-                                  inherit: false)),
+                                  fontSize: 13)),
                           margin: EdgeInsets.only(left: 3),
                         ),
                       ],
@@ -287,7 +286,6 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
                 child: Text("手机存储",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        inherit: false,
                         color: Color(0xff616161),
                         fontSize: 16.0))),
             Align(
@@ -405,8 +403,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
               child: Text(itemNumStr,
                   style: TextStyle(
                       color: "#646464".toColor(),
-                      fontSize: 12,
-                      inherit: false))),
+                      fontSize: 12))),
           height: 20,
           color: "#fafafa".toColor()),
       Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),

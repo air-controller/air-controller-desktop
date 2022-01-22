@@ -235,8 +235,7 @@ class _WifiState extends State<MyHomePage> {
                           style: TextStyle(
                               color: "#a1a1a1".toColor(),
                               fontSize: 16,
-                              decoration: TextDecoration.none,
-                              inherit: false),
+                              decoration: TextDecoration.none),
                           textAlign: TextAlign.center,
                         ),
                         margin: EdgeInsets.fromLTRB(0, 10, 0, 0))

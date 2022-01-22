@@ -122,7 +122,6 @@ class VideoFlowWidget extends StatelessWidget {
 
                         Container(
                           child: Text(duration, style: TextStyle(
-                              inherit: false,
                               fontSize: 14,
                               color: Colors.white,
                               shadows: [

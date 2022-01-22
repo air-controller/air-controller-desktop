@@ -51,7 +51,7 @@ final COLUMN_NAME_MODIFY_DATE = "modifyDate";
 
 class _DownloadListModeState extends State<DownloadListModePage>  with AutomaticKeepAliveClientMixin {
   final _headerTextStyle =
-      TextStyle(color: Color(0xff5d5e63), fontSize: 14, inherit: false);
+      TextStyle(color: Color(0xff5d5e63), fontSize: 14);
   final _minColumnWidth = 200.0;
   final _maxColumnWidth = 400.0;
   final _headerPaddingStart = 15.0;
@@ -230,7 +230,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
   @override
   Widget build(BuildContext context) {
     TextStyle headerStyle =
-        TextStyle(inherit: false, fontSize: 14, color: Colors.black);
+        TextStyle(fontSize: 14, color: Colors.black);
 
     _rootFocusNode = FocusNode();
     _rootFocusNode?.canRequestFocus = true;
@@ -727,7 +727,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
           ? Colors.white
           : Color(0xff313237);
       TextStyle textStyle =
-      TextStyle(inherit: false, fontSize: 14, color: textColor);
+      TextStyle(fontSize: 14, color: textColor);
 
       final inputController = TextEditingController();
 

@@ -226,8 +226,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                             child: Text("返回",
                                 style: TextStyle(
                                     color: Color(0xff5c5c62),
-                                    fontSize: 13,
-                                    inherit: false)),
+                                    fontSize: 13)),
                             margin: EdgeInsets.only(left: 3),
                           ),
                         ],
@@ -274,7 +273,6 @@ class ImageManagerState extends State<ImageManagerPage> {
                         INDEX_ALL_IMAGE: Container(
                           child: Text("所有图片",
                               style: TextStyle(
-                                  inherit: false,
                                   fontSize: 12,
                                   color: getSegmentBtnColor(INDEX_ALL_IMAGE))),
                           padding: EdgeInsets.only(left: 10, right: 10),
@@ -282,7 +280,6 @@ class ImageManagerState extends State<ImageManagerPage> {
                         INDEX_CAMERA_ALBUM: Container(
                           child: Text("相机相册",
                               style: TextStyle(
-                                  inherit: false,
                                   fontSize: 12,
                                   color:
                                       getSegmentBtnColor(INDEX_CAMERA_ALBUM))),
@@ -290,7 +287,6 @@ class ImageManagerState extends State<ImageManagerPage> {
                         INDEX_ALL_ALBUM: Container(
                             child: Text("所有相册",
                                 style: TextStyle(
-                                    inherit: false,
                                     fontSize: 12,
                                     color:
                                         getSegmentBtnColor(INDEX_ALL_ALBUM))))
@@ -473,7 +469,7 @@ class ImageManagerState extends State<ImageManagerPage> {
             alignment: Alignment.center,
             child: Text(itemNumStr,
                 style: TextStyle(
-                    inherit: false, fontSize: 12, color: Color(0xff646464))),
+                    fontSize: 12, color: Color(0xff646464))),
           ),
           height: 20,
           color: Color(0xfffafafa),
@@ -512,8 +508,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                                 child: Text("返回",
                                     style: TextStyle(
                                         color: Color(0xff5c5c62),
-                                        fontSize: 13,
-                                        inherit: false)),
+                                        fontSize: 13)),
                                 margin: EdgeInsets.only(left: 3),
                               ),
                             ],
@@ -611,8 +606,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                       Text(imageScaleStr,
                           style: TextStyle(
                               fontSize: 13,
-                              color: Color(0xff7a7a7a),
-                              inherit: false)),
+                              color: Color(0xff7a7a7a))),
                     ],
                   )),
               Align(
@@ -631,7 +625,6 @@ class ImageManagerState extends State<ImageManagerPage> {
                     Container(
                       child: Text(imageIndictorStr,
                           style: TextStyle(
-                              inherit: false,
                               color: Color(0xff626160),
                               fontSize: 16)),
                       padding: EdgeInsets.only(left: 20, right: 20),

@@ -259,8 +259,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                     child: Text("下载",
                         style: TextStyle(
                             color: Color(0xff5b5c61),
-                            fontSize: 12.0,
-                            inherit: false)),
+                            fontSize: 12.0)),
                     onTap: () {
                       _backToRootDir();
                     },
@@ -279,8 +278,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                           child: Text(fileNode.data.name,
                               style: TextStyle(
                                   color: Color(0xff5b5c61),
-                                  fontSize: 12.0,
-                                  inherit: false)),
+                                  fontSize: 12.0)),
                           padding: EdgeInsets.only(right: 5),
                         ),
                       ],
@@ -444,7 +442,6 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                                 child: Text(
                                   fileItem.data.name,
                                   style: TextStyle(
-                                      inherit: false,
                                       fontSize: 14,
                                       color: _isContainsFile(
                                           selectedFiles, fileItem) &&

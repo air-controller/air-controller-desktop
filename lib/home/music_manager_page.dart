@@ -514,7 +514,6 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                 child: Text("音乐",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        inherit: false,
                         color: Color(0xff616161),
                         fontSize: 16.0))),
             Align(
@@ -565,7 +564,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               alignment: Alignment.center,
               child: Text(itemNumStr,
                   style: TextStyle(
-                      color: Color(0xff646464), fontSize: 12, inherit: false))),
+                      color: Color(0xff646464), fontSize: 12))),
           height: 20,
           color: Color(0xfffafafa)),
       Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
@@ -629,7 +628,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
 
   Widget _createContent() {
     TextStyle headerStyle =
-        TextStyle(inherit: false, fontSize: 14, color: Colors.black);
+        TextStyle(fontSize: 14, color: Colors.black);
 
     return Expanded(
         child: Container(
@@ -739,7 +738,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
       Color textColor =
           _isSelected(audioItem) ? Colors.white : Color(0xff313237);
       TextStyle textStyle =
-          TextStyle(inherit: false, fontSize: 14, color: textColor);
+          TextStyle(fontSize: 14, color: textColor);
 
       String folderName = audioItem.folder;
       int pointIndex0 = folderName.lastIndexOf("/");

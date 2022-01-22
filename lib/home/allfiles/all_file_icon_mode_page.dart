@@ -162,8 +162,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                     child: Text("手机存储",
                         style: TextStyle(
                             color: Color(0xff5b5c61),
-                            fontSize: 12.0,
-                            inherit: false)),
+                            fontSize: 12.0)),
                     onTap: () {
                       _backToRootDir();
                     },
@@ -183,8 +182,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                           child: Text(fileNode.data.name,
                               style: TextStyle(
                                   color: Color(0xff5b5c61),
-                                  fontSize: 12.0,
-                                  inherit: false)),
+                                  fontSize: 12.0)),
                           padding: EdgeInsets.only(right: 5),
                         ),
                       ],
@@ -348,7 +346,6 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                                 child: Text(
                                   fileItem.data.name,
                                   style: TextStyle(
-                                      inherit: false,
                                       fontSize: 14,
                                       color: _isContainsFile(
                                                   selectedFiles, fileItem) &&

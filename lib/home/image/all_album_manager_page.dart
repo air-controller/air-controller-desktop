@@ -356,7 +356,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                             child: Text("所有相册",
                                 style: TextStyle(
                                     color: Color(0xff5b5c62),
-                                    inherit: false,
                                     fontSize: 14)),
                             padding: EdgeInsets.only(left: 10),
                           ),
@@ -368,7 +367,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                         Text(_currentAlbum?.name ?? "",
                             style: TextStyle(
                                 color: Color(0xff5b5c62),
-                                inherit: false,
                                 fontSize: 14))
                       ],
                     ),
@@ -838,7 +836,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                           Text(
                             album.name,
                             style: TextStyle(
-                                inherit: false,
                                 color: _isContainsAlbum(_selectedAlbums, album)
                                     ? _ALBUM_NAME_TEXT_COLOR_SELECTED
                                     : _ALBUM_NAME_TEXT_COLOR_NORMAL),
@@ -847,7 +844,6 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                             child: Text(
                               "(${album.photoNum})",
                               style: TextStyle(
-                                  inherit: false,
                                   color:
                                       _isContainsAlbum(_selectedAlbums, album)
                                           ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED

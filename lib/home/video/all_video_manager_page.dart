@@ -388,7 +388,6 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
 
                         Container(
                           child: Text(duration, style: TextStyle(
-                              inherit: false,
                               fontSize: 14,
                               color: Colors.white,
                               shadows: [
