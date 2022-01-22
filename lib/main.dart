@@ -40,7 +40,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         textSelectionTheme: TextSelectionThemeData(
           selectionColor: Color(0xffe0e0e0)
-        )
+        ),
+        fontFamily: 'NotoSansSC'
       ),
       home: MyHomePage(title: '手机助手PC端'),
       navigatorObservers: [FlutterSmartDialog.observer],
@@ -78,17 +79,21 @@ class _WifiState extends State<MyHomePage> {
     subscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) {
-      if (result == ConnectivityResult.wifi) {
-        debugPrint("Wifi已连接");
-        updateWifiStatus(true);
+      if (_isNetworkConnected(result)) {
+        debugPrint("Network connected");
+        updateNetworkStatus(true);
         // Wifi已连接的情况下，开启设备搜索
         _startSearchDevices();
       } else {
-        debugPrint("Wifi已断开");
-        updateWifiStatus(false);
+        debugPrint("Network disconnected");
+        updateNetworkStatus(false);
       }
     });
     _startRefreshDeviceScheduler();
+  }
+  
+  bool _isNetworkConnected(ConnectivityResult result) {
+    return result == ConnectivityResult.wifi || result == ConnectivityResult.ethernet;
   }
 
   void _startRefreshDeviceScheduler() {
@@ -115,15 +120,13 @@ class _WifiState extends State<MyHomePage> {
   }
 
   void initWifiState() async {
-    final result = Connectivity().checkConnectivity();
-    if (result == ConnectivityResult.wifi) {
-      debugPrint("Wifi已连接");
-      updateWifiStatus(true);
-      // Wifi已连接的情况下，开启设备搜索
+    final result = await Connectivity().checkConnectivity();
+    if (_isNetworkConnected(result)) {
+      updateNetworkStatus(true);
+      // 已连接的情况下，开启设备搜索
       _startSearchDevices();
     } else {
-      debugPrint("Wifi已断开");
-      updateWifiStatus(false);
+      updateNetworkStatus(false);
     }
   }
 
@@ -140,7 +143,7 @@ class _WifiState extends State<MyHomePage> {
     DeviceDiscoverManager.instance.startDiscover();
   }
 
-  Future<void> updateWifiStatus(bool isConnected) async {
+  Future<void> updateNetworkStatus(bool isConnected) async {
     final info = NetworkInfo();
     _wifiName = await info.getWifiName();
 
@@ -156,92 +159,106 @@ class _WifiState extends State<MyHomePage> {
 
   Widget _createWifiOffWidget() {
     return Container(
-        padding: EdgeInsets.fromLTRB(
-            0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Stack(
           children: [
-            Image.asset("icons/intro_nonetwork.tiff",
-                width: _iconSize, height: _iconSize),
-            Container(
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text("请先连接到无线网络",
-                    style: TextStyle(
-                        color: "#5b5c61".toColor(),
-                        fontSize: 25,
-                        decoration: TextDecoration.none,
-                        inherit: false))
-              ]),
-              margin: EdgeInsets.fromLTRB(0, 100, 0, 0),
-            ),
-            Container(
-                child: Text(
-                  "要通过无线网络与手机建立链接，请确保电脑与手机连接至同一网络",
-                  style: TextStyle(
-                      color: "#a1a1a1".toColor(),
-                      fontSize: 16,
-                      decoration: TextDecoration.none,
-                      inherit: false),
-                  textAlign: TextAlign.center,
-                ),
-                margin: EdgeInsets.fromLTRB(0, 20, 0, 0)),
+            Align(
+              alignment: Alignment.center,
+              child: Wrap(
+                direction: Axis.vertical,
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Image.asset("icons/intro_nonetwork.png",
+                      width: _iconSize, height: _iconSize),
+                  Container(
+                    child: Text("请先将脑连接至网络",
+                        style: TextStyle(
+                            color: Color(0xff5b5c61),
+                            fontSize: 25,
+                            decoration: TextDecoration.none)),
+                    margin: EdgeInsets.fromLTRB(0, 100, 0, 0),
+                  ),
+                  Container(
+                      child: Text(
+                        "为确保应用正常工作，请确保手机与电脑连接至同一网络",
+                      style: TextStyle(
+                            color: Color(0xffa1a1a1),
+                            fontSize: 16,
+                            decoration: TextDecoration.none),
+                      ),
+                      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                  ),
+                ],
+              )
+            )
           ],
         ),
-        color: Colors.white);
+        color: Colors.white,
+      width: double.infinity,
+      height: double.infinity,
+    );
   }
 
   Widget _createWifiOnWidget() {
     return Stack(children: [
       Container(
-          padding: EdgeInsets.fromLTRB(
-              0, MediaQuery.of(context).size.height / 2 - _iconSize / 2, 0, 0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Stack(
             children: [
-              Image.asset("icons/intro_radar.tiff",
-                  width: _iconSize, height: _iconSize),
-              Container(
-                child:
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text("当前网络：",
-                      style: TextStyle(
-                          color: "#5b5c61".toColor(),
-                          fontSize: 16,
-                          decoration: TextDecoration.none,
-                          inherit: false)),
-                  Text("${_wifiName}",
-                      style: TextStyle(
-                          color: "#5b5c61".toColor(),
-                          fontSize: 16,
-                          decoration: TextDecoration.none,
-                          inherit: false))
-                ]),
-                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+              Align(
+                alignment: Alignment.center,
+                child: Wrap(
+                  direction: Axis.vertical,
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Image.asset("icons/intro_radar.png",
+                        width: _iconSize, height: _iconSize),
+                    Container(
+                      child:
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Text("当前网络：",
+                            style: TextStyle(
+                                color: "#5b5c61".toColor(),
+                                fontSize: 16,
+                                decoration: TextDecoration.none)),
+                        Text("${_wifiName}",
+                            style: TextStyle(
+                                color: "#5b5c61".toColor(),
+                                fontSize: 16,
+                                decoration: TextDecoration.none))
+                      ]),
+                      margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                    ),
+                    Container(
+                        child: Text(
+                          "请确保手机与电脑处于同一网络，并在手机端保持${Constant.APP_NAME}应用打开",
+                          style: TextStyle(
+                              color: "#a1a1a1".toColor(),
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                              inherit: false),
+                          textAlign: TextAlign.center,
+                        ),
+                        margin: EdgeInsets.fromLTRB(0, 10, 0, 0))
+                  ],
+                ),
               ),
-              Container(
-                  child: Text(
-                    "请确保手机和电脑处理同一无线网络，并在手机端打开${Constant.APP_NAME}应用",
-                    style: TextStyle(
-                        color: "#a1a1a1".toColor(),
-                        fontSize: 16,
-                        decoration: TextDecoration.none,
-                        inherit: false),
-                    textAlign: TextAlign.center,
-                  ),
-                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
-              Spacer(),
-              Text("如手机上尚未安装${Constant.APP_NAME}应用，请扫描二维码下载。",
-                  style: TextStyle(
-                      color: "#949494".toColor(),
-                      fontSize: 16,
-                      decoration: TextDecoration.none,
-                      inherit: false)),
-              SizedBox(height: 20)
+
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  child: Text("如手机上尚未安装${Constant.APP_NAME}应用，请扫描二维码下载。",
+                      style: TextStyle(
+                          color: "#949494".toColor(),
+                          fontSize: 16,
+                          decoration: TextDecoration.none)),
+                  margin: EdgeInsets.only(bottom: 10),
+                ),
+              )
             ],
           ),
+           width: double.infinity,
+          height: double.infinity,
           color: Colors.white),
       Stack(
           children: List.generate(_devices.length, (index) {
