@@ -664,34 +664,42 @@ class ImageManagerState extends State<ImageManagerPage> {
             child: Container(
           child: ExtendedImageGesturePageView.builder(
             itemBuilder: (context, index) {
-              return ExtendedImage.network(
-                "${_URL_SERVER}/stream/file?path=${_allImageItems[_currentImageIndex].path}",
-                mode: ExtendedImageMode.gesture,
-                fit: BoxFit.contain,
-                initGestureConfigHandler: (state) {
-                  return GestureConfig(
-                      minScale: 1.0,
-                      animationMinScale: 1.0,
-                      maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
-                      animationMaxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
-                      speed: 1.0,
-                      inertialSpeed: 100.0,
-                      initialScale: _currentImageScale,
-                      inPageView: false,
-                      initialAlignment: InitialAlignment.center,
-                      gestureDetailsIsChanged: (detail) {
-                        debugPrint("Total scale: ${detail?.totalScale}");
-                        setState(() {
-                          _currentImageScale = detail?.totalScale ?? 1.0;
+              return Listener(
+                child: ExtendedImage.network(
+                  "${_URL_SERVER}/stream/file?path=${_allImageItems[_currentImageIndex].path}",
+                  mode: ExtendedImageMode.gesture,
+                  fit: BoxFit.contain,
+                  initGestureConfigHandler: (state) {
+                    return GestureConfig(
+                        minScale: 1.0,
+                        animationMinScale: 1.0,
+                        maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
+                        animationMaxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
+                        speed: 1.0,
+                        inertialSpeed: 100.0,
+                        initialScale: _currentImageScale,
+                        inPageView: false,
+                        initialAlignment: InitialAlignment.center,
+                        gestureDetailsIsChanged: (detail) {
+                          debugPrint("Total scale: ${detail?.totalScale}");
+                          setState(() {
+                            _currentImageScale = detail?.totalScale ?? 1.0;
 
-                          // 设置Slider的值
-                          _imageSizeSliderValue =
-                              (_currentImageScale - 1.0) / 1.0 * 100;
+                            // 设置Slider的值
+                            _imageSizeSliderValue =
+                                (_currentImageScale - 1.0) / 1.0 * 100;
 
-                          debugPrint(
-                              "Image slider value: ${_imageSizeSliderValue}");
+                            debugPrint(
+                                "Image slider value: ${_imageSizeSliderValue}");
+                          });
                         });
-                      });
+                  },
+                  onDoubleTap: (event) {
+                    _setImageScale(true);
+                  },
+                ),
+                onPointerDown: (event) {
+
                 },
               );
             },
@@ -723,28 +731,6 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   void _setImageScale(bool isEnlarge) {
-    // if (isEnlarge) {
-    //   if (_currentImageScale < 1.5) {
-    //     setState(() {
-    //       _currentImageScale = 1.5;
-    //     });
-    //   } else if (_currentImageScale < 2.0) {
-    //     setState(() {
-    //       _currentImageScale = 2.0;
-    //     });
-    //   }
-    // } else {
-    //   if (_currentImageScale <= 1.5) {
-    //     setState(() {
-    //       _currentImageScale = 1.0;
-    //     });
-    //   } else {
-    //     setState(() {
-    //       _currentImageScale = 1.5;
-    //     });
-    //   }
-    // }
-
     _seekClosestSize(isEnlarge);
 
     _updateImageSliderValue();
