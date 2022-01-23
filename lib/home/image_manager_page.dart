@@ -1,9 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
@@ -16,11 +22,16 @@ import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
 import 'package:mobile_assistant_client/home/image/album_image_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_album_manager_page.dart';
 import 'package:mobile_assistant_client/home/image/all_image_manager_page.dart';
+import 'package:mobile_assistant_client/model/ResponseEntity.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import '../event/update_bottom_item_num.dart';
 import '../model/ImageItem.dart';
+import 'package:http/http.dart' as http;
 
 class ImageManagerPage extends StatefulWidget {
   ImageManagerPage();
@@ -50,6 +61,10 @@ class ImageManagerState extends State<ImageManagerPage> {
   static const _ARRANGE_MODE_DAILY = 1;
   static const _ARRANGE_MODE_MONTHLY = 2;
 
+  final _KB_BOUND = 1 * 1024;
+  final _MB_BOUND = 1 * 1024 * 1024;
+  final _GB_BOUND = 1 * 1024 * 1024 * 1024;
+
   int _arrange_mode = _ARRANGE_MODE_GRID;
 
   AllImageManagerPage _allImageManagerPage = AllImageManagerPage();
@@ -74,6 +89,9 @@ class ImageManagerState extends State<ImageManagerPage> {
   bool _isBackBtnVisible = false;
   // 排列方式按钮可见性
   bool _rangeModeVisibility = true;
+
+  DownloaderCore? _downloaderCore;
+  ProgressIndicatorDialog? _progressIndicatorDialog;
 
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
@@ -699,7 +717,9 @@ class ImageManagerState extends State<ImageManagerPage> {
                   },
                 ),
                 onPointerDown: (event) {
-
+                  if (_isMouseRightClicked(event)) {
+                    _openMenu(event.position, _allImageItems[_currentImageIndex]);
+                  }
                 },
               );
             },
@@ -716,6 +736,226 @@ class ImageManagerState extends State<ImageManagerPage> {
     );
   }
 
+  bool _isMouseRightClicked(PointerDownEvent event) {
+    return event.kind == PointerDeviceKind.mouse &&
+        event.buttons == kSecondaryMouseButton;
+  }
+
+  void _openMenu(Offset position, ImageItem imageItem) {
+    RenderBox? overlay =
+    Overlay.of(context)?.context.findRenderObject() as RenderBox;
+
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    showMenu(
+        context: context,
+        position: RelativeRect.fromSize(
+            Rect.fromLTRB(position.dx, position.dy, 0, 0),
+            overlay.size ?? Size(0, 0)),
+        items: [
+          PopupMenuItem(
+              child: Text("拷贝$name到电脑"),
+              onTap: () {
+                _openFilePicker(imageItem);
+              }),
+          PopupMenuItem(
+              child: Text("删除"),
+              onTap: () {
+                Future<void>.delayed(const Duration(), () => _deleteImage());
+              }),
+        ]);
+  }
+
+  void _showConfirmDialog(
+      String content,
+      String desc,
+      String negativeText,
+      String positiveText,
+      Function(BuildContext context) onPositiveClick,
+      Function(BuildContext context) onNegativeClick) {
+    Dialog dialog = ConfirmDialogBuilder()
+        .content(content)
+        .desc(desc)
+        .negativeBtnText(negativeText)
+        .positiveBtnText(positiveText)
+        .onPositiveClick(onPositiveClick)
+        .onNegativeClick(onNegativeClick)
+        .build();
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return dialog;
+        },
+        barrierDismissible: false);
+  }
+
+  void _deleteImage() {
+    _showConfirmDialog(
+        "确定删除这个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+            (context) {
+          Navigator.of(context, rootNavigator: true).pop();
+          _tryToDeleteImages();
+        }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
+  }
+
+  void _showErrorDialog(String error) {
+    Alert alert =
+    Alert(context: context, type: AlertType.error, desc: error, buttons: [
+      DialogButton(
+          child: Text(
+            "我知道了",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+          })
+    ]);
+
+    alert.show();
+  }
+
+  void _tryToDeleteImages() {
+    var url = Uri.parse("${_URL_SERVER}/image/delete");
+    http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(
+            {"paths": [_allImageItems[_currentImageIndex].path]}))
+        .then((response) {
+      if (response.statusCode != 200) {
+        _showErrorDialog(response.reasonPhrase != null
+            ? response.reasonPhrase!
+            : "Unknown error");
+      } else {
+        var body = response.body;
+        debugPrint("Delete image: $body");
+
+        final map = jsonDecode(body);
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          setState(() {
+            _allImageItems.removeAt(_currentImageIndex);
+            if (_currentImageIndex > _allImageItems.length - 1) {
+              _currentImageIndex = _allImageItems.length - 1;
+            }
+          });
+        } else {
+          _showErrorDialog(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).catchError((error) {
+      _showErrorDialog(error.toString());
+    });
+  }
+
+  void _openFilePicker(ImageItem imageItem) async {
+    String? dir = await FilePicker.platform
+        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
+
+    if (null != dir) {
+      debugPrint("Select directory: $dir");
+
+      _showDownloadProgressDialog(imageItem);
+
+      String name = "";
+      int index = imageItem.path.indexOf("/");
+      if (index != -1) {
+        name = imageItem.path.substring(0, index);
+      }
+
+      _downloadImage(imageItem, dir, () {
+        _progressIndicatorDialog?.dismiss();
+      }, (error) {
+        _progressIndicatorDialog?.dismiss();
+        SmartDialog.showToast(error);
+      }, (current, total) {
+        if (_progressIndicatorDialog?.isShowing == true) {
+          if (current > 0) {
+            setState(() {
+              _progressIndicatorDialog?.title = "正在导出图片 ${name}";
+            });
+          }
+
+          setState(() {
+            _progressIndicatorDialog?.subtitle =
+            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            _progressIndicatorDialog?.updateProgress(current / total);
+          });
+        }
+      });
+    }
+  }
+
+  String _convertToReadableSize(int size) {
+    if (size < _KB_BOUND) {
+      return "${size} bytes";
+    }
+    if (size >= _KB_BOUND && size < _MB_BOUND) {
+      return "${(size / 1024).toStringAsFixed(1)} KB";
+    }
+
+    if (size >= _MB_BOUND && size <= _GB_BOUND) {
+      return "${(size / 1024 / 1024).toStringAsFixed(1)} MB";
+    }
+
+    return "${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB";
+  }
+
+  void _showDownloadProgressDialog(ImageItem imageItem) {
+    if (null == _progressIndicatorDialog) {
+      _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
+      _progressIndicatorDialog?.onCancelClick(() {
+        _downloaderCore?.cancel();
+        _progressIndicatorDialog?.dismiss();
+      });
+    }
+
+    String title = "正在准备中，请稍后...";
+    _progressIndicatorDialog?.title = title;
+
+    if (!_progressIndicatorDialog!.isShowing) {
+      _progressIndicatorDialog!.show();
+    }
+  }
+
+  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = imageItem.path;
+    int index = name.lastIndexOf("/");
+    if (index != -1) {
+      name = name.substring(index + 1);
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          debugPrint("Download ${imageItem.path} done");
+          onSuccess.call();
+        },
+        progressCallback: (current, total) {
+          debugPrint(
+              "Downloading ${imageItem.path}, percent: ${current / total}");
+          onDownload.call(current, total);
+        });
+
+    if (null == _downloaderCore) {
+      _downloaderCore = await Flowder.download(
+          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    } else {
+      _downloaderCore?.download(
+          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+    }
+  }
   void openImageDetail(List<ImageItem> images, ImageItem current) {
     setState(() {
       _allImageItems = images;
@@ -829,6 +1069,7 @@ class ImageManagerState extends State<ImageManagerPage> {
   void dispose() {
     super.dispose();
 
+    _downloaderCore?.cancel();
     _unRegisterEventBus();
   }
 }
