@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_assistant_client/constant.dart';
 
 class ConnectionDisconnectedPage extends StatefulWidget {
 
@@ -19,7 +20,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
         child: Wrap(
           direction: Axis.horizontal,
           children: [
-            Image.asset("icons/error_wrong.tiff", width: 540 * 0.6, height: 960 * 0.6),
+            Image.asset("icons/error_wrong.png", width: 540 * 0.6, height: 960 * 0.6),
             Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +44,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
 
                       Container(
                         child: Text(
-                          "由于网络环境不稳定或手机端EasyHandler连接超时等原因，无线连接已断开，请检查。",
+                          "由于网络环境不稳定或手机端${Constant.APP_NAME}连接超时等原因，无线连接已断开，请检查。",
                           style: TextStyle(
                               color: Color(0xffdc0c0c0),
                               fontSize: 14
@@ -58,7 +59,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
                   Container(
                     child: OutlinedButton(
                       child: Text("返回主界面", style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Color(0xff5b5c61)
                       )),
                       style: OutlinedButton.styleFrom(

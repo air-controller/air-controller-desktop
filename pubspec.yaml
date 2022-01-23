@@ -83,8 +83,6 @@ flutter:
   assets:
      - icons/intro_nonetwork.png
      - icons/intro_radar.png
-     - icons/intro_nonetwork.tiff
-     - icons/intro_radar.tiff
      - icons/icon_image.png
      - icons/icon_music.png
      - icons/icon_video.png
@@ -128,7 +126,7 @@ flutter:
      - icons/ic_large_type_audio.png
      - icons/icon_list_selected.png
      - icons/ic_popup.png
-     - icons/error_wrong.tiff
+     - icons/error_wrong.png
      - icons/brokenImage.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
