@@ -171,7 +171,7 @@ class _WifiState extends State<MyHomePage> {
                   Image.asset("icons/intro_nonetwork.png",
                       width: _iconSize, height: _iconSize),
                   Container(
-                    child: Text("请先将脑连接至网络",
+                    child: Text("请先将电脑连接至网络",
                         style: TextStyle(
                             color: Color(0xff5b5c61),
                             fontSize: 25,
