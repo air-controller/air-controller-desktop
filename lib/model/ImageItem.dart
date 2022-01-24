@@ -8,14 +8,15 @@ class ImageItem {
   int height;
   int modifyTime;
   int createTime;
+  int size;
 
   ImageItem(this.id, this.mimeType, this.path, this.width, this.height,
-      this.modifyTime, this.createTime) {}
+      this.modifyTime, this.createTime, this.size) {}
 
   factory ImageItem.fromJson(Map<String, dynamic> parsedJson) {
     return ImageItem(parsedJson["id"], parsedJson["mimeType"],
         parsedJson["path"], parsedJson["width"], parsedJson["height"],
-        parsedJson["modifyTime"], parsedJson["createTime"]);
+        parsedJson["modifyTime"], parsedJson["createTime"], parsedJson["size"]);
   }
 
   @override

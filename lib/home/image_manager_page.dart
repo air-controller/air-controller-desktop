@@ -10,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
@@ -28,6 +29,7 @@ import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
+import 'package:mobile_assistant_client/widget/upward_triangle.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import '../event/update_bottom_item_num.dart';
 import '../model/ImageItem.dart';
@@ -79,19 +81,27 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   bool _openImageDetail = false;
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   double _currentImageScale = 1.0;
+
   // 标记删除按钮是否可以点击
   bool _isDeleteBtnEnabled = false;
   int _allItemNum = 0;
   int _selectedItemNum = 0;
   bool _isBackBtnVisible = false;
+
   // 排列方式按钮可见性
   bool _rangeModeVisibility = true;
 
   DownloaderCore? _downloaderCore;
   ProgressIndicatorDialog? _progressIndicatorDialog;
+
+  Offset? _aboutIconTapDownPosition;
+  bool _isAboutIconTapDown = false;
+
+  GlobalKey _aboutIconKey = GlobalKey();
 
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
@@ -106,11 +116,13 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   void _registerEventBus() {
-    _updateDeleteBtnStream = eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
+    _updateDeleteBtnStream =
+        eventBus.on<UpdateDeleteBtnStatus>().listen((event) {
       setDeleteBtnEnabled(event.isEnable);
     });
 
-    _updateBottomItemNumStream = eventBus.on<UpdateBottomItemNum>().listen((event) {
+    _updateBottomItemNumStream =
+        eventBus.on<UpdateBottomItemNum>().listen((event) {
       updateBottomItemNumber(event.totalNum, event.selectedNum);
     });
 
@@ -124,7 +136,8 @@ class ImageManagerState extends State<ImageManagerPage> {
       });
     });
 
-    _imageRangeModeVisibilityStream = eventBus.on<ImageRangeModeVisibility>().listen((event) {
+    _imageRangeModeVisibilityStream =
+        eventBus.on<ImageRangeModeVisibility>().listen((event) {
       setState(() {
         _rangeModeVisibility = event.visible;
         debugPrint("Event bus _rangeModeVisibility: $_rangeModeVisibility");
@@ -164,16 +177,22 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   void _updateArrangeMode(int rangeModeIndex) {
     switch (rangeModeIndex) {
-      case _ARRANGE_MODE_DAILY: {
-          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY));
+      case _ARRANGE_MODE_DAILY:
+        {
+          eventBus.fire(
+              UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_DAILY));
           break;
         }
-      case _ARRANGE_MODE_MONTHLY: {
-          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY));
+      case _ARRANGE_MODE_MONTHLY:
+        {
+          eventBus.fire(
+              UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_MONTHLY));
           break;
         }
-      default: {
-          eventBus.fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID));
+      default:
+        {
+          eventBus
+              .fire(UpdateImageArrangeMode(ImageManagerPage.ARRANGE_MODE_GRID));
         }
     }
   }
@@ -243,8 +262,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                           Container(
                             child: Text("返回",
                                 style: TextStyle(
-                                    color: Color(0xff5c5c62),
-                                    fontSize: 13)),
+                                    color: Color(0xff5c5c62), fontSize: 13)),
                             margin: EdgeInsets.only(left: 3),
                           ),
                         ],
@@ -253,10 +271,9 @@ class ImageManagerState extends State<ImageManagerPage> {
                           color: _isBackBtnDown
                               ? Color(0xffe8e8e8)
                               : Color(0xfff3f3f4),
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(3.0)),
-                          border: Border.all(
-                              color: Color(0xffdedede), width: 1.0)),
+                          borderRadius: BorderRadius.all(Radius.circular(3.0)),
+                          border:
+                              Border.all(color: Color(0xffdedede), width: 1.0)),
                       height: 25,
                       width: 50,
                       margin: EdgeInsets.only(left: 15),
@@ -486,8 +503,7 @@ class ImageManagerState extends State<ImageManagerPage> {
           child: Align(
             alignment: Alignment.center,
             child: Text(itemNumStr,
-                style: TextStyle(
-                    fontSize: 12, color: Color(0xff646464))),
+                style: TextStyle(fontSize: 12, color: Color(0xff646464))),
           ),
           height: 20,
           color: Color(0xfffafafa),
@@ -597,7 +613,8 @@ class ImageManagerState extends State<ImageManagerPage> {
                                   debugPrint("Current value: $value");
                                   setState(() {
                                     _imageSizeSliderValue = value;
-                                    _currentImageScale = _imageSizeSliderValue / 100 + 1.0;
+                                    _currentImageScale =
+                                        _imageSizeSliderValue / 100 + 1.0;
                                   });
                                 },
                                 min: 0,
@@ -623,8 +640,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
                       Text(imageScaleStr,
                           style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xff7a7a7a))),
+                              fontSize: 13, color: Color(0xff7a7a7a))),
                     ],
                   )),
               Align(
@@ -643,8 +659,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                     Container(
                       child: Text(imageIndictorStr,
                           style: TextStyle(
-                              color: Color(0xff626160),
-                              fontSize: 16)),
+                              color: Color(0xff626160), fontSize: 16)),
                       padding: EdgeInsets.only(left: 20, right: 20),
                     ),
                     GestureDetector(
@@ -661,15 +676,39 @@ class ImageManagerState extends State<ImageManagerPage> {
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: Container(
-                  child: Image.asset("icons/icon_about_image.png",
-                      width: 14, height: 14),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Color(0xffd5d5d5), width: 1.0),
-                      borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                      color: Color(0xfff4f4f4)),
-                  padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
-                  margin: EdgeInsets.only(right: 15),
+                child: GestureDetector(
+                  child: Container(
+                    key: _aboutIconKey,
+                    child: Image.asset("icons/icon_about_image.png",
+                        width: 14, height: 14),
+                    decoration: BoxDecoration(
+                        border:
+                            Border.all(color: Color(0xffd5d5d5), width: 1.0),
+                        borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                        color: _isAboutIconTapDown ? Color(0xffe7e7e7) : Color(0xfff4f4f4)),
+                    padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
+                    margin: EdgeInsets.only(right: 15),
+                  ),
+                  onTap: () {
+                    _showImageInfoDialog(_allImageItems[_currentImageIndex]);
+                  },
+                  onTapDown: (event) {
+                    setState(() {
+                      _isAboutIconTapDown = true;
+                    });
+
+                    _aboutIconTapDownPosition = event.localPosition;
+                  },
+                  onTapUp: (event) {
+                    setState(() {
+                      _isAboutIconTapDown = false;
+                    });
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isAboutIconTapDown = false;
+                    });
+                  },
                 ),
               )
             ],
@@ -718,7 +757,8 @@ class ImageManagerState extends State<ImageManagerPage> {
                 ),
                 onPointerDown: (event) {
                   if (_isMouseRightClicked(event)) {
-                    _openMenu(event.position, _allImageItems[_currentImageIndex]);
+                    _openMenu(
+                        event.position, _allImageItems[_currentImageIndex]);
                   }
                 },
               );
@@ -736,6 +776,257 @@ class ImageManagerState extends State<ImageManagerPage> {
     );
   }
 
+  void _showImageInfoDialog(ImageItem imageItem) {
+    TextStyle textStyle = TextStyle(
+        color: Color(0xff636363),
+        fontSize: 13
+    );
+
+    String name = "";
+    String path = "";
+    int index = imageItem.path.lastIndexOf("/");
+    if (index != -1) {
+      path = imageItem.path.substring(0, index);
+      name = imageItem.path.substring(index + 1);
+    }
+
+    String extension = "";
+    int pointIndex = imageItem.path.lastIndexOf(".");
+    if (pointIndex != -1) {
+      extension = imageItem.path.substring(pointIndex + 1);
+    }
+
+    double labelWidth = 100;
+    double contentWidth = 200;
+    double dialogWidth = 380;
+    double triangleWidth = 15;
+
+    RenderBox renderBox = _aboutIconKey.currentContext?.findRenderObject() as RenderBox;
+
+    var offset = renderBox.localToGlobal(Offset.zero);
+    var width = renderBox.size.width;
+    var height = renderBox.size.height;
+
+    var screenWidth = MediaQuery.of(context).size.width;
+
+    var left = screenWidth - dialogWidth - 10;
+    var top = offset.dy + height + 5;
+
+    var triangleLeft = offset.dx + width / 2 - left - triangleWidth / 2 - 8;
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Stack(
+            children: [
+              Positioned(
+                  left: left,
+                  top: top,
+                  child: Stack(
+                    children: [
+                      Container(
+                        child: Wrap(
+                          direction: Axis.vertical,
+                          children: [
+                            Container(
+                              child: Text(
+                                "基本信息：",
+                                style: TextStyle(
+                                    color: Color(0xff313237), fontSize: 16),
+                              ),
+                              margin: EdgeInsets.only(top: 10, left: 15, bottom: 15),
+                            ),
+                            Wrap(
+                              children: [
+                                Container(
+                                  child: Text(
+                                    "名称：",
+                                    style: textStyle,
+                                    textAlign: TextAlign.right,
+                                  ),
+                                  width: labelWidth,
+                                ),
+                                Container(
+                                  child: Text(
+                                      "$name",
+                                      style: textStyle
+                                  ),
+                                  width: contentWidth,
+                                )
+                              ],
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "路径：",
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "$path",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "种类：",
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "$extension",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  ),
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "大小：",
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${_convertToReadableSize(imageItem.size)}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  ),
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "尺寸：",
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${imageItem.width} x ${imageItem.height}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "创建时间：",
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${_formatTime(imageItem.createTime)}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      "修改时间：",
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${_formatTime(imageItem.modifyTime * 1000)}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            )
+                          ],
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xfffdfdfc),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black54,
+                                offset: Offset(0, 0),
+                                blurRadius: 1),
+                          ],
+                        ),
+                        padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                        margin: EdgeInsets.only(top: 10),
+                        width: dialogWidth,
+                      ),
+                      Container(
+                        child: UpwardTriangle(
+                          key: Key("upward_triangle"),
+                          width: triangleWidth,
+                          height: 10,
+                          color: Colors.white,
+                          dividerColor: Colors.black26,
+                        ),
+                        margin: EdgeInsets.only(left: triangleLeft),
+                      )
+                    ],
+                  ))
+            ],
+          );
+        },
+        barrierColor: Colors.transparent);
+  }
+
+  String _formatTime(int time) {
+    final df = DateFormat("yyyy年M月d日 HH:mm");
+    return df.format(new DateTime.fromMillisecondsSinceEpoch(time));
+  }
+
   bool _isMouseRightClicked(PointerDownEvent event) {
     return event.kind == PointerDeviceKind.mouse &&
         event.buttons == kSecondaryMouseButton;
@@ -743,7 +1034,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   void _openMenu(Offset position, ImageItem imageItem) {
     RenderBox? overlay =
-    Overlay.of(context)?.context.findRenderObject() as RenderBox;
+        Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
     String name = imageItem.path;
     int index = name.lastIndexOf("/");
@@ -795,19 +1086,17 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   void _deleteImage() {
-    _showConfirmDialog(
-        "确定删除这个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
-            (context) {
-          Navigator.of(context, rootNavigator: true).pop();
-          _tryToDeleteImages();
-        }, (context) {
+    _showConfirmDialog("确定删除这个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+      _tryToDeleteImages();
+    }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
     });
   }
 
   void _showErrorDialog(String error) {
     Alert alert =
-    Alert(context: context, type: AlertType.error, desc: error, buttons: [
+        Alert(context: context, type: AlertType.error, desc: error, buttons: [
       DialogButton(
           child: Text(
             "我知道了",
@@ -823,10 +1112,12 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   void _tryToDeleteImages() {
     var url = Uri.parse("${_URL_SERVER}/image/delete");
-    http.post(url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(
-            {"paths": [_allImageItems[_currentImageIndex].path]}))
+    http
+        .post(url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode({
+              "paths": [_allImageItems[_currentImageIndex].path]
+            }))
         .then((response) {
       if (response.statusCode != 200) {
         _showErrorDialog(response.reasonPhrase != null
@@ -887,7 +1178,7 @@ class ImageManagerState extends State<ImageManagerPage> {
 
           setState(() {
             _progressIndicatorDialog?.subtitle =
-            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+                "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
             _progressIndicatorDialog?.updateProgress(current / total);
           });
         }
@@ -956,6 +1247,7 @@ class ImageManagerState extends State<ImageManagerPage> {
           "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
     }
   }
+
   void openImageDetail(List<ImageItem> images, ImageItem current) {
     setState(() {
       _allImageItems = images;
@@ -1038,7 +1330,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     }
   }
 
-  void _updateDeleteBtnStatus () {
+  void _updateDeleteBtnStatus() {
     if (_currentIndex == INDEX_ALL_IMAGE) {
       _allImageManagerPage.state?.updateDeleteBtnStatus();
     } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
@@ -1060,7 +1352,7 @@ class ImageManagerState extends State<ImageManagerPage> {
       _selectedItemNum = selectedItemNum;
     });
   }
-  
+
   int selectedIndex() {
     return _currentIndex;
   }
