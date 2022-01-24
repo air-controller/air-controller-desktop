@@ -9,6 +9,7 @@ import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
@@ -31,6 +32,7 @@ import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 import 'package:mobile_assistant_client/widget/upward_triangle.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import '../event/update_bottom_item_num.dart';
 import '../model/ImageItem.dart';
 import 'package:http/http.dart' as http;
@@ -103,6 +105,8 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   GlobalKey _aboutIconKey = GlobalKey();
 
+  FocusNode? _imageDetailFocusNode;
+
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<OpenImageDetail>? _openImageDetailStream;
@@ -167,10 +171,21 @@ class ImageManagerState extends State<ImageManagerPage> {
           maintainSize: false,
           maintainAnimation: false,
         ),
-        Visibility(
-          child: previewWidget,
-          visible: _openImageDetail ? true : false,
-        )
+        VisibilityDetector(
+            key: Key("image_detail_page"),
+            child: Visibility(
+              child: previewWidget,
+              visible: _openImageDetail ? true : false,
+            ),
+            onVisibilityChanged: (info) {
+              if (info.visibleFraction >= 1) {
+                _imageDetailFocusNode?.requestFocus();
+              }
+
+              if (info.visibleFraction <= 0) {
+                _imageDetailFocusNode?.unfocus();
+              }
+            })
       ],
     );
   }
@@ -245,270 +260,302 @@ class ImageManagerState extends State<ImageManagerPage> {
       itemNumStr = "$itemNumStr (选中${_selectedItemNum}项)";
     }
 
-    return Column(
-      children: [
-        Container(
-          child: Stack(
-            children: [
-              GestureDetector(
-                child: Visibility(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      child: Row(
-                        children: [
-                          Image.asset("icons/icon_right_arrow.png",
-                              width: 12, height: 12),
-                          Container(
-                            child: Text("返回",
-                                style: TextStyle(
-                                    color: Color(0xff5c5c62), fontSize: 13)),
-                            margin: EdgeInsets.only(left: 3),
-                          ),
-                        ],
-                      ),
-                      decoration: BoxDecoration(
-                          color: _isBackBtnDown
-                              ? Color(0xffe8e8e8)
-                              : Color(0xfff3f3f4),
-                          borderRadius: BorderRadius.all(Radius.circular(3.0)),
-                          border:
-                              Border.all(color: Color(0xffdedede), width: 1.0)),
-                      height: 25,
-                      width: 50,
-                      margin: EdgeInsets.only(left: 15),
-                    ),
-                  ),
-                  visible: _isBackBtnVisible,
-                ),
-                onTap: () {
-                  _onBackPressed();
-                },
-                onTapDown: (detail) {
-                  setState(() {
-                    _isBackBtnDown = true;
-                  });
-                },
-                onTapCancel: () {
-                  setState(() {
-                    _isBackBtnDown = false;
-                  });
-                },
-                onTapUp: (detail) {
-                  setState(() {
-                    _isBackBtnDown = false;
-                  });
-                },
-              ),
-              Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    child: MaterialSegmentedControl<int>(
-                      children: {
-                        INDEX_ALL_IMAGE: Container(
-                          child: Text("所有图片",
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: getSegmentBtnColor(INDEX_ALL_IMAGE))),
-                          padding: EdgeInsets.only(left: 10, right: 10),
-                        ),
-                        INDEX_CAMERA_ALBUM: Container(
-                          child: Text("相机相册",
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color:
-                                      getSegmentBtnColor(INDEX_CAMERA_ALBUM))),
-                        ),
-                        INDEX_ALL_ALBUM: Container(
-                            child: Text("所有相册",
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        getSegmentBtnColor(INDEX_ALL_ALBUM))))
-                      },
-                      selectionIndex: _currentIndex,
-                      borderColor: Color(0xffdedede),
-                      selectedColor: Color(0xffc3c3c3),
-                      unselectedColor: Color(0xfff7f5f6),
-                      borderRadius: 3.0,
-                      verticalOffset: 0,
-                      disabledChildren: [],
-                      onSegmentChosen: (index) {
-                        setState(() {
-                          _currentIndex = index;
-                          pageController.jumpToPage(_currentIndex);
+    _imageDetailFocusNode = FocusNode();
+    _imageDetailFocusNode?.canRequestFocus = true;
+    _imageDetailFocusNode?.requestFocus();
 
-                          if (_currentIndex == INDEX_ALL_IMAGE) {
-                            _allImageManagerPage.state?.updateBottomItemNum();
-                          } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
-                            _albumImageManagerPage.state?.updateBottomItemNum();
-                          } else {
-                            _allAlbumManagerPage.state?.updateBottomItemNum();
-                          }
-                          _updateDeleteBtnStatus();
-                        });
-                      },
-                    ),
-                    height: 30,
-                  )),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  child: Row(
-                    children: [
-                      Visibility(
+    return Focus(
+      autofocus: true,
+      focusNode: _imageDetailFocusNode,
+      child: Column(
+        children: [
+          Container(
+            child: Stack(
+              children: [
+                GestureDetector(
+                  child: Visibility(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
                         child: Row(
                           children: [
-                            GestureDetector(
-                              child: Container(
-                                child: Image.asset(
-                                    _getArrangeModeIcon(_ARRANGE_MODE_GRID),
-                                    width: 20,
-                                    height: 20),
-                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Color(0xffdddedf), width: 1.0),
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(4.0),
-                                      bottomLeft: Radius.circular(4.0)),
-                                  color: _getArrangeModeBgColor(
-                                      _ARRANGE_MODE_GRID),
-                                ),
-                              ),
-                              onTap: () {
-                                if (_arrange_mode != _ARRANGE_MODE_GRID) {
-                                  setState(() {
-                                    _arrange_mode = _ARRANGE_MODE_GRID;
-                                  });
-                                  _updateArrangeMode(_arrange_mode);
-                                }
-                              },
-                            ),
-                            GestureDetector(
-                              child: Container(
-                                child: Image.asset(
-                                    _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
-                                    width: 20,
-                                    height: 20),
-                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Color(0xffdddedf), width: 1.0),
-                                  color: _getArrangeModeBgColor(
-                                      _ARRANGE_MODE_DAILY),
-                                ),
-                              ),
-                              onTap: () {
-                                if (_arrange_mode != _ARRANGE_MODE_DAILY) {
-                                  setState(() {
-                                    _arrange_mode = _ARRANGE_MODE_DAILY;
-                                  });
-                                  _updateArrangeMode(_arrange_mode);
-                                }
-                              },
-                            ),
-                            GestureDetector(
-                              child: Container(
-                                child: Image.asset(
-                                    _getArrangeModeIcon(_ARRANGE_MODE_MONTHLY),
-                                    width: 20,
-                                    height: 20),
-                                padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: Color(0xffdddedf), width: 1.0),
-                                  color: _getArrangeModeBgColor(
-                                      _ARRANGE_MODE_MONTHLY),
-                                  borderRadius: BorderRadius.only(
-                                      topRight: Radius.circular(4.0),
-                                      bottomRight: Radius.circular(4.0)),
-                                ),
-                              ),
-                              onTap: () {
-                                if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
-                                  setState(() {
-                                    _arrange_mode = _ARRANGE_MODE_MONTHLY;
-                                  });
-                                  _updateArrangeMode(_arrange_mode);
-                                }
-                              },
+                            Image.asset("icons/icon_right_arrow.png",
+                                width: 12, height: 12),
+                            Container(
+                              child: Text("返回",
+                                  style: TextStyle(
+                                      color: Color(0xff5c5c62), fontSize: 13)),
+                              margin: EdgeInsets.only(left: 3),
                             ),
                           ],
                         ),
-                        maintainSize: true,
-                        maintainState: true,
-                        maintainAnimation: true,
-                        visible: _rangeModeVisibility,
+                        decoration: BoxDecoration(
+                            color: _isBackBtnDown
+                                ? Color(0xffe8e8e8)
+                                : Color(0xfff3f3f4),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(3.0)),
+                            border: Border.all(
+                                color: Color(0xffdedede), width: 1.0)),
+                        height: 25,
+                        width: 50,
+                        margin: EdgeInsets.only(left: 15),
                       ),
-                      Container(
-                          child: GestureDetector(
-                            child: Opacity(
-                              opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
-                              child: Container(
-                                child: Image.asset("icons/icon_delete.png",
-                                    width: 10, height: 10),
-                                decoration: BoxDecoration(
-                                    color: Color(0xffcb6357),
-                                    border: new Border.all(
-                                        color: Color(0xffb43f32), width: 1.0),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(4.0))),
-                                width: 40,
-                                height: 25,
-                                padding:
-                                    EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
-                              ),
-                            ),
-                            onTap: () {
-                              debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
-
-                              if (_isDeleteBtnEnabled) {
-                                eventBus.fire(DeleteOp(UIModule.Image));
-                              }
-                            },
-                          ),
-                          margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
-                    ],
+                    ),
+                    visible: _isBackBtnVisible,
                   ),
-                  width: 210,
+                  onTap: () {
+                    _onBackPressed();
+                  },
+                  onTapDown: (detail) {
+                    setState(() {
+                      _isBackBtnDown = true;
+                    });
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isBackBtnDown = false;
+                    });
+                  },
+                  onTapUp: (detail) {
+                    setState(() {
+                      _isBackBtnDown = false;
+                    });
+                  },
                 ),
-              )
-            ],
+                Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      child: MaterialSegmentedControl<int>(
+                        children: {
+                          INDEX_ALL_IMAGE: Container(
+                            child: Text("所有图片",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        getSegmentBtnColor(INDEX_ALL_IMAGE))),
+                            padding: EdgeInsets.only(left: 10, right: 10),
+                          ),
+                          INDEX_CAMERA_ALBUM: Container(
+                            child: Text("相机相册",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: getSegmentBtnColor(
+                                        INDEX_CAMERA_ALBUM))),
+                          ),
+                          INDEX_ALL_ALBUM: Container(
+                              child: Text("所有相册",
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          getSegmentBtnColor(INDEX_ALL_ALBUM))))
+                        },
+                        selectionIndex: _currentIndex,
+                        borderColor: Color(0xffdedede),
+                        selectedColor: Color(0xffc3c3c3),
+                        unselectedColor: Color(0xfff7f5f6),
+                        borderRadius: 3.0,
+                        verticalOffset: 0,
+                        disabledChildren: [],
+                        onSegmentChosen: (index) {
+                          setState(() {
+                            _currentIndex = index;
+                            pageController.jumpToPage(_currentIndex);
+
+                            if (_currentIndex == INDEX_ALL_IMAGE) {
+                              _allImageManagerPage.state?.updateBottomItemNum();
+                            } else if (_currentIndex == INDEX_CAMERA_ALBUM) {
+                              _albumImageManagerPage.state
+                                  ?.updateBottomItemNum();
+                            } else {
+                              _allAlbumManagerPage.state?.updateBottomItemNum();
+                            }
+                            _updateDeleteBtnStatus();
+                          });
+                        },
+                      ),
+                      height: 30,
+                    )),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    child: Row(
+                      children: [
+                        Visibility(
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(_ARRANGE_MODE_GRID),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(4.0),
+                                        bottomLeft: Radius.circular(4.0)),
+                                    color: _getArrangeModeBgColor(
+                                        _ARRANGE_MODE_GRID),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_GRID) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_GRID;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(_ARRANGE_MODE_DAILY),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    color: _getArrangeModeBgColor(
+                                        _ARRANGE_MODE_DAILY),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_DAILY) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_DAILY;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                              GestureDetector(
+                                child: Container(
+                                  child: Image.asset(
+                                      _getArrangeModeIcon(
+                                          _ARRANGE_MODE_MONTHLY),
+                                      width: 20,
+                                      height: 20),
+                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Color(0xffdddedf), width: 1.0),
+                                    color: _getArrangeModeBgColor(
+                                        _ARRANGE_MODE_MONTHLY),
+                                    borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(4.0),
+                                        bottomRight: Radius.circular(4.0)),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (_arrange_mode != _ARRANGE_MODE_MONTHLY) {
+                                    setState(() {
+                                      _arrange_mode = _ARRANGE_MODE_MONTHLY;
+                                    });
+                                    _updateArrangeMode(_arrange_mode);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          maintainSize: true,
+                          maintainState: true,
+                          maintainAnimation: true,
+                          visible: _rangeModeVisibility,
+                        ),
+                        Container(
+                            child: GestureDetector(
+                              child: Opacity(
+                                opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
+                                child: Container(
+                                  child: Image.asset("icons/icon_delete.png",
+                                      width: 10, height: 10),
+                                  decoration: BoxDecoration(
+                                      color: Color(0xffcb6357),
+                                      border: new Border.all(
+                                          color: Color(0xffb43f32), width: 1.0),
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(4.0))),
+                                  width: 40,
+                                  height: 25,
+                                  padding:
+                                      EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
+                                ),
+                              ),
+                              onTap: () {
+                                debugPrint("当前删除按钮点击状态: $_isDeleteBtnEnabled");
+
+                                if (_isDeleteBtnEnabled) {
+                                  eventBus.fire(DeleteOp(UIModule.Image));
+                                }
+                              },
+                            ),
+                            margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
+                      ],
+                    ),
+                    width: 210,
+                  ),
+                )
+              ],
+            ),
+            height: Constant.HOME_NAVI_BAR_HEIGHT,
+            color: Color(0xfff6f6f6),
           ),
-          height: Constant.HOME_NAVI_BAR_HEIGHT,
-          color: Color(0xfff6f6f6),
-        ),
-        Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
-        Expanded(
-          child: PageView(
-            scrollDirection: Axis.vertical,
-            physics: NeverScrollableScrollPhysics(),
-            children: [
-              _allImageManagerPage,
-              _albumImageManagerPage,
-              _allAlbumManagerPage
-            ],
-            onPageChanged: (index) {
-              debugPrint("onPageChanged, index: $index");
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            controller: pageController,
+          Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+          Expanded(
+            child: PageView(
+              scrollDirection: Axis.vertical,
+              physics: NeverScrollableScrollPhysics(),
+              children: [
+                _allImageManagerPage,
+                _albumImageManagerPage,
+                _allAlbumManagerPage
+              ],
+              onPageChanged: (index) {
+                debugPrint("onPageChanged, index: $index");
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              controller: pageController,
+            ),
           ),
-        ),
-        Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
-        Container(
-          child: Align(
-            alignment: Alignment.center,
-            child: Text(itemNumStr,
-                style: TextStyle(fontSize: 12, color: Color(0xff646464))),
-          ),
-          height: 20,
-          color: Color(0xfffafafa),
-        )
-      ],
+          Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+          Container(
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(itemNumStr,
+                  style: TextStyle(fontSize: 12, color: Color(0xff646464))),
+            ),
+            height: 20,
+            color: Color(0xfffafafa),
+          )
+        ],
+      ),
+      onKey: (node, event) {
+        debugPrint(
+            "Key => ${event.logicalKey.keyId} : ${event.logicalKey.keyLabel}");
+        if (event.isKeyPressed(LogicalKeyboardKey.backspace)) {
+          _deleteImage();
+          return KeyEventResult.handled;
+        }
+
+        if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+          _openPreImage();
+          return KeyEventResult.handled;
+        }
+
+        if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+          _openNextImage();
+          return KeyEventResult.handled;
+        }
+
+        return KeyEventResult.ignored;
+      },
     );
   }
 
@@ -685,7 +732,9 @@ class ImageManagerState extends State<ImageManagerPage> {
                         border:
                             Border.all(color: Color(0xffd5d5d5), width: 1.0),
                         borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                        color: _isAboutIconTapDown ? Color(0xffe7e7e7) : Color(0xfff4f4f4)),
+                        color: _isAboutIconTapDown
+                            ? Color(0xffe7e7e7)
+                            : Color(0xfff4f4f4)),
                     padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
                     margin: EdgeInsets.only(right: 15),
                   ),
@@ -777,10 +826,7 @@ class ImageManagerState extends State<ImageManagerPage> {
   }
 
   void _showImageInfoDialog(ImageItem imageItem) {
-    TextStyle textStyle = TextStyle(
-        color: Color(0xff636363),
-        fontSize: 13
-    );
+    TextStyle textStyle = TextStyle(color: Color(0xff636363), fontSize: 13);
 
     String name = "";
     String path = "";
@@ -801,7 +847,8 @@ class ImageManagerState extends State<ImageManagerPage> {
     double dialogWidth = 380;
     double triangleWidth = 15;
 
-    RenderBox renderBox = _aboutIconKey.currentContext?.findRenderObject() as RenderBox;
+    RenderBox renderBox =
+        _aboutIconKey.currentContext?.findRenderObject() as RenderBox;
 
     var offset = renderBox.localToGlobal(Offset.zero);
     var width = renderBox.size.width;
@@ -834,7 +881,8 @@ class ImageManagerState extends State<ImageManagerPage> {
                                 style: TextStyle(
                                     color: Color(0xff313237), fontSize: 16),
                               ),
-                              margin: EdgeInsets.only(top: 10, left: 15, bottom: 15),
+                              margin: EdgeInsets.only(
+                                  top: 10, left: 15, bottom: 15),
                             ),
                             Wrap(
                               children: [
@@ -847,10 +895,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                                   width: labelWidth,
                                 ),
                                 Container(
-                                  child: Text(
-                                      "$name",
-                                      style: textStyle
-                                  ),
+                                  child: Text("$name", style: textStyle),
                                   width: contentWidth,
                                 )
                               ],
@@ -873,7 +918,6 @@ class ImageManagerState extends State<ImageManagerPage> {
                                     ),
                                     width: contentWidth,
                                   )
-
                                 ],
                               ),
                               margin: EdgeInsets.only(top: 10),
@@ -1363,5 +1407,6 @@ class ImageManagerState extends State<ImageManagerPage> {
 
     _downloaderCore?.cancel();
     _unRegisterEventBus();
+    _imageDetailFocusNode?.unfocus();
   }
 }
