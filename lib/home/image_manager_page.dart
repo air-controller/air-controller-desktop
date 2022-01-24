@@ -554,6 +554,16 @@ class ImageManagerState extends State<ImageManagerPage> {
           return KeyEventResult.handled;
         }
 
+        if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+          _setImageScale(true);
+          return KeyEventResult.handled;
+        }
+
+        if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
+          _setImageScale(false);
+          return KeyEventResult.handled;
+        }
+
         if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
           _dismissImageInfoDialog();
           _openNextImage();
