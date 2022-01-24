@@ -107,6 +107,9 @@ class ImageManagerState extends State<ImageManagerPage> {
 
   FocusNode? _imageDetailFocusNode;
 
+  // 标记图片详情弹窗是否显示中
+  bool _isImageInfoDialogShowing = false;
+
   StreamSubscription<UpdateDeleteBtnStatus>? _updateDeleteBtnStream;
   StreamSubscription<UpdateBottomItemNum>? _updateBottomItemNumStream;
   StreamSubscription<OpenImageDetail>? _openImageDetailStream;
@@ -540,16 +543,19 @@ class ImageManagerState extends State<ImageManagerPage> {
         debugPrint(
             "Key => ${event.logicalKey.keyId} : ${event.logicalKey.keyLabel}");
         if (event.isKeyPressed(LogicalKeyboardKey.backspace)) {
+          _dismissImageInfoDialog();
           _deleteImage();
           return KeyEventResult.handled;
         }
 
         if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+          _dismissImageInfoDialog();
           _openPreImage();
           return KeyEventResult.handled;
         }
 
         if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+          _dismissImageInfoDialog();
           _openNextImage();
           return KeyEventResult.handled;
         }
@@ -557,6 +563,12 @@ class ImageManagerState extends State<ImageManagerPage> {
         return KeyEventResult.ignored;
       },
     );
+  }
+
+  void _dismissImageInfoDialog() {
+    if (_isImageInfoDialogShowing) {
+      Navigator.pop(context);
+    }
   }
 
   void _onBackPressed() {
@@ -1063,7 +1075,10 @@ class ImageManagerState extends State<ImageManagerPage> {
             ],
           );
         },
-        barrierColor: Colors.transparent);
+        barrierColor: Colors.transparent).then((value) {
+          _isImageInfoDialogShowing = false;
+    });
+    _isImageInfoDialogShowing = true;
   }
 
   String _formatTime(int time) {
