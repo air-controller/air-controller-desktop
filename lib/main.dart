@@ -330,8 +330,6 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
             Rect? rect = _deviceRectMap[device.ip];
 
-            rect = null;
-
             double left = 0;
             double top = 0;
 
