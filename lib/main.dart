@@ -12,6 +12,7 @@ import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/network/device_discover_manager.dart';
 import 'package:mobile_assistant_client/network/heartbeat_service.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+import 'package:mobile_assistant_client/widget/multiple_rings.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:window_size/window_size.dart';
@@ -70,6 +71,9 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   // 记录上一次设备显示坐标位置（Key为设备IP）
   Map<String, Rect> _deviceRectMap = Map();
   AnimationController? _animationController;
+
+  // 标记连接按钮是否按下
+  bool _isConnectPressed = false;
 
   @override
   void initState() {
@@ -305,8 +309,14 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                 ),
               ),
 
-
-
+              MultipleRings(
+                  width: width,
+                  height: height,
+                  minRadius: 100,
+                  radiusStep: 100,
+                lineColor: Color(0xfff3f3f3),
+                color: Colors.transparent,
+              )
             ],
           ),
            width: double.infinity,
@@ -320,60 +330,155 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
             Rect? rect = _deviceRectMap[device.ip];
 
+            rect = null;
+
             double left = 0;
             double top = 0;
 
             if (null == rect) {
-              var width = MediaQuery
-                  .of(context)
-                  .size
-                  .width - 80;
-              var height = MediaQuery
-                  .of(context)
-                  .size
-                  .height - 30;
+              var width = MediaQuery.of(context).size.width;
+              var height = MediaQuery.of(context).size.height;
 
-              left = _randomDouble(0, width);
-              top = _randomDouble(0, height);
+              Offset offset = Offset(150, 150);
+
+              bool isValidLeftValue(double left) {
+                if (left < offset.dx) return false;
+
+                if (left > width - offset.dx) return false;
+
+                if (left > (width / 2 - _iconSize / 2 - 100) && left < (width / 2 + _iconSize / 2 + 100)) {
+                  return false;
+                }
+
+                return true;
+              }
+
+              bool isValidTop(double top) {
+                if (top < offset.dy) return false;
+                if (top > height - offset.dy) return false;
+
+                if (top > (height / 2 - _iconSize / 2 - 100)
+                && top < (height / 2 + _iconSize / 2 + 100)) {
+                  return false;
+                }
+
+                return true;
+              }
+
+              while (!isValidLeftValue(left)) {
+                left = _randomDouble(0, width);
+              }
+
+              while (!isValidTop(top)) {
+                top = _randomDouble(0, height);
+              }
 
               _deviceRectMap[device.ip] = Rect.fromLTRB(left, top, 0, 0);
             } else {
               left = rect.left;
               top = rect.top;
             }
-        return Positioned(
-            child: ElevatedButton(onPressed: () {
-              final device = _devices[index];
 
-              DeviceConnectionManager.instance.currentDevice = device;
-              CmdClient.getInstance().connect(device.ip);
-              CmdClient.getInstance().onCmdReceive((data) {
-                debugPrint("onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
-                _processCmd(data);
-              });
-              CmdClient.getInstance().onConnected(() {
-                debugPrint("onConnected, ip: ${device.ip}");
-              });
-              CmdClient.getInstance().onDisconnected(() {
-                debugPrint("onDisconnected, ip: ${device.ip}");
-              });
+            return Positioned(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      child: Container(
+                        child: Wrap(
+                          children: [
+                            Text(
+                              "连接",
+                              style: TextStyle(
+                                  color: _isConnectPressed ? Colors.white : Color(0xff949494),
+                                  fontSize: 14
+                              ),
+                            ),
+                            Container(
+                              child: Image.asset("icons/ic_right_arrow.png", width: 15, height: 15),
+                              margin: EdgeInsets.only(left: 3),
+                            )
+                          ],
+                          direction: Axis.horizontal,
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                        ),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(color: Color(0xffe5e5e5), width: 1.5),
+                            color: _isConnectPressed ? Color(0xff6989e2) : Color(0xfffefefe),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Color(0xffe5e5e5),
+                                  offset: Offset(0, 0),
+                                  blurRadius: 1.0
+                              )
+                            ]
+                        ),
+                        padding: EdgeInsets.fromLTRB(14, 6, 10, 6),
+                      ),
+                      onTap: () {
+                          final device = _devices[index];
 
-              HeartbeatService.instance.connectToServer(device.ip);
+                          DeviceConnectionManager.instance.currentDevice = device;
+                          CmdClient.getInstance().connect(device.ip);
+                          CmdClient.getInstance().onCmdReceive((data) {
+                            debugPrint("onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
+                            _processCmd(data);
+                          });
+                          CmdClient.getInstance().onConnected(() {
+                            debugPrint("onConnected, ip: ${device.ip}");
+                          });
+                          CmdClient.getInstance().onDisconnected(() {
+                            debugPrint("onDisconnected, ip: ${device.ip}");
+                          });
 
-              HeartbeatService.instance.onHeartbeatInterrupt(() {
-                debugPrint("HeartbeatService, onHeartbeatInterrupt");
-                _pushToErrorPage();
-              });
+                          HeartbeatService.instance.connectToServer(device.ip);
 
-              HeartbeatService.instance.onHeartbeatTimeout(() {
-                debugPrint("HeartbeatService, onHeartbeatTimeout");
-                _pushToErrorPage();
-              });
+                          HeartbeatService.instance.onHeartbeatInterrupt(() {
+                            debugPrint("HeartbeatService, onHeartbeatInterrupt");
+                            _pushToErrorPage();
+                          });
 
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return FileManagerPage(key: FileManagerPage.fileManagerKey);
-              }));
-            }, child: Text(_devices[index].name)), left: left, top: top, width: 80, height: 30);
+                          HeartbeatService.instance.onHeartbeatTimeout(() {
+                            debugPrint("HeartbeatService, onHeartbeatTimeout");
+                            _pushToErrorPage();
+                          });
+
+                          Navigator.push(context, MaterialPageRoute(builder: (context) {
+                            return FileManagerPage(key: FileManagerPage.fileManagerKey);
+                          }));
+                      },
+                      onTapDown: (event) {
+                        setState(() {
+                          _isConnectPressed = true;
+                        });
+                      },
+                      onTapCancel: () {
+                        setState(() {
+                          _isConnectPressed = false;
+                        });
+                      },
+                      onTapUp: (event) {
+                        setState(() {
+                          _isConnectPressed = false;
+                        });
+                      },
+                    ),
+
+                    Container(
+                      child: Image.asset("icons/ic_mobile.png", width: 76 * 0.5, height: 134 * 0.5),
+                      margin: EdgeInsets.only(top: 5),
+                    ),
+
+                    Text(
+                      "${device.name}",
+                      style: TextStyle(
+                        color: Color(0xff313237),
+                        fontSize: 14
+                      ),
+                    )
+                  ],
+                ), left: left, top: top);
       }))
     ]);
   }
