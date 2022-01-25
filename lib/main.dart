@@ -59,7 +59,7 @@ class MyHomePage extends StatefulWidget {
   State createState() => _WifiState();
 }
 
-class _WifiState extends State<MyHomePage> {
+class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   var _iconSize = 80.0;
   var _isWifiOn = false;
   var subscription = null;
@@ -69,6 +69,7 @@ class _WifiState extends State<MyHomePage> {
   NeatPeriodicTaskScheduler? _refreshDeviceScheduler;
   // 记录上一次设备显示坐标位置（Key为设备IP）
   Map<String, Rect> _deviceRectMap = Map();
+  AnimationController? _animationController;
 
   @override
   void initState() {
@@ -90,6 +91,14 @@ class _WifiState extends State<MyHomePage> {
       }
     });
     _startRefreshDeviceScheduler();
+
+    _animationController = AnimationController(
+      vsync: this, duration: Duration(milliseconds: 4500)
+    );
+
+    Future.delayed(Duration.zero, () {
+      _animationController?.repeat();
+    });
   }
   
   bool _isNetworkConnected(ConnectivityResult result) {
@@ -200,19 +209,60 @@ class _WifiState extends State<MyHomePage> {
   }
 
   Widget _createWifiOnWidget() {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
+    double radarRadius = width;
+
+    if (height > width) {
+      radarRadius = height;
+    }
+
+    double marginTop = height / 2 + _iconSize / 2 + 10;
+
     return Stack(children: [
       Container(
           child: Stack(
             children: [
               Align(
                 alignment: Alignment.center,
+                child: ClipRect(
+                  child: UnconstrainedBox(
+                    child: RotationTransition(
+                      turns: _animationController!,
+                      child: ClipOval(
+                        child: Container(
+                          width: radarRadius * 1.5,
+                          height: radarRadius * 1.5 ,
+                          decoration: BoxDecoration(
+                              gradient: SweepGradient(
+                                  colors: [
+                                    Color(0xfff8fbf4),
+                                    Color(0xfffcfefb),
+                                    Colors.white
+                                  ]
+                              )
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              Align(
+                alignment: Alignment.center,
+                child: Image.asset("icons/intro_radar.png",
+                    width: _iconSize, height: _iconSize),
+              ),
+
+              Align(
+                alignment: Alignment.topCenter,
                 child: Wrap(
                   direction: Axis.vertical,
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Image.asset("icons/intro_radar.png",
-                        width: _iconSize, height: _iconSize),
                     Container(
                       child:
                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -227,7 +277,7 @@ class _WifiState extends State<MyHomePage> {
                                 fontSize: 16,
                                 decoration: TextDecoration.none))
                       ]),
-                      margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                      margin: EdgeInsets.fromLTRB(0, marginTop, 0, 0),
                     ),
                     Container(
                         child: Text(
@@ -253,7 +303,10 @@ class _WifiState extends State<MyHomePage> {
                           decoration: TextDecoration.none)),
                   margin: EdgeInsets.only(bottom: 10),
                 ),
-              )
+              ),
+
+
+
             ],
           ),
            width: double.infinity,
@@ -353,5 +406,6 @@ class _WifiState extends State<MyHomePage> {
 
     subscription?.cancel();
     _stopRefreshDeviceScheduler();
+    _animationController?.dispose();
   }
 }
