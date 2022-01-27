@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/constant_pool.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/refresh_all_file_list.dart';
@@ -135,15 +136,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
       if (isDir) {
         return "icons/ic_large_type_folder.png";
       } else {
-        if (_isAudio(extension)) {
-          return "icons/ic_large_type_audio.png";
-        }
-
-        if (_isTextFile(extension)) {
-          return "icons/ic_large_type_txt.png";
-        }
-
-        return "icons/ic_large_type_doc.png";
+        return ConstantPool.fileExtensionIconMap[extension] ?? ConstantPool.fileExtensionIconMap["other"]!;
       }
     }
 
@@ -226,7 +219,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                     extension = name.substring(pointIndex + 1);
                   }
 
-                  String fileTypeIcon = getFileTypeIcon(isDir, extension);
+                  String fileTypeIcon = getFileTypeIcon(isDir, extension.toLowerCase());
 
                   Widget icon =
                       Image.asset(fileTypeIcon, width: 100, height: 100);

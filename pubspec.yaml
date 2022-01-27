@@ -81,54 +81,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - icons/intro_nonetwork.png
-     - icons/intro_radar.png
-     - icons/icon_image.png
-     - icons/icon_music.png
-     - icons/icon_video.png
-     - icons/icon_download.png
-     - icons/icon_all_file.png
-     - icons/icon_image_text_normal.png
-     - icons/icon_image_text_selected.png
-     - icons/icon_list_normal.png
-     - icons/icon_delete.png
-     - icons/icon_right_arrow_normal.png
-     - icons/icon_right_arrow_selected.png
-     - icons/icon_down_arrow_normal.png
-     - icons/icon_down_arrow_selected.png
-     - icons/icon_folder.png
-     - icons/icon_file_type_audio.png
-     - icons/icon_file_type_doc.png
-     - icons/icon_file_type_image.png
-     - icons/icon_file_type_text.png
-     - icons/icon_grid_normal.png
-     - icons/icon_grid_selected.png
-     - icons/icon_monthly_normal.png
-     - icons/icon_monthly_selected.png
-     - icons/icon_weekly_normal.png
-     - icons/icon_weekly_selected.png
-     - icons/icon_right_arrow.png
-     - icons/icon_image_size_minus_normal.png
-     - icons/icon_image_size_minus_pressed.png
-     - icons/icon_image_size_plus_normal.png
-     - icons/icon_image_size_plus_pressed.png
-     - icons/icon_image_pre_normal.png
-     - icons/icon_image_pre_pressed.png
-     - icons/icon_image_next_normal.png
-     - icons/icon_image_next_pressed.png
-     - icons/icon_about_image.png
-     - icons/ic_android.jpg
-     - icons/ic_right_arrow.png
-     - icons/ic_video_indictor.png
-     - icons/ic_large_type_folder.png
-     - icons/ic_large_type_doc.png
-     - icons/ic_large_type_txt.png
-     - icons/ic_large_type_audio.png
-     - icons/icon_list_selected.png
-     - icons/ic_popup.png
-     - icons/error_wrong.png
-     - icons/brokenImage.png
-     - icons/ic_mobile.png
+     - icons/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
