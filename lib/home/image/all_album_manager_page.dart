@@ -718,6 +718,10 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
       },
       onPointerDown: (event, image) {
         if (_isMouseRightClicked(event)) {
+          if (!_selectedImages.contains(image)) {
+            _setImageSelected(image);
+          }
+
           _openMenu(event.position, image);
         }
       },
@@ -1019,11 +1023,11 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                     "Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                 if (_isMouseRightClicked(event)) {
-                  _openMenu(event.position, album);
-
                   if (!_selectedAlbums.contains(album)) {
                     _setAlbumSelected(album);
                   }
+
+                  _openMenu(event.position, album);
                 }
               });
         },
