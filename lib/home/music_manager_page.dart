@@ -150,6 +150,15 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
 
     String name = audioItem.name;
 
+
+    String copyTitle = "";
+
+    if (_selectedAudioItems.length == 1) {
+      copyTitle = "拷贝${_selectedAudioItems.single.name}到电脑";
+    } else {
+      copyTitle = "拷贝 ${_selectedAudioItems.length} 项 到 电脑";
+    }
+
     showMenu(
         context: context,
         position: RelativeRect.fromSize(
@@ -170,9 +179,13 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                 });
               }),
           PopupMenuItem(
-              child: Text("拷贝$name到电脑"),
+              child: Text(copyTitle),
               onTap: () {
-                _openFilePicker(audioItem);
+                _openFilePicker((dir) {
+                  _startDownload(dir, _selectedAudioItems);
+                }, (error) {
+                  debugPrint("_openFilePicker, error: $error");
+                });
               }),
           PopupMenuItem(
               child: Text("删除"),
@@ -181,6 +194,43 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                         () => _tryToDeleteFiles(_selectedAudioItems));
               }),
         ]);
+  }
+
+  void _startDownload(String dir, List<AudioItem> audios) {
+    _showDownloadProgressDialog(audios);
+
+    _downloadFiles(audios, dir, () {
+      _progressIndicatorDialog?.dismiss();
+    }, (error) {
+      debugPrint("_startDownload, $error");
+      _progressIndicatorDialog?.dismiss();
+
+      SmartDialog.showToast(error);
+    }, (current, total) {
+      if (_progressIndicatorDialog?.isShowing == true) {
+        if (current > 0) {
+          setState(() {
+            String title = "正在导出音频";
+
+            if (audios.length == 1) {
+              title = "正在导出音频${audios.single.name}...";
+            }
+
+            if (audios.length > 1) {
+              title = "正在导出${audios.length}个音频...";
+            }
+
+            _progressIndicatorDialog?.title = title;
+          });
+        }
+
+        setState(() {
+          _progressIndicatorDialog?.subtitle =
+          "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+          _progressIndicatorDialog?.updateProgress(current / total);
+        });
+      }
+    });
   }
 
   void _rename(AudioItem audio, String newName, Function() onSuccess,
@@ -312,58 +362,52 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
         },
         barrierDismissible: false);
   }
-  
-  void _openFilePicker(AudioItem item) async {
-    String? dir = await FilePicker.platform
-        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
 
-    if (null != dir) {
-      debugPrint("Select directory: $dir");
-
-      _showDownloadProgressDialog(item);
-
-      _downloadFile(item, dir, () {
-        _progressIndicatorDialog?.dismiss();
-      }, (error) {
-        SmartDialog.showToast(error);
-      }, (current, total) {
-        if (_progressIndicatorDialog?.isShowing == true) {
-          if (current > 0) {
-            setState(() {
-              _progressIndicatorDialog?.title = "正在导出音频 ${item.name}";
-            });
-          }
-
-          setState(() {
-            _progressIndicatorDialog?.subtitle =
-            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
-            _progressIndicatorDialog?.updateProgress(current / total);
-          });
-        }
-      });
-    }
+  void _openFilePicker(void onSuccess(String dir), void onError(String error)) {
+    FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true)
+        .then((value) {
+      if (null == value) {
+        onError.call("Dir is null");
+      } else {
+        onSuccess.call(value!);
+      }
+    }).catchError((error) {
+      onError.call(error);
+    });
   }
-
-  void _downloadFile(AudioItem fileItem, String dir, void onSuccess(),
+  
+  void _downloadFiles(List<AudioItem> audios, String dir, void onSuccess(),
       void onError(String error), void onDownload(current, total)) async {
-    String name = fileItem.name;
+    if (audios.isEmpty) return;
+
+    String name = "";
+
+    if (audios.length <= 1) {
+      name = audios.single.name;
+    } else {
+      final df = DateFormat("yyyyMd_HHmmss");
+
+      String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
+
+      name = "AirController_${formatTime}.zip";
+    }
 
     var options = DownloaderUtils(
         progress: ProgressImplementation(),
         file: File("$dir/$name"),
         onDone: () {
-          debugPrint("Download ${fileItem.name} done");
+          debugPrint("Download done");
           onSuccess.call();
         },
         progressCallback: (current, total) {
           debugPrint("total: $total");
-          debugPrint(
-              "Downloading ${fileItem.name}, percent: ${current / total}");
+          debugPrint("Downloading percent: ${current / total}");
           onDownload.call(current, total);
         });
 
-    String api = "${_URL_SERVER}/stream/file?path=${fileItem.folder}/${fileItem.name}";
+    String pathsStr =  Uri.encodeComponent(jsonEncode(audios.map((audio) => audio.path).toList()));
 
+    String api = "${_URL_SERVER}/stream/download?paths=$pathsStr";
     if (null == _downloaderCore) {
       _downloaderCore = await Flowder.download(api, options);
     } else {
@@ -371,7 +415,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
     }
   }
 
-  void _showDownloadProgressDialog(AudioItem audioItem) {
+  void _showDownloadProgressDialog(List<AudioItem> audios) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -381,6 +425,11 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
     }
 
     String title = "正在准备中，请稍后...";
+
+    if (audios.length > 1) {
+      title = "正在压缩中，请稍后...";
+    }
+
     _progressIndicatorDialog?.title = title;
 
     if (!_progressIndicatorDialog!.isShowing) {
@@ -805,11 +854,11 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
-                  _openMenu(event.position, audioItem);
-
                   if (!_selectedAudioItems.contains(audioItem)) {
                     _setAudioSelected(audioItem);
                   }
+
+                  _openMenu(event.position, audioItem);
                 }
               },
             )),
@@ -876,6 +925,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+
                   _openMenu(event.position, audioItem);
                 }
               },
@@ -892,6 +945,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+
                   _openMenu(event.position, audioItem);
                 }
               },
@@ -908,6 +965,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+
                   _openMenu(event.position, audioItem);
                 }
               },
@@ -924,6 +985,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+
                   _openMenu(event.position, audioItem);
                 }
               },
@@ -940,6 +1005,10 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
               ),
               onPointerDown: (event) {
                 if (_isMouseRightClicked(event)) {
+                  if (!_selectedAudioItems.contains(audioItem)) {
+                    _setAudioSelected(audioItem);
+                  }
+
                   _openMenu(event.position, audioItem);
                 }
               },
