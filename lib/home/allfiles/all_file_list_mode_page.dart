@@ -748,9 +748,11 @@ class _DownloadListModeState extends State<AllFileListModePage>
               onPointerDown: (e) {
                 debugPrint("Cell name, ${e.kind.index}");
                 if (_isMouseRightClicked(e)) {
-                  _openMenu(e.position, fileNode);
+                  if (!AllFileManager.instance.isSelected(fileNode)) {
+                    _setFileSelected(fileNode);
+                  }
 
-                  _setFileSelected(fileNode);
+                  _openMenu(e.position, fileNode);
                 }
               },
             )),
@@ -771,6 +773,10 @@ class _DownloadListModeState extends State<AllFileListModePage>
                 debugPrint("Cell size, ${e.kind.index}");
 
                 if (_isMouseRightClicked(e)) {
+                  if (!AllFileManager.instance.isSelected(fileNode)) {
+                    _setFileSelected(fileNode);
+                  }
+
                   _openMenu(e.position, fileNode);
                 }
               },
@@ -789,6 +795,10 @@ class _DownloadListModeState extends State<AllFileListModePage>
                 debugPrint("Cell data, ${e.kind.index}");
 
                 if (_isMouseRightClicked(e)) {
+                  if (!AllFileManager.instance.isSelected(fileNode)) {
+                    _setFileSelected(fileNode);
+                  }
+
                   _openMenu(e.position, fileNode);
                 }
               },
@@ -807,8 +817,11 @@ class _DownloadListModeState extends State<AllFileListModePage>
                 debugPrint("Cell changeDate, ${e.kind.index}");
 
                 if (_isMouseRightClicked(e)) {
-                  _openMenu(e.position, fileNode);
-                }
+                  if (!AllFileManager.instance.isSelected(fileNode)) {
+                    _setFileSelected(fileNode);
+                  }
+
+                  _openMenu(e.position, fileNode);                }
               },
             )),
           ],
@@ -848,9 +861,16 @@ class _DownloadListModeState extends State<AllFileListModePage>
 
   void _openMenu(Offset position, FileNode fileNode) {
     RenderBox? overlay =
-        Overlay.of(context)?.context.findRenderObject() as RenderBox;
+    Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
-    String name = fileNode.data.name;
+    List<FileNode> fileNodes = AllFileManager.instance.selectedFiles();
+    String copyTitle = "";
+
+    if (fileNodes.length == 1) {
+      copyTitle = "拷贝${fileNodes.single.data.name}到电脑";
+    } else {
+      copyTitle = "拷贝 ${fileNodes.length} 项 到 电脑";
+    }
 
     showMenu(
         context: context,
@@ -872,16 +892,16 @@ class _DownloadListModeState extends State<AllFileListModePage>
                 });
               }),
           PopupMenuItem(
-              child: Text("拷贝$name到电脑"),
+              child: Text(copyTitle),
               onTap: () {
-                _openFilePicker(fileNode.data);
+                _openFilePicker(AllFileManager.instance.selectedFiles());
               }),
           PopupMenuItem(
               child: Text("删除"),
               onTap: () {
                 Future<void>.delayed(
                     const Duration(),
-                    () => _tryToDeleteFiles(
+                        () => _tryToDeleteFiles(
                         AllFileManager.instance.selectedFiles()));
               }),
         ]);
@@ -995,16 +1015,16 @@ class _DownloadListModeState extends State<AllFileListModePage>
     }
   }
 
-  void _openFilePicker(FileItem fileItem) async {
+  void _openFilePicker(List<FileNode> files) async {
     String? dir = await FilePicker.platform
         .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
 
     if (null != dir) {
       debugPrint("Select directory: $dir");
 
-      _showDownloadProgressDialog(fileItem);
+      _showDownloadProgressDialog(files);
 
-      _downloadFile(fileItem, dir, () {
+      _downloadFiles(files.map((node) => node.data).toList(), dir, () {
         _progressIndicatorDialog?.dismiss();
       }, (error) {
         SmartDialog.showToast(error);
@@ -1012,13 +1032,24 @@ class _DownloadListModeState extends State<AllFileListModePage>
         if (_progressIndicatorDialog?.isShowing == true) {
           if (current > 0) {
             setState(() {
-              _progressIndicatorDialog?.title = "正在导出文件夹 ${fileItem.name}";
+              String title = "文件导出中，请稍后...";
+              if (files.length == 1) {
+                var fileItem = files.single.data;
+
+                if (fileItem.isDir) {
+                  title = "正在导出文件夹${fileItem.name}";
+                } else {
+                  title = "正在导出文件${fileItem.name}";
+                }
+              }
+
+              _progressIndicatorDialog?.title = title;
             });
           }
 
           setState(() {
             _progressIndicatorDialog?.subtitle =
-                "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
             _progressIndicatorDialog?.updateProgress(current / total);
           });
         }
@@ -1026,35 +1057,37 @@ class _DownloadListModeState extends State<AllFileListModePage>
     }
   }
 
-  void _downloadFile(FileItem fileItem, String dir, void onSuccess(),
+  void _downloadFiles(List<FileItem> fileItems, String dir, void onSuccess(),
       void onError(String error), void onDownload(current, total)) async {
-    String name = fileItem.name;
+    String name = "";
 
-    if (fileItem.isDir) {
-      name = "${name}.zip";
+    if (fileItems.length <= 1) {
+      name = fileItems.single.name;
+    } else {
+      final df = DateFormat("yyyyMd_HHmmss");
+
+      String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
+
+      name = "AirController_${formatTime}.zip";
     }
 
     var options = DownloaderUtils(
         progress: ProgressImplementation(),
         file: File("$dir/$name"),
         onDone: () {
-          debugPrint("Download ${fileItem.name} done");
           onSuccess.call();
         },
         progressCallback: (current, total) {
           debugPrint("total: $total");
-          debugPrint(
-              "Downloading ${fileItem.name}, percent: ${current / total}");
+          debugPrint("Downloading percent: ${current / total}");
           onDownload.call(current, total);
         });
 
-    String api =
-        "${_URL_SERVER}/stream/file?path=${fileItem.folder}/${fileItem.name}";
+    List<String> paths = fileItems.map((file) => "${file.folder}/${file.name}").toList();
 
-    if (fileItem.isDir) {
-      api =
-          "${_URL_SERVER}/stream/dir?path=${fileItem.folder}/${fileItem.name}";
-    }
+    String pathsStr =  Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "${_URL_SERVER}/stream/download?paths=$pathsStr";
 
     if (null == _downloaderCore) {
       _downloaderCore = await Flowder.download(api, options);
@@ -1063,7 +1096,7 @@ class _DownloadListModeState extends State<AllFileListModePage>
     }
   }
 
-  void _showDownloadProgressDialog(FileItem fileItem) {
+  void _showDownloadProgressDialog(List<FileNode> files) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -1072,7 +1105,20 @@ class _DownloadListModeState extends State<AllFileListModePage>
       });
     }
 
-    String title = fileItem.isDir ? "正在压缩中，请稍后..." : "正在准备中，请稍后...";
+    String title = "正在准备中，请稍后...";
+
+    if (files.length == 1) {
+      FileNode fileNode = files.single;
+
+      if (fileNode.data.isDir) {
+        title = "正在压缩中，请稍后...";
+      }
+    }
+
+    if (files.length > 1) {
+      title = "正在压缩中，请稍后...";
+    }
+
     _progressIndicatorDialog?.title = title;
 
     if (!_progressIndicatorDialog!.isShowing) {
