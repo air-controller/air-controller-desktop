@@ -866,7 +866,20 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
       });
     }
 
-    String title = files.length > 1 ? "正在压缩中，请稍后..." : "正在准备中，请稍后...";
+    String title = "正在准备中，请稍后...";
+
+    if (files.length == 1) {
+      FileNode fileNode = files.single;
+
+      if (fileNode.data.isDir) {
+        title = "正在压缩中，请稍后...";
+      }
+    }
+
+    if (files.length > 1) {
+      title = "正在压缩中，请稍后...";
+    }
+
     _progressIndicatorDialog?.title = title;
 
     if (!_progressIndicatorDialog!.isShowing) {
