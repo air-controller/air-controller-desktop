@@ -22,6 +22,7 @@ import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
+import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -78,6 +79,12 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
 
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
+
+  final _KB_BOUND = 1 * 1024;
+  final _MB_BOUND = 1 * 1024 * 1024;
+  final _GB_BOUND = 1 * 1024 * 1024 * 1024;
+
+  ProgressIndicatorDialog? _progressIndicatorDialog;
 
   StreamSubscription<UpdateImageArrangeMode>? _updateArrangeModeSubscription;
   StreamSubscription<DeleteOp>? _deleteOpSubscription;
@@ -408,11 +415,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
               debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
               if (_isMouseRightClicked(event)) {
-                _openMenu(event.position, image);
-
                 if (!_selectedImages.contains(image)) {
                   _setImageSelected(image);
                 }
+
+                _openMenu(event.position, image);
               }
             }
           );
@@ -532,11 +539,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                           debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                           if (_isMouseRightClicked(event)) {
-                            _openMenu(event.position, image);
-
                             if (!_selectedImages.contains(image)) {
                               _setImageSelected(image);
                             }
+
+                            _openMenu(event.position, image);
                           }
                         }
                       );
@@ -657,11 +664,11 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                           debugPrint("Mouse clicked, is right key: ${_isMouseRightClicked(event)}");
 
                           if (_isMouseRightClicked(event)) {
-                            _openMenu(event.position, image);
-
                             if (!_selectedImages.contains(image)) {
                               _setImageSelected(image);
                             }
+
+                            _openMenu(event.position, image);
                           }
                         }
                       );
@@ -683,10 +690,21 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     // 为什么这样可以？值得思考
     RenderBox? overlay = Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
-    String name = imageItem.path;
-    int index = name.lastIndexOf("/");
-    if (index != -1) {
-      name = name.substring(index + 1);
+    String copyTitle = "";
+
+    if (_selectedImages.length == 1) {
+      ImageItem imageItem = _selectedImages.single;
+
+      String name = "";
+
+      int index = imageItem.path.lastIndexOf("/");
+      if (index != -1) {
+        name = imageItem.path.substring(index + 1);
+      }
+
+      copyTitle = "拷贝${name}到电脑";
+    } else {
+      copyTitle = "拷贝 ${_selectedImages.length} 项 到 电脑";
     }
 
     showMenu(
@@ -696,14 +714,99 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
           PopupMenuItem(child: Text("打开"), onTap: () {
             _openImageDetail(_allImages, imageItem);
           }),
-          PopupMenuItem(child: Text("拷贝$name到电脑"), onTap: () {
-            _openFilePicker(imageItem);
+          PopupMenuItem(child: Text(copyTitle), onTap: () {
+            _openFilePicker((dir) {
+              _startDownload(dir, _selectedImages);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
           }),
           PopupMenuItem(child: Text("删除"), onTap: () {
             Future<void>.delayed(const Duration(), () => _deleteImage());
           }),
         ]
     );
+  }
+
+  void _showDownloadProgressDialog(List<ImageItem> images) {
+    if (null == _progressIndicatorDialog) {
+      _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
+      _progressIndicatorDialog?.onCancelClick(() {
+        _downloaderCore?.cancel();
+        _progressIndicatorDialog?.dismiss();
+      });
+    }
+
+    String title = "正在准备中，请稍后...";
+
+    if (images.length > 1) {
+      title = "正在压缩中，请稍后...";
+    }
+
+    _progressIndicatorDialog?.title = title;
+
+    if (!_progressIndicatorDialog!.isShowing) {
+      _progressIndicatorDialog!.show();
+    }
+  }
+
+  void _startDownload(String dir, List<ImageItem> images) {
+    _showDownloadProgressDialog(images);
+
+    _downloadFiles(images, dir, () {
+      _progressIndicatorDialog?.dismiss();
+    }, (error) {
+      debugPrint("_startDownload, $error");
+      _progressIndicatorDialog?.dismiss();
+
+      SmartDialog.showToast(error);
+    }, (current, total) {
+      if (_progressIndicatorDialog?.isShowing == true) {
+        if (current > 0) {
+          setState(() {
+            String title = "正在导出图片";
+
+            if (images.length == 1) {
+              String name = "";
+
+              int index = images.single.path.lastIndexOf("/");
+              if (index != -1) {
+                name = images.single.path.substring(index + 1);
+              }
+
+              title = "正在导出图片$name...";
+            }
+
+            if (images.length > 1) {
+              title = "正在导出${images.length}张图片...";
+            }
+
+            _progressIndicatorDialog?.title = title;
+          });
+        }
+
+        setState(() {
+          _progressIndicatorDialog?.subtitle =
+          "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
+          _progressIndicatorDialog?.updateProgress(current / total);
+        });
+      }
+    });
+  }
+
+  String _convertToReadableSize(int size) {
+    if (size < _KB_BOUND) {
+      return "${size}Byte";
+    }
+    if (size >= _KB_BOUND && size < _MB_BOUND) {
+      return "${size ~/ 1024}KB";
+    }
+
+    if (size >= _MB_BOUND && size <= _GB_BOUND) {
+      return "${size / 1024 ~/ 1024}MB";
+    }
+
+    return "${size / 1024 / 1024 ~/ 1024}GB";
   }
 
   void _showConfirmDialog(
@@ -795,50 +898,59 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
     alert.show();
   }
 
-  void _openFilePicker(ImageItem imageItem) async {
-    String? dir = await FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
-
-    if (null != dir) {
-      debugPrint("Select directory: $dir");
-
-      SmartDialog.showLoading(msg: "请稍后");
-
-      _downloadImage(imageItem, dir, () {
-        SmartDialog.dismiss();
-        // SmartDialog.showToast("图片已保存至${dir}");
-      }, (error) {
-        SmartDialog.dismiss();
-        SmartDialog.showToast(error);
-      }, (current, total) {
-
-      });
-    }
+  void _openFilePicker(void onSuccess(String dir), void onError(String error)) {
+    FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true)
+        .then((value) {
+      if (null == value) {
+        onError.call("Dir is null");
+      } else {
+        onSuccess.call(value);
+      }
+    }).catchError((error) {
+      onError.call(error);
+    });
   }
 
-  void _downloadImage(ImageItem imageItem, String dir, void onSuccess(), void onError(String error), void onDownload(current, total)) async {
-    String name = imageItem.path;
-    int index = name.lastIndexOf("/");
-    if (index != -1) {
-      name = name.substring(index + 1);
+  void _downloadFiles(List<ImageItem> images, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    if (images.isEmpty) return;
+
+    String name = "";
+
+    if (images.length <= 1) {
+      int index = images.single.path.lastIndexOf("/");
+
+      if (index != -1) {
+        name = images.single.path.substring(index + 1);
+      }
+    } else {
+      final df = DateFormat("yyyyMd_HHmmss");
+
+      String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
+
+      name = "AirController_${formatTime}.zip";
     }
 
     var options = DownloaderUtils(
         progress: ProgressImplementation(),
         file: File("$dir/$name"),
         onDone: () {
-          debugPrint("Download ${imageItem.path} done");
+          debugPrint("Download done");
           onSuccess.call();
-        }, progressCallback: (current, total) {
-      debugPrint(
-          "Downloading ${imageItem.path}, percent: ${current / total}");
-      onDownload.call(current, total);
-    });
+        },
+        progressCallback: (current, total) {
+          debugPrint("total: $total");
+          debugPrint("Downloading percent: ${current / total}");
+          onDownload.call(current, total);
+        });
 
+    String pathsStr =  Uri.encodeComponent(jsonEncode(images.map((audio) => audio.path).toList()));
+
+    String api = "${_URL_SERVER}/stream/download?paths=$pathsStr";
     if (null == _downloaderCore) {
-      _downloaderCore = await Flowder.download(
-          "${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+      _downloaderCore = await Flowder.download(api, options);
     } else {
-      _downloaderCore?.download("${_URL_SERVER}/stream/file?path=${imageItem.path}", options);
+      _downloaderCore?.download(api, options);
     }
   }
 
