@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_pressed.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
@@ -68,7 +69,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   List<VideoFolderItem> _selectedVideoFolders = [];
   List<VideoFolderItem> _videoFolders = [];
 
-  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
+  final _URL_SERVER = "http://${DeviceConnectionManager.instance.currentDevice
+      ?.ip}:${Constant.PORT_HTTP}";
 
   bool _isFolderPageVisible = false;
   bool _isVideosInFolderPageVisible = false;
@@ -154,18 +156,19 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
       }
     });
 
-    _updateVideoSortOrderStream = eventBus.on<UpdateVideoSortOrder>().listen((event) {
-      if (event.type == UpdateVideoSortOrder.TYPE_CREATE_TIME) {
-        setState(() {
-          _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
+    _updateVideoSortOrderStream =
+        eventBus.on<UpdateVideoSortOrder>().listen((event) {
+          if (event.type == UpdateVideoSortOrder.TYPE_CREATE_TIME) {
+            setState(() {
+              _currentSortOrder = VideoManagerState.SORT_ORDER_CREATE_TIME;
+            });
+          } else {
+            setState(() {
+              _currentSortOrder = VideoManagerState.SORT_ORDER_SIZE;
+            });
+          }
+          _reSortVideos();
         });
-      } else {
-        setState(() {
-          _currentSortOrder = VideoManagerState.SORT_ORDER_SIZE;
-        });
-      }
-      _reSortVideos();
-    });
   }
 
   void _reSortVideos() {
@@ -250,9 +253,12 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
               },
               onKey: (node, event) {
-                debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+                debugPrint(
+                    "Outside key pressed: ${event.logicalKey.keyId}, ${event
+                        .logicalKey.keyLabel}");
 
-                _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                _isControlPressed =
+                Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
                 _isShiftPressed = event.isShiftPressed;
 
                 if (Platform.isMacOS) {
@@ -311,7 +317,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                           ),
 
                           Image.asset("icons/ic_right_arrow.png", height: 20),
-                          Text(_currentVideoFolder?.name ?? "", style: TextStyle(
+                          Text(
+                              _currentVideoFolder?.name ?? "", style: TextStyle(
                               color: Color(0xff5b5c62),
                               fontSize: 14
                           ))
@@ -321,7 +328,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                       height: 30,
                     ),
 
-                    Divider(color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+                    Divider(
+                        color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
 
                     Expanded(child: Stack(children: [
                       videosInFolderWidget,
@@ -341,9 +349,12 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
               },
               onKey: (node, event) {
-                debugPrint("Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
+                debugPrint(
+                    "Outside key pressed: ${event.logicalKey.keyId}, ${event
+                        .logicalKey.keyLabel}");
 
-                _isControlPressed = Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                _isControlPressed =
+                Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
                 _isShiftPressed = event.isShiftPressed;
 
                 if (Platform.isMacOS) {
@@ -444,15 +455,18 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
           if (current >= minIndex && current <= maxIndex) {
             setState(() {
-              _selectedVideoFolders = _videoFolders.sublist(current, maxIndex + 1);
+              _selectedVideoFolders =
+                  _videoFolders.sublist(current, maxIndex + 1);
             });
           } else if (current < minIndex) {
             setState(() {
-              _selectedVideoFolders = _videoFolders.sublist(current, maxIndex + 1);
+              _selectedVideoFolders =
+                  _videoFolders.sublist(current, maxIndex + 1);
             });
           } else if (current > maxIndex) {
             setState(() {
-              _selectedVideoFolders = _videoFolders.sublist(minIndex, current + 1);
+              _selectedVideoFolders =
+                  _videoFolders.sublist(minIndex, current + 1);
             });
           }
         }
@@ -514,11 +528,13 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
           if (current > index) {
             setState(() {
-              _selectedVideosInFolder = _videosInFolder.sublist(index, current + 1);
+              _selectedVideosInFolder =
+                  _videosInFolder.sublist(index, current + 1);
             });
           } else {
             setState(() {
-              _selectedVideosInFolder = _videosInFolder.sublist(current, index + 1);
+              _selectedVideosInFolder =
+                  _videosInFolder.sublist(current, index + 1);
             });
           }
         } else {
@@ -548,15 +564,18 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
           if (current >= minIndex && current <= maxIndex) {
             setState(() {
-              _selectedVideosInFolder = _videosInFolder.sublist(current, maxIndex + 1);
+              _selectedVideosInFolder =
+                  _videosInFolder.sublist(current, maxIndex + 1);
             });
           } else if (current < minIndex) {
             setState(() {
-              _selectedVideosInFolder = _videosInFolder.sublist(current, maxIndex + 1);
+              _selectedVideosInFolder =
+                  _videosInFolder.sublist(current, maxIndex + 1);
             });
           } else if (current > maxIndex) {
             setState(() {
-              _selectedVideosInFolder = _videosInFolder.sublist(minIndex, current + 1);
+              _selectedVideosInFolder =
+                  _videosInFolder.sublist(minIndex, current + 1);
             });
           }
         }
@@ -679,7 +698,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                         Container(
                           child: CachedNetworkImage(
                               imageUrl:
-                              "${_URL_SERVER}/stream/video/thumbnail/${videoFolder.coverVideoId}/400/400"
+                              "${_URL_SERVER}/stream/video/thumbnail/${videoFolder
+                                  .coverVideoId}/400/400"
                                   .replaceAll("storage/emulated/0/", ""),
                               fit: BoxFit.cover,
                               width: imageWidth,
@@ -698,7 +718,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                       ],
                     ),
                     decoration: BoxDecoration(
-                        color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
+                        color: _isContainsVideoFolder(
+                            _selectedVideoFolders, videoFolder)
                             ? _BACKGROUND_ALBUM_SELECTED
                             : _BACKGROUND_ALBUM_NORMAL,
                         borderRadius: BorderRadius.all(Radius.circular(4.0))),
@@ -722,7 +743,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                         Text(
                           videoFolder.name,
                           style: TextStyle(
-                              color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
+                              color: _isContainsVideoFolder(
+                                  _selectedVideoFolders, videoFolder)
                                   ? _ALBUM_NAME_TEXT_COLOR_SELECTED
                                   : _ALBUM_NAME_TEXT_COLOR_NORMAL),
                         ),
@@ -730,7 +752,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                           child: Text(
                             "(${videoFolder.videoCount})",
                             style: TextStyle(
-                                color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
+                                color: _isContainsVideoFolder(
+                                    _selectedVideoFolders, videoFolder)
                                     ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED
                                     : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL),
                           ),
@@ -741,7 +764,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                     margin: EdgeInsets.only(top: 10),
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(3)),
-                        color: _isContainsVideoFolder(_selectedVideoFolders, videoFolder)
+                        color: _isContainsVideoFolder(
+                            _selectedVideoFolders, videoFolder)
                             ? _BACKGROUND_ALBUM_NAME_SELECTED
                             : _BACKGROUND_ALBUM_NAME_NORMAL),
                     padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
@@ -756,10 +780,11 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
             ),
             onPointerDown: (event) {
               if (_isMouseRightClicked(event)) {
-                _showMenu(event.position, videoFolder);
                 if (!_selectedVideoFolders.contains(videoFolder)) {
                   _setVideoFolderSelected(videoFolder);
                 }
+
+                _showMenu(event.position, videoFolder);
               }
             },
           );
@@ -772,7 +797,8 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     );
   }
 
-  bool _isContainsVideoFolder(List<VideoFolderItem> folders, VideoFolderItem current) {
+  bool _isContainsVideoFolder(List<VideoFolderItem> folders,
+      VideoFolderItem current) {
     for (VideoFolderItem folder in folders) {
       if (folder.id == current.id) return true;
     }
@@ -815,12 +841,13 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     });
   }
 
-  void _getVideosInFolder(String folderId, Function(List<VideoItem> videos) onSuccess,
+  void _getVideosInFolder(String folderId,
+      Function(List<VideoItem> videos) onSuccess,
       Function(String error) onError) {
     var url = Uri.parse("${_URL_SERVER}/video/videosInFolder");
     http.post(url,
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"folderId" : folderId}))
+        body: json.encode({"folderId": folderId}))
         .then((response) {
       if (response.statusCode != 200) {
         onError.call(response.reasonPhrase != null
@@ -873,30 +900,30 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
 
   Widget _createVideosWidget() {
     return VideoFlowWidget(
-        videos: _videosInFolder,
-        selectedVideos: _selectedVideosInFolder,
-        sortOrder: _currentSortOrder,
-        onVideoTap: (video) {
-          _setVideoSelected(video);
-        },
-        onOutsideTap: () {
-          _clearSelectedVideosInFolder();
-        },
-        onVisibleChange: (totalVisible, partOfVisible) {
-          setState(() {
-            _isVideosInFolderPageVisible = totalVisible;
-            if (_isVideosInFolderPageVisible) {
-              updateBottomItemNum();
-            }
-          });
-        },
-        onVideoDoubleTap: (video) {
-          _openVideoWithSystemApp(video);
-        },
-      onPointerDown: (event, video) {
-          if (_isMouseRightClicked(event)) {
-            _showMenu(event.position, video);
+      videos: _videosInFolder,
+      selectedVideos: _selectedVideosInFolder,
+      sortOrder: _currentSortOrder,
+      onVideoTap: (video) {
+        _setVideoSelected(video);
+      },
+      onOutsideTap: () {
+        _clearSelectedVideosInFolder();
+      },
+      onVisibleChange: (totalVisible, partOfVisible) {
+        setState(() {
+          _isVideosInFolderPageVisible = totalVisible;
+          if (_isVideosInFolderPageVisible) {
+            updateBottomItemNum();
           }
+        });
+      },
+      onVideoDoubleTap: (video) {
+        _openVideoWithSystemApp(video);
+      },
+      onPointerDown: (event, video) {
+        if (_isMouseRightClicked(event)) {
+          _showMenu(event.position, video);
+        }
       },
     );
   }
@@ -907,14 +934,33 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
   }
 
   void _showMenu(Offset position, dynamic item) {
-    if (item !is VideoFolderItem && item !is VideoItem) {
+    if (item! is VideoFolderItem && item! is VideoItem) {
       throw "item must be one of VideoFolderItem or VideoItem";
     }
-    
-    RenderBox? overlay =
-    Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
-    String name = item.name;
+    RenderBox? overlay =
+    Overlay
+        .of(context)
+        ?.context
+        .findRenderObject() as RenderBox;
+
+    String copyTitle = "";
+
+    if (item is VideoFolderItem) {
+      if (_selectedVideoFolders.length == 1) {
+        copyTitle = "拷贝${_selectedVideoFolders.single.name}到电脑";
+      } else {
+        copyTitle = "拷贝 ${_selectedVideoFolders.length} 项 到 电脑";
+      }
+    }
+
+    if (item is VideoItem) {
+      if (_selectedVideosInFolder.length == 1) {
+        copyTitle = "拷贝${_selectedVideosInFolder.single.name}到电脑";
+      } else {
+        copyTitle = "拷贝 ${_selectedVideosInFolder.length} 项 到 电脑";
+      }
+    }
 
     showMenu(
         context: context,
@@ -933,14 +979,24 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                 }
               }),
           PopupMenuItem(
-              child: Text("拷贝$name到电脑"),
+              child: Text(copyTitle),
               onTap: () {
-                _openFilePicker(item);
+                _openFilePicker((dir) {
+                  if (item is VideoFolderItem) {
+                    _startDownload(true, dir);
+                  }
+
+                  if (item is VideoItem) {
+                    _startDownload(false, dir);
+                  }
+                }, (error) {
+                  debugPrint("_openFilePicker, error: $error");
+                });
               }),
           PopupMenuItem(
               child: Text("删除"),
               onTap: () {
-                Future<void>.delayed(const Duration(),() {
+                Future<void>.delayed(const Duration(), () {
                   if (item is VideoFolderItem) {
                     _tryToDeleteVideoFolders(_selectedVideoFolders);
                   } else {
@@ -951,75 +1007,103 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         ]);
   }
 
-  void _openFilePicker(dynamic item) async {
-    if (item !is VideoFolderItem && item !is VideoItem) {
-      throw "item must be one of VideoFolderItem or VideoItem";
-    }
-    
-    String? dir = await FilePicker.platform
-        .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
-
-    if (null != dir) {
-      debugPrint("Select directory: $dir");
-
-      _showDownloadProgressDialog(item);
-
-      _downloadFile(item, dir, () {
-        _progressIndicatorDialog?.dismiss();
-      }, (error) {
-        SmartDialog.showToast(error);
-      }, (current, total) {
-        if (_progressIndicatorDialog?.isShowing == true) {
-          if (current > 0) {
-            setState(() {
-              var title = item is VideoItem ? "正在导出视频 ${item.name}" : "正在导出视频文件夹 ${item.name}";
-              _progressIndicatorDialog?.title = title;
-            });
+  void _openFilePicker(void onSuccess(String dir), void onError(String error)) {
+    FilePicker.platform.getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true)
+        .then((value) {
+          if (null == value) {
+            onError.call("Dir is null");
+          } else {
+            onSuccess.call(value!);
           }
-
-          setState(() {
-            _progressIndicatorDialog?.subtitle =
-            "${_convertToReadableSize(current)}/${_convertToReadableSize(total)}";
-            _progressIndicatorDialog?.updateProgress(current / total);
-          });
-        }
-      });
-    }
+    }).catchError((error) {
+      onError.call(error);
+    });
   }
 
-  void _downloadFile(dynamic item, String dir, void onSuccess(),
-      void onError(String error), void onDownload(current, total)) async {
-    if (item !is VideoFolderItem && item !is VideoItem) {
-      throw "item must be one of VideoFolderItem or VideoItem";
+  void _startDownload(bool isDownloadFolders, String dir) {
+    List<String> paths = _selectedVideoFolders.map((folder) => folder.path).toList();
+
+    if (!isDownloadFolders) {
+      paths = _selectedVideosInFolder.map((video) => video.path).toList();
     }
-    
-    String name = item.name;
-    
-    if (item is VideoFolderItem) {
-      name = "${item.name}.zip";
+
+    _showDownloadProgressDialog(isDownloadFolders);
+
+    _downloadFiles(paths, dir, () {
+      _progressIndicatorDialog?.dismiss();
+    }, (error) {
+      SmartDialog.showToast(error);
+    }, (current, total) {
+      if (_progressIndicatorDialog?.isShowing == true) {
+        if (current > 0) {
+          setState(() {
+            String title = "视频导出中，请稍后...";
+
+            if (isDownloadFolders) {
+              if (_selectedVideoFolders.length > 1) {
+                title = "正在导出${_selectedVideoFolders.length}个视频文件夹";
+              }
+
+              if (_selectedVideoFolders.length == 1) {
+                title = "正在导出视频文件夹${_selectedVideoFolders.single.name}";
+              }
+            } else {
+              if (_selectedVideosInFolder.length > 1) {
+                title = "正在导出${_selectedVideosInFolder.length}个视频文件夹";
+              }
+
+              if (_selectedVideosInFolder.length == 1) {
+                title = "正在导出视频${_selectedVideosInFolder.single.name}";
+              }
+            }
+
+            _progressIndicatorDialog?.title = title;
+          });
+        }
+
+        setState(() {
+          _progressIndicatorDialog?.subtitle =
+          "${_convertToReadableSize(current)}/${_convertToReadableSize(
+              total)}";
+          _progressIndicatorDialog?.updateProgress(current / total);
+        });
+      }
+    });
+  }
+
+  void _downloadFiles(List<String> paths, String dir, void onSuccess(),
+      void onError(String error), void onDownload(current, total)) async {
+    String name = "";
+
+    if (paths.length <= 1) {
+      String path = paths.single;
+      int index = path.lastIndexOf("/");
+      if (index != -1) {
+        name = path.substring(index + 1);
+      }
+    } else {
+      final df = DateFormat("yyyyMd_HHmmss");
+
+      String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
+
+      name = "AirController_${formatTime}.zip";
     }
 
     var options = DownloaderUtils(
         progress: ProgressImplementation(),
         file: File("$dir/$name"),
         onDone: () {
-          debugPrint("Download ${item.name} done");
           onSuccess.call();
         },
         progressCallback: (current, total) {
-          debugPrint("total: $total");
-          debugPrint(
-              "Downloading ${item.name}, percent: ${current / total}");
+          debugPrint("total: $total, current: $current");
+
           onDownload.call(current, total);
         });
 
-    String api = "";
+    String pathsStr =  Uri.encodeComponent(jsonEncode(paths));
 
-    if (item is VideoFolderItem) {
-      api = "${_URL_SERVER}/stream/dir?path=${item.path}";
-    } else {
-      api = "${_URL_SERVER}/stream/file?path=${item.path}";
-    }
+    String api = "${_URL_SERVER}/stream/download?paths=$pathsStr";
 
     if (null == _downloaderCore) {
       _downloaderCore = await Flowder.download(api, options);
@@ -1189,11 +1273,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     return "${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB";
   }
 
-  void _showDownloadProgressDialog(dynamic item) {
-    if (item !is VideoFolderItem && item !is VideoItem) {
-      throw "item must be one of VideoFolderItem or VideoItem";
-    }
-    
+  void _showDownloadProgressDialog(bool isDownloadFolders) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -1203,11 +1283,15 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
     }
 
     String title = "正在准备中，请稍后...";
-    
-    if (item is VideoFolderItem) {
+
+    if (isDownloadFolders) {
       title = "正在压缩中，请稍后...";
+    } else {
+      if (_selectedVideosInFolder.length > 1) {
+        title = "正在压缩中，请稍后...";
+      }
     }
-    
+
     _progressIndicatorDialog?.title = title;
 
     if (!_progressIndicatorDialog!.isShowing) {

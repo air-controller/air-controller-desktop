@@ -11,6 +11,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/event/back_btn_visibility.dart';
 import 'package:mobile_assistant_client/event/delete_op.dart';
 import 'package:mobile_assistant_client/event/update_delete_btn_status.dart';
@@ -410,11 +411,11 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
             ),
             onPointerDown: (event) {
               if (_isMouseRightClicked(event)) {
-                _openMenu(event.position, videoItem);
-
                 if (!_isSelected(videoItem)) {
                   _setVideoSelected(videoItem);
                 }
+
+                _openMenu(event.position, videoItem);
               }
             },
           );
@@ -502,7 +503,13 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     RenderBox? overlay =
     Overlay.of(context)?.context.findRenderObject() as RenderBox;
 
-    String name = videoItem.name;
+    String copyTitle = "";
+
+    if (_selectedVideos.length == 1) {
+      copyTitle = "拷贝${_selectedVideos.single.name}到电脑";
+    } else {
+      copyTitle = "拷贝 ${_selectedVideos.length} 项 到 电脑";
+    }
 
     showMenu(
         context: context,
@@ -516,9 +523,9 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
                 _openVideoWithSystemApp(videoItem);
               }),
           PopupMenuItem(
-              child: Text("拷贝$name到电脑"),
+              child: Text(copyTitle),
               onTap: () {
-                _openFilePicker(videoItem);
+                _openFilePicker(_selectedVideos);
               }),
           PopupMenuItem(
               child: Text("删除"),
@@ -616,7 +623,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
         });
   }
 
-  void _showDownloadProgressDialog(VideoItem videoItem) {
+  void _showDownloadProgressDialog(List<VideoItem> videos) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -626,6 +633,11 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     }
 
     String title = "正在准备中，请稍后...";
+
+    if (videos.length > 1) {
+      title = "正在压缩中，请稍后...";
+    }
+
     _progressIndicatorDialog?.title = title;
 
     if (!_progressIndicatorDialog!.isShowing) {
@@ -633,16 +645,16 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     }
   }
   
-  void _openFilePicker(VideoItem videoItem) async {
+  void _openFilePicker(List<VideoItem> videos) async {
     String? dir = await FilePicker.platform
         .getDirectoryPath(dialogTitle: "选择目录", lockParentWindow: true);
 
     if (null != dir) {
       debugPrint("Select directory: $dir");
 
-      _showDownloadProgressDialog(videoItem);
+      _showDownloadProgressDialog(videos);
 
-      _downloadFile(videoItem, dir, () {
+      _downloadFiles(videos, dir, () {
         _progressIndicatorDialog?.dismiss();
       }, (error) {
         SmartDialog.showToast(error);
@@ -650,7 +662,17 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
         if (_progressIndicatorDialog?.isShowing == true) {
           if (current > 0) {
             setState(() {
-              _progressIndicatorDialog?.title = "正在导出视频 ${videoItem.name}";
+              String title = "视频导出中，请稍后...";
+
+              if (_selectedVideos.length == 1) {
+                title = "正在导出视频${_selectedVideos.single.name}...";
+              }
+
+              if (_selectedVideos.length > 1) {
+                title = "正在导出${_selectedVideos.length}个视频...";
+              }
+
+              _progressIndicatorDialog?.title = title;
             });
           }
 
@@ -679,25 +701,37 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
     return "${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB";
   }
 
-  void _downloadFile(VideoItem videoItem, String dir, void onSuccess(),
+  void _downloadFiles(List<VideoItem> videos, String dir, void onSuccess(),
       void onError(String error), void onDownload(current, total)) async {
-    String name = videoItem.name;
+    String name = "";
+
+    if (videos.length <= 1) {
+      name = videos.single.name;
+    } else {
+      final df = DateFormat("yyyyMd_HHmmss");
+
+      String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
+
+      name = "AirController_${formatTime}.zip";
+    }
 
     var options = DownloaderUtils(
         progress: ProgressImplementation(),
         file: File("$dir/$name"),
         onDone: () {
-          debugPrint("Download ${videoItem.name} done");
           onSuccess.call();
         },
         progressCallback: (current, total) {
-          debugPrint("total: $total");
-          debugPrint(
-              "Downloading ${videoItem.name}, percent: ${current / total}");
+          debugPrint("total: $total, current: $current");
+
           onDownload.call(current, total);
         });
 
-    String api = "${_URL_SERVER}/stream/file?path=${videoItem.path}";
+    List<String> paths = videos.map((video) => "${video.path}").toList();
+
+    String pathsStr =  Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "${_URL_SERVER}/stream/download?paths=$pathsStr";
 
     if (null == _downloaderCore) {
       _downloaderCore = await Flowder.download(api, options);
