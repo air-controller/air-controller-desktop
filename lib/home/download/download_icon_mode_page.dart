@@ -31,6 +31,7 @@ import 'package:mobile_assistant_client/widget/confirm_dialog_builder.dart';
 import 'package:mobile_assistant_client/widget/progress_indictor_dialog.dart';
 
 import '../../constant.dart';
+import '../../constant_pool.dart';
 import '../file_manager.dart';
 
 class DownloadIconModePage extends StatefulWidget {
@@ -232,15 +233,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
       if (isDir) {
         return "icons/ic_large_type_folder.png";
       } else {
-        if (_isAudio(extension)) {
-          return "icons/ic_large_type_audio.png";
-        }
-
-        if (_isTextFile(extension)) {
-          return "icons/ic_large_type_txt.png";
-        }
-
-        return "icons/ic_large_type_doc.png";
+        return ConstantPool.fileExtensionIconMap[extension] ?? ConstantPool.fileExtensionIconMap["other"]!;
       }
     }
 
