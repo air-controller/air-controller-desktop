@@ -1387,6 +1387,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     if (_currentImageIndex > 0) {
       setState(() {
         _currentImageIndex--;
+        _imageDetailFocusNode?.requestFocus();
       });
     }
   }
@@ -1395,6 +1396,7 @@ class ImageManagerState extends State<ImageManagerPage> {
     if (_currentImageIndex < _allImageItems.length - 1) {
       setState(() {
         _currentImageIndex++;
+        _imageDetailFocusNode?.requestFocus();
       });
     }
   }
