@@ -273,7 +273,7 @@ packages:
       name: file_picker
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "4.3.2"
+    version: "4.3.3"
   flowder:
     dependency: "direct main"
     description:
@@ -336,7 +336,7 @@ packages:
       name: flutter_smart_dialog
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.3.6"
+    version: "3.3.7"
   flutter_spinkit:
     dependency: "direct main"
     description:
@@ -438,6 +438,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.12.11"
+  material_color_utilities:
+    dependency: transitive
+    description:
+      name: material_color_utilities
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.2"
   material_segmented_control:
     dependency: "direct main"
     description:
@@ -757,14 +764,14 @@ packages:
       name: syncfusion_flutter_core
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "19.4.43+1"
+    version: "19.4.47"
   syncfusion_flutter_datagrid:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_datagrid
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "19.4.43"
+    version: "19.4.47"
   synchronized:
     dependency: transitive
     description:
@@ -785,7 +792,7 @@ packages:
       name: test_api
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.4.3"
+    version: "0.4.8"
   tuple:
     dependency: transitive
     description:
@@ -876,7 +883,7 @@ packages:
       name: video_player
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.2.14"
+    version: "2.2.16"
   video_player_platform_interface:
     dependency: transitive
     description:

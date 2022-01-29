@@ -57,7 +57,7 @@ class ConfirmDialogBuilder {
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset("icons/ic_android.jpg", width: 60, height: 60),
+                  Image.asset("icons/ic_app_icon.png", width: 60, height: 60),
 
                   Container(
                     child: Text(contentStr ?? "", style: TextStyle(
