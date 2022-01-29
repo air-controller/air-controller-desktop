@@ -76,8 +76,6 @@ class _DownloadListModeState extends State<AllFileListModePage>
   final _URL_SERVER =
       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}/";
 
-  late Function() _ctrlAPressedCallback;
-
   StreamSubscription<RefreshAllFileList>? _refreshDownloadFileList;
   StreamSubscription<DeleteOp>? _deleteOpSubscription;
 
@@ -97,14 +95,6 @@ class _DownloadListModeState extends State<AllFileListModePage>
     super.initState();
 
     _registerEventBus();
-
-    _ctrlAPressedCallback = () {
-      _setAllSelected();
-      debugPrint("Ctrl + A pressed...");
-    };
-
-    _addCtrlAPressedCallback(_ctrlAPressedCallback);
-    debugPrint("_DownloadListModeState: initState, instance: $this");
   }
 
   void _registerEventBus() {
@@ -1158,16 +1148,6 @@ class _DownloadListModeState extends State<AllFileListModePage>
     return _isShiftPressed;
   }
 
-  void _addCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.addCtrlAPressedCallback(callback);
-  }
-
-  void _removeCtrlAPressedCallback(Function() callback) {
-    FileManagerPage.fileManagerKey.currentState
-        ?.removeCtrlAPressedCallback(callback);
-  }
-
   void _setFileSelected(FileNode fileNode) {
     debugPrint("Shift key down status: ${_isShiftDown()}");
     debugPrint("Control key down status: ${_isControlDown()}");
@@ -1326,8 +1306,6 @@ class _DownloadListModeState extends State<AllFileListModePage>
     super.deactivate();
 
     _unRegisterEventBus();
-    _removeCtrlAPressedCallback(_ctrlAPressedCallback);
-    debugPrint("DownloadListModePage deactivate, instance: $this");
     _rootFocusNode?.unfocus();
   }
 

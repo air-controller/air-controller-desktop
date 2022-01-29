@@ -48,14 +48,6 @@ class FileManagerState extends State<FileManagerPage> {
   static final _DEFAULT_SELECTED_PAGE_INDEX = 0;
   int _selectedPageIndex = _DEFAULT_SELECTED_PAGE_INDEX;
 
-  // 用于监听Control、Shift键按下
-  late final FocusNode _focusNode;
-  late final FocusAttachment _nodeAttachment;
-  bool _isControlDown = false;
-  bool _isShiftDown = false;
-
-  List<Function()> _ctrlAPressedCallbacks = [];
-
   MobileInfo? _mobileInfo;
 
   StreamSubscription<UpdateMobileInfo>? _updateMobileInfoStream;
@@ -69,24 +61,6 @@ class FileManagerState extends State<FileManagerPage> {
     super.initState();
 
     _registerEventBus();
-
-    // _focusNode = FocusNode(debugLabel: 'All image page');
-    // _nodeAttachment = _focusNode.attach(context, onKey: (node, event) {
-    //   _isControlDown = event.isControlPressed;
-    //   _isShiftDown = event.isShiftPressed;
-    //
-    //   bool isKeyAPressed = event.isKeyPressed(LogicalKeyboardKey.keyA);
-    //   if (_isControlDown && isKeyAPressed) {
-    //     debugPrint("Ctrl + A pressed...");
-    //
-    //     for (Function() callback in _ctrlAPressedCallbacks) {
-    //       callback.call();
-    //     }
-    //   }
-    //
-    //   return KeyEventResult.handled;
-    // });
-    // _focusNode.requestFocus();
   }
 
   void _registerEventBus() {
@@ -101,26 +75,8 @@ class FileManagerState extends State<FileManagerPage> {
     _updateMobileInfoStream?.cancel();
   }
 
-  void addCtrlAPressedCallback(Function() callback) {
-    _ctrlAPressedCallbacks.add(callback);
-    debugPrint(
-        "After addCtrlAPressedCallback, _ctrlAPressedCallbacks length: ${_ctrlAPressedCallbacks.length}");
-  }
-
-  void removeCtrlAPressedCallback(Function() callback) {
-    _ctrlAPressedCallbacks.remove(callback);
-    debugPrint(
-        "After removeCtrlAPressedCallback, _ctrlAPressedCallbacks length: ${_ctrlAPressedCallbacks.length}");
-  }
-
-  bool isControlDown() => _isControlDown;
-
-  bool isShiftDown() => _isShiftDown;
-
   @override
   Widget build(BuildContext context) {
-    // _nodeAttachment.reparent();
-
     final pageController = PageController(initialPage: _selectedPageIndex);
 
     Color getTabBgColor(int currentIndex) {
@@ -422,9 +378,6 @@ class FileManagerState extends State<FileManagerPage> {
   @override
   void dispose() {
     super.dispose();
-
-    _focusNode.dispose();
-    _ctrlAPressedCallbacks.clear();
 
     _unRegisterEventBus();
   }
