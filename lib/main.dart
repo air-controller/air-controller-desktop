@@ -452,6 +452,8 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                         padding: EdgeInsets.fromLTRB(14, 6, 10, 6),
                       ),
                       onTap: () {
+                        if (_devices.isEmpty) return;
+
                           final device = _devices[index];
 
                           DeviceConnectionManager.instance.currentDevice = device;
