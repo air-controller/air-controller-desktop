@@ -149,6 +149,7 @@ class VideoFlowWidget extends StatelessWidget {
         },
         itemCount: sortedVideos.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),

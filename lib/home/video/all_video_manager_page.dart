@@ -6,7 +6,6 @@ import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flowder/flowder.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,8 +31,6 @@ import '../../model/ResponseEntity.dart';
 import '../../util/event_bus.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
-
-import '../file_manager.dart';
 
 class AllVideoManagerPage extends StatefulWidget {
 
@@ -65,8 +62,6 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
 
   StreamSubscription<UpdateVideoSortOrder>? _updateVideoSortOrderStream;
   StreamSubscription<DeleteOp>? _deleteOpSubscription;
-
-  late Function() _ctrlAPressedCallback;
 
   bool _isPageVisible = false;
 
@@ -422,6 +417,7 @@ class _AllVideoManagerState extends State<AllVideoManagerPage> with AutomaticKee
         },
         itemCount: _videos.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),

@@ -1033,6 +1033,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
         },
         itemCount: _allAlbums.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),

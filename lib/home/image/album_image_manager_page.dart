@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flowder/flowder.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +16,6 @@ import 'package:mobile_assistant_client/event/image_range_mode_visibility.dart';
 import 'package:mobile_assistant_client/event/open_image_detail.dart';
 import 'package:mobile_assistant_client/event/update_bottom_item_num.dart';
 import 'package:mobile_assistant_client/event/update_image_arrange_mode.dart';
-import 'package:mobile_assistant_client/home/file_manager.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/model/UIModule.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
@@ -426,6 +424,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
         },
         itemCount: _allImages.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
@@ -550,6 +549,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                     },
                     itemCount: images.length,
                     shrinkWrap: true,
+                    primary: false,
                   ),
                   color: Colors.white,
                   margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -558,6 +558,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
             padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
       },
       itemCount: map.length,
+      primary: false,
     );
   }
 
@@ -675,6 +676,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
                     },
                     itemCount: images.length,
                     shrinkWrap: true,
+                    primary: false,
                   ),
                   color: Colors.white,
                   margin: EdgeInsets.fromLTRB(0, 10, 0, 0),

@@ -162,6 +162,7 @@ class ImageFlowWidget extends StatelessWidget {
                     },
                     itemCount: images.length,
                     shrinkWrap: true,
+                    primary: false,
                   ),
                   color: Colors.white,
                   margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -170,6 +171,7 @@ class ImageFlowWidget extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
       },
       itemCount: map.length,
+      primary: false,
     );
   }
 
@@ -277,6 +279,7 @@ class ImageFlowWidget extends StatelessWidget {
                     },
                     itemCount: images.length,
                     shrinkWrap: true,
+                    primary: false,
                   ),
                   color: Colors.white,
                   margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -285,6 +288,7 @@ class ImageFlowWidget extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
       },
       itemCount: map.length,
+      primary: false,
     );
   }
 
@@ -339,6 +343,7 @@ class ImageFlowWidget extends StatelessWidget {
         },
         itemCount: images.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),

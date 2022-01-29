@@ -6,7 +6,6 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flowder/flowder.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +33,6 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../constant.dart';
 import '../../model/ResponseEntity.dart';
-import '../file_manager.dart';
 import '../video_manager_page.dart';
 
 class VideoFolderManagerPage extends StatefulWidget {
@@ -791,6 +789,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         },
         itemCount: _videoFolders.length,
         shrinkWrap: true,
+        primary: false,
       ),
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),

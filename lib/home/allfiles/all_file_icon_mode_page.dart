@@ -451,6 +451,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                     mainAxisSpacing: 10),
                 padding: EdgeInsets.all(10.0),
                 itemCount: files.length,
+                primary: false,
               ),
               color: Colors.white)),
     ]);
