@@ -23,19 +23,10 @@ class HeartbeatService {
   bool _isTimerStarted = false;
   Timer? _delayTimer;
 
-  static final HeartbeatService _instance = HeartbeatService._();
-
-  static HeartbeatService get instance {
-    return _instance;
-  }
-
   // 心跳连接阈值（单位：秒）
   static final int _HEARTBEAT_THRESHOLD_VALUE = 5;
   // 剩余时间
   int _leftTime = _HEARTBEAT_THRESHOLD_VALUE;
-
-
-  HeartbeatService._();
 
   void connectToServer(String ip) async {
     _reset();
@@ -166,6 +157,11 @@ class HeartbeatService {
     _isConnected = false;
     _stopTimer();
     _stopDelayTimer();
+
+    _onHeartbeatInterrupt = null;
+    _onHeartbeatTimeout = null;
+    _onConnected = null;
+    _onError = null;
     _socket?.close();
     _socket = null;
   }

@@ -14,12 +14,6 @@ class CmdClient {
   Function(String error)? _onError;
   bool _isConnected = false;
 
-  CmdClient._() {}
-
-  static final CmdClient _instance = CmdClient._();
-
-  static CmdClient getInstance() => _instance;
-
   void connect(String ip) async {
     _socket = await Socket.connect(ip, Constant.PORT_CMD);
     print('Connected to: ${_socket?.remoteAddress.address}:${_socket?.remotePort}');
@@ -41,6 +35,7 @@ class CmdClient {
       _isConnected = false;
     }, onDone: () {
       debugPrint("CmdClient, onDone.");
+      _isConnected = false;
     }, cancelOnError: true);
   }
 

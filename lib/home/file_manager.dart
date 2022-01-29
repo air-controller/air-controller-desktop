@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile_assistant_client/event/exit_cmd_service.dart';
+import 'package:mobile_assistant_client/event/exit_heartbeat_service.dart';
 import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
@@ -366,8 +368,10 @@ class FileManagerState extends State<FileManagerPage> {
 
   void _exitFileManager() {
     DeviceConnectionManager.instance.currentDevice = null;
-    CmdClient.getInstance().disconnect();
-    HeartbeatService.instance.cancel();
+
+    eventBus.fire(ExitCmdService());
+    eventBus.fire(ExitHeartbeatService());
+
     Navigator.pop(context);
   }
 

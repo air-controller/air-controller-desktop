@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/event/exit_cmd_service.dart';
+import 'package:mobile_assistant_client/event/exit_heartbeat_service.dart';
 import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/connection_disconnected_page.dart';
 import 'package:mobile_assistant_client/home/file_manager.dart';
@@ -74,6 +78,12 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
   // 标记连接按钮是否按下
   bool _isConnectPressed = false;
+  
+  HeartbeatService? _heartbeatService = null;
+  CmdClient? _cmdClient = null;
+
+  StreamSubscription<ExitHeartbeatService>? _exitHeartbeatServiceStream;
+  StreamSubscription<ExitCmdService>? _exitCmdServiceStream;
 
   @override
   void initState() {
@@ -103,6 +113,33 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
     Future.delayed(Duration.zero, () {
       _animationController?.repeat();
     });
+
+    _registerEventBus();
+  }
+
+  void _registerEventBus() {
+    _exitHeartbeatServiceStream = eventBus.on<ExitHeartbeatService>().listen((event) {
+      _exitHeartbeatService();
+    });
+
+    _exitCmdServiceStream = eventBus.on<ExitCmdService>().listen((event) {
+      _exitCmdService();
+    });
+  }
+
+  void _exitHeartbeatService() {
+    _heartbeatService?.cancel();
+    _heartbeatService = null;
+  }
+
+  void _exitCmdService() {
+    _cmdClient?.disconnect();
+    _cmdClient = null;
+  }
+
+  void _unRegisterEventBus() {
+    _exitHeartbeatServiceStream?.cancel();
+    _exitCmdServiceStream?.cancel();
   }
   
   bool _isNetworkConnected(ConnectivityResult result) {
@@ -418,26 +455,35 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                           final device = _devices[index];
 
                           DeviceConnectionManager.instance.currentDevice = device;
-                          CmdClient.getInstance().connect(device.ip);
-                          CmdClient.getInstance().onCmdReceive((data) {
+
+                          if (null == _cmdClient) {
+                            _cmdClient = CmdClient();
+                          }
+
+                          _cmdClient!.connect(device.ip);
+                          _cmdClient!.onCmdReceive((data) {
                             debugPrint("onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
                             _processCmd(data);
                           });
-                          CmdClient.getInstance().onConnected(() {
+                          _cmdClient!.onConnected(() {
                             debugPrint("onConnected, ip: ${device.ip}");
                           });
-                          CmdClient.getInstance().onDisconnected(() {
+                          _cmdClient!.onDisconnected(() {
                             debugPrint("onDisconnected, ip: ${device.ip}");
                           });
 
-                          HeartbeatService.instance.connectToServer(device.ip);
+                          if (null == _heartbeatService) {
+                            _heartbeatService = HeartbeatService();
+                          }
 
-                          HeartbeatService.instance.onHeartbeatInterrupt(() {
+                          _heartbeatService!.connectToServer(device.ip);
+
+                          _heartbeatService!.onHeartbeatInterrupt(() {
                             debugPrint("HeartbeatService, onHeartbeatInterrupt");
                             _pushToErrorPage();
                           });
 
-                          HeartbeatService.instance.onHeartbeatTimeout(() {
+                          _heartbeatService!.onHeartbeatTimeout(() {
                             debugPrint("HeartbeatService, onHeartbeatTimeout");
                             _pushToErrorPage();
                           });
@@ -510,5 +556,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
     subscription?.cancel();
     _stopRefreshDeviceScheduler();
     _animationController?.dispose();
+
+    _unRegisterEventBus();
   }
 }
