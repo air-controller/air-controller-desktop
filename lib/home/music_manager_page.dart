@@ -163,7 +163,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
         context: context,
         position: RelativeRect.fromSize(
             Rect.fromLTRB(position.dx, position.dy, 0, 0),
-            overlay.size ?? Size(0, 0)),
+            overlay.size),
         items: [
           PopupMenuItem(
               child: Text("打开"),
@@ -369,7 +369,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
       if (null == value) {
         onError.call("Dir is null");
       } else {
-        onSuccess.call(value!);
+        onSuccess.call(value);
       }
     }).catchError((error) {
       onError.call(error);
@@ -1147,7 +1147,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
           _resetRenamingAudioFile();
         });
       }, (error) {
-        SmartDialog.showToast(error ?? "文件重命名失败！");
+        SmartDialog.showToast(error);
         _resetRenamingAudioFile();
       });
     }

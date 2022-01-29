@@ -711,7 +711,7 @@ class _AlbumImageManagerPageState extends State<AlbumImageManagerPage>
 
     showMenu(
         context: context,
-        position: RelativeRect.fromSize(Rect.fromLTRB(position.dx, position.dy, 0, 0), overlay.size ?? Size(0, 0)),
+        position: RelativeRect.fromSize(Rect.fromLTRB(position.dx, position.dy, 0, 0), overlay.size),
         items: [
           PopupMenuItem(child: Text("打开"), onTap: () {
             _openImageDetail(_allImages, imageItem);

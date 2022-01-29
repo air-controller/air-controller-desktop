@@ -965,7 +965,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
         context: context,
         position: RelativeRect.fromSize(
             Rect.fromLTRB(position.dx, position.dy, 0, 0),
-            overlay.size ?? Size(0, 0)),
+            overlay.size),
         items: [
           PopupMenuItem(
               child: Text("打开"),
@@ -1012,7 +1012,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
           if (null == value) {
             onError.call("Dir is null");
           } else {
-            onSuccess.call(value!);
+            onSuccess.call(value);
           }
     }).catchError((error) {
       onError.call(error);

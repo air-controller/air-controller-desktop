@@ -390,7 +390,7 @@ class _DownloadListModeState extends State<AllFileListModePage>
       // 2.获取最大的层级值，依次循环插入
       int maxLevel = allFileNodes.map((e) => e.level).toList().reduce(max);
 
-      int currentLevel = currentFileNode == null ? 0 : currentFileNode!.level;
+      int currentLevel = currentFileNode == null ? 0 : currentFileNode.level;
 
       while (currentLevel < maxLevel) {
         currentLevel++;
@@ -866,7 +866,7 @@ class _DownloadListModeState extends State<AllFileListModePage>
         context: context,
         position: RelativeRect.fromSize(
             Rect.fromLTRB(position.dx, position.dy, 0, 0),
-            overlay.size ?? Size(0, 0)),
+            overlay.size),
         items: [
           PopupMenuItem(
               child: Text("打开"),

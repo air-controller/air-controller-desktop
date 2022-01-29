@@ -1115,7 +1115,7 @@ class ImageManagerState extends State<ImageManagerPage> {
         context: context,
         position: RelativeRect.fromSize(
             Rect.fromLTRB(position.dx, position.dy, 0, 0),
-            overlay.size ?? Size(0, 0)),
+            overlay.size),
         items: [
           PopupMenuItem(
               child: Text("拷贝$name到电脑"),
