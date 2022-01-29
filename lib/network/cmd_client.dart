@@ -28,6 +28,8 @@ class CmdClient {
     _onConnected?.call();
 
     _socket?.listen((Uint8List data) {
+      if (!_isConnected) return;
+
       String str = String.fromCharCodes(data);
       debugPrint("CmdClient listen str: $str\n");
       dynamic map = jsonDecode(str);
@@ -62,6 +64,7 @@ class CmdClient {
 
   void disconnect() {
     _socket?.close();
+    _socket = null;
     _isConnected = false;
     _onDisconnected?.call();
   }

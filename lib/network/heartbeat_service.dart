@@ -49,6 +49,8 @@ class HeartbeatService {
     _sendHeartbeatToServer(needDelay: false);
 
     _socket?.listen((Uint8List data) {
+      if (!_isConnected) return;
+
       _stopTimer();
 
       String str = String.fromCharCodes(data);
@@ -108,35 +110,34 @@ class HeartbeatService {
   }
 
   void _startTimer() {
-    if (null == _countdownTimer) {
-      _leftTime = _HEARTBEAT_THRESHOLD_VALUE;
+    _leftTime = _HEARTBEAT_THRESHOLD_VALUE;
 
-      const oneSec = Duration(seconds: 1);
-      _countdownTimer = Timer.periodic(oneSec, (timer) {
-        if (_leftTime == 0) {
-          if (_noHeartbeatResponse()) {
-            _countdownTimer?.cancel();
-            _onHeartbeatInterrupt?.call();
-          }
-        } else {
-          _leftTime --;
-          debugPrint("_startTimer, leftTime: $_leftTime");
+    const oneSec = Duration(seconds: 1);
+    _countdownTimer = Timer.periodic(oneSec, (timer) {
+      if (_leftTime == 0) {
+        if (_noHeartbeatResponse()) {
+          _countdownTimer?.cancel();
+          _onHeartbeatInterrupt?.call();
         }
-      });
-      _isTimerStarted = true;
-    }
+      } else {
+        _leftTime --;
+        debugPrint("_startTimer, leftTime: $_leftTime");
+      }
+    });
+    _isTimerStarted = true;
   }
 
   bool _noHeartbeatResponse() {
     if (null == _heartbeatResponse) return true;
     // 响应无效，认为没有心跳响应
+    debugPrint("Heartbeat service: _heartbeatResponse?.value: ${_heartbeatResponse?.value}, _lastHeartbeat?.value: ${_lastHeartbeat?.value}");
     if (_heartbeatResponse?.value != _lastHeartbeat?.value) return true;
 
     return false;
   }
 
   void _reset() {
-    if (_isTimerStarted) {
+    if (_isTimerStarted || null != _countdownTimer) {
       _countdownTimer?.cancel();
       _countdownTimer = null;
       _isTimerStarted = false;
@@ -146,6 +147,7 @@ class HeartbeatService {
     _isConnected = false;
     _socket = null;
     _lastHeartbeat = null;
+    _heartbeatResponse = null;
   }
 
   void _stopTimer() {
