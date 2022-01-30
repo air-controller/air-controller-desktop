@@ -5,15 +5,17 @@ import 'package:flutter/material.dart';
  *
  * @author Houjun Yuan 2022/01/23 18:22
  */
-class UpwardTrianglePainter extends CustomPainter {
+class TrianglePainter extends CustomPainter {
   Color color;
   Color dividerColor;
   double dividerWidth;
+  bool isUpward;
 
   late Paint _paint;
   late Path _path;
 
-  UpwardTrianglePainter({required this.color, this.dividerColor = Colors.black, this.dividerWidth = 1.0}) {
+  TrianglePainter({required this.color, this.dividerColor = Colors.black,
+    this.dividerWidth = 1.0, required this.isUpward}) {
     _paint = Paint()
         ..strokeWidth = 1.0
         ..color = color
@@ -26,19 +28,35 @@ class UpwardTrianglePainter extends CustomPainter {
     final x = size.width;
     final y = size.height;
 
-    _path.moveTo(x * 0.5, 0);
-    _path.lineTo(x, y);
-    _path.lineTo(0, y);
+    if (isUpward) {
+      _path.moveTo(x * 0.5, 0);
+      _path.lineTo(x, y);
+      _path.lineTo(0, y);
 
-    _paint.color = color;
-    _paint.strokeWidth = 10;
-    canvas.drawPath(_path, _paint);
+      _paint.color = color;
+      _paint.strokeWidth = 1;
+      canvas.drawPath(_path, _paint);
 
-    _paint.color = dividerColor;
-    _paint.strokeWidth = 1;
+      _paint.color = dividerColor;
+      _paint.strokeWidth = dividerWidth;
 
-    canvas.drawLine(Offset(0, y), Offset(0.5 * x, 0), _paint);
-    canvas.drawLine(Offset(0.5 * x, 0), Offset(x, y), _paint);
+      canvas.drawLine(Offset(0, y), Offset(0.5 * x, 0), _paint);
+      canvas.drawLine(Offset(0.5 * x, 0), Offset(x, y), _paint);
+    } else {
+      _path.moveTo(0, 0);
+      _path.lineTo(0.5 * x, y);
+      _path.lineTo(x, 0);
+
+      _paint.color = color;
+      _paint.strokeWidth = 1;
+      canvas.drawPath(_path, _paint);
+
+      _paint.color = dividerColor;
+      _paint.strokeWidth = dividerWidth;
+
+      canvas.drawLine(Offset(0, 0), Offset(0.5 * x, y), _paint);
+      canvas.drawLine(Offset(0.5 * x, y), Offset(x, 0), _paint);
+    }
   }
 
   @override
@@ -47,21 +65,25 @@ class UpwardTrianglePainter extends CustomPainter {
   }
 }
 
-class UpwardTriangle extends StatefulWidget {
+class Triangle extends StatefulWidget {
   double width;
   double height;
   Color color;
   Color dividerColor;
+  bool isUpward;
 
-  UpwardTriangle({required Key key, required this.width, required this.height, this.color = Colors.white, this.dividerColor = Colors.black}) : super(key: key);
+  Triangle({required Key key, required this.width, required this.height,
+    this.color = Colors.white, this.dividerColor = Colors.black,
+    this.isUpward = true
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return UpwardTriangleState();
+    return TriangleState();
   }
 }
 
-class UpwardTriangleState extends State<UpwardTriangle> {
+class TriangleState extends State<Triangle> {
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +91,11 @@ class UpwardTriangleState extends State<UpwardTriangle> {
       height: widget.height,
       width: widget.width,
       child: CustomPaint(
-        painter: UpwardTrianglePainter(color: widget.color, dividerColor: widget.dividerColor)
+        painter: TrianglePainter(
+            color: widget.color,
+            dividerColor: widget.dividerColor,
+          isUpward: widget.isUpward
+        )
       ),
     );
   }

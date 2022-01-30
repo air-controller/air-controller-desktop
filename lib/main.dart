@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/constant.dart';
@@ -17,8 +19,8 @@ import 'package:mobile_assistant_client/network/device_discover_manager.dart';
 import 'package:mobile_assistant_client/network/heartbeat_service.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
 import 'package:mobile_assistant_client/widget/multiple_rings.dart';
-import 'package:shelf/shelf_io.dart' as shelf_io;
-import 'package:shelf_web_socket/shelf_web_socket.dart';
+import 'package:mobile_assistant_client/widget/upward_triangle.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:window_size/window_size.dart';
 import 'ext/string-ext.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -337,22 +339,51 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
-                  child: Text("如手机上尚未安装${Constant.APP_NAME}应用，请扫描二维码下载。",
-                      style: TextStyle(
-                          color: "#949494".toColor(),
-                          fontSize: 16,
-                          decoration: TextDecoration.none)),
+                  child: Wrap(
+                    children: [
+                      Text("如手机上尚未安装${Constant.APP_NAME}应用，请",
+                          style: TextStyle(
+                              color: "#949494".toColor(),
+                              fontSize: 16,
+                              decoration: TextDecoration.none)),
+
+                      Container(
+                        child: Listener(
+                          child: Text("扫描二维码",
+                              style: TextStyle(
+                                  color: Color(0xff2869d3),
+                                  fontSize: 16,
+                                  decoration: TextDecoration.underline)),
+                          onPointerDown: (event) {
+                            if (event.kind == PointerDeviceKind.mouse && event.buttons == kPrimaryMouseButton) {
+                              debugPrint("Scan qr code for downloading apk file.");
+                              _showApkQrCode(event.position);
+                            }
+                          },
+                        ),
+                        margin: EdgeInsets.only(left: 5, right: 5),
+                      ),
+
+                      Text("下载。",
+                          style: TextStyle(
+                              color: "#949494".toColor(),
+                              fontSize: 16,
+                              decoration: TextDecoration.none)),
+                    ],
+                  ),
                   margin: EdgeInsets.only(bottom: 10),
                 ),
               ),
 
-              MultipleRings(
+              IgnorePointer(
+                child: MultipleRings(
                   width: width,
                   height: height,
                   minRadius: 100,
                   radiusStep: 100,
-                lineColor: Color(0xfff3f3f3),
-                color: Colors.transparent,
+                  lineColor: Color(0xfff3f3f3),
+                  color: Colors.transparent,
+                ),
               )
             ],
           ),
@@ -527,6 +558,81 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                 ), left: left, top: top);
       }))
     ]);
+  }
+
+  void _showApkQrCode(Offset offset) {
+    double width = 160;
+    double height = 170;
+    double triangleWidth = 20;
+    double triangleHeight = 12;
+
+    double left = offset.dx - width / 2;
+    double top = offset.dy - height - triangleHeight - 8;
+
+    showDialog(context: context, builder: (context) {
+      return Stack(
+        children: [
+          Positioned(
+            left: left,
+              top: top,
+              child: Stack(
+            children: [
+
+              Container(
+                child: Column(
+                    children: [
+                      Container(
+                        child: Text(
+                          "手机扫描下载App",
+                          style: TextStyle(
+                              color: Color(0xff848485)
+                          ),
+                        ),
+                        margin: EdgeInsets.only(top: 5),
+                      ),
+
+                      QrImage(
+                        data: "https://github.com/air-controller/air-controller-mobile/releases",
+                        size: 130,
+                      )
+                    ]
+                ),
+                width: width,
+                height: height,
+                decoration: BoxDecoration(
+                  color: Color(0xffe7e7e8),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black54,
+                        offset: Offset(0, 0),
+                        blurRadius: 1),
+                  ],
+                ),
+              ),
+
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  child: Triangle(
+                    key: Key("download_qr_code"),
+                    width: triangleWidth,
+                    height: triangleHeight,
+                    isUpward: false,
+                    color: Color(0xffe7e7e8),
+                    dividerColor: Colors.black12,
+                  ),
+                  margin: EdgeInsets.only(top: 168, left: 70),
+                ),
+              ),
+            ],
+          )
+          )
+        ],
+      );
+    },
+      barrierColor: Colors.transparent
+    );
   }
 
   void _pushToErrorPage() {

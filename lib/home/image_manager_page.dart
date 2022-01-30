@@ -1071,7 +1071,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                         width: dialogWidth,
                       ),
                       Container(
-                        child: UpwardTriangle(
+                        child: Triangle(
                           key: Key("upward_triangle"),
                           width: triangleWidth,
                           height: 10,

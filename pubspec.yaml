@@ -64,6 +64,7 @@ dependencies:
     git:
       url: git@github.com:yuanhoujun/flowder.git
   flutter_markdown: ^0.6.9
+  qr_flutter: ^4.0.0
 
 dev_dependencies:
   flutter_test:
