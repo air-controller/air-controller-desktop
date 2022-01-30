@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
@@ -7,7 +6,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../constant.dart';
 
 class HelpAndFeedbackPage extends StatefulWidget {
-
   Future<String> loadMdText(String path) async {
     return await rootBundle.loadString(path);
   }
@@ -28,12 +26,13 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   }
 
   void _loadHelpMdText() {
-    DefaultAssetBundle.of(context).loadString('assets/docs/help.zh_CN.md')
+    DefaultAssetBundle.of(context)
+        .loadString('assets/docs/help.zh_CN.md')
         .then((value) {
-          debugPrint("_loadHelpMdText: $value");
-          setState(() {
-            _mdContent = value;
-          });
+      debugPrint("_loadHelpMdText: $value");
+      setState(() {
+        _mdContent = value;
+      });
     }).catchError((error) {
       debugPrint("_loadHelpMdText, error: $error");
     });
@@ -45,12 +44,8 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
       children: [
         Container(
           child: Center(
-            child: Text(
-                "帮助与反馈",
-                style: TextStyle(
-                    color: Color(0xff616161),
-                    fontSize: 16.0)
-            ),
+            child: Text("帮助与反馈",
+                style: TextStyle(color: Color(0xff616161), fontSize: 16.0)),
           ),
           height: Constant.HOME_NAVI_BAR_HEIGHT,
           color: Color(0xfff6f6f6),
@@ -61,8 +56,11 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
             color: Colors.white,
             child: Markdown(
               data: _mdContent ?? "",
+              styleSheetTheme: MarkdownStyleSheetBaseTheme.platform,
+              selectable: false,
               onTapLink: (String text, String? href, String title) {
-                SystemAppLauncher.openUrl(href ?? "https://github.com/yuanhoujun");
+                SystemAppLauncher.openUrl(
+                    href ?? "https://github.com/yuanhoujun");
               },
             ),
           ),
