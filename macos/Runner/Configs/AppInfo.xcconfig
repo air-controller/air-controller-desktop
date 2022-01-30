@@ -11,4 +11,4 @@ PRODUCT_NAME = AirController
 PRODUCT_BUNDLE_IDENTIFIER = com.youngfeng.android.assistant.mobileAssistantServer
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2021 com.youngfeng.android.assistant. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2022 Open Source Code. All rights reserved.
