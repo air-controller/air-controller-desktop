@@ -231,7 +231,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
   Widget build(BuildContext context) {
     String getFileTypeIcon(bool isDir, String extension) {
       if (isDir) {
-        return "icons/ic_large_type_folder.png";
+        return "assets/icons/ic_large_type_folder.png";
       } else {
         return ConstantPool.fileExtensionIconMap[extension] ?? ConstantPool.fileExtensionIconMap["other"]!;
       }
@@ -267,7 +267,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                   return GestureDetector(
                     child: Row(
                       children: [
-                        Image.asset("icons/ic_right_arrow.png", height: 20),
+                        Image.asset("assets/icons/ic_right_arrow.png", height: 20),
                         Container(
                           child: Text(fileNode.data.name,
                               style: TextStyle(
@@ -337,7 +337,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                           fadeOutDuration: Duration.zero,
                           fadeInDuration: Duration.zero,
                           errorWidget: (context, url, error) {
-                            return Image.asset("icons/brokenImage.png",
+                            return Image.asset("assets/icons/brokenImage.png",
                                 width: 100, height: 100);
                           }),
                       decoration: BoxDecoration(
@@ -364,7 +364,7 @@ class _DownloadIconModeState extends State<DownloadIconModePage>
                           fadeInDuration: Duration.zero,
                         ),
                         Positioned(
-                          child: Image.asset("icons/ic_video_indictor.png",
+                          child: Image.asset("assets/icons/ic_video_indictor.png",
                               width: 20, height: 20),
                           left: 15,
                           bottom: 8,

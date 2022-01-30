@@ -371,7 +371,7 @@ class _AllAlbumManagerPageState extends State<AllAlbumManagerPage>
                             _backToAlbumListPage();
                           },
                         ),
-                        Image.asset("icons/ic_right_arrow.png", height: 20),
+                        Image.asset("assets/icons/ic_right_arrow.png", height: 20),
                         Text(_currentAlbum?.name ?? "",
                             style: TextStyle(
                                 color: Color(0xff5b5c62),

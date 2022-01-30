@@ -118,7 +118,7 @@ class VideoFlowWidget extends StatelessWidget {
                   child: Align(
                     child: Row(
                       children: [
-                        Image.asset("icons/ic_video_indictor.png", width: 20, height: 20),
+                        Image.asset("assets/icons/ic_video_indictor.png", width: 20, height: 20),
 
                         Container(
                           child: Text(duration, style: TextStyle(

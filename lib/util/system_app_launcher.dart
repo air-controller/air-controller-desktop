@@ -42,4 +42,12 @@ class SystemAppLauncher {
       debugPrint("Open file: $url success");
     }
   }
+
+  static void openUrl(String url) async {
+    if (!await launch(url, universalLinksOnly: true)) {
+      debugPrint("Open url: $url fail");
+    } else {
+      debugPrint("Open url: $url success");
+    }
+  }
 }

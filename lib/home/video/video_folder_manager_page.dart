@@ -314,7 +314,7 @@ class _VideoFolderManagerState extends State<VideoFolderManagerPage> with Automa
                             },
                           ),
 
-                          Image.asset("icons/ic_right_arrow.png", height: 20),
+                          Image.asset("assets/icons/ic_right_arrow.png", height: 20),
                           Text(
                               _currentVideoFolder?.name ?? "", style: TextStyle(
                               color: Color(0xff5b5c62),

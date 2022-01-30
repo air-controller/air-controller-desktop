@@ -218,7 +218,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Image.asset("icons/intro_nonetwork.png",
+                  Image.asset("assets/icons/intro_nonetwork.png",
                       width: _iconSize, height: _iconSize),
                   Container(
                     child: Text("请先将电脑连接至网络",
@@ -293,7 +293,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
               Align(
                 alignment: Alignment.center,
-                child: Image.asset("icons/intro_radar.png",
+                child: Image.asset("assets/icons/intro_radar.png",
                     width: _iconSize, height: _iconSize),
               ),
 
@@ -429,7 +429,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                               ),
                             ),
                             Container(
-                              child: Image.asset("icons/ic_right_arrow.png", width: 15, height: 15),
+                              child: Image.asset("assets/icons/ic_right_arrow.png", width: 15, height: 15),
                               margin: EdgeInsets.only(left: 3),
                             )
                           ],
@@ -512,7 +512,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                     ),
 
                     Container(
-                      child: Image.asset("icons/ic_mobile.png", width: 76 * 0.5, height: 134 * 0.5),
+                      child: Image.asset("assets/icons/ic_mobile.png", width: 76 * 0.5, height: 134 * 0.5),
                       margin: EdgeInsets.only(top: 5),
                     ),
 

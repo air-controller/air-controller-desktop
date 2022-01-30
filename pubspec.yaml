@@ -63,6 +63,7 @@ dependencies:
   flowder:
     git:
       url: git@github.com:yuanhoujun/flowder.git
+  flutter_markdown: ^0.6.9
 
 dev_dependencies:
   flutter_test:
@@ -81,7 +82,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - icons/
+     - assets/icons/
+     - assets/fonts/
+     - assets/docs/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
@@ -96,12 +99,12 @@ flutter:
   fonts:
     - family: NotoSansSC
       fonts:
-        - asset: fonts/NotoSansSC-Black.otf
-        - asset: fonts/NotoSansSC-Bold.otf
-        - asset: fonts/NotoSansSC-Light.otf
-        - asset: fonts/NotoSansSC-Medium.otf
-        - asset: fonts/NotoSansSC-Regular.otf
-        - asset: fonts/NotoSansSC-Thin.otf
+        - asset: assets/fonts/NotoSansSC-Black.otf
+        - asset: assets/fonts/NotoSansSC-Bold.otf
+        - asset: assets/fonts/NotoSansSC-Light.otf
+        - asset: assets/fonts/NotoSansSC-Medium.otf
+        - asset: assets/fonts/NotoSansSC-Regular.otf
+        - asset: assets/fonts/NotoSansSC-Thin.otf
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

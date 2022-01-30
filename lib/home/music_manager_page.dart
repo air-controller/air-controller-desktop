@@ -570,7 +570,7 @@ class _MusicManagerState extends State<MusicManagerPage> with AutomaticKeepAlive
                   child: Container(
                       child: Opacity(
                         opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
-                        child: Image.asset("icons/icon_delete.png",
+                        child: Image.asset("assets/icons/icon_delete.png",
                             width: _icon_delete_btn_size,
                             height: _icon_delete_btn_size),
                       ),

@@ -20,7 +20,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
         child: Wrap(
           direction: Axis.horizontal,
           children: [
-            Image.asset("icons/error_wrong.png", width: 540 * 0.6, height: 960 * 0.6),
+            Image.asset("assets/icons/error_wrong.png", width: 540 * 0.6, height: 960 * 0.6),
             Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

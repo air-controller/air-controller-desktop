@@ -6,6 +6,7 @@ import 'package:mobile_assistant_client/event/exit_cmd_service.dart';
 import 'package:mobile_assistant_client/event/exit_heartbeat_service.dart';
 import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
+import 'package:mobile_assistant_client/home/help_and_feedback_page.dart';
 import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
@@ -137,7 +138,7 @@ class FileManagerState extends State<FileManagerPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  child: Image.asset("icons/icon_image.png",
+                                  child: Image.asset("assets/icons/icon_image.png",
                                       width: _icons_size, height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
@@ -161,7 +162,7 @@ class FileManagerState extends State<FileManagerPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  child: Image.asset("icons/icon_music.png",
+                                  child: Image.asset("assets/icons/icon_music.png",
                                       width: _icons_size, height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
@@ -184,7 +185,7 @@ class FileManagerState extends State<FileManagerPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  child: Image.asset("icons/icon_video.png",
+                                  child: Image.asset("assets/icons/icon_video.png",
                                       width: _icons_size, height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
@@ -207,8 +208,8 @@ class FileManagerState extends State<FileManagerPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  child: Image.asset("icons/icon_download.png",
-                                      width: _icons_size, height: _icons_size),
+                                  child: Image.asset("assets/icons/icon_download.png",
+                                      width: _icons_size - 3, height: _icons_size - 3),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
                               Text("下载",
@@ -230,8 +231,8 @@ class FileManagerState extends State<FileManagerPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                  child: Image.asset("icons/icon_all_file.png",
-                                      width: _icons_size, height: _icons_size),
+                                  child: Image.asset("assets/icons/icon_all_file.png",
+                                      width: _icons_size - 5, height: _icons_size - 5),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
                               Text("全部文件",
@@ -244,6 +245,29 @@ class FileManagerState extends State<FileManagerPage> {
                       ),
                       onTap: () {
                         pageController.jumpToPage(4);
+                      },
+                    ),
+                    Divider(height: 1, color: "#e0e0e0".toColor()),
+                    GestureDetector(
+                      child: Container(
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                  child: Image.asset("assets/icons/ic_help.png",
+                                      width: _icons_size - 4, height: _icons_size - 4),
+                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
+                                      0, _icon_margin_hor, 0)),
+                              Text("帮助与反馈",
+                                  style: TextStyle(
+                                      color: "#636363".toColor(),
+                                      fontSize: _tab_font_size))
+                            ]),
+                        height: _tab_height,
+                        color: getTabBgColor(5),
+                      ),
+                      onTap: () {
+                        pageController.jumpToPage(5);
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -271,7 +295,7 @@ class FileManagerState extends State<FileManagerPage> {
 
                             InkWell(
                               child: Container(
-                                child: Image.asset("icons/ic_popup.png",
+                                child: Image.asset("assets/icons/ic_popup.png",
                                     width: 13, height: 13),
                                 // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
                                 // 方式进行处理
@@ -354,7 +378,8 @@ class FileManagerState extends State<FileManagerPage> {
                     MusicManagerPage(),
                     VideoManagerPage(),
                     DownloadManagerPage(),
-                    AllFileManagerPage()
+                    AllFileManagerPage(),
+                    HelpAndFeedbackPage()
                   ],
                   onPageChanged: (index) {
                     debugPrint("onPageChanged, index: $index");

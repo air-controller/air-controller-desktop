@@ -134,7 +134,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
   Widget build(BuildContext context) {
     String getFileTypeIcon(bool isDir, String extension) {
       if (isDir) {
-        return "icons/ic_large_type_folder.png";
+        return "assets/icons/ic_large_type_folder.png";
       } else {
         return ConstantPool.fileExtensionIconMap[extension] ?? ConstantPool.fileExtensionIconMap["other"]!;
       }
@@ -171,7 +171,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                   return GestureDetector(
                     child: Row(
                       children: [
-                        Image.asset("icons/ic_right_arrow.png", height: 20),
+                        Image.asset("assets/icons/ic_right_arrow.png", height: 20),
                         Container(
                           child: Text(fileNode.data.name,
                               style: TextStyle(
@@ -239,7 +239,7 @@ class _AllFileIconModeState extends State<AllFileIconModePage>
                           fadeOutDuration: Duration.zero,
                           fadeInDuration: Duration.zero,
                           errorWidget: (context, url, error) {
-                            return Image.asset("icons/brokenImage.png",
+                            return Image.asset("assets/icons/brokenImage.png",
                                 width: 100, height: 100);
                           }),
                       decoration: BoxDecoration(

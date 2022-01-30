@@ -576,15 +576,15 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
 
     if (DownloadFileManager.instance.isSelected(node)) {
       if (node.isExpand) {
-        iconPath = "icons/icon_down_arrow_selected.png";
+        iconPath = "assets/icons/icon_down_arrow_selected.png";
       } else {
-        iconPath = "icons/icon_right_arrow_selected.png";
+        iconPath = "assets/icons/icon_right_arrow_selected.png";
       }
     } else {
       if (node.isExpand) {
-        iconPath = "icons/icon_down_arrow_normal.png";
+        iconPath = "assets/icons/icon_down_arrow_normal.png";
       } else {
-        iconPath = "icons/icon_right_arrow_normal.png";
+        iconPath = "assets/icons/icon_right_arrow_normal.png";
       }
     }
 
@@ -707,7 +707,7 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
 
   Image getFileTypeIcon(FileItem fileItem) {
     if (fileItem.isDir) {
-      return Image.asset("icons/icon_folder.png", width: 20, height: 20);
+      return Image.asset("assets/icons/icon_folder.png", width: 20, height: 20);
     }
 
     String name = fileItem.name.toLowerCase();
@@ -715,21 +715,21 @@ class _DownloadListModeState extends State<DownloadListModePage>  with Automatic
     if (name.endsWith(".jpg") ||
         name.endsWith(".jpeg") ||
         name.endsWith(".png")) {
-      return Image.asset("icons/icon_file_type_image.png",
+      return Image.asset("assets/icons/icon_file_type_image.png",
           width: 20, height: 20);
     }
 
     if (name.endsWith(".mp3")) {
-      return Image.asset("icons/icon_file_type_audio.png",
+      return Image.asset("assets/icons/icon_file_type_audio.png",
           width: 20, height: 20);
     }
 
     if (name.endsWith(".txt")) {
-      return Image.asset("icons/icon_file_type_text.png",
+      return Image.asset("assets/icons/icon_file_type_text.png",
           width: 20, height: 20);
     }
 
-    return Image.asset("icons/icon_file_type_doc.png", width: 20, height: 20);
+    return Image.asset("assets/icons/icon_file_type_doc.png", width: 20, height: 20);
   }
 
   List<DataRow> _generateRows() {

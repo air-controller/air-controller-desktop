@@ -107,16 +107,16 @@ class VideoManagerState extends State<VideoManagerPage> {
     String _getSortOrderIcon(int sortOrder) {
       if (sortOrder == SORT_ORDER_CREATE_TIME) {
         if (_sortOrder == sortOrder) {
-          return "icons/icon_grid_selected.png";
+          return "assets/icons/icon_grid_selected.png";
         } else {
-          return "icons/icon_grid_normal.png";
+          return "assets/icons/icon_grid_normal.png";
         }
       }
 
       if (_sortOrder == sortOrder) {
-        return "icons/icon_monthly_selected.png";
+        return "assets/icons/icon_monthly_selected.png";
       } else {
-        return "icons/icon_monthly_normal.png";
+        return "assets/icons/icon_monthly_normal.png";
       }
     }
 
@@ -145,7 +145,7 @@ class VideoManagerState extends State<VideoManagerPage> {
                     child: Container(
                       child: Row(
                         children: [
-                          Image.asset("icons/icon_right_arrow.png",
+                          Image.asset("assets/icons/icon_right_arrow.png",
                               width: 12, height: 12),
                           Container(
                             child: Text("返回",
@@ -298,7 +298,7 @@ class VideoManagerState extends State<VideoManagerPage> {
                             child: Opacity(
                               opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
                               child: Container(
-                                child: Image.asset("icons/icon_delete.png",
+                                child: Image.asset("assets/icons/icon_delete.png",
                                     width: 10, height: 10),
                                 decoration: BoxDecoration(
                                     color: Color(0xffcb6357),

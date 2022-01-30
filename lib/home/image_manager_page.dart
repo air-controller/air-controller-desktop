@@ -229,24 +229,24 @@ class ImageManagerState extends State<ImageManagerPage> {
     String _getArrangeModeIcon(int mode) {
       if (mode == _ARRANGE_MODE_GRID) {
         if (_arrange_mode == mode) {
-          return "icons/icon_grid_selected.png";
+          return "assets/icons/icon_grid_selected.png";
         } else {
-          return "icons/icon_grid_normal.png";
+          return "assets/icons/icon_grid_normal.png";
         }
       }
 
       if (mode == _ARRANGE_MODE_DAILY) {
         if (_arrange_mode == mode) {
-          return "icons/icon_weekly_selected.png";
+          return "assets/icons/icon_weekly_selected.png";
         } else {
-          return "icons/icon_weekly_normal.png";
+          return "assets/icons/icon_weekly_normal.png";
         }
       }
 
       if (_arrange_mode == mode) {
-        return "icons/icon_monthly_selected.png";
+        return "assets/icons/icon_monthly_selected.png";
       } else {
-        return "icons/icon_monthly_normal.png";
+        return "assets/icons/icon_monthly_normal.png";
       }
     }
 
@@ -282,7 +282,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                       child: Container(
                         child: Row(
                           children: [
-                            Image.asset("icons/icon_right_arrow.png",
+                            Image.asset("assets/icons/icon_right_arrow.png",
                                 width: 12, height: 12),
                             Container(
                               child: Text("返回",
@@ -475,7 +475,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                               child: Opacity(
                                 opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
                                 child: Container(
-                                  child: Image.asset("icons/icon_delete.png",
+                                  child: Image.asset("assets/icons/icon_delete.png",
                                       width: 10, height: 10),
                                   decoration: BoxDecoration(
                                       color: Color(0xffcb6357),
@@ -605,7 +605,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                         child: Container(
                           child: Row(
                             children: [
-                              Image.asset("icons/icon_right_arrow.png",
+                              Image.asset("assets/icons/icon_right_arrow.png",
                                   width: 12, height: 12),
                               Container(
                                 child: Text("返回",
@@ -651,7 +651,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                       GestureDetector(
                         child: Container(
                           child: Image.asset(
-                              "icons/icon_image_size_minus_normal.png",
+                              "assets/icons/icon_image_size_minus_normal.png",
                               width: 13,
                               height: 60),
                           // color: Colors.red,
@@ -697,7 +697,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                       GestureDetector(
                         child: Container(
                           child: Image.asset(
-                              "icons/icon_image_size_plus_normal.png",
+                              "assets/icons/icon_image_size_plus_normal.png",
                               width: 20,
                               height: 20),
                           margin: EdgeInsets.only(right: 15),
@@ -719,7 +719,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                   children: [
                     GestureDetector(
                       child: Container(
-                          child: Image.asset("icons/icon_image_pre_normal.png",
+                          child: Image.asset("assets/icons/icon_image_pre_normal.png",
                               width: 13, height: 13)),
                       onTap: () {
                         _openPreImage();
@@ -733,7 +733,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                     ),
                     GestureDetector(
                       child: Container(
-                        child: Image.asset("icons/icon_image_next_normal.png",
+                        child: Image.asset("assets/icons/icon_image_next_normal.png",
                             width: 13, height: 13),
                       ),
                       onTap: () {
@@ -748,7 +748,7 @@ class ImageManagerState extends State<ImageManagerPage> {
                 child: GestureDetector(
                   child: Container(
                     key: _aboutIconKey,
-                    child: Image.asset("icons/icon_about_image.png",
+                    child: Image.asset("assets/icons/icon_about_image.png",
                         width: 14, height: 14),
                     decoration: BoxDecoration(
                         border:

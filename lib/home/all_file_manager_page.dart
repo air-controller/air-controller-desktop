@@ -197,18 +197,18 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
 
     String getIconModeIcon() {
       if (_currentPageIndex == PAGE_INDEX_ICON_MODE) {
-        return "icons/icon_image_text_selected.png";
+        return "assets/icons/icon_image_text_selected.png";
       }
 
-      return "icons/icon_image_text_normal.png";
+      return "assets/icons/icon_image_text_normal.png";
     }
 
     String getListModeIcon() {
       if (_currentPageIndex == PAGE_INDEX_LIST_MODE) {
-        return "icons/icon_list_selected.png";
+        return "assets/icons/icon_list_selected.png";
       }
 
-      return "icons/icon_list_normal.png";
+      return "assets/icons/icon_list_normal.png";
     }
 
     Color getModeBtnBgColor(int pageIndex) {
@@ -237,7 +237,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
                   child: Container(
                     child: Row(
                       children: [
-                        Image.asset("icons/icon_right_arrow.png",
+                        Image.asset("assets/icons/icon_right_arrow.png",
                             width: 12, height: 12),
                         Container(
                           child: Text("返回",
@@ -354,7 +354,7 @@ class _AllFileManagerState extends State<AllFileManagerPage> with AutomaticKeepA
                             child: Container(
                                 child: Opacity(
                                   opacity: _isDeleteBtnEnabled ? 1.0 : 0.6,
-                                  child: Image.asset("icons/icon_delete.png",
+                                  child: Image.asset("assets/icons/icon_delete.png",
                                       width: _icon_delete_btn_size,
                                       height: _icon_delete_btn_size),
                                 ),
