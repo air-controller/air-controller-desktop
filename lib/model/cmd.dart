@@ -3,6 +3,7 @@ class Cmd<T> {
   T? data;
 
   static int CMD_UPDATE_MOBILE_INFO = 1;
+  static int CMD_REPORT_DESKTOP_INFO = 2;
 
   Cmd(this.cmd, this.data);
 
@@ -12,4 +13,9 @@ class Cmd<T> {
         parsedJson["data"]
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    "cmd": cmd,
+    "data": data,
+  };
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -500,6 +502,7 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                           });
                           _cmdClient!.onConnected(() {
                             debugPrint("onConnected, ip: ${device.ip}");
+                            _reportDesktopInfo();
                           });
                           _cmdClient!.onDisconnected(() {
                             debugPrint("onDisconnected, ip: ${device.ip}");
@@ -558,6 +561,39 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
                 ), left: left, top: top);
       }))
     ]);
+  }
+
+  void _reportDesktopInfo() async {
+    DeviceInfoPlugin deviceInfo = new DeviceInfoPlugin();
+    String deviceName = "";
+
+    NetworkInfo networkInfo = NetworkInfo();
+    String? ip = await networkInfo.getWifiIP() ?? "*.*.*.*";
+
+    int platform = Device.PLATFORM_MACOS;
+
+    if (Platform.isMacOS) {
+      MacOsDeviceInfo macOsDeviceInfo = await deviceInfo.macOsInfo;
+      deviceName = macOsDeviceInfo.computerName;
+    }
+
+    if (Platform.isLinux) {
+      LinuxDeviceInfo linuxDeviceInfo = await deviceInfo.linuxInfo;
+      deviceName = linuxDeviceInfo.name;
+      platform = Device.PLATFORM_LINUX;
+    }
+
+    if (Platform.isWindows) {
+      WindowsDeviceInfo windowsDeviceInfo = await deviceInfo.windowsInfo;
+      deviceName = windowsDeviceInfo.computerName;
+      platform = Device.PLATFORM_WINDOWS;
+    }
+
+    Device device = Device(platform, deviceName, ip);
+
+    Cmd<Device> cmd = Cmd(Cmd.CMD_REPORT_DESKTOP_INFO, device);
+
+    _cmdClient?.sendToServer(cmd);
   }
 
   void _showApkQrCode(Offset offset) {

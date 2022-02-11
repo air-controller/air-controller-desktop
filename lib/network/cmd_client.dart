@@ -53,7 +53,13 @@ class CmdClient {
 
   void sendToServer(Cmd<dynamic> cmd) {
     String data = jsonEncode(cmd);
+    debugPrint("CmdClient, sendToServer: $data");
     _socket?.write(data);
+    _socket?.flush();
+  }
+
+  void sendStrToServer(String str) {
+    _socket?.write(str);
     _socket?.flush();
   }
 

@@ -24,6 +24,20 @@ class Device {
     return PLATFORM_UNKNOWN;
   }
 
+  factory Device.fromJson(Map<String, dynamic> parsedJson) {
+    return Device(
+        parsedJson["name"],
+        parsedJson["ip"],
+        parsedJson["platform"]
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "ip": ip,
+    "platform": platform
+  };
+
   @override
   bool operator ==(Object other) {
     // IP地址相同，就认为是同一台设备，暂时这样处理
