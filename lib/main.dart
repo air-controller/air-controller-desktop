@@ -199,7 +199,11 @@ class _WifiState extends State<MyHomePage> with SingleTickerProviderStateMixin {
 
   Future<void> updateNetworkStatus(bool isConnected) async {
     final info = NetworkInfo();
-    _wifiName = await info.getWifiName();
+    try {
+      _wifiName = await info.getWifiName();
+    } catch (e) {
+      debugPrint("info.getWifiName() throw error: $e");
+    }
 
     setState(() {
       _isWifiOn = isConnected;
