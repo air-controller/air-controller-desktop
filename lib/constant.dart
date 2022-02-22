@@ -30,4 +30,12 @@ class Constant {
   static const int IMAGE_MAX_SCALE = 4;
 
   static const String APP_NAME = "AirController";
+
+  static const double MIN_WINDOW_WIDTH = 1036;
+
+  static const double MIN_WINDOW_HEIGHT = 687;
+
+  static const double DEFAULT_WINDOW_WIDTH = 1243.2;
+
+  static const double DEFAULT_WINDOW_HEIGHT = 824.4;
 }
