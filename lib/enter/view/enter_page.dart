@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_bloc.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_event.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_state.dart';
+import 'package:mobile_assistant_client/home2/view/home_page.dart';
 import 'package:neat_periodic_task/neat_periodic_task.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -511,7 +512,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                         });
 
                         Navigator.push(context, MaterialPageRoute(builder: (context) {
-                          return FileManagerPage(key: FileManagerPage.fileManagerKey);
+                          return HomePage(key: FileManagerPage.fileManagerKey);
                         }));
                       },
                       onTapDown: (event) {
