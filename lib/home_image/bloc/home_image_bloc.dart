@@ -14,6 +14,8 @@ class HomeImageBloc extends Bloc<HomeImageEvent, HomeImageState> {
     on<HomeImageDeleteTrigger>(_onDeleteImagesTrigger);
     on<HomeImageCountChanged>(_onImageCountChanged);
     on<HomeImageArrangementVisibilityChanged>(_onArrangementVisibilityChanged);
+    on<HomeImageBackVisibilityChanged>(_onBackVisibilityChanged);
+    on<HomeImageBackTapStatusChanged>(_onBackTapStatusChanged);
   }
 
   void _onTabChanged(HomeImageTabChanged event, Emitter<HomeImageState> emit) {
@@ -56,5 +58,23 @@ class HomeImageBloc extends Bloc<HomeImageEvent, HomeImageState> {
       HomeImageArrangementVisibilityChanged event,
       Emitter<HomeImageState> emit) {
     emit(state.copyWith(isArrangementVisible: event.visible));
+  }
+
+  void _onBackVisibilityChanged(
+      HomeImageBackVisibilityChanged event,
+      Emitter<HomeImageState> emit) {
+    emit(state.copyWith(isBackBtnVisible: event.visible));
+  }
+
+  void _onBackTapStatusChanged(
+      HomeImageBackTapStatusChanged event,
+      Emitter<HomeImageState> emit) {
+    emit(state.copyWith(
+      backTapStatus: event.status
+    ));
+
+    emit(state.copyWith(
+        backTapStatus: HomeImageBackTapStatus.initial
+    ));
   }
 }

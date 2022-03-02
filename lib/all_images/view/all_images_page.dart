@@ -268,6 +268,8 @@ class AllImagesView extends StatelessWidget {
                   true
                 ));
 
+                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(false));
+
                 _rootFocusNode?.requestFocus();
               }
             },

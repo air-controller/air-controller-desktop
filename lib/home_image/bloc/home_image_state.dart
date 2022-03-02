@@ -4,6 +4,8 @@ enum HomeImageTab { allImages, cameraImages, allAlbums }
 
 enum HomeImageDeleteStatus { initial, loading, success, failure }
 
+enum HomeImageBackTapStatus { initial, tap }
+
 extension HomeImageTabX on HomeImageTab {
   static HomeImageTab convertToTab(int value) {
     try {
@@ -47,6 +49,7 @@ class HomeImageState extends Equatable {
   final bool isArrangementVisible;
   final bool isBackBtnVisible;
   final HomeImageDeleteTapStatusUnit deleteTapStatus;
+  final HomeImageBackTapStatus backTapStatus;
 
   const HomeImageState(
       {this.tab = HomeImageTab.allImages,
@@ -56,7 +59,8 @@ class HomeImageState extends Equatable {
       this.imageCount = const HomeImageCount(checkedCount: 0, totalCount: 0),
       this.isArrangementVisible = true,
       this.isBackBtnVisible = false,
-      this.deleteTapStatus = const HomeImageDeleteTapStatusUnit()});
+      this.deleteTapStatus = const HomeImageDeleteTapStatusUnit(),
+      this.backTapStatus = HomeImageBackTapStatus.initial});
 
   @override
   List<Object?> get props => [
@@ -67,7 +71,8 @@ class HomeImageState extends Equatable {
         imageCount,
         isArrangementVisible,
         isBackBtnVisible,
-    deleteTapStatus
+        deleteTapStatus,
+        backTapStatus
       ];
 
   HomeImageState copyWith(
@@ -78,7 +83,8 @@ class HomeImageState extends Equatable {
       HomeImageCount? imageCount,
       bool? isArrangementVisible,
       bool? isBackBtnVisible,
-      HomeImageDeleteTapStatusUnit? deleteTapStatus}) {
+      HomeImageDeleteTapStatusUnit? deleteTapStatus,
+      HomeImageBackTapStatus? backTapStatus}) {
     return HomeImageState(
         tab: tab ?? this.tab,
         arrangement: arrangement ?? this.arrangement,
@@ -87,6 +93,7 @@ class HomeImageState extends Equatable {
         imageCount: imageCount ?? this.imageCount,
         isArrangementVisible: isArrangementVisible ?? this.isArrangementVisible,
         isBackBtnVisible: isBackBtnVisible ?? this.isBackBtnVisible,
-        deleteTapStatus: deleteTapStatus ?? this.deleteTapStatus);
+        deleteTapStatus: deleteTapStatus ?? this.deleteTapStatus,
+        backTapStatus: backTapStatus ?? this.backTapStatus);
   }
 }

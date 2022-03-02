@@ -112,6 +112,8 @@ class AllAlbumsView extends StatelessWidget {
                 context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
                     isDeleteEnabled: state.loadImagesInAlbumStatus.checkedImages.length > 0
                 ));
+
+                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(true));
               } else {
                 context.read<HomeImageBloc>().add(HomeImageCountChanged(
                     HomeImageCount(
@@ -123,6 +125,8 @@ class AllAlbumsView extends StatelessWidget {
                 context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
                     isDeleteEnabled: state.checkedAlbums.length > 0
                 ));
+
+                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(false));
               }
             },
             listenWhen: (previous, current) => _needListenItemCountChange(previous, current),
@@ -293,11 +297,22 @@ class AllAlbumsView extends StatelessWidget {
                     ));
                   }
 
+                  context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(isAlbumImagesOpened));
+
                   _rootFocusNode?.requestFocus();
                 }
               },
               listenWhen: (previous, current) => previous.tab != current.tab
-          )
+          ),
+
+          BlocListener<HomeImageBloc, HomeImageState>(
+            listener: (context, state) {
+              context.read<AllAlbumsBloc>().add(AllAlbumsOpenStatusChanged(isOpened: false));
+            },
+            listenWhen: (previous, current) =>
+            previous.backTapStatus != current.backTapStatus
+            && current.backTapStatus == HomeImageBackTapStatus.tap,
+          ),
         ],
         child: Focus(
           autofocus: true,

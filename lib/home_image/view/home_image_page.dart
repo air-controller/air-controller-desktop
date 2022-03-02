@@ -170,7 +170,9 @@ class HomeImageView extends StatelessWidget {
                     ),
                     visible: isBackVisible,
                   ),
-                  onTap: () {},
+                  onTap: () {
+                    context.read<HomeImageBloc>().add(HomeImageBackTapStatusChanged(HomeImageBackTapStatus.tap));
+                  },
                   onTapDown: (detail) {
                     setState(() {
                       _isBackBtnDown = true;

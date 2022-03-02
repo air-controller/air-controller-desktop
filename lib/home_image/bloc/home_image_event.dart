@@ -60,3 +60,21 @@ class HomeImageArrangementVisibilityChanged extends HomeImageEvent {
   @override
   List<Object?> get props => [visible];
 }
+
+class HomeImageBackVisibilityChanged extends HomeImageEvent {
+  final bool visible;
+
+  const HomeImageBackVisibilityChanged(this.visible);
+
+  @override
+  List<Object?> get props => [visible];
+}
+
+class HomeImageBackTapStatusChanged extends HomeImageEvent {
+  final HomeImageBackTapStatus status;
+
+  const HomeImageBackTapStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
