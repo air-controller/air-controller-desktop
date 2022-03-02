@@ -1,3 +1,4 @@
+import '../model/ResponseEntity.dart';
 import '../model/mobile_info.dart';
 import 'aircontroller_client.dart';
 
@@ -7,4 +8,5 @@ class CommonRepository {
   CommonRepository({required AirControllerClient client}): this.client = client;
 
   Future<MobileInfo> getMobileInfo() => this.client.getMobileInfo();
+
 }

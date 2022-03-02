@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 class ProgressIndicatorDialog {
@@ -9,6 +11,7 @@ class ProgressIndicatorDialog {
   Function()? _onCancelClick;
   bool isShowing = false;
   StateSetter? _stateSetter;
+  BuildContext? _dialogContext;
 
   ProgressIndicatorDialog({required BuildContext context, String title = "", String subtitle = ""}) {
     this.context = context;
@@ -25,6 +28,8 @@ class ProgressIndicatorDialog {
         barrierColor: Colors.black.withOpacity(0.5),
         transitionDuration: Duration(milliseconds: 300),
         pageBuilder: (context, animation, secondaryAnimation) {
+          _dialogContext = context;
+
           return StatefulBuilder(builder: (context, stateSetter) {
             _stateSetter = stateSetter;
 
@@ -139,7 +144,9 @@ class ProgressIndicatorDialog {
   }
 
   void dismiss() {
-    Navigator.pop(context);
+    if (null == _dialogContext) return;
+
+    Navigator.of(_dialogContext!).pop();
     _stateSetter = null;
   }
 }

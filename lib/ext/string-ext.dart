@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-extension ColorExtension on String {
+extension StringX on String {
   toColor() {
     var hexColor = this.replaceAll("#", "");
     if (hexColor.length == 6) {
@@ -9,5 +9,9 @@ extension ColorExtension on String {
     if (hexColor.length == 8) {
       return Color(int.parse("0x$hexColor"));
     }
+  }
+
+  String adaptForOverflow() {
+    return this.replaceAll('', '\u{200B}');
   }
 }

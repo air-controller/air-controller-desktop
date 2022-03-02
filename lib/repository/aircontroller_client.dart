@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flowder/flowder.dart';
 import 'package:http/http.dart';
+import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/model/AlbumItem.dart';
 
 import '../model/ImageItem.dart';
 import '../model/ResponseEntity.dart';
@@ -14,47 +18,44 @@ class BusinessError implements Exception {
 
 class AirControllerClient {
   final String _domain;
+  DownloaderCore? _downloaderCore;
 
   AirControllerClient({required String domain}) : _domain = domain;
 
   Future<List<ImageItem>> getAllImages() async {
     var uri = Uri.parse("${_domain}/image/all");
-    Response response = await post(
-        uri,
-        headers: { "Content-Type": "application/json"},
-        body: json.encode({})
-    );
+    Response response = await post(uri,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
 
     if (response.statusCode == 200) {
-        var body = response.body;
+      var body = response.body;
 
-        final map = jsonDecode(body);
-        final httpResponseEntity = ResponseEntity.fromJson(map);
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
 
-        if (httpResponseEntity.isSuccessful()) {
-          final data = httpResponseEntity.data as List<dynamic>;
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
 
-          final images = data.map((e) => ImageItem.fromJson(e as Map<String, dynamic>)).toList();
-          return images;
-        } else {
-          throw BusinessError(httpResponseEntity.msg == null
-              ? "Unknown error"
-              : httpResponseEntity.msg);
-        }
+        final images = data
+            .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return images;
       } else {
-        throw BusinessError(response.reasonPhrase != null
-            ? response.reasonPhrase!
-            : "Unknown error");
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg);
       }
+    } else {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    }
   }
 
   Future<MobileInfo> getMobileInfo() async {
     var uri = Uri.parse("${_domain}/common/mobileInfo");
-    Response response = await post(
-        uri,
-        headers: { "Content-Type": "application/json"},
-        body: json.encode({})
-    );
+    Response response = await post(uri,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -76,6 +77,209 @@ class AirControllerClient {
       throw BusinessError(response.reasonPhrase != null
           ? response.reasonPhrase!
           : "Unknown error");
+    }
+  }
+
+  Future<List<ImageItem>> getCameraImages() async {
+    var uri = Uri.parse("${_domain}/image/albumImages");
+    Response response = await post(uri,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode == 200) {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        final images = data
+            .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return images;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg);
+      }
+    } else {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    }
+  }
+
+  Future<List<ImageItem>> deleteImages(List<ImageItem> images) async {
+    var url = Uri.parse("${_domain}/image/delete");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body:
+            json.encode({"paths": images.map((image) => image.path).toList()}));
+
+    if (response.statusCode == 200) {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return images;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg);
+      }
+    } else {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    }
+  }
+
+  void copyFileTo(
+      {required List<String> paths,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+        String? fileName = null
+      }) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (paths.length <= 1) {
+        int index = paths.single.lastIndexOf("/");
+
+        if (index != -1) {
+          name = paths.single.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime
+                .now()
+                .millisecondsSinceEpoch));
+
+        name = "AirController_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "${_domain}/stream/download?paths=$pathsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
+    }
+  }
+
+  // Solving this problem like this is not so good, improve it later.
+  void cancelDownload() {
+    _downloaderCore?.cancel();
+  }
+
+  Future<List<AlbumItem>> getAllAlbums() async {
+    var url = Uri.parse("${_domain}/image/albums");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode == 200) {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+        final albums = data
+            .map((e) => AlbumItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return albums;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg);
+      }
+    } else {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    }
+  }
+
+  Future<List<ImageItem>> getImagesInAlbum(AlbumItem albumItem) async {
+    var url = Uri.parse("${_domain}/image/imagesOfAlbum");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"id": albumItem.id}));
+
+    if (response.statusCode == 200) {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+        final images = data
+            .map((e) => ImageItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return images;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg);
+      }
+    } else {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    }
+  }
+
+  Future<ResponseEntity> deleteFiles(List<String> paths) async {
+    var url = Uri.parse("${_domain}/file/deleteMulti");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"paths": paths}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
     }
   }
 }

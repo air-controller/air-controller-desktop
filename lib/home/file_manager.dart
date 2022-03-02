@@ -1,23 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile_assistant_client/event/exit_cmd_service.dart';
 import 'package:mobile_assistant_client/event/exit_heartbeat_service.dart';
 import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/help_and_feedback_page.dart';
-import 'package:mobile_assistant_client/home/image_manager_page.dart';
 import 'package:mobile_assistant_client/home/music_manager_page.dart';
 import 'package:mobile_assistant_client/home/video_manager_page.dart';
-import 'package:mobile_assistant_client/main.dart';
 import 'package:mobile_assistant_client/model/mobile_info.dart';
-import 'package:mobile_assistant_client/network/cmd_client.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-import 'package:mobile_assistant_client/network/heartbeat_service.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
+
 import '../ext/string-ext.dart';
-import '../constant.dart';
 import 'all_file_manager_page.dart';
 
 class FileManagerPage extends StatefulWidget {
@@ -374,7 +369,6 @@ class FileManagerState extends State<FileManagerPage> {
                   scrollDirection: Axis.vertical,
                   physics: NeverScrollableScrollPhysics(),
                   children: [
-                    ImageManagerPage(),
                     MusicManagerPage(),
                     VideoManagerPage(),
                     DownloadManagerPage(),

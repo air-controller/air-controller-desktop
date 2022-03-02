@@ -19,6 +19,8 @@ class Constant {
 
   static const double HOME_NAVI_BAR_HEIGHT = 50.0;
 
+  static const double HOME_TAB_WIDTH = 210;
+
   /// 是否隐藏右上角DEBUG标记
   static const bool HIDE_DEBUG_MARK = false;
 
@@ -38,4 +40,15 @@ class Constant {
   static const double DEFAULT_WINDOW_WIDTH = 1243.2;
 
   static const double DEFAULT_WINDOW_HEIGHT = 824.4;
+}
+
+class ImagePageRoute {
+  static const String IMAGE_HOME = "/image";
+
+  static const String IMAGE_DETAIL = "/image/detail";
+
+  /**
+   * Image list page in the someone album.
+   */
+  static const String IMAGE_ALBUM_IMAGES = "/image/album/images";
 }

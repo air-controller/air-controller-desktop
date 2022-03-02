@@ -8,6 +8,7 @@ import 'package:mobile_assistant_client/home2/bloc/home_event.dart';
 import 'package:mobile_assistant_client/home2/bloc/home_state.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import 'package:mobile_assistant_client/repository/common_repository.dart';
+import 'package:mobile_assistant_client/repository/file_repository.dart';
 
 import '../../constant.dart';
 import '../../event/exit_cmd_service.dart';
@@ -16,9 +17,9 @@ import '../../event/update_mobile_info.dart';
 import '../../home/all_file_manager_page.dart';
 import '../../home/download_manager_page.dart';
 import '../../home/help_and_feedback_page.dart';
-import '../../home/image_manager_page.dart';
 import '../../home/music_manager_page.dart';
 import '../../home/video_manager_page.dart';
+import '../../home_image/view/home_image_flow.dart';
 import '../../model/mobile_info.dart';
 import '../../network/device_connection_manager.dart';
 import '../../repository/image_repository.dart';
@@ -40,6 +41,9 @@ class HomePage extends StatelessWidget {
           RepositoryProvider<CommonRepository>(
               create: (context) => CommonRepository(client: client)
           ),
+          RepositoryProvider<FileRepository>(
+              create: (context) => FileRepository(client: client)
+          )
         ],
         child: HomeBlocProviderView());
   }
@@ -64,7 +68,7 @@ class HomeView extends StatelessWidget {
   final _tab_height = 50.0;
   final _icon_margin_hor = 10.0;
   final _tab_font_size = 16.0;
-  final _tab_width = 210.0;
+  final _tab_width = Constant.HOME_TAB_WIDTH;
 
   bool _isPopupIconDown = false;
   bool _isPopupIconHover = false;
@@ -101,7 +105,6 @@ class HomeView extends StatelessWidget {
     }
 
     Color hoverIconBgColor = Color(0xfffafafa);
-
 
     return Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -378,7 +381,7 @@ class HomeView extends StatelessWidget {
                   scrollDirection: Axis.vertical,
                   physics: NeverScrollableScrollPhysics(),
                   children: [
-                    ImageManagerPage(),
+                    HomeImageFlow(),
                     MusicManagerPage(),
                     VideoManagerPage(),
                     DownloadManagerPage(),
