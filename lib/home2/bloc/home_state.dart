@@ -1,5 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:mobile_assistant_client/model/mobile_info.dart';
+part of 'home_bloc.dart';
 
 enum HomeTab { image, music, video, download, allFile, helpAndFeedback }
 
