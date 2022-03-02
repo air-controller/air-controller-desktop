@@ -77,10 +77,6 @@ class AllAlbumsView extends StatelessWidget {
     Widget content = _createGridContent(context);
     Widget albumImagesWidget = _createAlbumImagesWidget(context);
 
-    _rootFocusNode = FocusNode();
-    _rootFocusNode?.canRequestFocus = true;
-    _rootFocusNode?.requestFocus();
-
     final color = Color(0xff85a8d0);
     final spinKit = SpinKitCircle(color: color, size: 60.0);
 
@@ -92,6 +88,15 @@ class AllAlbumsView extends StatelessWidget {
         .select((AllAlbumsBloc bloc) => bloc.state.albumOpenStatus.current);
     LoadImagesInAlbumStatusUnit loadImagesInAlbumStatusUnit = context
         .select((AllAlbumsBloc bloc) => bloc.state.loadImagesInAlbumStatus);
+
+    HomeImageTab currentTab = context.select((HomeImageBloc bloc) => bloc.state.tab);
+
+    _rootFocusNode = FocusNode();
+    _rootFocusNode?.canRequestFocus = true;
+
+    if (currentTab == HomeImageTab.allAlbums) {
+      _rootFocusNode?.requestFocus();
+    }
 
     return Scaffold(
       body: MultiBlocListener(
@@ -289,6 +294,8 @@ class AllAlbumsView extends StatelessWidget {
                         false
                     ));
                   }
+
+                  _rootFocusNode?.requestFocus();
                 }
               },
               listenWhen: (previous, current) => previous.tab != current.tab

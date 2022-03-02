@@ -77,11 +77,16 @@ class AllImagesView extends StatelessWidget {
         context.select((AllImagesBloc bloc) => bloc.state.checkedImages);
     bool isLoadingComplete = context.select(
         (AllImagesBloc bloc) => bloc.state.status == AllImagesStatus.success);
+    HomeImageTab currentTab = context.select((HomeImageBloc bloc) => bloc.state.tab);
 
     _rootFocusNode = FocusNode();
 
     _rootFocusNode?.canRequestFocus = true;
-    _rootFocusNode?.requestFocus();
+
+    if ((currentTab == HomeImageTab.allImages && !isFromCamera)
+    || currentTab == HomeImageTab.cameraImages && isFromCamera) {
+      _rootFocusNode?.requestFocus();
+    }
 
     return Scaffold(
       body: MultiBlocListener(
@@ -264,6 +269,8 @@ class AllImagesView extends StatelessWidget {
                 context.read<HomeImageBloc>().add(HomeImageArrangementVisibilityChanged(
                   true
                 ));
+
+                _rootFocusNode?.requestFocus();
               }
             },
             listenWhen: (previous, current) => previous.tab != current.tab
