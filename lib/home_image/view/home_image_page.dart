@@ -8,8 +8,6 @@ import 'package:mobile_assistant_client/all_albums/view/all_albums_page.dart';
 import 'package:mobile_assistant_client/all_images/all_images.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_event.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_state.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 
 class HomeImagePage extends StatelessWidget {

@@ -1,8 +1,10 @@
-import 'dart:developer';
-
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_event.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_state.dart';
+
+import '../../model/arrangement_mode.dart';
+
+part 'home_image_event.dart';
+part 'home_image_state.dart';
 
 class HomeImageBloc extends Bloc<HomeImageEvent, HomeImageState> {
   HomeImageBloc() : super(HomeImageState()) {

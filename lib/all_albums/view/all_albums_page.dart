@@ -10,8 +10,6 @@ import 'package:mobile_assistant_client/all_albums/bloc/all_albums_bloc.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_event.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_state.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';

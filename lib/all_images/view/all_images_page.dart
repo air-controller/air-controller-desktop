@@ -13,8 +13,6 @@ import 'package:mobile_assistant_client/all_images/model/image_detail_arguments.
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_event.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_state.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';

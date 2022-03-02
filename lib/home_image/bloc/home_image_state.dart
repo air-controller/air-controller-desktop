@@ -1,5 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:mobile_assistant_client/model/arrangement_mode.dart';
+part of 'home_image_bloc.dart';
 
 enum HomeImageTab { allImages, cameraImages, allAlbums }
 

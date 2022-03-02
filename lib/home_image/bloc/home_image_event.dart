@@ -1,8 +1,4 @@
-
-import 'package:equatable/equatable.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_state.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
-import 'package:mobile_assistant_client/model/arrangement_mode.dart';
+part of 'home_image_bloc.dart';
 
 abstract class HomeImageEvent extends Equatable {
   const HomeImageEvent();
