@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/home2/bloc/home_bloc.dart';
+import 'package:mobile_assistant_client/music_home/view/music_home_page.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
+import 'package:mobile_assistant_client/repository/audio_repository.dart';
 import 'package:mobile_assistant_client/repository/common_repository.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 
@@ -41,6 +43,9 @@ class HomePage extends StatelessWidget {
           ),
           RepositoryProvider<FileRepository>(
               create: (context) => FileRepository(client: client)
+          ),
+          RepositoryProvider<AudioRepository>(
+              create: (context) => AudioRepository(client: client)
           )
         ],
         child: HomeBlocProviderView());
@@ -380,7 +385,7 @@ class HomeView extends StatelessWidget {
                   physics: NeverScrollableScrollPhysics(),
                   children: [
                     HomeImageFlow(),
-                    MusicManagerPage(),
+                    MusicHomePage(),
                     VideoManagerPage(),
                     DownloadManagerPage(),
                     AllFileManagerPage(),

@@ -11,6 +11,10 @@ class CommonUtil {
   static final _MB_BOUND = 1 * 1024 * 1024;
   static final _GB_BOUND = 1 * 1024 * 1024 * 1024;
 
+  static final _ONE_HOUR = 60 * 60 * 1000;
+  static final _ONE_MINUTE = 60 * 1000;
+  static final _ONE_SECOND = 1000;
+
   static String convertToReadableSize(int size) {
     if (size < _KB_BOUND) {
       return "${size} bytes";
@@ -67,5 +71,45 @@ class CommonUtil {
     }).catchError((error) {
       onError.call(error.toString());
     });
+  }
+
+  static String convertToReadableDuration(int duration) {
+    if (duration >= _ONE_HOUR) {
+      int hour = (duration / _ONE_HOUR).truncate();
+
+      String durStr = "${hour}小时";
+
+      if (duration - hour * _ONE_HOUR > 0) {
+        int min = ((duration - hour * _ONE_HOUR) / _ONE_MINUTE).truncate();
+
+        durStr = "${durStr}${min}分";
+
+        if (duration - hour * _ONE_HOUR - min * _ONE_MINUTE > 0) {
+          int sec =
+          ((duration - hour * _ONE_HOUR - min * _ONE_MINUTE) / _ONE_SECOND)
+              .truncate();
+
+          durStr = "${durStr}${sec}秒";
+        }
+      }
+
+      return durStr;
+    } else if (duration < _ONE_HOUR && duration >= _ONE_MINUTE) {
+      int min = (duration / _ONE_MINUTE).truncate();
+
+      String durStr = "${min}分";
+
+      if (duration - min * _ONE_MINUTE > 0) {
+        int sec = ((duration - min * _ONE_MINUTE) / _ONE_SECOND).truncate();
+
+        durStr = "${durStr}${sec}秒";
+      }
+
+      return durStr;
+    } else {
+      int sec = (duration / _ONE_SECOND).truncate();
+
+      return "${sec}秒";
+    }
   }
 }

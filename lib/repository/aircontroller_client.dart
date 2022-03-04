@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 
+import '../model/AudioItem.dart';
 import '../model/ImageItem.dart';
 import '../model/ResponseEntity.dart';
 import '../model/mobile_info.dart';
@@ -143,8 +144,7 @@ class AirControllerClient {
       Function(String fileName)? onDone,
       Function(String fileName, int current, int total)? onProgress,
       Function(String error)? onError,
-        String? fileName = null
-      }) async {
+      String? fileName = null}) async {
     String name = "";
 
     if (fileName == null) {
@@ -158,9 +158,7 @@ class AirControllerClient {
         final df = DateFormat("yyyyMd_HHmmss");
 
         String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
-            DateTime
-                .now()
-                .millisecondsSinceEpoch));
+            DateTime.now().millisecondsSinceEpoch));
 
         name = "AirController_${formatTime}.zip";
       }
@@ -275,6 +273,35 @@ class AirControllerClient {
 
       if (httpResponseEntity.isSuccessful()) {
         return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<AudioItem>> getAllAudios() async {
+    var url = Uri.parse("$_domain/audio/all");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => AudioItem.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else {
         throw BusinessError(httpResponseEntity.msg == null
             ? "Unknown error"
