@@ -1,10 +1,12 @@
 import 'dart:developer';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/enter/bloc/enter_event.dart';
-import 'package:mobile_assistant_client/enter/bloc/enter_state.dart';
 
 import '../../model/Device.dart';
+
+part 'enter_event.dart';
+part 'enter_state.dart';
 
 class EnterBloc extends Bloc<EnterEvent, EnterState> {
   EnterBloc() : super(EnterState()) {

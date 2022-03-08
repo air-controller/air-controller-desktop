@@ -9,8 +9,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_bloc.dart';
-import 'package:mobile_assistant_client/enter/bloc/enter_event.dart';
-import 'package:mobile_assistant_client/enter/bloc/enter_state.dart';
 import 'package:mobile_assistant_client/home2/view/home_page.dart';
 import 'package:neat_periodic_task/neat_periodic_task.dart';
 import 'package:network_info_plus/network_info_plus.dart';

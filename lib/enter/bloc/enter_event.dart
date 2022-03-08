@@ -1,7 +1,4 @@
-
-import 'package:equatable/equatable.dart';
-
-import '../../model/Device.dart';
+part of 'enter_bloc.dart';
 
 abstract class EnterEvent extends Equatable {
   const EnterEvent();

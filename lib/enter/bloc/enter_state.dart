@@ -1,7 +1,4 @@
-
-import 'package:equatable/equatable.dart';
-import 'package:mobile_assistant_client/model/Device.dart';
-
+part of 'enter_bloc.dart';
 
 class EnterState extends Equatable {
   final bool isNetworkConnected;
