@@ -88,8 +88,6 @@ class HomeView extends StatelessWidget {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
     MobileInfo? mobileInfo = context.select((HomeBloc bloc) => bloc.state.mobileInfo);
 
-    final pageController = PageController(initialPage: tab.index);
-
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == tab.index) {
         return Color(0xffededed);
@@ -150,8 +148,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.image.index),
                       ),
                       onTap: () {
-                        debugPrint("Image tab click");
-                        pageController.jumpToPage(HomeTab.image.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.image));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -176,7 +173,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.music.index),
                       ),
                       onTap: () {
-                        pageController.jumpToPage(HomeTab.music.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.music));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -201,7 +198,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.video.index),
                       ),
                       onTap: () {
-                        pageController.jumpToPage(HomeTab.video.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.video));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -226,7 +223,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.download.index),
                       ),
                       onTap: () {
-                        pageController.jumpToPage(HomeTab.download.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.download));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -251,7 +248,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.allFile.index),
                       ),
                       onTap: () {
-                        pageController.jumpToPage(HomeTab.allFile.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.allFile));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -275,8 +272,7 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.helpAndFeedback.index),
                       ),
                       onTap: () {
-                        pageController
-                            .jumpToPage(HomeTab.helpAndFeedback.index);
+                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.helpAndFeedback));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -383,23 +379,35 @@ class HomeView extends StatelessWidget {
           VerticalDivider(
               width: 1.0, thickness: 1.0, color: "#e1e1d3".toColor()),
           Expanded(
-              child: PageView(
-                  scrollDirection: Axis.vertical,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [
-                    HomeImageFlow(),
-                    MusicHomePage(),
-                    VideoHomePage(),
-                    DownloadManagerPage(),
-                    AllFileManagerPage(),
-                    HelpAndFeedbackPage()
-                  ],
-                  onPageChanged: (index) {
-                    HomeTab tab = HomeTabX.convertToHomeTab(index);
-                    context.read<HomeBloc>().add(HomeTabChanged(tab));
-                  },
-                  controller: pageController))
+              child: IndexedStack(
+                index: tab.index,
+                children: [
+                  HomeImageFlow(),
+                  MusicHomePage(),
+                  VideoHomePage(),
+                  DownloadManagerPage(),
+                  AllFileManagerPage(),
+                  HelpAndFeedbackPage()
+                ],
+              ))
         ]);
+
+    // PageView(
+    //     scrollDirection: Axis.vertical,
+    //     physics: NeverScrollableScrollPhysics(),
+    //     children: [
+    //       HomeImageFlow(),
+    //       MusicHomePage(),
+    //       VideoHomePage(),
+    //       DownloadManagerPage(),
+    //       AllFileManagerPage(),
+    //       HelpAndFeedbackPage()
+    //     ],
+    //     onPageChanged: (index) {
+    //       HomeTab tab = HomeTabX.convertToHomeTab(index);
+    //       context.read<HomeBloc>().add(HomeTabChanged(tab));
+    //     },
+    //     controller: pageController)
   }
 
   void _exitFileManager(BuildContext context) {
