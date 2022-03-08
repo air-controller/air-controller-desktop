@@ -5,6 +5,8 @@ import 'package:flowder/flowder.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
+import 'package:mobile_assistant_client/model/video_folder_item.dart';
+import 'package:mobile_assistant_client/model/video_item.dart';
 
 import '../model/AudioItem.dart';
 import '../model/ImageItem.dart';
@@ -301,6 +303,94 @@ class AirControllerClient {
 
         return data
             .map((e) => AudioItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<VideoItem>> getAllVideos() async {
+    var url = Uri.parse("${_domain}/video/videos");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => VideoItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<VideoFolderItem>> getAllVideoFolders() async {
+    var url = Uri.parse("${_domain}/video/folders");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => VideoFolderItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<VideoItem>> getVideosInFolder(String folderId) async {
+    var url = Uri.parse("${_domain}/video/videosInFolder");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"folderId": folderId}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => VideoItem.fromJson(e as Map<String, dynamic>))
             .toList();
       } else {
         throw BusinessError(httpResponseEntity.msg == null

@@ -7,7 +7,6 @@ import 'package:mobile_assistant_client/event/update_mobile_info.dart';
 import 'package:mobile_assistant_client/home/download_manager_page.dart';
 import 'package:mobile_assistant_client/home/help_and_feedback_page.dart';
 import 'package:mobile_assistant_client/home/music_manager_page.dart';
-import 'package:mobile_assistant_client/home/video_manager_page.dart';
 import 'package:mobile_assistant_client/model/mobile_info.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
 import 'package:mobile_assistant_client/util/event_bus.dart';
@@ -370,7 +369,6 @@ class FileManagerState extends State<FileManagerPage> {
                   physics: NeverScrollableScrollPhysics(),
                   children: [
                     MusicManagerPage(),
-                    VideoManagerPage(),
                     DownloadManagerPage(),
                     AllFileManagerPage(),
                     HelpAndFeedbackPage()

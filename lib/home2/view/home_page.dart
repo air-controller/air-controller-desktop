@@ -9,6 +9,8 @@ import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import 'package:mobile_assistant_client/repository/audio_repository.dart';
 import 'package:mobile_assistant_client/repository/common_repository.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
+import 'package:mobile_assistant_client/repository/video_repository.dart';
+import 'package:mobile_assistant_client/video_home/video_home.dart';
 
 import '../../constant.dart';
 import '../../event/exit_cmd_service.dart';
@@ -17,8 +19,6 @@ import '../../event/update_mobile_info.dart';
 import '../../home/all_file_manager_page.dart';
 import '../../home/download_manager_page.dart';
 import '../../home/help_and_feedback_page.dart';
-import '../../home/music_manager_page.dart';
-import '../../home/video_manager_page.dart';
 import '../../home_image/view/home_image_flow.dart';
 import '../../model/mobile_info.dart';
 import '../../network/device_connection_manager.dart';
@@ -46,6 +46,9 @@ class HomePage extends StatelessWidget {
           ),
           RepositoryProvider<AudioRepository>(
               create: (context) => AudioRepository(client: client)
+          ),
+          RepositoryProvider<VideoRepository>(
+              create: (context) => VideoRepository(client: client)
           )
         ],
         child: HomeBlocProviderView());
@@ -386,7 +389,7 @@ class HomeView extends StatelessWidget {
                   children: [
                     HomeImageFlow(),
                     MusicHomePage(),
-                    VideoManagerPage(),
+                    VideoHomePage(),
                     DownloadManagerPage(),
                     AllFileManagerPage(),
                     HelpAndFeedbackPage()

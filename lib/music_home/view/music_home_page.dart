@@ -137,8 +137,8 @@ class MusicHomeView extends StatelessWidget {
 
                 if (state.copyStatus.status == MusicHomeCopyStatus.copying) {
                   if (_progressIndicatorDialog?.isShowing == true) {
-                    int current = state.copyStatus!.current;
-                    int total = state.copyStatus!.total;
+                    int current = state.copyStatus.current;
+                    int total = state.copyStatus.total;
 
                     if (current > 0) {
                       String title = "正在导出音乐";
