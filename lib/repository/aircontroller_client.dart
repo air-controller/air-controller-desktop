@@ -9,6 +9,7 @@ import 'package:mobile_assistant_client/model/video_folder_item.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
 
 import '../model/AudioItem.dart';
+import '../model/FileItem.dart';
 import '../model/ImageItem.dart';
 import '../model/ResponseEntity.dart';
 import '../model/mobile_info.dart';
@@ -392,6 +393,96 @@ class AirControllerClient {
         return data
             .map((e) => VideoItem.fromJson(e as Map<String, dynamic>))
             .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<FileItem>> getFiles(String? path) async {
+    var url = Uri.parse("${_domain}/file/list");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"path": path == null ? "" : path}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<List<FileItem>> getDownloadFiles() async {
+    var url = Uri.parse("${_domain}/file/downloadedFiles");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => FileItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<ResponseEntity> rename(FileItem file, String newName) async {
+    var url = Uri.parse("${_domain}/file/rename");
+    Response response = await post(url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "folder": file.folder,
+          "file": file.name,
+          "newName": newName,
+          "isDir": file.isDir
+        }));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
       } else {
         throw BusinessError(httpResponseEntity.msg == null
             ? "Unknown error"

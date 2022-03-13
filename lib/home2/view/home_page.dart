@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
+import 'package:mobile_assistant_client/file_home/file_home.dart';
 import 'package:mobile_assistant_client/home2/bloc/home_bloc.dart';
 import 'package:mobile_assistant_client/music_home/view/music_home_page.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
@@ -385,8 +386,8 @@ class HomeView extends StatelessWidget {
                   HomeImageFlow(),
                   MusicHomePage(),
                   VideoHomePage(),
-                  DownloadManagerPage(),
-                  AllFileManagerPage(),
+                  FileHomePage(true),
+                  FileHomePage(false),
                   HelpAndFeedbackPage()
                 ],
               ))

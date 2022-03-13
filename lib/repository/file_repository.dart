@@ -1,3 +1,4 @@
+import '../model/FileItem.dart';
 import '../model/ResponseEntity.dart';
 import 'aircontroller_client.dart';
 
@@ -25,4 +26,10 @@ class FileRepository {
   );
 
   void cancelCopy() => this.client.cancelDownload();
+
+  Future<List<FileItem>> getFiles(String? path) => this.client.getFiles(path);
+
+  Future<List<FileItem>> getDownloadFiles() => this.client.getDownloadFiles();
+
+  Future<ResponseEntity> rename(FileItem file, String newName) => this.client.rename(file, newName);
 }

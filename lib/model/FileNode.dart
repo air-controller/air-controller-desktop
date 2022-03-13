@@ -8,6 +8,7 @@ class FileNode extends Comparable<FileNode> {
   int level;
 
   bool isExpand = false;
+  bool isRenaming = false;
 
   FileNode(this.parent, this.data, this.level);
 

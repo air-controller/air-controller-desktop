@@ -2,7 +2,7 @@ import 'dart:collection';
 
 class StackQueue<T> {
   final _stack = Queue<T>();
-  
+
   void push(T element) {
     _stack.addLast(element);
   }
@@ -37,6 +37,8 @@ class StackQueue<T> {
 
     return false;
   }
+
+  bool contains(T data) => _stack.contains(data);
 
   int get length => _stack.length;
 
