@@ -8,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
 import 'package:mobile_assistant_client/grid_mode_files/view/grid_mode_files_page.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/list_mode_files/list_mode_files.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 
@@ -179,7 +180,22 @@ class FileHomeView extends StatelessWidget {
                     int total = state.copyStatus.total;
 
                     if (current > 0) {
-                      String title = "正在导出文件, 请稍后...";
+                      String title = context.l10n.exporting;
+
+                      List<FileNode> checkedFiles = state.checkedFiles;
+
+                      if (checkedFiles.length == 1) {
+                        String name = checkedFiles.single.data.name;
+
+                        title = context.l10n.placeholderExporting.replaceFirst(
+                            "%s", name);
+                      }
+
+                      if (checkedFiles.length > 1) {
+                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                            "${checkedFiles.length}");
+                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                      }
 
                       _progressIndicatorDialog?.title = title;
                     }
@@ -197,7 +213,7 @@ class FileHomeView extends StatelessWidget {
                     ..hideCurrentSnackBar()
                     ..showSnackBar(SnackBar(
                         content:
-                            Text(state.copyStatus.error ?? "拷贝文件失败，请稍后再试.")));
+                            Text(state.copyStatus.error ?? context.l10n.copyFileFailure)));
                 }
 
                 if (state.copyStatus.status == FileHomeCopyStatus.success) {
@@ -329,10 +345,10 @@ class FileHomeView extends StatelessWidget {
     final _delete_btn_padding_vertical = 4.5;
     final _divider_line_color = Color(0xffe0e0e0);
 
-    String itemNumStr = "共${files.length}项";
-
+    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${files.length}");
     if (checkedFiles.length > 0) {
-      itemNumStr += "(选中${checkedFiles.length}项)";
+      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${checkedFiles.length}")
+          .replaceFirst("%d", "${files.length}");
     }
 
     String getIconModeIcon() {
@@ -383,7 +399,7 @@ class FileHomeView extends StatelessWidget {
                               Image.asset("assets/icons/icon_right_arrow.png",
                                   width: 12, height: 12),
                               Container(
-                                child: Text("返回",
+                                child: Text(context.l10n.back,
                                     style: TextStyle(
                                         color: Color(0xff5c5c62),
                                         fontSize: 13)),
@@ -426,7 +442,7 @@ class FileHomeView extends StatelessWidget {
                     })),
             Align(
                 alignment: Alignment.center,
-                child: Text(this.isOnlyDownloadDir ? "下载" : "全部文件",
+                child: Text(this.isOnlyDownloadDir ? context.l10n.downloads : context.l10n.files,
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(color: Color(0xff616161), fontSize: 16.0))),
@@ -590,9 +606,12 @@ class FileHomeView extends StatelessWidget {
 
       String name = file.data.name;
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedFiles.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedFiles.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -625,7 +644,7 @@ class FileHomeView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
@@ -646,7 +665,7 @@ class FileHomeView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "重命名",
+                          title: pageContext.l10n.rename,
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
@@ -667,7 +686,7 @@ class FileHomeView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
-                            CommonUtil.openFilePicker("选择目录", (dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopyFiles(pageContext, checkedFiles, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -682,7 +701,7 @@ class FileHomeView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
@@ -717,10 +736,10 @@ class FileHomeView extends StatelessWidget {
       });
     }
 
-    String title = "正在准备中，请稍后...";
+    String title = context.l10n.preparing;
 
     if (files.length > 1) {
-      title = "正在压缩中，请稍后...";
+      title = context.l10n.compressing;
     }
 
     _progressIndicatorDialog?.title = title;
@@ -730,13 +749,14 @@ class FileHomeView extends StatelessWidget {
     }
   }
 
-  void _tryToDeleteFiles(BuildContext pageContext, List<FileNode> files) {
+  void _tryToDeleteFiles(BuildContext pageContext, List<FileNode> checkedFiles) {
     CommonUtil.showConfirmDialog(
-        pageContext, "确定删除这${files.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
-        (context) {
+      pageContext,
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedFiles.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
-      pageContext.read<FileHomeBloc>().add(FileHomeDeleteSubmitted(files));
+      pageContext.read<FileHomeBloc>().add(FileHomeDeleteSubmitted(checkedFiles));
     }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
     });

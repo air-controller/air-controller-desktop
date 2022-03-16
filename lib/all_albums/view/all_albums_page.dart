@@ -10,6 +10,7 @@ import 'package:mobile_assistant_client/all_albums/bloc/all_albums_bloc.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
@@ -207,15 +208,19 @@ class AllAlbumsView extends StatelessWidget {
                   int current = state.copyStatus.current;
                   int total = state.copyStatus.total;
 
-                  if (current > 0) {
-                    String title = "正在导出相册, 请稍后...";
+                  String title = "";
 
-                    if (state.copyStatus.fileType == AllAlbumsFileType.image) {
-                      title = "正在导出图片，请稍后...";
-                    }
+                  List<AlbumItem> checkedAlbums = state.checkedAlbums;
 
-                    _progressIndicatorDialog?.title = title;
+                  if (checkedAlbums.length == 1) {
+                    title = context.l10n.placeholderExporting.replaceFirst("%s", checkedAlbums.single.name);
+                  } else {
+                    String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                        "${state.checkedAlbums.length}");
+                    title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
                   }
+
+                  _progressIndicatorDialog?.title = title;
 
                   _progressIndicatorDialog?.subtitle =
                   "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
@@ -230,7 +235,7 @@ class AllAlbumsView extends StatelessWidget {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
                   ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? "拷贝文件失败，请稍后再试."
+                      state.copyStatus.error ?? context.l10n.copyFileFailure
                   )));
               }
 
@@ -343,7 +348,7 @@ class AllAlbumsView extends StatelessWidget {
                         children: [
                           GestureDetector(
                             child: Container(
-                              child: Text("所有相册",
+                              child: Text(context.l10n.galleries,
                                   style: TextStyle(
                                       color: Color(0xff5b5c62), fontSize: 14)),
                               padding: EdgeInsets.only(left: 10),
@@ -437,7 +442,7 @@ class AllAlbumsView extends StatelessWidget {
       });
     }
 
-    String title = "正在压缩中，请稍后...";
+    String title = context.l10n.preparing;
 
     _progressIndicatorDialog?.title = title;
 
@@ -473,9 +478,12 @@ class AllAlbumsView extends StatelessWidget {
 
       String name = albumItem.name;
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedAlbums.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedAlbums.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -508,7 +516,7 @@ class AllAlbumsView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -530,7 +538,7 @@ class AllAlbumsView extends StatelessWidget {
                             Navigator.of(dialogContext).pop();
 
                             CommonUtil.openFilePicker(
-                                "选择目录", (dir) {
+                                pageContext.l10n.chooseDir, (dir) {
                                   _startCopy(pageContext, checkedAlbums, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -545,7 +553,7 @@ class AllAlbumsView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -585,9 +593,12 @@ class AllAlbumsView extends StatelessWidget {
         name = imageItem.path.substring(index + 1);
       }
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedImages.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedImages.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -620,7 +631,7 @@ class AllAlbumsView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -640,7 +651,7 @@ class AllAlbumsView extends StatelessWidget {
                             Navigator.of(dialogContext).pop();
 
                             CommonUtil.openFilePicker(
-                                "选择目录", (dir) {
+                                pageContext.l10n.chooseDir, (dir) {
                               _startCopyImages(pageContext, checkedImages, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -655,7 +666,7 @@ class AllAlbumsView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -688,7 +699,8 @@ class AllAlbumsView extends StatelessWidget {
   void _tryToDeleteAlbums(BuildContext pageContext, List<AlbumItem> checkedAlbums) {
     CommonUtil.showConfirmDialog(
         pageContext,
-        "确定删除这${checkedAlbums.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedAlbums.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
             (context) {
           Navigator.of(context, rootNavigator: true).pop();
 
@@ -701,7 +713,8 @@ class AllAlbumsView extends StatelessWidget {
   void _tryToDeleteImages(BuildContext pageContext, List<ImageItem> checkedImages) {
     CommonUtil.showConfirmDialog(
         pageContext,
-        "确定删除这${checkedImages.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedImages.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
             (context) {
           Navigator.of(context, rootNavigator: true).pop();
 

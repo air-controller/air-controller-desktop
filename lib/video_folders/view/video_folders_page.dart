@@ -8,6 +8,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/video_order_type.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 import 'package:mobile_assistant_client/repository/video_repository.dart';
@@ -135,7 +136,7 @@ class VideoFoldersView extends StatelessWidget {
                     ..hideCurrentSnackBar()
                     ..showSnackBar(SnackBar(
                         content: Text(
-                            state.failureReason ?? "Delete files failure")));
+                            state.failureReason ?? context.l10n.deleteFilesFailure)));
                 }
 
                 if (state.deleteStatus == VideoFoldersDeleteStatus.success) {
@@ -158,10 +159,38 @@ class VideoFoldersView extends StatelessWidget {
                   int total = state.copyStatus.total;
 
                   if (current > 0) {
-                    String title = "正在导出视频文件夹, 请稍后...";
+                    String title = context.l10n.exporting;
 
-                    if (state.copyStatus.fileType == VideoFoldersFileType.video) {
-                      title = "正在导出视频，请稍后...";
+                    if (state.copyStatus.fileType == VideoFoldersFileType.folder) {
+                      List<VideoFolderItem> checkedVideoFolders = state.checkedVideoFolders;
+
+                      if (checkedVideoFolders.length == 1) {
+                        String name = checkedVideoFolders.single.name;
+
+                        title = context.l10n.placeholderExporting.replaceFirst(
+                            "%s", name);
+                      }
+
+                      if (checkedVideoFolders.length > 1) {
+                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                            "${checkedVideoFolders.length}");
+                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                      }
+                    } else {
+                      List<VideoItem> checkedVideos = state.loadVideosInFolderStatus.checkedVideos;
+
+                      if (checkedVideos.length == 1) {
+                        String name = checkedVideos.single.name;
+
+                        title = context.l10n.placeholderExporting.replaceFirst(
+                            "%s", name);
+                      }
+
+                      if (checkedVideos.length > 1) {
+                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                            "${checkedVideos.length}");
+                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                      }
                     }
 
                     _progressIndicatorDialog?.title = title;
@@ -180,7 +209,7 @@ class VideoFoldersView extends StatelessWidget {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
                   ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? "拷贝文件失败，请稍后再试."
+                      state.copyStatus.error ?? context.l10n.copyFileFailure
                   )));
               }
 
@@ -335,6 +364,20 @@ class VideoFoldersView extends StatelessWidget {
               => previous.deleteTapStatus != current.deleteTapStatus
                   && current.deleteTapStatus == VideoHomeDeleteTapStatus.tap
           ),
+
+          BlocListener<VideoFoldersBloc, VideoFoldersState>(
+              listener: (context, state) {
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(content: Text(
+                      state.copyStatus.error ?? context.l10n.loadVideoFoldersFailure
+                  )));
+              },
+              listenWhen: (previous, current)
+              => previous.status != current.status
+                  && current.status == VideoFoldersStatus.failure
+          ),
         ],
         child: Stack(
           children: [
@@ -410,7 +453,7 @@ class VideoFoldersView extends StatelessWidget {
                       children: [
                         GestureDetector(
                           child: Container(
-                            child: Text("视频文件夹",
+                            child: Text(context.l10n.videoFolders,
                                 style: TextStyle(
                                     color: Color(0xff5b5c62), fontSize: 14)),
                             padding: EdgeInsets.only(left: 10),
@@ -478,10 +521,10 @@ class VideoFoldersView extends StatelessWidget {
       });
     }
 
-    String title = "正在压缩中，请稍后...";
+    String title = context.l10n.compressing;
 
     if (fileType == VideoFoldersFileType.video) {
-      title = "正在准备中，请稍后...";
+      title = context.l10n.preparing;
     }
 
     _progressIndicatorDialog?.title = title;
@@ -683,9 +726,12 @@ class VideoFoldersView extends StatelessWidget {
 
       String name = folder.name;
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedFolders.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedFolders.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -718,7 +764,7 @@ class VideoFoldersView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -740,7 +786,7 @@ class VideoFoldersView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
-                            CommonUtil.openFilePicker("选择目录", (dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopy(pageContext, checkedFolders, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -755,7 +801,7 @@ class VideoFoldersView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -786,10 +832,8 @@ class VideoFoldersView extends StatelessWidget {
       BuildContext pageContext, List<VideoFolderItem> checkedFolders) {
     CommonUtil.showConfirmDialog(
         pageContext,
-        "确定删除这${checkedFolders.length}个项目吗？",
-        "注意：删除的文件无法恢复",
-        "取消",
-        "删除", (context) {
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedFolders.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       pageContext
@@ -812,9 +856,12 @@ class VideoFoldersView extends StatelessWidget {
       VideoItem videoItem = checkedVideos.single;
 
       String name = videoItem.name;
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedVideos.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedVideos.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -847,7 +894,7 @@ class VideoFoldersView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -866,7 +913,7 @@ class VideoFoldersView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
-                            CommonUtil.openFilePicker("选择目录", (dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopyVideos(pageContext, checkedVideos, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -881,7 +928,7 @@ class VideoFoldersView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(dialogContext).pop();
 
@@ -908,10 +955,8 @@ class VideoFoldersView extends StatelessWidget {
       BuildContext pageContext, List<VideoItem> checkedVideos) {
     CommonUtil.showConfirmDialog(
         pageContext,
-        "确定删除这${checkedVideos.length}个项目吗？",
-        "注意：删除的文件无法恢复",
-        "取消",
-        "删除", (context) {
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedVideos.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       pageContext

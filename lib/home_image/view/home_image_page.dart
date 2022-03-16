@@ -8,6 +8,7 @@ import 'package:mobile_assistant_client/all_albums/view/all_albums_page.dart';
 import 'package:mobile_assistant_client/all_images/all_images.dart';
 import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 
 class HomeImagePage extends StatelessWidget {
@@ -47,7 +48,7 @@ class HomeImageView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text("删除图片失败")));
+                  ..showSnackBar(SnackBar(content: Text(context.l10n.deleteFilesFailure)));
               }),
           BlocListener<HomeImageBloc, HomeImageState>(
               listenWhen: (previous, current) =>
@@ -127,9 +128,10 @@ class HomeImageView extends StatelessWidget {
       }
     }
 
-    String itemNumStr = "共${imageCount.totalCount}项";
+    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${imageCount.totalCount}");
     if (imageCount.checkedCount > 0) {
-      itemNumStr = "$itemNumStr (选中${imageCount.checkedCount}项)";
+      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${imageCount.checkedCount}")
+      .replaceFirst("%d", "${imageCount.totalCount}");
     }
 
     return Column(
@@ -148,7 +150,7 @@ class HomeImageView extends StatelessWidget {
                             Image.asset("assets/icons/icon_right_arrow.png",
                                 width: 12, height: 12),
                             Container(
-                              child: Text("返回",
+                              child: Text(context.l10n.back,
                                   style: TextStyle(
                                       color: Color(0xff5c5c62), fontSize: 13)),
                               margin: EdgeInsets.only(left: 3),
@@ -196,7 +198,7 @@ class HomeImageView extends StatelessWidget {
                     child: MaterialSegmentedControl<int>(
                       children: {
                         HomeImageTab.allImages.index: Container(
-                          child: Text("所有图片",
+                          child: Text(context.l10n.allPictures,
                               style: TextStyle(
                                   fontSize: 12,
                                   color: getSegmentBtnColor(
@@ -204,14 +206,14 @@ class HomeImageView extends StatelessWidget {
                           padding: EdgeInsets.only(left: 10, right: 10),
                         ),
                         HomeImageTab.cameraImages.index: Container(
-                          child: Text("相机相册",
+                          child: Text(context.l10n.cameraRoll,
                               style: TextStyle(
                                   fontSize: 12,
                                   color: getSegmentBtnColor(
                                       HomeImageTab.cameraImages))),
                         ),
                         HomeImageTab.allAlbums.index: Container(
-                            child: Text("所有相册",
+                            child: Text(context.l10n.galleries,
                                 style: TextStyle(
                                     fontSize: 12,
                                     color: getSegmentBtnColor(

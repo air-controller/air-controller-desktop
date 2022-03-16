@@ -10,6 +10,7 @@ import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/image_detail/bloc/image_detail_bloc.dart';
 import 'package:mobile_assistant_client/image_detail/model/delete_images_result.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';
@@ -155,15 +156,18 @@ class ImageDetailView extends StatelessWidget {
                   int total = state.copyStatus.total;
 
                   if (current > 0) {
-                    String name = "";
+                    String title = context.l10n.exporting;
 
-                    int index = state.images[state.currentIndex].path.lastIndexOf("/");
+                    ImageItem image = state.images[state.currentIndex];
 
+                    String name = image.path;
+
+                    int index = image.path.lastIndexOf("/");
                     if (index != -1) {
-                      name = state.images[state.currentIndex].path.substring(index + 1);
+                      name = image.path.substring(index + 1);
                     }
 
-                    String title = "正在导出图片$name...";
+                    title = context.l10n.placeholderExporting.replaceFirst("%s", name);
 
                     _progressIndicatorDialog?.title = title;
                   }
@@ -247,7 +251,7 @@ class ImageDetailView extends StatelessWidget {
                                               width: 12,
                                               height: 12),
                                           Container(
-                                            child: Text("返回",
+                                            child: Text(context.l10n.back,
                                                 style: TextStyle(
                                                     color: Color(0xff5c5c62),
                                                     fontSize: 13)),
@@ -500,7 +504,7 @@ class ImageDetailView extends StatelessWidget {
       });
     }
 
-    String title = "正在准备中，请稍后...";
+    String title = context.l10n.preparing;
 
     _progressIndicatorDialog?.title = title;
 
@@ -523,7 +527,8 @@ class ImageDetailView extends StatelessWidget {
       name = image.path.substring(index + 1);
     }
 
-    copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+    copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+        .adaptForOverflow();;
 
     double width = 320;
     double itemHeight = 25;
@@ -559,7 +564,7 @@ class ImageDetailView extends StatelessWidget {
                           onTap: () {
                             _closeMenu(dialogContext);
 
-                            CommonUtil.openFilePicker("选择目录", (dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopy(pageContext, image, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -574,7 +579,7 @@ class ImageDetailView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             _closeMenu(dialogContext);
                             _deleteImage(pageContext, bloc, image);
@@ -606,7 +611,8 @@ class ImageDetailView extends StatelessWidget {
   }
 
   void _deleteImage(BuildContext context, ImageDetailBloc bloc, ImageItem image) {
-    CommonUtil.showConfirmDialog(context, "确定删除这个项目吗？", "注意：删除的文件无法恢复", "取消", "删除", (context) {
+    CommonUtil.showConfirmDialog(context, "${context.l10n.tipDeleteTitle.replaceFirst("%s", "1")}",
+        context.l10n.tipDeleteDesc, context.l10n.cancel, context.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       bloc.add(ImageDetailDeleteSubmitted(image));
@@ -709,7 +715,7 @@ class ImageDetailView extends StatelessWidget {
                               children: [
                                 Container(
                                   child: Text(
-                                    "基本信息：",
+                                    context.l10n.generalLabel,
                                     style: TextStyle(
                                         color: Color(0xff313237), fontSize: 16),
                                   ),
@@ -720,11 +726,12 @@ class ImageDetailView extends StatelessWidget {
                                   children: [
                                     Container(
                                       child: Text(
-                                        "名称：",
+                                        context.l10n.nameLabel,
                                         style: textStyle,
                                         textAlign: TextAlign.right,
                                       ),
                                       width: labelWidth,
+                                      padding: EdgeInsets.only(right: 5),
                                     ),
                                     Container(
                                       child: Text("$name", style: textStyle),
@@ -737,11 +744,12 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "路径：",
+                                          context.l10n.pathLabel,
                                           textAlign: TextAlign.right,
                                           style: textStyle,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
@@ -759,11 +767,12 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "种类：",
+                                          context.l10n.kindLabel,
                                           textAlign: TextAlign.right,
                                           style: textStyle,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
@@ -781,11 +790,12 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "大小：",
+                                          context.l10n.sizeLabel,
                                           textAlign: TextAlign.right,
                                           style: textStyle,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
@@ -803,11 +813,12 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "尺寸：",
+                                          context.l10n.dimensionsLabel,
                                           style: textStyle,
                                           textAlign: TextAlign.right,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
@@ -825,15 +836,16 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "创建时间：",
+                                          context.l10n.createdLabel,
                                           style: textStyle,
                                           textAlign: TextAlign.right,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
-                                          "${CommonUtil.formatTime(imageItem.createTime, "yyyy年MM月dd日 HH:mm")}",
+                                          "${CommonUtil.formatTime(imageItem.createTime, context.l10n.yMdHmPattern)}",
                                           style: textStyle,
                                         ),
                                         width: contentWidth,
@@ -847,15 +859,16 @@ class ImageDetailView extends StatelessWidget {
                                     children: [
                                       Container(
                                         child: Text(
-                                          "修改时间：",
+                                          context.l10n.modifiedLabel,
                                           style: textStyle,
                                           textAlign: TextAlign.right,
                                         ),
                                         width: labelWidth,
+                                        padding: EdgeInsets.only(right: 5),
                                       ),
                                       Container(
                                         child: Text(
-                                          "${CommonUtil.formatTime(imageItem.modifyTime * 1000, "yyyy年MM月dd日 HH:mm")}",
+                                          "${CommonUtil.formatTime(imageItem.modifyTime * 1000, context.l10n.yMdHmPattern)}",
                                           style: textStyle,
                                         ),
                                         width: contentWidth,

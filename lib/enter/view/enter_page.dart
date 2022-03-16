@@ -19,7 +19,6 @@ import '../../event/exit_cmd_service.dart';
 import '../../event/exit_heartbeat_service.dart';
 import '../../event/update_mobile_info.dart';
 import '../../home/connection_disconnected_page.dart';
-import '../../home/file_manager.dart';
 import '../../model/Device.dart';
 import '../../model/cmd.dart';
 import '../../model/mobile_info.dart';
@@ -30,6 +29,7 @@ import '../../network/heartbeat_service.dart';
 import '../../util/event_bus.dart';
 import '../../widget/multiple_rings.dart';
 import '../../widget/upward_triangle.dart';
+import '../../l10n/l10n.dart';
 
 class EnterPage extends StatefulWidget {
   const EnterPage({Key? key}) : super(key: key);
@@ -197,7 +197,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                   Image.asset("assets/icons/intro_nonetwork.png",
                       width: _ICON_SIZE, height: _ICON_SIZE),
                   Container(
-                    child: Text("请先将电脑连接至网络",
+                    child: Text(context.l10n.tipConnectToNetworkFirst,
                         style: TextStyle(
                             color: Color(0xff5b5c61),
                             fontSize: 25,
@@ -206,7 +206,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                   ),
                   Container(
                     child: Text(
-                      "为确保应用正常工作，请确保手机与电脑连接至同一网络",
+                      context.l10n.tipConnectToNetworkDesc,
                       style: TextStyle(
                           color: Color(0xffa1a1a1),
                           fontSize: 16,
@@ -296,7 +296,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                     Container(
                       child:
                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Text("当前网络：",
+                        Text(context.l10n.currentNetworkLabel,
                             style: TextStyle(
                                 color: Color(0xff5b5c61),
                                 fontSize: 16,
@@ -310,15 +310,14 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                       margin: EdgeInsets.fromLTRB(0, marginTop, 0, 0),
                     ),
                     Container(
-                        child: Text(
-                          "请确保手机与电脑处于同一网络，并在手机端保持${Constant.APP_NAME}应用打开",
+                        child: Text(context.l10n.tipConnectToSameNetwork.replaceFirst("%s", "${Constant.APP_NAME}"),
                           style: TextStyle(
                               color: Color(0xffa1a1a1),
                               fontSize: 16,
                               decoration: TextDecoration.none),
                           textAlign: TextAlign.center,
                         ),
-                        margin: EdgeInsets.fromLTRB(0, 10, 0, 0))
+                        margin: EdgeInsets.fromLTRB(0, 10, 0, 0)),
                   ],
                 ),
               ),
@@ -328,7 +327,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                 child: Container(
                   child: Wrap(
                     children: [
-                      Text("如手机上尚未安装${Constant.APP_NAME}应用，请",
+                      Text(context.l10n.tipInstallMobileApp01.replaceFirst("%s", "${Constant.APP_NAME}"),
                           style: TextStyle(
                               color: Color(0xff949494),
                               fontSize: 16,
@@ -336,7 +335,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
 
                       Container(
                         child: Listener(
-                          child: Text("扫描二维码",
+                          child: Text(context.l10n.tipInstallMobileApp02,
                               style: TextStyle(
                                   color: Color(0xff2869d3),
                                   fontSize: 16,
@@ -351,7 +350,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                         margin: EdgeInsets.only(left: 5, right: 5),
                       ),
 
-                      Text("下载。",
+                      Text(context.l10n.tipInstallMobileApp03,
                           style: TextStyle(
                               color: Color(0xff949494),
                               fontSize: 16,
@@ -440,7 +439,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                         child: Wrap(
                           children: [
                             Text(
-                              "连接",
+                              context.l10n.connect,
                               style: TextStyle(
                                   color: _isConnectPressed ? Colors.white : Color(0xff949494),
                                   fontSize: 14
@@ -510,7 +509,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                         });
 
                         Navigator.push(context, MaterialPageRoute(builder: (context) {
-                          return HomePage(key: FileManagerPage.fileManagerKey);
+                          return HomePage();
                         }));
                       },
                       onTapDown: (event) {
@@ -626,7 +625,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                         children: [
                           Container(
                             child: Text(
-                              "手机扫描下载App",
+                              context.l10n.scanToDownloadApk,
                               style: TextStyle(
                                   color: Color(0xff848485)
                               ),

@@ -10,6 +10,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/AudioItem.dart';
 import 'package:mobile_assistant_client/music_home/bloc/music_home_bloc.dart';
 import 'package:mobile_assistant_client/repository/audio_repository.dart';
@@ -67,10 +68,10 @@ class MusicHomeView extends StatelessWidget {
 
     bool isDeleteEnabled = checkedMusics.length > 0;
 
-    String itemNumStr = "共${musics.length}项";
-
+    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${musics.length}");
     if (checkedMusics.length > 0) {
-      itemNumStr = "选中${checkedMusics.length}项（共${musics.length}项目)";
+      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${checkedMusics.length}")
+          .replaceFirst("%d", "${musics.length}");
     }
 
     TextStyle headerStyle =
@@ -141,21 +142,18 @@ class MusicHomeView extends StatelessWidget {
                     int total = state.copyStatus.total;
 
                     if (current > 0) {
-                      String title = "正在导出音乐";
+                      String title = context.l10n.exporting;
 
                       if (state.checkedMusics.length == 1) {
-                        String name = "";
+                        String name = state.checkedMusics.single.name;
 
-                        int index = state.checkedMusics.single.path.lastIndexOf("/");
-                        if (index != -1) {
-                          name = state.checkedMusics.single.path.substring(index + 1);
-                        }
-
-                        title = "正在导出音乐$name...";
+                        title = context.l10n.placeholderExporting.replaceFirst("%s", name);
                       }
 
                       if (state.checkedMusics.length > 1) {
-                        title = "正在导出${state.checkedMusics.length}个音频...";
+                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                            "${state.checkedMusics.length}");
+                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
                       }
 
                       _progressIndicatorDialog?.title = title;
@@ -198,7 +196,7 @@ class MusicHomeView extends StatelessWidget {
                       child: Stack(children: [
                         Align(
                             alignment: Alignment.center,
-                            child: Text("音乐",
+                            child: Text(context.l10n.musics,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Color(0xff616161),
@@ -286,7 +284,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                   child: Text(
-                                    "文件夹",
+                                    context.l10n.folder,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         inherit: true,
@@ -305,7 +303,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                     child: Text(
-                                      "名称",
+                                      context.l10n.name,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           inherit: true,
@@ -323,7 +321,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                   child: Text(
-                                    "类型",
+                                    context.l10n.type,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         inherit: true,
@@ -335,7 +333,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                   child: Text(
-                                    "时长",
+                                    context.l10n.duration,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         inherit: true,
@@ -354,7 +352,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                   child: Text(
-                                    "大小",
+                                    context.l10n.size,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         inherit: true,
@@ -373,7 +371,7 @@ class MusicHomeView extends StatelessWidget {
                             DataColumn2(
                                 label: Container(
                                   child: Text(
-                                    "修改日期",
+                                    context.l10n.dateModified,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         inherit: true,
@@ -545,7 +543,7 @@ class MusicHomeView extends StatelessWidget {
                                     child: Container(
                                       alignment: Alignment.centerLeft,
                                       padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(CommonUtil.convertToReadableDuration(audioItem.duration),
+                                      child: Text(CommonUtil.convertToReadableDuration(context, audioItem.duration),
                                           overflow: TextOverflow.ellipsis,
                                           softWrap: false,
                                           style: textStyle),
@@ -587,7 +585,7 @@ class MusicHomeView extends StatelessWidget {
                                     child: Container(
                                       alignment: Alignment.centerLeft,
                                       padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(CommonUtil.formatTime(audioItem.modifyDate * 1000, "yyyy年M月d日 HH:mm"),
+                                      child: Text(CommonUtil.formatTime(audioItem.modifyDate * 1000, context.l10n.yMdHmPattern),
                                           overflow: TextOverflow.ellipsis,
                                           softWrap: false,
                                           style: textStyle),
@@ -749,9 +747,12 @@ class MusicHomeView extends StatelessWidget {
 
       String name = audioItem.name;
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedMusics.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedMusics.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -784,7 +785,7 @@ class MusicHomeView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
@@ -803,7 +804,7 @@ class MusicHomeView extends StatelessWidget {
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
-                            CommonUtil.openFilePicker("选择目录", (dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopy(pageContext, checkedMusics, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -818,7 +819,7 @@ class MusicHomeView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             Navigator.of(pageContext).pop();
 
@@ -847,7 +848,8 @@ class MusicHomeView extends StatelessWidget {
   void _tryToDeleteMusics(BuildContext pageContext, List<AudioItem> checkedMusics) {
     CommonUtil.showConfirmDialog(
         pageContext,
-        "确定删除这${checkedMusics.length}个项目吗？", "注意：删除的文件无法恢复", "取消", "删除",
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedMusics.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
             (context) {
           Navigator.of(context, rootNavigator: true).pop();
 
@@ -866,10 +868,10 @@ class MusicHomeView extends StatelessWidget {
       });
     }
 
-    String title = "正在准备中，请稍后...";
+    String title = context.l10n.preparing;
 
     if (musics.length > 1) {
-      title = "正在压缩中，请稍后...";
+      title = context.l10n.compressing;
     }
 
     _progressIndicatorDialog?.title = title;

@@ -97,7 +97,6 @@ class VideoFlowWidget2 extends StatelessWidget {
                       _onVideoTap?.call(videoItem);
                     },
                     onDoubleTap: () {
-                      debugPrint("双击");
                       _onVideoDoubleTap?.call(videoItem);
                     },
                   ),

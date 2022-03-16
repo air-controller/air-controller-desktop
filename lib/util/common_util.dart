@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 
 import '../widget/confirm_dialog_builder.dart';
 
@@ -73,23 +74,25 @@ class CommonUtil {
     });
   }
 
-  static String convertToReadableDuration(int duration) {
+  static String convertToReadableDuration(BuildContext context, int duration) {
     if (duration >= _ONE_HOUR) {
       int hour = (duration / _ONE_HOUR).truncate();
 
-      String durStr = "${hour}小时";
+      String durStr = context.l10n.placeholderH.replaceFirst("%s", "${hour}");
 
       if (duration - hour * _ONE_HOUR > 0) {
         int min = ((duration - hour * _ONE_HOUR) / _ONE_MINUTE).truncate();
 
-        durStr = "${durStr}${min}分";
+        durStr = context.l10n.placeholderHM.replaceFirst("%s", "${hour}")
+        .replaceFirst("%s", "${min}");
 
         if (duration - hour * _ONE_HOUR - min * _ONE_MINUTE > 0) {
           int sec =
           ((duration - hour * _ONE_HOUR - min * _ONE_MINUTE) / _ONE_SECOND)
               .truncate();
 
-          durStr = "${durStr}${sec}秒";
+          durStr = context.l10n.placeholderHMS.replaceFirst("%s", "${hour}")
+              .replaceFirst("%s", "${min}").replaceFirst("%s", "$sec");
         }
       }
 
@@ -97,19 +100,20 @@ class CommonUtil {
     } else if (duration < _ONE_HOUR && duration >= _ONE_MINUTE) {
       int min = (duration / _ONE_MINUTE).truncate();
 
-      String durStr = "${min}分";
+      String durStr = context.l10n.placeholderM.replaceFirst("%s", "$min");
 
       if (duration - min * _ONE_MINUTE > 0) {
         int sec = ((duration - min * _ONE_MINUTE) / _ONE_SECOND).truncate();
 
-        durStr = "${durStr}${sec}秒";
+        durStr = context.l10n.placeholderMS.replaceFirst("%s", "$min")
+        .replaceFirst("%s", "$sec");
       }
 
       return durStr;
     } else {
       int sec = (duration / _ONE_SECOND).truncate();
 
-      return "${sec}秒";
+      return context.l10n.placeholderS.replaceFirst("%s", "$sec");
     }
   }
 }

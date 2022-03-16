@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 
 import '../../constant.dart';
@@ -62,7 +63,7 @@ class GridModeFilesView extends StatelessWidget {
               children: [
                 Container(
                   child: GestureDetector(
-                    child: Text(isOnlyDownloadDir ? "下载" : "手机存储",
+                    child: Text(isOnlyDownloadDir ? context.l10n.downloads : context.l10n.phoneStorage,
                         style: TextStyle(
                             color: Color(0xff5b5c61),
                             fontSize: 12.0)),

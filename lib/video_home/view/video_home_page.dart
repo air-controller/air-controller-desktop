@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:mobile_assistant_client/all_videos/view/all_videos_page.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/video_order_type.dart';
 import 'package:mobile_assistant_client/video_folders/view/video_folders_page.dart';
 import 'package:mobile_assistant_client/video_home/bloc/video_home_bloc.dart';
@@ -64,10 +65,12 @@ class VideoHomeView extends StatelessWidget {
       }
     }
 
-    String itemNumStr = "共${itemCount.totalCount}项";
+    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${itemCount.totalCount}");
     if (itemCount.checkedCount > 0) {
-      itemNumStr = "$itemNumStr (选中${itemCount.checkedCount}项)";
+      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${itemCount.checkedCount}")
+          .replaceFirst("%d", "${itemCount.totalCount}");
     }
+
 
     final _divider_line_color = Color(0xffe0e0e0);
 
@@ -94,7 +97,7 @@ class VideoHomeView extends StatelessWidget {
                                 Image.asset("assets/icons/icon_right_arrow.png",
                                     width: 12, height: 12),
                                 Container(
-                                  child: Text("返回",
+                                  child: Text(context.l10n.back,
                                       style: TextStyle(
                                           color: Color(0xff5c5c62),
                                           fontSize: 13)),
@@ -144,14 +147,14 @@ class VideoHomeView extends StatelessWidget {
                         child: MaterialSegmentedControl<int>(
                           children: {
                             VideoHomeTab.allVideos.index: Container(
-                              child: Text("所有视频",
+                              child: Text(context.l10n.allVideos,
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: getSegmentBtnColor(VideoHomeTab.allVideos))),
                               padding: EdgeInsets.only(left: 10, right: 10),
                             ),
                             VideoHomeTab.videoFolders.index: Container(
-                              child: Text("视频文件夹",
+                              child: Text(context.l10n.videoFolders,
                                   style: TextStyle(
                                       fontSize: 12,
                                       color:

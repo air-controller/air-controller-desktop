@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -44,7 +45,7 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
       children: [
         Container(
           child: Center(
-            child: Text("帮助与反馈",
+            child: Text(context.l10n.helpAndFeedback,
                 style: TextStyle(color: Color(0xff616161), fontSize: 16.0)),
           ),
           height: Constant.HOME_NAVI_BAR_HEIGHT,

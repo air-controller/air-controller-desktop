@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:flutter/material.dart';
 import 'dart:collection';
@@ -39,22 +40,22 @@ class ImageFlowWidget2 extends StatelessWidget {
     required this.rootUrl
   });
 
-  Widget _createContent(ArrangementMode arrangeMode) {
+  Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
     if (arrangeMode == ArrangementMode.groupByDay) {
-      return _createDailyContent();
+      return _createDailyContent(context);
     }
 
     if (arrangeMode == ArrangementMode.groupByMonth) {
-      return _createMonthlyContent();
+      return _createMonthlyContent(context);
     }
 
     return _createGridContent();
   }
 
-  Widget _createDailyContent() {
+  Widget _createDailyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
-    final timeFormat = "yyyy年M月d日";
+    final timeFormat = context.l10n.yMdPattern;
 
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
@@ -168,10 +169,10 @@ class ImageFlowWidget2 extends StatelessWidget {
     );
   }
 
-  Widget _createMonthlyContent() {
+  Widget _createMonthlyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
-    final timeFormat = "yyyy年M月";
+    final timeFormat = context.l10n.yMPattern;
 
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
@@ -353,7 +354,7 @@ class ImageFlowWidget2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget widget = _createContent(arrangeMode);
+    Widget widget = _createContent(context, arrangeMode);
     return Listener(
       child: GestureDetector(
         child: widget,

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/file_home/file_home.dart';
 import 'package:mobile_assistant_client/home2/bloc/home_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/music_home/view/music_home_page.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import 'package:mobile_assistant_client/repository/audio_repository.dart';
@@ -17,8 +18,6 @@ import '../../constant.dart';
 import '../../event/exit_cmd_service.dart';
 import '../../event/exit_heartbeat_service.dart';
 import '../../event/update_mobile_info.dart';
-import '../../home/all_file_manager_page.dart';
-import '../../home/download_manager_page.dart';
 import '../../home/help_and_feedback_page.dart';
 import '../../home_image/view/home_image_flow.dart';
 import '../../model/mobile_info.dart';
@@ -99,13 +98,13 @@ class HomeView extends StatelessWidget {
 
     String batteryInfo = "";
     if (null != mobileInfo) {
-      batteryInfo = "电量：${mobileInfo.batteryLevel}%";
+      batteryInfo = "${context.l10n.batteryLabel}${mobileInfo.batteryLevel}%";
     }
 
     String storageInfo = "";
     if (null != mobileInfo) {
       storageInfo =
-          "手机存储：${(mobileInfo.storageSize.availableSize ~/ (1024 * 1024 * 1024)).toStringAsFixed(1)}/" +
+          "${context.l10n.storageLabel}${(mobileInfo.storageSize.availableSize ~/ (1024 * 1024 * 1024)).toStringAsFixed(1)}/" +
               "${mobileInfo.storageSize.totalSize ~/ (1024 * 1024 * 1024)}GB";
     }
 
@@ -140,7 +139,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("图片",
+                              Text(context.l10n.pictures,
                                   style: TextStyle(
                                       color: Color(0xff636363),
                                       fontSize: _tab_font_size))
@@ -165,7 +164,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("音乐",
+                              Text(context.l10n.musics,
                                   style: TextStyle(
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
@@ -190,7 +189,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("视频",
+                              Text(context.l10n.videos,
                                   style: TextStyle(
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
@@ -215,7 +214,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size - 3),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("下载",
+                              Text(context.l10n.downloads,
                                   style: TextStyle(
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
@@ -240,7 +239,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size - 5),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("全部文件",
+                              Text(context.l10n.files,
                                   style: TextStyle(
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))
@@ -264,7 +263,7 @@ class HomeView extends StatelessWidget {
                                       height: _icons_size - 4),
                                   margin: EdgeInsets.fromLTRB(_icon_margin_hor,
                                       0, _icon_margin_hor, 0)),
-                              Text("帮助与反馈",
+                              Text(context.l10n.helpAndFeedback,
                                   style: TextStyle(
                                       color: "#636363".toColor(),
                                       fontSize: _tab_font_size))

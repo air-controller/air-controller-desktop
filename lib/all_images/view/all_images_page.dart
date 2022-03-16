@@ -13,6 +13,7 @@ import 'package:mobile_assistant_client/all_images/model/image_detail_arguments.
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';
@@ -186,7 +187,7 @@ class AllImagesView extends StatelessWidget {
                   int total = state.copyStatus!.total;
 
                   if (current > 0) {
-                    String title = "正在导出图片";
+                    String title = context.l10n.exporting;
 
                     if (state.checkedImages.length == 1) {
                       String name = "";
@@ -196,11 +197,13 @@ class AllImagesView extends StatelessWidget {
                         name = state.checkedImages.single.path.substring(index + 1);
                       }
 
-                      title = "正在导出图片$name...";
+                      title = context.l10n.placeholderExporting.replaceFirst("%s", name);
                     }
 
                     if (state.checkedImages.length > 1) {
-                      title = "正在导出${state.checkedImages.length}张图片...";
+                      String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
+                          "${state.checkedImages.length}");
+                      title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
                     }
 
                     _progressIndicatorDialog?.title = title;
@@ -371,10 +374,10 @@ class AllImagesView extends StatelessWidget {
       });
     }
 
-    String title = "正在准备中，请稍后...";
+    String title = context.l10n.preparing;
 
     if (images.length > 1) {
-      title = "正在压缩中，请稍后...";
+      title = context.l10n.compressing;
     }
 
     _progressIndicatorDialog?.title = title;
@@ -385,8 +388,8 @@ class AllImagesView extends StatelessWidget {
   }
 
   void _deleteImage(BuildContext pageContext, List<ImageItem> checkedImages) {
-    CommonUtil.showConfirmDialog(pageContext, "确定删除这${checkedImages.length}个项目吗？",
-        "注意：删除的文件无法恢复", "取消", "删除", (context) {
+    CommonUtil.showConfirmDialog(pageContext, "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedImages.length}")}",
+        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       pageContext.read<AllImagesBloc>().add(AllImagesDeleteSubmitted(checkedImages));
@@ -421,9 +424,12 @@ class AllImagesView extends StatelessWidget {
         name = imageItem.path.substring(index + 1);
       }
 
-      copyTitle = "拷贝${name}到电脑".adaptForOverflow();
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+          .adaptForOverflow();
     } else {
-      copyTitle = "拷贝 ${checkedImages.length} 项 到 电脑".adaptForOverflow();
+      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedImages.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+          .adaptForOverflow();
     }
 
     double width = 320;
@@ -456,7 +462,7 @@ class AllImagesView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "打开",
+                          title: pageContext.l10n.open,
                           onTap: () {
                             _closeMenu(dialogContext);
 
@@ -476,7 +482,7 @@ class AllImagesView extends StatelessWidget {
                           onTap: () {
                             _closeMenu(dialogContext);
 
-                            _openFilePicker((dir) {
+                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
                               _startCopy(pageContext, checkedImages, dir);
                             }, (error) {
                               debugPrint("_openFilePicker, error: $error");
@@ -491,7 +497,7 @@ class AllImagesView extends StatelessWidget {
                           margin: itemMargin,
                           borderRadius: itemBorderRadius,
                           defaultBackgroundColor: defaultItemBgColor,
-                          title: "删除",
+                          title: pageContext.l10n.delete,
                           onTap: () {
                             _closeMenu(dialogContext);
 
@@ -511,10 +517,6 @@ class AllImagesView extends StatelessWidget {
             ],
           );
         });
-  }
-
-  void _openFilePicker(void onSuccess(String dir), void onError(String error)) {
-    CommonUtil.openFilePicker("选择目录", onSuccess, onError);
   }
 
   void _startCopy(BuildContext context, List<ImageItem> images, String dir) {

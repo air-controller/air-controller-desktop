@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_bloc.dart';
 import 'package:mobile_assistant_client/enter/view/enter_page.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 
 import 'constant.dart';
 
@@ -15,7 +17,18 @@ class App extends StatelessWidget {
         create: (context) => EnterBloc(),
       child: MaterialApp(
         debugShowCheckedModeBanner: !Constant.HIDE_DEBUG_MARK,
-        title: 'Flutter Demo',
+        title: 'AirController',
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          Locale("en", "US"),
+          Locale("zh", "CH")
+        ],
+        locale: Locale("en"),
         theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';
 
 import '../../model/FileItem.dart';
@@ -226,7 +227,7 @@ class ListModeFilesView extends StatelessWidget {
                 child: Container(
                   alignment: Alignment.centerLeft,
                   padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                  child: Text(_convertToCategory(file.data),
+                  child: Text(_convertToCategory(context, file.data),
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
                       style: textStyle),
@@ -240,7 +241,7 @@ class ListModeFilesView extends StatelessWidget {
                 child: Container(
                   alignment: Alignment.centerLeft,
                   padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                  child: Text(CommonUtil.formatTime(file.data.changeDate, "yyyy年M月d日 HH:mm"),
+                  child: Text(CommonUtil.formatTime(file.data.changeDate, context.l10n.yMdHmPattern),
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
                       style: textStyle),
@@ -303,7 +304,7 @@ class ListModeFilesView extends StatelessWidget {
             DataColumn2(
                 label: Container(
                   child: Text(
-                    "名称",
+                    context.l10n.name,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         inherit: true,
@@ -322,7 +323,7 @@ class ListModeFilesView extends StatelessWidget {
             DataColumn2(
                 label: Container(
                     child: Text(
-                      "大小",
+                      context.l10n.size,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           inherit: true,
@@ -340,7 +341,7 @@ class ListModeFilesView extends StatelessWidget {
             DataColumn2(
                 label: Container(
                   child: Text(
-                    "种类",
+                    context.l10n.type,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         inherit: true,
@@ -352,7 +353,7 @@ class ListModeFilesView extends StatelessWidget {
             DataColumn2(
                 label: Container(
                   child: Text(
-                    "修改日期",
+                    context.l10n.dateModified,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         inherit: true,
@@ -409,34 +410,34 @@ class ListModeFilesView extends StatelessWidget {
     }
   }
 
-  String _convertToCategory(FileItem item) {
+  String _convertToCategory(BuildContext context, FileItem item) {
     if (item.isDir) {
-      return "文件夹";
+      return context.l10n.folder;
     } else {
       String name = item.name.toLowerCase();
       if (name.trim() == "") return "--";
 
       if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
-        return "JPEG图像";
+        return context.l10n.jpegImage;
       }
 
       if (name.endsWith(".png")) {
-        return "PNG图像";
+        return context.l10n.pngImage;
       }
 
       if (name.endsWith(".raw")) {
-        return "Panasonic raw图像";
+        return context.l10n.rawImage;
       }
 
       if (name.endsWith(".mp3")) {
-        return "MP3音频";
+        return context.l10n.mp3Audio;
       }
 
       if (name.endsWith(".txt")) {
-        return "文本";
+        return context.l10n.textFile;
       }
 
-      return "文档";
+      return context.l10n.document;
     }
   }
 }

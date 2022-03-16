@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/l10n/l10n.dart';
 
 class ConnectionDisconnectedPage extends StatefulWidget {
 
@@ -32,7 +33,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
                     children: [
                       Container(
                         child: Text(
-                          "无线连接已断开",
+                          context.l10n.wirelessConDisconnected,
                           style: TextStyle(
                               color: Color(0xff57595d),
                               fontSize: 23,
@@ -44,7 +45,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
 
                       Container(
                         child: Text(
-                          "由于网络环境不稳定或手机端${Constant.APP_NAME}连接超时等原因，无线连接已断开，请检查。",
+                          context.l10n.placeholderDisconnectionDesc.replaceFirst("%s", Constant.APP_NAME),
                           style: TextStyle(
                               color: Color(0xffdc0c0c0),
                               fontSize: 14
@@ -58,7 +59,7 @@ class _ConnectionDisconnectionState extends State<ConnectionDisconnectedPage> {
                   ),
                   Container(
                     child: OutlinedButton(
-                      child: Text("返回主界面", style: TextStyle(
+                      child: Text(context.l10n.backToHome, style: TextStyle(
                         fontSize: 14,
                         color: Color(0xff5b5c61)
                       )),

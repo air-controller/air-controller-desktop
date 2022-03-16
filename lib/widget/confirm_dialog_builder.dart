@@ -6,7 +6,7 @@ class ConfirmDialogBuilder {
   String negativeBtnStr = "Cancel";
   String positiveBtnStr = "Sure";
   final _OPERATE_BTN_HEIGHT = 35.0;
-  final _OPERATE_BTN_WIDTH = 110.0;
+  final _OPERATE_BTN_WIDTH = 115.0;
   bool _isNegativeBtnDown = false;
   bool _isPositiveBtnDown = false;
   Function(BuildContext context)? _onPositiveClick;
@@ -72,7 +72,9 @@ class ConfirmDialogBuilder {
                     child: Text(descStr ?? "", style: TextStyle(
                         color: Color(0xff262626),
                         fontSize: 14
-                    )),
+                    ),
+                      textAlign: TextAlign.center,
+                    ),
                     margin: EdgeInsets.only(top: 5),
                   ),
 
@@ -161,7 +163,7 @@ class ConfirmDialogBuilder {
               borderRadius: BorderRadius.all(Radius.circular(5.0)),
             ),
             width: 260,
-            height: 210,
+            height: 220,
           );
         },
       )
