@@ -17,7 +17,7 @@ import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';
-import 'package:mobile_assistant_client/widget/image_flow_widget2.dart';
+import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
 import 'package:mobile_assistant_client/widget/overlay_menu_item.dart';
 
 import '../../constant.dart';
@@ -284,7 +284,7 @@ class AllImagesView extends StatelessWidget {
             Focus(
                 autofocus: true,
                 focusNode: _rootFocusNode,
-                child: ImageFlowWidget2(
+                child: ImageFlowWidget(
                   rootUrl:
                       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
                   arrangeMode: arrangement,

@@ -23,7 +23,7 @@ import '../../network/device_connection_manager.dart';
 import '../../util/common_util.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
-import '../../widget/video_flow_widget2.dart';
+import '../../widget/video_flow_widget.dart';
 
 class VideoFoldersPage extends StatelessWidget {
   @override
@@ -973,7 +973,7 @@ class VideoFoldersView extends StatelessWidget {
 
   Widget _createVideosWidget(BuildContext context, List<VideoItem> videos,
       List<VideoItem> checkedVideos, VideoOrderType orderType) {
-    return VideoFlowWidget2(
+    return VideoFlowWidget(
       rootUrl: _URL_SERVER,
       videos: videos,
       selectedVideos: checkedVideos,

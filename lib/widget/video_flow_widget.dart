@@ -9,7 +9,7 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 import '../constant.dart';
 
-class VideoFlowWidget2 extends StatelessWidget {
+class VideoFlowWidget extends StatelessWidget {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
   List<VideoItem> _videos = [];
@@ -31,7 +31,7 @@ class VideoFlowWidget2 extends StatelessWidget {
   Function(VideoItem video)? _onVideoDoubleTap;
   Function(PointerDownEvent event, VideoItem videoItem)? _onPointerDown;
 
-  VideoFlowWidget2({
+  VideoFlowWidget({
     required String rootUrl,
     required List<VideoItem> videos,
     required List<VideoItem> selectedVideos,

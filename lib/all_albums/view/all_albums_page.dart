@@ -21,7 +21,7 @@ import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
 import '../../model/ImageItem.dart';
 import '../../network/device_connection_manager.dart';
-import '../../widget/image_flow_widget2.dart';
+import '../../widget/image_flow_widget.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 
@@ -894,7 +894,7 @@ class AllAlbumsView extends StatelessWidget {
     List<ImageItem> checkedImages = context.select((AllAlbumsBloc bloc) =>
         bloc.state.loadImagesInAlbumStatus.checkedImages);
 
-    return ImageFlowWidget2(
+    return ImageFlowWidget(
       rootUrl:
           "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
       arrangeMode: arrangementMode,

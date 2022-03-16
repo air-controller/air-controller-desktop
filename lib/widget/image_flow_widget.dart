@@ -13,7 +13,7 @@ import '../model/arrangement_mode.dart';
  *
  * @author Scott Smith 2021/11/23 22:52
  */
-class ImageFlowWidget2 extends StatelessWidget {
+class ImageFlowWidget extends StatelessWidget {
   ArrangementMode arrangeMode = ArrangementMode.grid;
   List<ImageItem> images = [];
   Function(ImageItem imageItem) onImageDoubleTap;
@@ -34,7 +34,7 @@ class ImageFlowWidget2 extends StatelessWidget {
 
   Function(PointerDownEvent event, ImageItem imageItem)? onPointerDown;
 
-  ImageFlowWidget2({required this.arrangeMode, required this.images,
+  ImageFlowWidget({required this.arrangeMode, required this.images,
     required this.selectedImages, required this.onImageDoubleTap,
     required this.onImageSelected, required this.onOutsideTap, this.onPointerDown,
     required this.rootUrl

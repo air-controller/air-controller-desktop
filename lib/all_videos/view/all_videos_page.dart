@@ -16,7 +16,7 @@ import 'package:mobile_assistant_client/repository/file_repository.dart';
 import 'package:mobile_assistant_client/repository/video_repository.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:mobile_assistant_client/video_home/bloc/video_home_bloc.dart';
-import 'package:mobile_assistant_client/widget/video_flow_widget2.dart';
+import 'package:mobile_assistant_client/widget/video_flow_widget.dart';
 
 import '../../constant.dart';
 import '../../network/device_connection_manager.dart';
@@ -213,7 +213,7 @@ class AllVideosView extends StatelessWidget {
             Focus(
                 autofocus: true,
                 focusNode: _rootFocusNode,
-                child: VideoFlowWidget2(
+                child: VideoFlowWidget(
                   rootUrl: "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
                   sortOrder: orderType,
                   videos: videos,
