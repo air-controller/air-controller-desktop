@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_bloc.dart';
 import 'package:mobile_assistant_client/home/view/home_page.dart';
+import 'package:mobile_assistant_client/network/heartbeat_client.dart';
 import 'package:neat_periodic_task/neat_periodic_task.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -25,7 +26,6 @@ import '../../model/mobile_info.dart';
 import '../../network/cmd_client.dart';
 import '../../network/device_connection_manager.dart';
 import '../../network/device_discover_manager.dart';
-import '../../network/heartbeat_service.dart';
 import '../../util/event_bus.dart';
 import '../../widget/multiple_rings.dart';
 import '../../widget/upward_triangle.dart';
@@ -40,7 +40,7 @@ class EnterPage extends StatefulWidget {
   }
 }
 
-class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
+class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin implements HeartbeatListener {
   static final _ICON_SIZE = 80.0;
 
   AnimationController? _animationController;
@@ -51,7 +51,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
 
   NeatPeriodicTaskScheduler? _refreshDeviceScheduler;
 
-  HeartbeatService? _heartbeatService = null;
+  HeartbeatClient? _heartbeatClient = null;
   CmdClient? _cmdClient = null;
 
   StreamSubscription<ConnectivityResult>? _networkConnectivitySubscription = null;
@@ -118,8 +118,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
   }
 
   void _exitHeartbeatService() {
-    _heartbeatService?.cancel();
-    _heartbeatService = null;
+    _heartbeatClient?.quit();
+    _heartbeatClient = null;
   }
 
   void _exitCmdService() {
@@ -492,21 +492,13 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
                           debugPrint("onDisconnected, ip: ${device.ip}");
                         });
 
-                        if (null == _heartbeatService) {
-                          _heartbeatService = HeartbeatService();
+                        if (null == _heartbeatClient) {
+                          _heartbeatClient = HeartbeatClient.create(device.ip, Constant.PORT_HEARTBEAT);
                         }
+                        
+                        _heartbeatClient?.addListener(this);
 
-                        _heartbeatService!.connectToServer(device.ip);
-
-                        _heartbeatService!.onHeartbeatInterrupt(() {
-                          debugPrint("HeartbeatService, onHeartbeatInterrupt");
-                          _pushToErrorPage();
-                        });
-
-                        _heartbeatService!.onHeartbeatTimeout(() {
-                          debugPrint("HeartbeatService, onHeartbeatTimeout");
-                          _pushToErrorPage();
-                        });
+                        _heartbeatClient!.connectToServer();
 
                         Navigator.push(context, MaterialPageRoute(builder: (context) {
                           return HomePage();
@@ -684,5 +676,35 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin {
     _refreshDeviceScheduler?.stop();
 
     _unRegisterEventBus();
+  }
+
+  @override
+  void onConnected() {
+    log("Heartbeat client connected!");
+  }
+
+  @override
+  void onDisconnected() {
+    log("Heartbeat client disconnected!");
+  }
+
+  @override
+  void onRequestTimeout() {
+    log("Heartbeat client single timeout!");
+  }
+
+  @override
+  void onRetryTimeout() {
+    _pushToErrorPage();
+  }
+
+  @override
+  void onDone() {
+    _pushToErrorPage();
+  }
+
+  @override
+  void onError(String error) {
+    _pushToErrorPage();
   }
 }

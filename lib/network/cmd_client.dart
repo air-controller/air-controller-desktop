@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -26,10 +27,15 @@ class CmdClient {
 
       String str = String.fromCharCodes(data);
       debugPrint("CmdClient listen str: $str\n");
-      dynamic map = jsonDecode(str);
-      Cmd<dynamic> cmd = Cmd.fromJson(map);
 
-      _onCmdReceive?.call(cmd);
+      try {
+        dynamic map = jsonDecode(str);
+        Cmd<dynamic> cmd = Cmd.fromJson(map);
+
+        _onCmdReceive?.call(cmd);
+      } catch (e) {
+        log("CmdClient#connect, error: ${e.toString()}");
+      }
     }, onError: (error) {
       _onError?.call(error);
       _isConnected = false;
