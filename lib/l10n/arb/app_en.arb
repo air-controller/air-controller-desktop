@@ -72,5 +72,5 @@
   "placeholderS": "%s s",
   "wirelessConDisconnected": "Wireless connection disconnected",
   "placeholderDisconnectionDesc": "The wireless connection has been disconnected due to unstable network environment or %s connection timeout on the mobile phone, please check.",
-  "backToHome": "Back to Home page"
+  "backToHome": "Back to Home"
 }
