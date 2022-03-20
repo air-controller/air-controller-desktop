@@ -695,16 +695,24 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
 
   @override
   void onRetryTimeout() {
+    log("Heartbeat client onRetryTimeout!");
+
     _pushToErrorPage();
   }
 
   @override
-  void onDone() {
-    _pushToErrorPage();
+  void onDone(bool isQuit) {
+    log("Heartbeat client onDone!");
+
+    if (!isQuit) {
+      _pushToErrorPage();
+    }
   }
 
   @override
   void onError(String error) {
+    log("Heartbeat client onError!");
+
     _pushToErrorPage();
   }
 }

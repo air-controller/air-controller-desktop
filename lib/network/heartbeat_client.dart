@@ -33,7 +33,10 @@ abstract class HeartbeatListener {
 
   void onError(String error);
 
-  void onDone();
+  /**
+   * @param isQuit whether is quit by positively.
+   */
+  void onDone(bool isQuit);
 }
 
 class HeartbeatClientImpl extends HeartbeatClient {
@@ -53,6 +56,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
   CountDownTimer? _retryTimeoutTimer;
   bool _isRetryTimerStarted = false;
   StreamSubscription<Uint8List>? _socketSubscription;
+  bool _isQuit = false;
 
   HeartbeatClientImpl(this.ip, this.port);
 
@@ -116,7 +120,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       });
     }, onDone: () {
       listeners.forEach((listener) {
-        listener.onDone();
+        listener.onDone(_isQuit);
       });
     }, cancelOnError: true);
   }
@@ -198,6 +202,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
   @override
   void disconnectToServer() {
     if (isConnected) {
+      _isQuit = true;
       _socket?.close();
       _socket = null;
       isConnected = false;
