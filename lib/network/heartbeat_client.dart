@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:mobile_assistant_client/model/heartbeat.dart';
 import 'package:mobile_assistant_client/util/count_down_timer.dart';
@@ -51,6 +52,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
   CountDownTimer? _timeoutTimer;
   CountDownTimer? _retryTimeoutTimer;
   bool _isRetryTimerStarted = false;
+  StreamSubscription<Uint8List>? _socketSubscription;
 
   HeartbeatClientImpl(this.ip, this.port);
 
@@ -76,7 +78,11 @@ class HeartbeatClientImpl extends HeartbeatClient {
 
     _startTimeoutTimer();
 
-    _socket?.listen((data) {
+    if (null != _socketSubscription) {
+      _socketSubscription?.cancel();
+    }
+
+    _socketSubscription = _socket?.listen((data) {
       _stopTimeoutTimer();
 
       String str = String.fromCharCodes(data);
@@ -112,7 +118,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       listeners.forEach((listener) {
         listener.onDone();
       });
-    });
+    }, cancelOnError: true);
   }
 
   void _startTimeoutTimer() {
