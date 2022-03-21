@@ -40,6 +40,8 @@ class Constant {
   static const double DEFAULT_WINDOW_WIDTH = 1243.2;
 
   static const double DEFAULT_WINDOW_HEIGHT = 824.4;
+
+  static const String DEFAULT_LANGUAGE_CODE = "en";
 }
 
 class ImagePageRoute {

@@ -32,6 +32,8 @@ import '../../widget/upward_triangle.dart';
 import '../../l10n/l10n.dart';
 
 class EnterPage extends StatefulWidget {
+  static final enterKey = GlobalKey(debugLabel: "EnterPage");
+
   const EnterPage({Key? key}) : super(key: key);
 
   @override

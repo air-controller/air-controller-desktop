@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flowder/flowder.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/constant.dart';
+import 'package:mobile_assistant_client/enter/enter.dart';
 import 'package:mobile_assistant_client/model/AlbumItem.dart';
 import 'package:mobile_assistant_client/model/video_folder_item.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
@@ -27,9 +30,10 @@ class AirControllerClient {
   AirControllerClient({required String domain}) : _domain = domain;
 
   Future<List<ImageItem>> getAllImages() async {
+
     var uri = Uri.parse("${_domain}/image/all");
     Response response = await post(uri,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -59,7 +63,7 @@ class AirControllerClient {
   Future<MobileInfo> getMobileInfo() async {
     var uri = Uri.parse("${_domain}/common/mobileInfo");
     Response response = await post(uri,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -87,7 +91,7 @@ class AirControllerClient {
   Future<List<ImageItem>> getCameraImages() async {
     var uri = Uri.parse("${_domain}/image/albumImages");
     Response response = await post(uri,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -117,7 +121,7 @@ class AirControllerClient {
   Future<List<ImageItem>> deleteImages(List<ImageItem> images) async {
     var url = Uri.parse("${_domain}/image/delete");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body:
             json.encode({"paths": images.map((image) => image.path).toList()}));
 
@@ -202,7 +206,7 @@ class AirControllerClient {
   Future<List<AlbumItem>> getAllAlbums() async {
     var url = Uri.parse("${_domain}/image/albums");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -231,7 +235,7 @@ class AirControllerClient {
   Future<List<ImageItem>> getImagesInAlbum(AlbumItem albumItem) async {
     var url = Uri.parse("${_domain}/image/imagesOfAlbum");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body: json.encode({"id": albumItem.id}));
 
     if (response.statusCode == 200) {
@@ -261,7 +265,7 @@ class AirControllerClient {
   Future<ResponseEntity> deleteFiles(List<String> paths) async {
     var url = Uri.parse("${_domain}/file/deleteMulti");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body: json.encode({"paths": paths}));
 
     if (response.statusCode != 200) {
@@ -287,7 +291,7 @@ class AirControllerClient {
   Future<List<AudioItem>> getAllAudios() async {
     var url = Uri.parse("$_domain/audio/all");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -316,7 +320,7 @@ class AirControllerClient {
   Future<List<VideoItem>> getAllVideos() async {
     var url = Uri.parse("${_domain}/video/videos");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -345,7 +349,7 @@ class AirControllerClient {
   Future<List<VideoFolderItem>> getAllVideoFolders() async {
     var url = Uri.parse("${_domain}/video/folders");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -374,7 +378,7 @@ class AirControllerClient {
   Future<List<VideoItem>> getVideosInFolder(String folderId) async {
     var url = Uri.parse("${_domain}/video/videosInFolder");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body: json.encode({"folderId": folderId}));
 
     if (response.statusCode != 200) {
@@ -404,7 +408,7 @@ class AirControllerClient {
   Future<List<FileItem>> getFiles(String? path) async {
     var url = Uri.parse("${_domain}/file/list");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body: json.encode({"path": path == null ? "" : path}));
 
     if (response.statusCode != 200) {
@@ -434,7 +438,7 @@ class AirControllerClient {
   Future<List<FileItem>> getDownloadFiles() async {
     var url = Uri.parse("${_domain}/file/downloadedFiles");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"}, body: json.encode({}));
+        headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -463,7 +467,7 @@ class AirControllerClient {
   Future<ResponseEntity> rename(FileItem file, String newName) async {
     var url = Uri.parse("${_domain}/file/rename");
     Response response = await post(url,
-        headers: {"Content-Type": "application/json"},
+        headers: _commonHeaders(),
         body: json.encode({
           "folder": file.folder,
           "file": file.name,
@@ -489,5 +493,19 @@ class AirControllerClient {
             : httpResponseEntity.msg!);
       }
     }
+  }
+
+  Map<String, String> _commonHeaders() {
+    BuildContext? context = EnterPage.enterKey.currentContext;
+
+    String languageCode = Constant.DEFAULT_LANGUAGE_CODE;
+    if (null != context) {
+      languageCode = Localizations.localeOf(context).languageCode;
+    }
+
+    return {
+      "Content-Type": "application/json",
+      "languageCode": languageCode
+    };
   }
 }

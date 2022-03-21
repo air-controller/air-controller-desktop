@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -28,7 +30,6 @@ class App extends StatelessWidget {
           Locale("en", "US"),
           Locale("zh", "CH")
         ],
-        locale: Locale("en"),
         theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,
@@ -37,7 +38,7 @@ class App extends StatelessWidget {
             ),
             fontFamily: 'NotoSansSC'
         ),
-        home: EnterPage(),
+        home: EnterPage(key: EnterPage.enterKey),
         navigatorObservers: [FlutterSmartDialog.observer],
         builder: FlutterSmartDialog.init(),
       ),
