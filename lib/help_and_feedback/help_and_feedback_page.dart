@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:mobile_assistant_client/enter/enter.dart';
 import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -27,8 +30,17 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   }
 
   void _loadHelpMdText() {
+    final enterContext = EnterPage.enterKey.currentContext;
+    String languageCode = "en";
+
+    if (null != enterContext) {
+      languageCode = Localizations.localeOf(enterContext).languageCode;
+    }
+
+    log("languageCode: $languageCode");
+
     DefaultAssetBundle.of(context)
-        .loadString('assets/docs/help.zh_CN.md')
+        .loadString('assets/docs/help.${languageCode}.md')
         .then((value) {
       debugPrint("_loadHelpMdText: $value");
       setState(() {
