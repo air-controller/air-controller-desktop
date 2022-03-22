@@ -161,7 +161,17 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
         path = "${event.dir!.data.folder}/${event.dir!.data.name}";
       }
 
-      List<FileItem> fileItems = await _fileRepository.getFiles(path);
+      List<FileItem> fileItems = [];
+
+      if (dir != null) {
+        fileItems = await _fileRepository.getFiles(path);
+      } else {
+        if (isOnlyDownloadDir) {
+          fileItems = await _fileRepository.getDownloadFiles();
+        } else {
+          fileItems = await _fileRepository.getFiles(path);
+        }
+      }
 
       List<FileNode> dirStack = [...state.dirStack];
 
