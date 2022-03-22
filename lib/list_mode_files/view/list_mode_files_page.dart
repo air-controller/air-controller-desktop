@@ -36,6 +36,8 @@ class ListModeFilesView extends StatelessWidget {
     bool isRenamingMode = context.select((FileHomeBloc bloc) => bloc.state.isRenamingMode);
     FileHomeSortColumn sortColumn = context.select((FileHomeBloc bloc) => bloc.state.sortColumn);
     FileHomeSortDirection sortDirection = context.select((FileHomeBloc bloc) => bloc.state.sortDirection);
+    FileNode? currentDir = context.select((FileHomeBloc bloc) => bloc.state.currentDir);
+    bool isRootDir = context.select((FileHomeBloc bloc) => bloc.state.isRootDir);
 
     Visibility getRightArrowIcon(int index, FileNode node) {
       String iconPath = "";
@@ -56,11 +58,9 @@ class ListModeFilesView extends StatelessWidget {
 
       Image icon = Image.asset(iconPath, width: 20, height: 20);
 
-      FileNode? currentDir = null;
-
       double indent = 0;
 
-      if (null == currentDir) {
+      if (null == currentDir || isRootDir) {
         indent = node.level * _INDENT_STEP;
       } else {
         indent = (node.level - currentDir.level - 1) * _INDENT_STEP;
