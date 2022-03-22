@@ -36,7 +36,7 @@ dependencies:
   desktop_window: ^0.4.0
   window_size:
     git:
-      url: git://github.com/google/flutter-desktop-embedding.git
+      url: https://github.com/google/flutter-desktop-embedding
       path: plugins/window_size
   connectivity_plus: ^2.0.2
   network_info_plus: ^2.0.2
@@ -64,7 +64,7 @@ dependencies:
   file_picker: ^4.3.1
   flowder:
     git:
-      url: git@github.com:yuanhoujun/flowder.git
+      url: https://github.com/yuanhoujun/flowder
   flutter_markdown: ^0.6.9
   qr_flutter: ^4.0.0
   flutter_bloc: ^8.0.1
