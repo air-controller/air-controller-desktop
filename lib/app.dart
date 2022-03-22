@@ -30,7 +30,6 @@ class App extends StatelessWidget {
           Locale("en", "US"),
           Locale("zh", "CH")
         ],
-        locale: Locale("en"),
         theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,
