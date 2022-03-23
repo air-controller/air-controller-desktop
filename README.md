@@ -93,4 +93,9 @@ If you want more features, just tell me by issue, please.
 [https://github.com/air-controller/air-controller-desktop/issues](https://github.com/air-controller/air-controller-desktop/issues)
 
 
-# Contact Information.
+# Stay In Touch
+[QQ Group](https://im.qq.com/index): 329673958
+
+[Telegram Channel](https://t.me/aircontroller2022)
+
+[Email](mailto:ouyangfeng2016@gmail.com): ouyangfeng2016@gmail.com
