@@ -1,4 +1,7 @@
 # AirController
+
+[中文文档](https://github.com/air-controller/air-controller-desktop/blob/master/README_zh_CN.md)
+
 The AirController is a desktop app to manage your files on Android mobile by using wifi. It's developed by the Flutter framework and supports Linux, macOS, and Windows platforms.
 
 Inspired by HandShaker, this is absolutely a handy and powerful tool and deserves a try.
