@@ -13,13 +13,13 @@ Inspired by HandShaker, this is absolutely a handy and powerful tool and deserve
 
 # How to use
 
-1) Install the latest AirController mobile app on your Android phone.
+1. Install the latest AirController mobile app on your Android phone.
 
 Open the link below and choose the latest version apk file to install.
 
 [https://github.com/air-controller/air-controller-mobile/releases](https://github.com/air-controller/air-controller-mobile/releases)
 
-2）Install the latest AirController desktop app on your computer.
+2. Install the latest AirController desktop app on your computer.
 
 Open the link below and choose the latest file to install.
 
@@ -33,15 +33,17 @@ Open the link below and choose the latest file to install.
 
 
 
-3）Open the desktop application
+3. Open the desktop application
 
-4）Make sure your phone and computer have been connected to the same network, and open the application on your phone.
+4. Make sure your phone and computer have been connected to the same network, and open the application on your phone.
 
 **That's all, enjoy it!**
 
 # Build and run.
 
-1) This project is developed by the Flutter framework. You should install Flutter first on your computer.
+1. Install the latest Flutter SDK on your computer.
+
+This project is developed by the Flutter framework. You should install Flutter first on your computer.
 
 Make sure:
 
@@ -53,7 +55,7 @@ Make sure:
 
 
 
-2) Install dependencies and add desktop support.
+2. Install dependencies and add desktop support.
 
 Use the command `flutter pub get` to install dependencies.
 
@@ -67,7 +69,7 @@ Eg: `flutter config -enable-linux-desktop` to add support for the Linux platform
 
 
 
-3) Build
+3. Build
 
 The build command is `flutter build <platform>`.
 
