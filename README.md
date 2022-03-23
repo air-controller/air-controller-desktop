@@ -91,7 +91,7 @@ If you got any questions when using this app, please click the link below and su
 
 [https://github.com/air-controller/air-controller-desktop/issues](https://github.com/air-controller/air-controller-desktop/issues)
 
-# Feature Suggestions
+# Feature Suggestion
 
 If you want more features, just tell me by issue, please.
 
