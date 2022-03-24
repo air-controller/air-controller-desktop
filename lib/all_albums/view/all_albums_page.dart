@@ -899,6 +899,8 @@ class AllAlbumsView extends StatelessWidget {
         shrinkWrap: true,
         primary: false,
       ),
+      width: double.infinity,
+      height: double.infinity,
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
