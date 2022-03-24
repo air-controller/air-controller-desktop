@@ -20,6 +20,7 @@ class ImageFlowWidget extends StatelessWidget {
   Function(ImageItem imageItem) onImageSelected;
   Function() onOutsideTap;
   String rootUrl;
+  Color backgroundColor;
 
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
@@ -37,7 +38,8 @@ class ImageFlowWidget extends StatelessWidget {
   ImageFlowWidget({required this.arrangeMode, required this.images,
     required this.selectedImages, required this.onImageDoubleTap,
     required this.onImageSelected, required this.onOutsideTap, this.onPointerDown,
-    required this.rootUrl
+    required this.rootUrl,
+    this.backgroundColor = Colors.white
   });
 
   Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
@@ -91,81 +93,86 @@ class ImageFlowWidget extends StatelessWidget {
       sortedMap[key] = map[key]!;
     });
 
-    return ListView.builder(
-      itemBuilder: (BuildContext context, int index) {
-        final entry = sortedMap.entries.toList()[index];
-        String dateTime = entry.key;
-        List<ImageItem> images = entry.value;
+    return Container(
+      color: backgroundColor,
+      width: double.infinity,
+      height: double.infinity,
+      child: ListView.builder(
+        itemBuilder: (BuildContext context, int index) {
+          final entry = sortedMap.entries.toList()[index];
+          String dateTime = entry.key;
+          List<ImageItem> images = entry.value;
 
-        return Container(
-            child: StickyHeader(
-                header: Container(
-                  child: Text(dateTime,
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xff515151))),
-                  color: Colors.white,
-                ),
-                content: Container(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 100,
-                        crossAxisSpacing: _IMAGE_SPACE,
-                        childAspectRatio: 1.0,
-                        mainAxisSpacing: _IMAGE_SPACE),
-                    itemBuilder: (BuildContext context, int index) {
-                      ImageItem image = images[index];
-                      return Listener(
-                        child: Container(
-                          child: GestureDetector(
-                            child: CachedNetworkImage(
-                              imageUrl:
-                              "$rootUrl/stream/image/thumbnail/${image.id}/200/200"
-                                  .replaceAll("storage/emulated/0/", ""),
-                              fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
-                              memCacheWidth: 200,
-                              fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero,
-                            ),
-                            onTap: () {
-                              onImageSelected.call(image);
-                            },
-                            onDoubleTap: () {
-                              onImageDoubleTap.call(image);
-                            },
-                          ),
-                          decoration: BoxDecoration(
-                              border: new Border.all(
-                                  color: _isContainsImage(selectedImages, image)
-                                      ? Color(0xff5d86ec)
-                                      : Color(0xffdedede),
-                                  width: _isContainsImage(selectedImages, image)
-                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                      : _IMAGE_GRID_BORDER_WIDTH),
-                              borderRadius: new BorderRadius.all(Radius.circular(
-                                  _isContainsImage(selectedImages, image)
-                                      ? _IMAGE_GRID_RADIUS_SELECTED
-                                      : _IMAGE_GRID_RADIUS))),
-                        ),
-                        onPointerDown: (event) {
-                          onPointerDown?.call(event, image);
-                        },
-                      );
-                    },
-                    itemCount: images.length,
-                    shrinkWrap: true,
-                    primary: false,
+          return Container(
+              child: StickyHeader(
+                  header: Container(
+                    child: Text(dateTime,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xff515151))),
+                    color: Colors.white,
                   ),
-                  color: Colors.white,
-                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                )),
-            color: Colors.white,
-            padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
-      },
-      itemCount: map.length,
-      primary: false,
+                  content: Container(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 100,
+                          crossAxisSpacing: _IMAGE_SPACE,
+                          childAspectRatio: 1.0,
+                          mainAxisSpacing: _IMAGE_SPACE),
+                      itemBuilder: (BuildContext context, int index) {
+                        ImageItem image = images[index];
+                        return Listener(
+                          child: Container(
+                            child: GestureDetector(
+                              child: CachedNetworkImage(
+                                imageUrl:
+                                "$rootUrl/stream/image/thumbnail/${image.id}/200/200"
+                                    .replaceAll("storage/emulated/0/", ""),
+                                fit: BoxFit.cover,
+                                width: 100,
+                                height: 100,
+                                memCacheWidth: 200,
+                                fadeOutDuration: Duration.zero,
+                                fadeInDuration: Duration.zero,
+                              ),
+                              onTap: () {
+                                onImageSelected.call(image);
+                              },
+                              onDoubleTap: () {
+                                onImageDoubleTap.call(image);
+                              },
+                            ),
+                            decoration: BoxDecoration(
+                                border: new Border.all(
+                                    color: _isContainsImage(selectedImages, image)
+                                        ? Color(0xff5d86ec)
+                                        : Color(0xffdedede),
+                                    width: _isContainsImage(selectedImages, image)
+                                        ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                        : _IMAGE_GRID_BORDER_WIDTH),
+                                borderRadius: new BorderRadius.all(Radius.circular(
+                                    _isContainsImage(selectedImages, image)
+                                        ? _IMAGE_GRID_RADIUS_SELECTED
+                                        : _IMAGE_GRID_RADIUS))),
+                          ),
+                          onPointerDown: (event) {
+                            onPointerDown?.call(event, image);
+                          },
+                        );
+                      },
+                      itemCount: images.length,
+                      shrinkWrap: true,
+                      primary: false,
+                    ),
+                    color: Colors.white,
+                    margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                  )),
+              color: Colors.white,
+              padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
+        },
+        itemCount: map.length,
+        primary: false,
+      ),
     );
   }
 
@@ -208,81 +215,86 @@ class ImageFlowWidget extends StatelessWidget {
       sortedMap[key] = map[key]!;
     });
 
-    return ListView.builder(
-      itemBuilder: (BuildContext context, int index) {
-        final entry = sortedMap.entries.toList()[index];
-        String dateTime = entry.key;
-        List<ImageItem> images = entry.value;
+    return Container(
+      child: ListView.builder(
+        itemBuilder: (BuildContext context, int index) {
+          final entry = sortedMap.entries.toList()[index];
+          String dateTime = entry.key;
+          List<ImageItem> images = entry.value;
 
-        return Container(
-            child: StickyHeader(
-                header: Container(
-                  child: Text(dateTime,
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xff515151))),
-                  color: Colors.white,
-                ),
-                content: Container(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 80,
-                        crossAxisSpacing: _IMAGE_SPACE,
-                        childAspectRatio: 1.0,
-                        mainAxisSpacing: _IMAGE_SPACE),
-                    itemBuilder: (BuildContext context, int index) {
-                      ImageItem image = images[index];
-                      return Listener(
-                        child: Container(
-                          child: GestureDetector(
-                            child: CachedNetworkImage(
-                              imageUrl:
-                              "$rootUrl/stream/image/thumbnail/${image.id}/200/200"
-                                  .replaceAll("storage/emulated/0/", ""),
-                              fit: BoxFit.cover,
-                              width: 80,
-                              height: 80,
-                              memCacheWidth: 200,
-                              fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero,
-                            ),
-                            onTap: () {
-                              onImageSelected.call(image);
-                            },
-                            onDoubleTap: () {
-                              onImageDoubleTap.call(image);
-                            },
-                          ),
-                          decoration: BoxDecoration(
-                              border: new Border.all(
-                                  color: _isContainsImage(selectedImages, image)
-                                      ? Color(0xff5d86ec)
-                                      : Color(0xffdedede),
-                                  width: _isContainsImage(selectedImages, image)
-                                      ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                                      : _IMAGE_GRID_BORDER_WIDTH),
-                              borderRadius: new BorderRadius.all(Radius.circular(
-                                  _isContainsImage(selectedImages, image)
-                                      ? _IMAGE_GRID_RADIUS_SELECTED
-                                      : _IMAGE_GRID_RADIUS))),
-                        ),
-                        onPointerDown: (event) {
-                          onPointerDown?.call(event, image);
-                        },
-                      );
-                    },
-                    itemCount: images.length,
-                    shrinkWrap: true,
-                    primary: false,
+          return Container(
+              child: StickyHeader(
+                  header: Container(
+                    child: Text(dateTime,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xff515151))),
+                    color: Colors.white,
                   ),
-                  color: Colors.white,
-                  margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                )),
-            color: Colors.white,
-            padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
-      },
-      itemCount: map.length,
-      primary: false,
+                  content: Container(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 80,
+                          crossAxisSpacing: _IMAGE_SPACE,
+                          childAspectRatio: 1.0,
+                          mainAxisSpacing: _IMAGE_SPACE),
+                      itemBuilder: (BuildContext context, int index) {
+                        ImageItem image = images[index];
+                        return Listener(
+                          child: Container(
+                            child: GestureDetector(
+                              child: CachedNetworkImage(
+                                imageUrl:
+                                "$rootUrl/stream/image/thumbnail/${image.id}/200/200"
+                                    .replaceAll("storage/emulated/0/", ""),
+                                fit: BoxFit.cover,
+                                width: 80,
+                                height: 80,
+                                memCacheWidth: 200,
+                                fadeOutDuration: Duration.zero,
+                                fadeInDuration: Duration.zero,
+                              ),
+                              onTap: () {
+                                onImageSelected.call(image);
+                              },
+                              onDoubleTap: () {
+                                onImageDoubleTap.call(image);
+                              },
+                            ),
+                            decoration: BoxDecoration(
+                                border: new Border.all(
+                                    color: _isContainsImage(selectedImages, image)
+                                        ? Color(0xff5d86ec)
+                                        : Color(0xffdedede),
+                                    width: _isContainsImage(selectedImages, image)
+                                        ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
+                                        : _IMAGE_GRID_BORDER_WIDTH),
+                                borderRadius: new BorderRadius.all(Radius.circular(
+                                    _isContainsImage(selectedImages, image)
+                                        ? _IMAGE_GRID_RADIUS_SELECTED
+                                        : _IMAGE_GRID_RADIUS))),
+                          ),
+                          onPointerDown: (event) {
+                            onPointerDown?.call(event, image);
+                          },
+                        );
+                      },
+                      itemCount: images.length,
+                      shrinkWrap: true,
+                      primary: false,
+                    ),
+                    color: Colors.white,
+                    margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                  )),
+              color: Colors.white,
+              padding: EdgeInsets.fromLTRB(20, 15, 20, 0));
+        },
+        itemCount: map.length,
+        primary: false,
+      ),
+      width: double.infinity,
+      height: double.infinity,
+      color: backgroundColor,
     );
   }
 
@@ -339,7 +351,9 @@ class ImageFlowWidget extends StatelessWidget {
         shrinkWrap: true,
         primary: false,
       ),
-      color: Colors.white,
+      color: backgroundColor,
+      width: double.infinity,
+      height: double.infinity,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
   }
