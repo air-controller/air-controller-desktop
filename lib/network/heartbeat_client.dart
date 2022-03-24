@@ -86,7 +86,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       _socketSubscription?.cancel();
     }
 
-    _socketSubscription = _socket?.listen((data) {
+    _socketSubscription = _socket?.asBroadcastStream().listen((data) {
       _stopTimeoutTimer();
 
       String str = String.fromCharCodes(data);
