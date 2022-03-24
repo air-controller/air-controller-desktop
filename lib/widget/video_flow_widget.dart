@@ -25,6 +25,7 @@ class VideoFlowWidget extends StatelessWidget {
   VideoOrderType _currentSortOrder = VideoOrderType.createTime;
 
   late String _rootUrl;
+  late Color _backgroundColor;
   Function(VideoItem video)? _onVideoTap;
   Function()? _onOutsideTap;
   Function(bool isTotalVisible, bool isPartOfVisible)? _onVisibleChange;
@@ -32,6 +33,7 @@ class VideoFlowWidget extends StatelessWidget {
   Function(PointerDownEvent event, VideoItem videoItem)? _onPointerDown;
 
   VideoFlowWidget({
+    Color backgroundColor = Colors.white,
     required String rootUrl,
     required List<VideoItem> videos,
     required List<VideoItem> selectedVideos,
@@ -42,6 +44,7 @@ class VideoFlowWidget extends StatelessWidget {
     required Function(VideoItem video)? onVideoDoubleTap,
     required Function(PointerDownEvent event, VideoItem videoItem) onPointerDown
 }) {
+    _backgroundColor = backgroundColor;
     _rootUrl = rootUrl;
     _videos = videos;
     _selectedVideos = selectedVideos;
@@ -150,7 +153,9 @@ class VideoFlowWidget extends StatelessWidget {
         shrinkWrap: true,
         primary: false,
       ),
-      color: Colors.white,
+      color: _backgroundColor,
+      width: double.infinity,
+      height: double.infinity,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
     );
 
