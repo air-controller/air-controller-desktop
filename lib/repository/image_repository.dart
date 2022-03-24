@@ -3,6 +3,7 @@ import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 
 import '../model/AlbumItem.dart';
+import '../model/ResponseEntity.dart';
 
 class ImageRepository {
   final AirControllerClient client;
@@ -13,7 +14,7 @@ class ImageRepository {
 
   Future<List<ImageItem>> getCameraImages() => this.client.getCameraImages();
 
-  Future<List<ImageItem>> deleteImages(List<ImageItem> images) => this.client.deleteImages(images);
+  Future<ResponseEntity> deleteImages(List<ImageItem> images) => this.client.deleteFiles(images.map((image) => image.path).toList());
 
   void copyImagesTo({
     required List<ImageItem> images,

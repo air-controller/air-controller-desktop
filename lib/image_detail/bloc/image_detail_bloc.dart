@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/image_detail/model/delete_images_result.dart';
 import 'package:mobile_assistant_client/image_detail/model/image_detail_copy_status.dart';
+import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 
 import '../../model/ImageItem.dart';
@@ -62,7 +63,7 @@ class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
     } catch (e) {
       emit(state.copyWith(deleteStatus: DeleteImagesStatusUnit(
           status: DeleteImagesStatus.failure,
-        failureReason: e.toString()
+        failureReason: (e as BusinessError).message
       )));
     }
   }

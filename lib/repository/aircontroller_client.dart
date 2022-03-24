@@ -118,6 +118,7 @@ class AirControllerClient {
     }
   }
 
+  @Deprecated("Use deleteFiles instead!")
   Future<List<ImageItem>> deleteImages(List<ImageItem> images) async {
     var url = Uri.parse("${_domain}/image/delete");
     Response response = await post(url,
