@@ -238,7 +238,10 @@ class AllImagesView extends StatelessWidget {
 
           BlocListener<HomeImageBloc, HomeImageState>(
             listener: (context, state) {
-              _deleteImage(context, context.read<AllImagesBloc>().state.checkedImages);
+              if ((state.tab == HomeImageTab.allImages && !isFromCamera)
+              || (state.tab == HomeImageTab.cameraImages && isFromCamera)) {
+                _deleteImage(context, context.read<AllImagesBloc>().state.checkedImages);
+              }
             },
             listenWhen: (previous, current) =>
             previous.deleteTapStatus != current.deleteTapStatus
