@@ -318,6 +318,24 @@ class AllAlbumsView extends StatelessWidget {
             previous.backTapStatus != current.backTapStatus
             && current.backTapStatus == HomeImageBackTapStatus.tap,
           ),
+
+          BlocListener<HomeImageBloc, HomeImageState>(
+            listener: (context, state) {
+              bool isAlbumImagesOpened = context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+              if (isAlbumImagesOpened) {
+                List<ImageItem> checkedImages = context.read<AllAlbumsBloc>().state.loadImagesInAlbumStatus.checkedImages;
+                _tryToDeleteImages(context, checkedImages);
+              } else {
+                List<AlbumItem> checkedAlbums = context.read<AllAlbumsBloc>().state.checkedAlbums;
+                _tryToDeleteAlbums(context, checkedAlbums);
+              }
+            },
+            listenWhen: (previous, current) =>
+            previous.deleteTapStatus != current.deleteTapStatus
+                && current.deleteTapStatus.tab == HomeImageTab.allAlbums
+                && current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap
+            ,
+          ),
         ],
         child: Focus(
           autofocus: true,
