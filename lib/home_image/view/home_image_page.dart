@@ -10,6 +10,7 @@ import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
 import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
+import 'package:mobile_assistant_client/widget/unified_delete_button.dart';
 
 class HomeImagePage extends StatelessWidget {
   final GlobalKey<NavigatorState> _navigatorKey;
@@ -310,37 +311,16 @@ class HomeImageView extends StatelessWidget {
                         maintainAnimation: true,
                         visible: isArrangementVisible,
                       ),
-                      Container(
-                          child: GestureDetector(
-                            child: Opacity(
-                              opacity: isDeleteEnabled ? 1.0 : 0.6,
-                              child: Container(
-                                child: Image.asset(
-                                    "assets/icons/icon_delete.png",
-                                    width: 10,
-                                    height: 10),
-                                decoration: BoxDecoration(
-                                    color: Color(0xffcb6357),
-                                    border: new Border.all(
-                                        color: Color(0xffb43f32), width: 1.0),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(4.0))),
-                                width: 40,
-                                height: 25,
-                                padding:
-                                    EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
-                              ),
-                            ),
-                            onTap: () {
-                              if (isDeleteEnabled) {
-                                context.read<HomeImageBloc>().add(
-                                    HomeImageDeleteTrigger(
-                                        currentTab: currentTab)
-                                );
-                              }
-                            },
-                          ),
-                          margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
+                      UnifiedDeleteButton(
+                        isEnable: isDeleteEnabled,
+                        onTap: () {
+                          context.read<HomeImageBloc>().add(
+                              HomeImageDeleteTrigger(
+                                  currentTab: currentTab)
+                          );
+                        },
+                        margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                      )
                     ],
                   ),
                   width: 210,

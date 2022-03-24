@@ -294,7 +294,7 @@ packages:
       path: "."
       ref: HEAD
       resolved-ref: c95a309a82d5e4d1c862444b96db73676c6b5dc0
-      url: "git@github.com:yuanhoujun/flowder.git"
+      url: "https://github.com/yuanhoujun/flowder"
     source: git
     version: "0.2.0"
   flutter:
@@ -1041,8 +1041,8 @@ packages:
     description:
       path: "plugins/window_size"
       ref: HEAD
-      resolved-ref: "03d957e8b5c99fc83cd4a781031b154ab3de8753"
-      url: "git://github.com/google/flutter-desktop-embedding.git"
+      resolved-ref: "5c51870ced62a00e809ba4b81a846a052d241c9f"
+      url: "https://github.com/google/flutter-desktop-embedding"
     source: git
     version: "0.1.0"
   xdg_directories:

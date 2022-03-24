@@ -18,6 +18,7 @@ import '../../util/common_util.dart';
 import '../../util/system_app_launcher.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
+import '../../widget/unified_delete_button.dart';
 
 class FileHomePage extends StatelessWidget {
   final bool isOnlyDownloadDir;
@@ -40,7 +41,6 @@ class FileHomeView extends StatelessWidget {
   final bool isOnlyDownloadDir;
 
   bool _isBackBtnDown = false;
-  bool _isDeleteBtnTapDown = false;
   FocusNode? _rootFocusNode;
 
   bool _isControlPressed = false;
@@ -338,11 +338,6 @@ class FileHomeView extends StatelessWidget {
     final _segment_control_width = 32.0;
     final _segment_control_padding_hor = 8.0;
     final _segment_control_padding_vertical = 6.0;
-    final _icon_delete_btn_size = 10.0;
-    final _delete_btn_width = 40.0;
-    final _delete_btn_height = 25.0;
-    final _delete_btn_padding_hor = 8.0;
-    final _delete_btn_padding_vertical = 4.5;
     final _divider_line_color = Color(0xffe0e0e0);
 
     String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${files.length}");
@@ -504,65 +499,15 @@ class FileHomeView extends StatelessWidget {
                                   FileHomeTabChanged(FileHomeTab.listMode));
                             },
                           ),
-                          StatefulBuilder(builder: (context, setState) {
-                            double opacity = _isDeleteBtnTapDown ? 0.6 : 1.0;
-
-                            if (!isDeleteEnabled) {
-                              opacity = 0.6;
-                            }
-
-                            return GestureDetector(
-                              child: Opacity(
-                                opacity: opacity,
-                                child: Container(
-                                    child: Image.asset(
-                                        "assets/icons/icon_delete.png",
-                                        width: _icon_delete_btn_size,
-                                        height: _icon_delete_btn_size),
-                                    decoration: BoxDecoration(
-                                        color: Color(0xffcb6357),
-                                        border: new Border.all(
-                                            color: Color(0xffb43f32),
-                                            width: 1.0),
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(4.0))),
-                                    width: _delete_btn_width,
-                                    height: _delete_btn_height,
-                                    padding: EdgeInsets.fromLTRB(
-                                        _delete_btn_padding_hor,
-                                        _delete_btn_padding_vertical,
-                                        _delete_btn_padding_hor,
-                                        _delete_btn_padding_vertical),
-                                    margin: EdgeInsets.fromLTRB(20, 0, 10, 0)),
-                              ),
-                              onTap: () {
-                                if (isDeleteEnabled) {
-                                  _tryToDeleteFiles(context, checkedFiles);
-                                }
-                              },
-                              onTapDown: (details) {
-                                if (isDeleteEnabled) {
-                                  setState(() {
-                                    _isDeleteBtnTapDown = true;
-                                  });
-                                }
-                              },
-                              onTapCancel: () {
-                                if (isDeleteEnabled) {
-                                  setState(() {
-                                    _isDeleteBtnTapDown = false;
-                                  });
-                                }
-                              },
-                              onTapUp: (details) {
-                                if (isDeleteEnabled) {
-                                  setState(() {
-                                    _isDeleteBtnTapDown = false;
-                                  });
-                                }
-                              },
-                            );
-                          })
+                          UnifiedDeleteButton(
+                            isEnable: isDeleteEnabled,
+                            onTap: () {
+                              if (isDeleteEnabled) {
+                                _tryToDeleteFiles(context, checkedFiles);
+                              }
+                            },
+                            margin: EdgeInsets.fromLTRB(20, 0, 10, 0),
+                          ),
                         ],
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center),

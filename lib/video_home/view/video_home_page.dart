@@ -9,6 +9,7 @@ import 'package:mobile_assistant_client/video_folders/view/video_folders_page.da
 import 'package:mobile_assistant_client/video_home/bloc/video_home_bloc.dart';
 
 import '../../constant.dart';
+import '../../widget/unified_delete_button.dart';
 
 class VideoHomePage extends StatelessWidget {
 
@@ -242,32 +243,15 @@ class VideoHomeView extends StatelessWidget {
                               maintainAnimation: true,
                               visible: isOrderTypeVisible
                           ),
-                          Container(
-                              child: GestureDetector(
-                                child: Opacity(
-                                  opacity: isDeleteEnabled ? 1.0 : 0.6,
-                                  child: Container(
-                                    child: Image.asset("assets/icons/icon_delete.png",
-                                        width: 10, height: 10),
-                                    decoration: BoxDecoration(
-                                        color: Color(0xffcb6357),
-                                        border: new Border.all(
-                                            color: Color(0xffb43f32), width: 1.0),
-                                        borderRadius:
-                                        BorderRadius.all(Radius.circular(4.0))),
-                                    width: 40,
-                                    height: 25,
-                                    padding:
-                                    EdgeInsets.fromLTRB(6.0, 4.0, 6.0, 4.0),
-                                  ),
-                                ),
-                                onTap: () {
-                                  if (isDeleteEnabled) {
-                                    context.read<VideoHomeBloc>().add(VideoHomeDeleteTapped());
-                                  }
-                                },
-                              ),
-                              margin: EdgeInsets.fromLTRB(10, 0, 0, 0))
+                          UnifiedDeleteButton(
+                            isEnable: isDeleteEnabled,
+                            onTap: () {
+                              if (isDeleteEnabled) {
+                                context.read<VideoHomeBloc>().add(VideoHomeDeleteTapped());
+                              }
+                            },
+                            margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                          ),
                         ],
                       ),
                       width: 160,
