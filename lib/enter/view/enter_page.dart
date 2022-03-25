@@ -42,7 +42,9 @@ class EnterPage extends StatefulWidget {
   }
 }
 
-class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin implements HeartbeatListener {
+class _EnterState extends State<EnterPage>
+    with SingleTickerProviderStateMixin
+    implements HeartbeatListener {
   static final _ICON_SIZE = 80.0;
 
   AnimationController? _animationController;
@@ -56,7 +58,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
   HeartbeatClient? _heartbeatClient = null;
   CmdClient? _cmdClient = null;
 
-  StreamSubscription<ConnectivityResult>? _networkConnectivitySubscription = null;
+  StreamSubscription<ConnectivityResult>? _networkConnectivitySubscription =
+      null;
   StreamSubscription<ExitHeartbeatService>? _exitHeartbeatServiceStream;
   StreamSubscription<ExitCmdService>? _exitCmdServiceStream;
 
@@ -69,7 +72,10 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
     _networkConnectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((ConnectivityResult result) async {
-          log("_isNetworkConnected: ${_isNetworkConnected(result)}");
+      log("_isNetworkConnected: ${_isNetworkConnected(result)}");
+      NetworkType networkType = result == ConnectivityResult.wifi
+          ? NetworkType.wifi
+          : NetworkType.ethernet;
       if (_isNetworkConnected(result)) {
         final info = NetworkInfo();
         String? networkName = "";
@@ -79,18 +85,26 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
         } catch (e) {
           log("info.getWifiName() throw error: $e");
         }
-        context.read<EnterBloc>().add(EnterNetworkChanged(true, networkName));
+        context
+            .read<EnterBloc>()
+            .add(EnterNetworkChanged(true, networkName, networkType));
 
         _startSearchDevices();
 
         _startRefreshDeviceScheduler();
       } else {
-        context.read<EnterBloc>().add(EnterNetworkChanged(false, null));
+        context
+            .read<EnterBloc>()
+            .add(EnterNetworkChanged(false, null, networkType));
       }
     });
 
     Connectivity().checkConnectivity().then((result) async {
       log("Initial network check: ${_isNetworkConnected(result)}");
+      NetworkType networkType = result == ConnectivityResult.wifi
+          ? NetworkType.wifi
+          : NetworkType.ethernet;
+
       if (_isNetworkConnected(result)) {
         final info = NetworkInfo();
         String? networkName = "";
@@ -100,9 +114,14 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
         } catch (e) {
           log("info.getWifiName() throw error: $e");
         }
-        context.read<EnterBloc>().add(EnterNetworkChanged(true, networkName));
+
+        context
+            .read<EnterBloc>()
+            .add(EnterNetworkChanged(true, networkName, networkType));
       } else {
-        context.read<EnterBloc>().add(EnterNetworkChanged(false, null));
+        context
+            .read<EnterBloc>()
+            .add(EnterNetworkChanged(false, null, networkType));
       }
     }).catchError((error) {
       log("Initial network check error: $error");
@@ -110,7 +129,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
   }
 
   void _registerEventBus() {
-    _exitHeartbeatServiceStream = eventBus.on<ExitHeartbeatService>().listen((event) {
+    _exitHeartbeatServiceStream =
+        eventBus.on<ExitHeartbeatService>().listen((event) {
       _exitHeartbeatService();
     });
 
@@ -135,7 +155,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
   }
 
   bool _isNetworkConnected(ConnectivityResult result) {
-    return result == ConnectivityResult.wifi || result == ConnectivityResult.ethernet;
+    return result == ConnectivityResult.wifi ||
+        result == ConnectivityResult.ethernet;
   }
 
   void _startSearchDevices() {
@@ -171,7 +192,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
 
   @override
   Widget build(BuildContext context) {
-    final isNetworkConnected = context.select((EnterBloc bloc) => bloc.state.isNetworkConnected);
+    final isNetworkConnected =
+        context.select((EnterBloc bloc) => bloc.state.isNetworkConnected);
 
     return BlocListener<EnterBloc, EnterState>(
       listener: (context, state) {
@@ -181,7 +203,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
           _animationController?.stop();
         }
       },
-      child: isNetworkConnected ? _createWifiOnWidget() : _createWifiOffWidget(),
+      child:
+          isNetworkConnected ? _createWifiOnWidget() : _createWifiOffWidget(),
     );
   }
 
@@ -217,8 +240,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                     margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
                   ),
                 ],
-              )
-          )
+              ))
         ],
       ),
       color: Colors.white,
@@ -229,7 +251,18 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
 
   Widget _createWifiOnWidget() {
     final devices = context.select((EnterBloc bloc) => bloc.state.devices);
-    final networkName = context.select((EnterBloc bloc) => bloc.state.networkName);
+    String? networkName =
+        context.select((EnterBloc bloc) => bloc.state.networkName);
+    final networkType =
+        context.select((EnterBloc bloc) => bloc.state.networkType);
+
+    if (networkType == NetworkType.ethernet) {
+      networkName = context.l10n.ethernet;
+    } else {
+      if (null == networkName || networkName.isEmpty) {
+        networkName = context.l10n.wifi;
+      }
+    }
 
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
@@ -244,8 +277,7 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
 
     if (null == _animationController) {
       _animationController = AnimationController(
-          vsync: this, duration: Duration(milliseconds: 4500)
-      );
+          vsync: this, duration: Duration(milliseconds: 4500));
 
       Future.delayed(Duration.zero, () {
         _animationController?.repeat();
@@ -265,29 +297,24 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                       child: ClipOval(
                         child: Container(
                           width: radarRadius * 1.5,
-                          height: radarRadius * 1.5 ,
+                          height: radarRadius * 1.5,
                           decoration: BoxDecoration(
-                              gradient: SweepGradient(
-                                  colors: [
-                                    Color(0xfff8fbf4),
-                                    Color(0xfffcfefb),
-                                    Colors.white
-                                  ]
-                              )
-                          ),
+                              gradient: SweepGradient(colors: [
+                            Color(0xfff8fbf4),
+                            Color(0xfffcfefb),
+                            Colors.white
+                          ])),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-
               Align(
                 alignment: Alignment.center,
                 child: Image.asset("assets/icons/intro_radar.png",
                     width: _ICON_SIZE, height: _ICON_SIZE),
               ),
-
               Align(
                 alignment: Alignment.topCenter,
                 child: Wrap(
@@ -296,23 +323,26 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
-                      child:
-                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Text(context.l10n.currentNetworkLabel,
-                            style: TextStyle(
-                                color: Color(0xff5b5c61),
-                                fontSize: 16,
-                                decoration: TextDecoration.none)),
-                        Text("${networkName}",
-                            style: TextStyle(
-                                color: Color(0xff5b5c61),
-                                fontSize: 16,
-                                decoration: TextDecoration.none))
-                      ]),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(context.l10n.currentNetworkLabel,
+                                style: TextStyle(
+                                    color: Color(0xff5b5c61),
+                                    fontSize: 16,
+                                    decoration: TextDecoration.none)),
+                            Text("${networkName}",
+                                style: TextStyle(
+                                    color: Color(0xff5b5c61),
+                                    fontSize: 16,
+                                    decoration: TextDecoration.none))
+                          ]),
                       margin: EdgeInsets.fromLTRB(0, marginTop, 0, 0),
                     ),
                     Container(
-                        child: Text(context.l10n.tipConnectToSameNetwork.replaceFirst("%s", "${Constant.APP_NAME}"),
+                        child: Text(
+                          context.l10n.tipConnectToSameNetwork
+                              .replaceFirst("%s", "${Constant.APP_NAME}"),
                           style: TextStyle(
                               color: Color(0xffa1a1a1),
                               fontSize: 16,
@@ -323,18 +353,18 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                   ],
                 ),
               ),
-
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
                   child: Wrap(
                     children: [
-                      Text(context.l10n.tipInstallMobileApp01.replaceFirst("%s", "${Constant.APP_NAME}"),
+                      Text(
+                          context.l10n.tipInstallMobileApp01
+                              .replaceFirst("%s", "${Constant.APP_NAME}"),
                           style: TextStyle(
                               color: Color(0xff949494),
                               fontSize: 16,
                               decoration: TextDecoration.none)),
-
                       Container(
                         child: Listener(
                           child: Text(context.l10n.tipInstallMobileApp02,
@@ -343,15 +373,16 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                                   fontSize: 16,
                                   decoration: TextDecoration.underline)),
                           onPointerDown: (event) {
-                            if (event.kind == PointerDeviceKind.mouse && event.buttons == kPrimaryMouseButton) {
-                              debugPrint("Scan qr code for downloading apk file.");
+                            if (event.kind == PointerDeviceKind.mouse &&
+                                event.buttons == kPrimaryMouseButton) {
+                              debugPrint(
+                                  "Scan qr code for downloading apk file.");
                               _showApkQrCode(event.position);
                             }
                           },
                         ),
                         margin: EdgeInsets.only(left: 5, right: 5),
                       ),
-
                       Text(context.l10n.tipInstallMobileApp03,
                           style: TextStyle(
                               color: Color(0xff949494),
@@ -362,7 +393,6 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
                   margin: EdgeInsets.only(bottom: 10),
                 ),
               ),
-
               IgnorePointer(
                 child: MultipleRings(
                   width: width,
@@ -380,164 +410,169 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
           color: Colors.white),
       Stack(
           children: List.generate(devices.length, (index) {
-            Device device = devices[index];
+        Device device = devices[index];
 
-            debugPrint("List.generate => Device ip: ${device.ip}");
+        debugPrint("List.generate => Device ip: ${device.ip}");
 
-            Rect? rect = _deviceRectMap[device.ip];
+        Rect? rect = _deviceRectMap[device.ip];
 
-            double left = 0;
-            double top = 0;
+        double left = 0;
+        double top = 0;
 
-            if (null == rect) {
-              var width = MediaQuery.of(context).size.width;
-              var height = MediaQuery.of(context).size.height;
+        if (null == rect) {
+          var width = MediaQuery.of(context).size.width;
+          var height = MediaQuery.of(context).size.height;
 
-              Offset offset = Offset(150, 150);
+          Offset offset = Offset(150, 150);
 
-              bool isValidLeftValue(double left) {
-                if (left < offset.dx) return false;
+          bool isValidLeftValue(double left) {
+            if (left < offset.dx) return false;
 
-                if (left > width - offset.dx) return false;
+            if (left > width - offset.dx) return false;
 
-                if (left > (width / 2 - _ICON_SIZE / 2 - 100) && left < (width / 2 + _ICON_SIZE / 2 + 100)) {
-                  return false;
-                }
-
-                return true;
-              }
-
-              bool isValidTop(double top) {
-                if (top < offset.dy) return false;
-                if (top > height - offset.dy) return false;
-
-                if (top > (height / 2 - _ICON_SIZE / 2 - 100)
-                    && top < (height / 2 + _ICON_SIZE / 2 + 100)) {
-                  return false;
-                }
-
-                return true;
-              }
-
-              while (!isValidLeftValue(left)) {
-                left = _randomDouble(0, width);
-              }
-
-              while (!isValidTop(top)) {
-                top = _randomDouble(0, height);
-              }
-
-              _deviceRectMap[device.ip] = Rect.fromLTRB(left, top, 0, 0);
-            } else {
-              left = rect.left;
-              top = rect.top;
+            if (left > (width / 2 - _ICON_SIZE / 2 - 100) &&
+                left < (width / 2 + _ICON_SIZE / 2 + 100)) {
+              return false;
             }
 
-            return Positioned(
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      child: Container(
-                        child: Wrap(
-                          children: [
-                            Text(
-                              context.l10n.connect,
-                              style: TextStyle(
-                                  color: _isConnectPressed ? Colors.white : Color(0xff949494),
-                                  fontSize: 14
-                              ),
-                            ),
-                            Container(
-                              child: Image.asset("assets/icons/ic_right_arrow.png", width: 15, height: 15),
-                              margin: EdgeInsets.only(left: 3),
-                            )
-                          ],
-                          direction: Axis.horizontal,
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
+            return true;
+          }
+
+          bool isValidTop(double top) {
+            if (top < offset.dy) return false;
+            if (top > height - offset.dy) return false;
+
+            if (top > (height / 2 - _ICON_SIZE / 2 - 100) &&
+                top < (height / 2 + _ICON_SIZE / 2 + 100)) {
+              return false;
+            }
+
+            return true;
+          }
+
+          while (!isValidLeftValue(left)) {
+            left = _randomDouble(0, width);
+          }
+
+          while (!isValidTop(top)) {
+            top = _randomDouble(0, height);
+          }
+
+          _deviceRectMap[device.ip] = Rect.fromLTRB(left, top, 0, 0);
+        } else {
+          left = rect.left;
+          top = rect.top;
+        }
+
+        return Positioned(
+            child: Column(
+              children: [
+                GestureDetector(
+                  child: Container(
+                    child: Wrap(
+                      children: [
+                        Text(
+                          context.l10n.connect,
+                          style: TextStyle(
+                              color: _isConnectPressed
+                                  ? Colors.white
+                                  : Color(0xff949494),
+                              fontSize: 14),
                         ),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(color: Color(0xffe5e5e5), width: 1.5),
-                            color: _isConnectPressed ? Color(0xff6989e2) : Color(0xfffefefe),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Color(0xffe5e5e5),
-                                  offset: Offset(0, 0),
-                                  blurRadius: 1.0
-                              )
-                            ]
-                        ),
-                        padding: EdgeInsets.fromLTRB(14, 6, 10, 6),
-                      ),
-                      onTap: () {
-                        if (devices.isEmpty) return;
-
-                        final device = devices[index];
-
-                        DeviceConnectionManager.instance.currentDevice = device;
-
-                        if (null == _cmdClient) {
-                          _cmdClient = CmdClient();
-                        }
-
-                        _cmdClient!.connect(device.ip);
-                        _cmdClient!.onCmdReceive((data) {
-                          debugPrint("onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
-                          _processCmd(data);
-                        });
-                        _cmdClient!.onConnected(() {
-                          debugPrint("onConnected, ip: ${device.ip}");
-                          _reportDesktopInfo();
-                        });
-                        _cmdClient!.onDisconnected(() {
-                          debugPrint("onDisconnected, ip: ${device.ip}");
-                        });
-
-                        if (null == _heartbeatClient) {
-                          _heartbeatClient = HeartbeatClient.create(device.ip, Constant.PORT_HEARTBEAT);
-                        }
-                        
-                        _heartbeatClient?.addListener(this);
-
-                        _heartbeatClient!.connectToServer();
-
-                        Navigator.push(context, MaterialPageRoute(builder: (context) {
-                          return HomePage();
-                        }));
-                      },
-                      onTapDown: (event) {
-                        setState(() {
-                          _isConnectPressed = true;
-                        });
-                      },
-                      onTapCancel: () {
-                        setState(() {
-                          _isConnectPressed = false;
-                        });
-                      },
-                      onTapUp: (event) {
-                        setState(() {
-                          _isConnectPressed = false;
-                        });
-                      },
+                        Container(
+                          child: Image.asset("assets/icons/ic_right_arrow.png",
+                              width: 15, height: 15),
+                          margin: EdgeInsets.only(left: 3),
+                        )
+                      ],
+                      direction: Axis.horizontal,
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                     ),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        border:
+                            Border.all(color: Color(0xffe5e5e5), width: 1.5),
+                        color: _isConnectPressed
+                            ? Color(0xff6989e2)
+                            : Color(0xfffefefe),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Color(0xffe5e5e5),
+                              offset: Offset(0, 0),
+                              blurRadius: 1.0)
+                        ]),
+                    padding: EdgeInsets.fromLTRB(14, 6, 10, 6),
+                  ),
+                  onTap: () {
+                    if (devices.isEmpty) return;
 
-                    Container(
-                      child: Image.asset("assets/icons/ic_mobile.png", width: 76 * 0.5, height: 134 * 0.5),
-                      margin: EdgeInsets.only(top: 5),
-                    ),
+                    final device = devices[index];
 
-                    Text(
-                      "${device.name}",
-                      style: TextStyle(
-                          color: Color(0xff313237),
-                          fontSize: 14
-                      ),
-                    )
-                  ],
-                ), left: left, top: top);
-          }))
+                    DeviceConnectionManager.instance.currentDevice = device;
+
+                    if (null == _cmdClient) {
+                      _cmdClient = CmdClient();
+                    }
+
+                    _cmdClient!.connect(device.ip);
+                    _cmdClient!.onCmdReceive((data) {
+                      debugPrint(
+                          "onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
+                      _processCmd(data);
+                    });
+                    _cmdClient!.onConnected(() {
+                      debugPrint("onConnected, ip: ${device.ip}");
+                      _reportDesktopInfo();
+                    });
+                    _cmdClient!.onDisconnected(() {
+                      debugPrint("onDisconnected, ip: ${device.ip}");
+                    });
+
+                    if (null == _heartbeatClient) {
+                      _heartbeatClient = HeartbeatClient.create(
+                          device.ip, Constant.PORT_HEARTBEAT);
+                    }
+
+                    _heartbeatClient?.addListener(this);
+
+                    _heartbeatClient!.connectToServer();
+
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return HomePage();
+                    }));
+                  },
+                  onTapDown: (event) {
+                    setState(() {
+                      _isConnectPressed = true;
+                    });
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isConnectPressed = false;
+                    });
+                  },
+                  onTapUp: (event) {
+                    setState(() {
+                      _isConnectPressed = false;
+                    });
+                  },
+                ),
+                Container(
+                  child: Image.asset("assets/icons/ic_mobile.png",
+                      width: 76 * 0.5, height: 134 * 0.5),
+                  margin: EdgeInsets.only(top: 5),
+                ),
+                Text(
+                  "${device.name}",
+                  style: TextStyle(color: Color(0xff313237), fontSize: 14),
+                )
+              ],
+            ),
+            left: left,
+            top: top);
+      }))
     ]);
   }
 
@@ -553,7 +588,8 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
       UpdateMobileInfo updateMobileInfo = UpdateMobileInfo(mobileInfo);
       eventBus.fire(updateMobileInfo);
 
-      debugPrint("BatteryLevel: ${mobileInfo.batteryLevel}, totalSize: ${mobileInfo.storageSize.totalSize}, "
+      debugPrint(
+          "BatteryLevel: ${mobileInfo.batteryLevel}, totalSize: ${mobileInfo.storageSize.totalSize}, "
           "availableSize: ${mobileInfo.storageSize.availableSize}");
     }
   }
@@ -605,70 +641,64 @@ class _EnterState extends State<EnterPage> with SingleTickerProviderStateMixin i
     double left = offset.dx - width / 2;
     double top = offset.dy - height - triangleHeight - 8;
 
-    showDialog(context: context, builder: (context) {
-      return Stack(
-        children: [
-          Positioned(
-              left: left,
-              top: top,
-              child: Stack(
-                children: [
-
-                  Container(
-                    child: Column(
-                        children: [
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Stack(
+            children: [
+              Positioned(
+                  left: left,
+                  top: top,
+                  child: Stack(
+                    children: [
+                      Container(
+                        child: Column(children: [
                           Container(
                             child: Text(
                               context.l10n.scanToDownloadApk,
-                              style: TextStyle(
-                                  color: Color(0xff848485)
-                              ),
+                              style: TextStyle(color: Color(0xff848485)),
                             ),
                             margin: EdgeInsets.only(top: 5),
                           ),
-
                           QrImage(
-                            data: "https://github.com/air-controller/air-controller-mobile/releases",
+                            data:
+                                "https://github.com/air-controller/air-controller-mobile/releases",
                             size: 130,
                           )
-                        ]
-                    ),
-                    width: width,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black54,
-                            offset: Offset(0, 0),
-                            blurRadius: 1),
-                      ],
-                    ),
-                  ),
-
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      child: Triangle(
-                        key: Key("download_qr_code"),
-                        width: triangleWidth,
-                        height: triangleHeight,
-                        isUpward: false,
-                        color: Colors.white,
-                        dividerColor: Colors.black12,
+                        ]),
+                        width: width,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black54,
+                                offset: Offset(0, 0),
+                                blurRadius: 1),
+                          ],
+                        ),
                       ),
-                      margin: EdgeInsets.only(top: 168, left: 70),
-                    ),
-                  ),
-                ],
-              )
-          )
-        ],
-      );
-    },
-        barrierColor: Colors.transparent
-    );
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          child: Triangle(
+                            key: Key("download_qr_code"),
+                            width: triangleWidth,
+                            height: triangleHeight,
+                            isUpward: false,
+                            color: Colors.white,
+                            dividerColor: Colors.black12,
+                          ),
+                          margin: EdgeInsets.only(top: 168, left: 70),
+                        ),
+                      ),
+                    ],
+                  ))
+            ],
+          );
+        },
+        barrierColor: Colors.transparent);
   }
 
   @override

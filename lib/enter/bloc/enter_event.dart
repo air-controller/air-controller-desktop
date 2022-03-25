@@ -10,11 +10,12 @@ abstract class EnterEvent extends Equatable {
 class EnterNetworkChanged extends EnterEvent {
   final bool isConnected;
   final String? networkName;
+  final NetworkType networkType;
 
-  const EnterNetworkChanged(this.isConnected, this.networkName);
+  const EnterNetworkChanged(this.isConnected, this.networkName, this.networkType);
 
   @override
-  List<Object?> get props => [isConnected, this.networkName];
+  List<Object?> get props => [isConnected, networkName, networkType];
 }
 
 class EnterFindMobile extends EnterEvent {

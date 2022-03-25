@@ -22,7 +22,8 @@ class EnterBloc extends Bloc<EnterEvent, EnterState> {
 
     emit(state.copyWith(
       isNetworkConnected: event.isConnected,
-      networkName: event.networkName
+      networkName: event.networkName,
+      networkType: event.networkType
     ));
   }
 

@@ -72,5 +72,7 @@
   "placeholderS": "%s 秒",
   "wirelessConDisconnected": "无线连接已断开",
   "placeholderDisconnectionDesc": "由于网络环境不稳定或手机端%s连接超时等原因，无线连接已断开，请检查。",
-  "backToHome": "返回主界面"
+  "backToHome": "返回主界面",
+  "ethernet": "以太网",
+  "wifi": "无线网络"
 }
