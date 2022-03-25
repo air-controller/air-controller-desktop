@@ -59,7 +59,9 @@ class UnifiedDeleteButton extends StatelessWidget {
               )
           ),
           onTap: () {
-            onTap?.call();
+            if (isEnable) {
+              onTap?.call();
+            }
           },
           onTapDown: (details) {
             if (isEnable) {
