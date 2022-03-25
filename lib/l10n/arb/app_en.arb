@@ -77,5 +77,7 @@
       "wifi": "WLAN",
   "defaultType": "Default",
   "daily": "Daily",
-  "monthly": "Monthly"
+  "monthly": "Monthly",
+  "sortByDate": "Sort by date",
+  "sortByDuration": "Sort by duration"
 }

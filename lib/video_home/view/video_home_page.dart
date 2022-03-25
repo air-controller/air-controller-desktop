@@ -186,55 +186,61 @@ class VideoHomeView extends StatelessWidget {
                           Visibility(
                               child: Row(
                                 children: [
-                                  GestureDetector(
-                                    child: Container(
-                                      child: Image.asset(
-                                          _getSortOrderIcon(VideoOrderType.createTime),
-                                          width: 20,
-                                          height: 20),
-                                      padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: Color(0xffdddedf), width: 1.0),
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(4.0),
-                                            bottomLeft: Radius.circular(4.0)),
-                                        color: _getSortOrderBgColor(VideoOrderType.createTime),
+                                  Tooltip(
+                                    child: GestureDetector(
+                                      child: Container(
+                                        child: Image.asset(
+                                            _getSortOrderIcon(VideoOrderType.createTime),
+                                            width: 20,
+                                            height: 20),
+                                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color: Color(0xffdddedf), width: 1.0),
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(4.0),
+                                              bottomLeft: Radius.circular(4.0)),
+                                          color: _getSortOrderBgColor(VideoOrderType.createTime),
+                                        ),
                                       ),
+                                      onTap: () {
+                                        VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
+                                        if (currentOderType != VideoOrderType.createTime) {
+                                          context.read<VideoHomeBloc>().add(
+                                              VideoHomeOderTypeChanged(
+                                                  VideoOrderType.createTime));
+                                        }
+                                      },
                                     ),
-                                    onTap: () {
-                                      VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
-                                      if (currentOderType != VideoOrderType.createTime) {
-                                        context.read<VideoHomeBloc>().add(
-                                            VideoHomeOderTypeChanged(
-                                                VideoOrderType.createTime));
-                                      }
-                                    },
+                                    message: context.l10n.sortByDate,
                                   ),
-                                  GestureDetector(
-                                    child: Container(
-                                      child: Image.asset(
-                                          _getSortOrderIcon(VideoOrderType.duration),
-                                          width: 20,
-                                          height: 20),
-                                      padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: Color(0xffdddedf), width: 1.0),
-                                        color: _getSortOrderBgColor(VideoOrderType.duration),
-                                        borderRadius: BorderRadius.only(
-                                            topRight: Radius.circular(4.0),
-                                            bottomRight: Radius.circular(4.0)),
+                                  Tooltip(
+                                    child: GestureDetector(
+                                      child: Container(
+                                        child: Image.asset(
+                                            _getSortOrderIcon(VideoOrderType.duration),
+                                            width: 20,
+                                            height: 20),
+                                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color: Color(0xffdddedf), width: 1.0),
+                                          color: _getSortOrderBgColor(VideoOrderType.duration),
+                                          borderRadius: BorderRadius.only(
+                                              topRight: Radius.circular(4.0),
+                                              bottomRight: Radius.circular(4.0)),
+                                        ),
                                       ),
+                                      onTap: () {
+                                        VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
+                                        if (currentOderType != VideoOrderType.duration) {
+                                          context.read<VideoHomeBloc>().add(
+                                              VideoHomeOderTypeChanged(
+                                                  VideoOrderType.duration));
+                                        }
+                                      },
                                     ),
-                                    onTap: () {
-                                      VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
-                                      if (currentOderType != VideoOrderType.duration) {
-                                        context.read<VideoHomeBloc>().add(
-                                            VideoHomeOderTypeChanged(
-                                                VideoOrderType.duration));
-                                      }
-                                    },
+                                    message: context.l10n.sortByDuration,
                                   ),
                                 ],
                               ),

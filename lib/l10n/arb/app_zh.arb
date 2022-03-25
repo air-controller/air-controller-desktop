@@ -77,5 +77,7 @@
   "wifi": "无线网络",
   "defaultType": "默认",
   "daily": "按天排列",
-  "monthly": "按月排列"
+  "monthly": "按月排列",
+  "sortByDate": "按时间排列",
+  "sortByDuration": "按时长排列"
 }
