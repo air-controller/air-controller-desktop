@@ -313,6 +313,7 @@ class HomeImageView extends StatelessWidget {
                       ),
                       UnifiedDeleteButton(
                         isEnable: isDeleteEnabled,
+                        contentDescription: context.l10n.delete,
                         onTap: () {
                           context.read<HomeImageBloc>().add(
                               HomeImageDeleteTrigger(

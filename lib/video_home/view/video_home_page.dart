@@ -245,6 +245,7 @@ class VideoHomeView extends StatelessWidget {
                           ),
                           UnifiedDeleteButton(
                             isEnable: isDeleteEnabled,
+                            contentDescription: context.l10n.delete,
                             onTap: () {
                               if (isDeleteEnabled) {
                                 context.read<VideoHomeBloc>().add(VideoHomeDeleteTapped());

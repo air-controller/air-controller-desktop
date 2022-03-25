@@ -501,6 +501,7 @@ class FileHomeView extends StatelessWidget {
                           ),
                           UnifiedDeleteButton(
                             isEnable: isDeleteEnabled,
+                            contentDescription: context.l10n.delete,
                             onTap: () {
                               if (isDeleteEnabled) {
                                 _tryToDeleteFiles(context, checkedFiles);
