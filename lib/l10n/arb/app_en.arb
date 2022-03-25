@@ -74,5 +74,8 @@
   "placeholderDisconnectionDesc": "The wireless connection has been disconnected due to unstable network environment or %s connection timeout on the mobile phone, please check.",
   "backToHome": "Back to Home",
     "ethernet": "Ethernet",
-      "wifi": "WLAN"
+      "wifi": "WLAN",
+  "defaultType": "Default",
+  "daily": "Daily",
+  "monthly": "Monthly"
 }
