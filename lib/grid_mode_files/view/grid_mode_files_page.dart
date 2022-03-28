@@ -5,6 +5,7 @@ import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
 import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
 import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/util/system_app_launcher.dart';
+import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 
 import '../../constant.dart';
 import '../../constant_pool.dart';
@@ -188,7 +189,7 @@ class GridModeFilesView extends StatelessWidget {
 
                   return Listener(
                     child: Column(children: [
-                      GestureDetector(
+                      SimpleGestureDetector(
                           child: Container(
                             child: icon,
                             decoration: BoxDecoration(
@@ -215,7 +216,7 @@ class GridModeFilesView extends StatelessWidget {
                               SystemAppLauncher.openFile(file.data);
                             }
                           }),
-                      GestureDetector(
+                      SimpleGestureDetector(
                         child: Container(
                           constraints: BoxConstraints(maxWidth: 150),
                           child: Stack(
