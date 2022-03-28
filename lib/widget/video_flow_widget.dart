@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/model/video_item.dart';
 import 'package:mobile_assistant_client/model/video_order_type.dart';
 import 'package:mobile_assistant_client/network/device_connection_manager.dart';
+import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../constant.dart';
@@ -13,11 +14,14 @@ class VideoFlowWidget extends StatelessWidget {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
   List<VideoItem> _videos = [];
-  final _IMAGE_GRID_RADIUS_SELECTED = 5.0;
-  final _IMAGE_GRID_RADIUS = 1.0;
+  final _VIDEO_GRID_RADIUS_CHECKED = 5.0;
+  final _VIDEO_GRID_BORDER_WIDTH_CHECKED = 3.4;
 
-  final _IMAGE_GRID_BORDER_WIDTH_SELECTED = 4.0;
-  final _IMAGE_GRID_BORDER_WIDTH = 1.0;
+  final _VIDEO_GRID_RADIUS = 1.0;
+  final _VIDEO_GRID_BORDER_WIDTH = 1.0;
+
+  final _CHECKED_BORDER_COLOR = Color(0xff5d86ec);
+  final _BORDER_COLOR = Color(0xffdedede);
 
   List<VideoItem> _selectedVideos = [];
 
@@ -85,16 +89,27 @@ class VideoFlowWidget extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  child: GestureDetector(
-                    child: CachedNetworkImage(
-                      imageUrl:
-                      "${_rootUrl}/stream/video/thumbnail/${videoItem.id}/200/200",
-                      fit: BoxFit.cover,
-                      width: 160,
-                      height: 160,
-                      memCacheWidth: 400,
-                      fadeOutDuration: Duration.zero,
-                      fadeInDuration: Duration.zero,
+                  child: SimpleGestureDetector(
+                    child: Container(
+                      child: CachedNetworkImage(
+                        imageUrl:
+                        "${_rootUrl}/stream/video/thumbnail/${videoItem.id}/200/200",
+                        fit: BoxFit.cover,
+                        width: 160,
+                        height: 160,
+                        memCacheWidth: 400,
+                        fadeOutDuration: Duration.zero,
+                        fadeInDuration: Duration.zero,
+                      ),
+                        decoration: BoxDecoration(
+                            border: new Border.all(
+                                color: _isChecked(videoItem)
+                                    ? _CHECKED_BORDER_COLOR
+                                    : _BORDER_COLOR,
+                                width: _VIDEO_GRID_BORDER_WIDTH),
+                            borderRadius: new BorderRadius.all(
+                                Radius.circular(
+                                    _VIDEO_GRID_RADIUS)))
                     ),
                     onTap: () {
                       _onVideoTap?.call(videoItem);
@@ -105,16 +120,11 @@ class VideoFlowWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                       border: new Border.all(
-                          color: _isContainsVideo(_selectedVideos, videoItem)
-                              ? Color(0xff5d86ec)
-                              : Color(0xffdedede),
-                          width: _isContainsVideo(_selectedVideos, videoItem)
-                              ? _IMAGE_GRID_BORDER_WIDTH_SELECTED
-                              : _IMAGE_GRID_BORDER_WIDTH),
-                      borderRadius: new BorderRadius.all(Radius.circular(
-                          _isContainsVideo(_selectedVideos, videoItem)
-                              ? _IMAGE_GRID_RADIUS_SELECTED
-                              : _IMAGE_GRID_RADIUS))),
+                          color: _isChecked(videoItem)
+                              ? _CHECKED_BORDER_COLOR
+                              : Colors.transparent,
+                          width: _VIDEO_GRID_BORDER_WIDTH_CHECKED),
+                      borderRadius: new BorderRadius.all(Radius.circular(_VIDEO_GRID_RADIUS_CHECKED))),
                 ),
                 Container(
                   child: Align(
@@ -187,12 +197,8 @@ class VideoFlowWidget extends StatelessWidget {
       return "$min:${sec < 10 ? "0${sec}" : sec}";
     }
   }
-
-  bool _isContainsVideo(List<VideoItem> images, VideoItem current) {
-    for (VideoItem imageItem in images) {
-      if (imageItem.id == current.id) return true;
-    }
-
-    return false;
+  
+  bool _isChecked(VideoItem video) {
+    return _selectedVideos.contains(video);
   }
 }

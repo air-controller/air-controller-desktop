@@ -23,6 +23,7 @@ import '../../network/device_connection_manager.dart';
 import '../../util/common_util.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
+import '../../widget/simple_gesture_detector.dart';
 import '../../widget/video_flow_widget.dart';
 
 class VideoFoldersPage extends StatelessWidget {
@@ -565,7 +566,7 @@ class VideoFoldersView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GestureDetector(
+                SimpleGestureDetector(
                   child: Container(
                     child: Stack(
                       children: [
