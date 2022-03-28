@@ -16,21 +16,26 @@ class CountDownTimer {
     void start() {
       final duration = Duration(milliseconds: countDownInterval);
       _internalTimer = Timer.periodic(duration, (timer) {
+        _currentTime += countDownInterval;
+
         if (_currentTime >= millisInFuture) {
           _onFinish?.call();
 
           _internalTimer?.cancel();
         } else {
-          _currentTime += countDownInterval;
           _onTick?.call(millisInFuture - _currentTime);
         }
       });
       _isCancelled = false;
     }
 
-    void onTick(Function(int millisUntilFinished) callback) {}
+    void onTick(Function(int millisUntilFinished) callback) {
+      _onTick = callback;
+    }
 
-    void onFinish(Function() callback) {}
+    void onFinish(Function() callback) {
+      _onFinish = callback;
+    }
 
     void cancel() {
       _internalTimer?.cancel();

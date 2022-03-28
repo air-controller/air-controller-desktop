@@ -16,6 +16,7 @@ import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 import 'package:mobile_assistant_client/repository/image_repository.dart';
 import 'package:mobile_assistant_client/util/common_util.dart';
+import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 
 import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
@@ -770,7 +771,7 @@ class AllAlbumsView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
+                  SimpleGestureDetector(
                     child: Container(
                       child: Stack(
                         children: [
@@ -919,7 +920,7 @@ class AllAlbumsView extends StatelessWidget {
           "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
       arrangeMode: arrangementMode,
       images: images,
-      selectedImages: checkedImages,
+      checkedImages: checkedImages,
       onImageDoubleTap: (image) {
         _openImageDetailPage(context, images, images.indexOf(image));
 

@@ -292,7 +292,7 @@ class AllImagesView extends StatelessWidget {
                       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
                   arrangeMode: arrangement,
                   images: images,
-                  selectedImages: checkedImages,
+                  checkedImages: checkedImages,
                   onPointerDown: (event, image) {
                     if (event.isRightMouseClick()) {
                       if (!checkedImages.contains(image)) {
