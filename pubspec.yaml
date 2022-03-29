@@ -58,7 +58,8 @@ dependencies:
   visibility_detector: ^0.2.2
   event_bus: ^2.0.0
   flutter_smart_dialog: ^3.0.2
-  data_table_2: ^2.2.0
+  data_table_2:
+    path: packages/data_table_2
   url_launcher: ^6.0.17
   neat_periodic_task: ^2.0.0
   file_picker: ^4.3.1
