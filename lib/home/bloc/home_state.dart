@@ -16,22 +16,26 @@ extension HomeTabX  on HomeTab {
 class HomeState extends Equatable {
   final HomeTab tab;
   final MobileInfo? mobileInfo;
+  final String? appVersion;
 
   const HomeState({
     this.tab = HomeTab.image,
-    this.mobileInfo = null
+    this.mobileInfo = null,
+    this.appVersion
   });
 
   @override
-  List<Object?> get props => [tab, mobileInfo];
+  List<Object?> get props => [tab, mobileInfo, appVersion];
 
   HomeState copyWith({
     HomeTab? tab,
-    MobileInfo? mobileInfo
+    MobileInfo? mobileInfo,
+    String? version
   }) {
     return HomeState(
       tab: tab ?? this.tab,
-      mobileInfo: mobileInfo ?? this.mobileInfo
+      mobileInfo: mobileInfo ?? this.mobileInfo,
+      appVersion: version ?? this.appVersion
     );
   }
 }

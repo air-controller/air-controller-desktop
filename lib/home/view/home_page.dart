@@ -87,6 +87,7 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
     MobileInfo? mobileInfo = context.select((HomeBloc bloc) => bloc.state.mobileInfo);
+    String? appVersion = context.select((HomeBloc bloc) => bloc.state.appVersion);
 
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == tab.index) {
@@ -109,7 +110,7 @@ class HomeView extends StatelessWidget {
     }
 
     Color hoverIconBgColor = Color(0xfffafafa);
-
+    
     return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
@@ -281,6 +282,17 @@ class HomeView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Container(
+                          child: Text(
+                            "v${appVersion}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 18, color: Color(0xff666333)),
+                          ),
+                          padding: EdgeInsets.only(right: 20),
+                          width: _tab_width - 20,
+                          margin: EdgeInsets.only(bottom: 20)
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -391,23 +403,6 @@ class HomeView extends StatelessWidget {
                 ],
               ))
         ]);
-
-    // PageView(
-    //     scrollDirection: Axis.vertical,
-    //     physics: NeverScrollableScrollPhysics(),
-    //     children: [
-    //       HomeImageFlow(),
-    //       MusicHomePage(),
-    //       VideoHomePage(),
-    //       DownloadManagerPage(),
-    //       AllFileManagerPage(),
-    //       HelpAndFeedbackPage()
-    //     ],
-    //     onPageChanged: (index) {
-    //       HomeTab tab = HomeTabX.convertToHomeTab(index);
-    //       context.read<HomeBloc>().add(HomeTabChanged(tab));
-    //     },
-    //     controller: pageController)
   }
 
   void _exitFileManager(BuildContext context) {
