@@ -70,6 +70,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
     }
 
     isConnected = true;
+    _isQuit = false;
 
     listeners.forEach((listener) {
       listener.onConnected();
@@ -87,6 +88,8 @@ class HeartbeatClientImpl extends HeartbeatClient {
     }
 
     _socketSubscription = _socket?.asBroadcastStream().listen((data) {
+      if (_isQuit) return;
+
       _stopTimeoutTimer();
 
       String str = String.fromCharCodes(data);
@@ -111,6 +114,10 @@ class HeartbeatClientImpl extends HeartbeatClient {
       _lastHeartbeat = heartbeat;
 
       Future.delayed(Duration(seconds: 2), () {
+        if (_isQuit) {
+          log("Heartbeat: heartbeat service had quit, don't need start timeout timer again!");
+          return;
+        }
         _sendToServer(_lastHeartbeat!);
         _startTimeoutTimer();
       });
@@ -126,6 +133,10 @@ class HeartbeatClientImpl extends HeartbeatClient {
   }
 
   void _startTimeoutTimer() {
+    if (_isQuit) {
+      log("Heartbeat: _startTimeoutTimer, heartbeat service had quit.");
+      return;
+    }
     _timeoutTimer = CountDownTimer(TIMEOUT_IN_MILLS, 1000);
     _timeoutTimer?.onFinish(() {
       listeners.forEach((listener) {
@@ -142,6 +153,10 @@ class HeartbeatClientImpl extends HeartbeatClient {
   }
 
   void _retryHeartbeat() async {
+    if (_isQuit) {
+      log("Heartbeat: _retryHeartbeat, heartbeat service had quit.");
+      return;
+    }
     if (!_isRetryTimerStarted) {
       _startRetryTimer();
     }
@@ -203,6 +218,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
   void disconnectToServer() {
     if (isConnected) {
       _isQuit = true;
+      _socketSubscription?.cancel();
       _socket?.close();
       _socket = null;
       isConnected = false;
@@ -210,6 +226,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       listeners.forEach((listener) {
         listener.onDisconnected();
       });
+      listeners.clear();
     }
   }
 
