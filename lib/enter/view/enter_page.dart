@@ -143,6 +143,7 @@ class _EnterState extends State<EnterPage>
   void _exitHeartbeatService() {
     _heartbeatClient?.quit();
     _heartbeatClient = null;
+    log("Heartbeat: Exit heartbeat service...");
   }
 
   void _exitCmdService() {
