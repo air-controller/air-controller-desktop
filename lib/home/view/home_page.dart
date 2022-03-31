@@ -25,33 +25,27 @@ import '../../network/device_connection_manager.dart';
 import '../../repository/image_repository.dart';
 import '../../util/event_bus.dart';
 
-
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final client = AirControllerClient(domain: "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}");
+    final client = AirControllerClient(
+        domain:
+            "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}");
 
-    return MultiRepositoryProvider(
-        providers: [
-          RepositoryProvider<ImageRepository>(
-              create: (context) => ImageRepository(client: client)
-          ),
-          RepositoryProvider<CommonRepository>(
-              create: (context) => CommonRepository(client: client)
-          ),
-          RepositoryProvider<FileRepository>(
-              create: (context) => FileRepository(client: client)
-          ),
-          RepositoryProvider<AudioRepository>(
-              create: (context) => AudioRepository(client: client)
-          ),
-          RepositoryProvider<VideoRepository>(
-              create: (context) => VideoRepository(client: client)
-          )
-        ],
-        child: HomeBlocProviderView());
+    return MultiRepositoryProvider(providers: [
+      RepositoryProvider<ImageRepository>(
+          create: (context) => ImageRepository(client: client)),
+      RepositoryProvider<CommonRepository>(
+          create: (context) => CommonRepository(client: client)),
+      RepositoryProvider<FileRepository>(
+          create: (context) => FileRepository(client: client)),
+      RepositoryProvider<AudioRepository>(
+          create: (context) => AudioRepository(client: client)),
+      RepositoryProvider<VideoRepository>(
+          create: (context) => VideoRepository(client: client))
+    ], child: HomeBlocProviderView());
   }
 }
 
@@ -61,9 +55,9 @@ class HomeBlocProviderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeBloc(
-          commonRepository: context.read<CommonRepository>()
-      )..add(const HomeSubscriptionRequested()),
+      create: (_) =>
+          HomeBloc(commonRepository: context.read<CommonRepository>())
+            ..add(const HomeSubscriptionRequested()),
       child: HomeView(),
     );
   }
@@ -86,8 +80,10 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
-    MobileInfo? mobileInfo = context.select((HomeBloc bloc) => bloc.state.mobileInfo);
-    String? appVersion = context.select((HomeBloc bloc) => bloc.state.appVersion);
+    MobileInfo? mobileInfo =
+        context.select((HomeBloc bloc) => bloc.state.mobileInfo);
+    String? appVersion =
+        context.select((HomeBloc bloc) => bloc.state.appVersion);
 
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == tab.index) {
@@ -110,7 +106,7 @@ class HomeView extends StatelessWidget {
     }
 
     Color hoverIconBgColor = Color(0xfffafafa);
-    
+
     return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
@@ -149,7 +145,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.image.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.image));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.image));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -174,7 +172,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.music.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.music));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.music));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -199,7 +199,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.video.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.video));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.video));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -224,7 +226,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.download.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.download));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.download));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -249,7 +253,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.allFile.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.allFile));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.allFile));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -273,7 +279,9 @@ class HomeView extends StatelessWidget {
                         color: getTabBgColor(HomeTab.helpAndFeedback.index),
                       ),
                       onTap: () {
-                        context.read<HomeBloc>().add(HomeTabChanged(HomeTab.helpAndFeedback));
+                        context
+                            .read<HomeBloc>()
+                            .add(HomeTabChanged(HomeTab.helpAndFeedback));
                       },
                     ),
                     Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -283,16 +291,15 @@ class HomeView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          child: Text(
-                            "v${appVersion}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 18, color: Color(0xff666333)),
-                          ),
-                          padding: EdgeInsets.only(right: 20),
-                          width: _tab_width - 20,
-                          margin: EdgeInsets.only(bottom: 20)
-                        ),
+                            child: Text(
+                              appVersion == null ? "" : "v${appVersion}",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 18, color: Color(0xff666333)),
+                            ),
+                            padding: EdgeInsets.only(right: 20),
+                            width: _tab_width - 20,
+                            margin: EdgeInsets.only(bottom: 20)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -323,14 +330,16 @@ class HomeView extends StatelessWidget {
 
                               return InkWell(
                                 child: Container(
-                                  child: Image.asset("assets/icons/ic_popup.png",
-                                      width: 13, height: 13),
+                                  child: Image.asset(
+                                      "assets/icons/ic_popup.png",
+                                      width: 13,
+                                      height: 13),
                                   // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
                                   // 方式进行处理
                                   margin: EdgeInsets.only(left: 30),
                                   decoration: BoxDecoration(
                                       borderRadius:
-                                      BorderRadius.all(Radius.circular(2)),
+                                          BorderRadius.all(Radius.circular(2)),
                                       color: hoverIconBgColor),
                                   padding: EdgeInsets.all(3.0),
                                   // color: Colors.yellow,
@@ -392,16 +401,16 @@ class HomeView extends StatelessWidget {
               width: 1.0, thickness: 1.0, color: "#e1e1d3".toColor()),
           Expanded(
               child: IndexedStack(
-                index: tab.index,
-                children: [
-                  HomeImageFlow(),
-                  MusicHomePage(),
-                  VideoHomePage(),
-                  FileHomePage(true),
-                  FileHomePage(false),
-                  HelpAndFeedbackPage()
-                ],
-              ))
+            index: tab.index,
+            children: [
+              HomeImageFlow(),
+              MusicHomePage(),
+              VideoHomePage(),
+              FileHomePage(true),
+              FileHomePage(false),
+              HelpAndFeedbackPage()
+            ],
+          ))
         ]);
   }
 
