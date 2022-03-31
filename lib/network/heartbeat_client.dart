@@ -77,7 +77,12 @@ class HeartbeatClientImpl extends HeartbeatClient {
     });
 
     NetworkInfo networkInfo = NetworkInfo();
-    String currentIp = await networkInfo.getWifiIP() ?? "Unknown ip";
+    String currentIp = "Unknown ip";
+    try {
+      currentIp = await networkInfo.getWifiIP() ?? "Unknown ip";
+    } catch (e) {
+      log("HeartClient: get wifi ip failure: ${e.toString()}");
+    }
     _lastHeartbeat = Heartbeat(currentIp, 0, _currentTimeInMills());
     _sendToServer(_lastHeartbeat!);
 

@@ -556,8 +556,13 @@ class _EnterState extends State<EnterPage>
     String deviceName = "";
 
     NetworkInfo networkInfo = NetworkInfo();
-    String? ip = await networkInfo.getWifiIP() ?? "*.*.*.*";
+    String ip = "*.*.*.*";
 
+    try {
+      ip = await networkInfo.getWifiIP() ?? "*.*.*.*";
+    } catch (e) {
+      log("EnterPage: get wifi ip failure! ${e.toString()}");
+    }
     int platform = Device.PLATFORM_MACOS;
 
     if (Platform.isMacOS) {
