@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/enter/bloc/enter_bloc.dart';
+import 'package:mobile_assistant_client/enter/widget/connect_button.dart';
 import 'package:mobile_assistant_client/home/view/home_page.dart';
 import 'package:mobile_assistant_client/network/heartbeat_client.dart';
 import 'package:neat_periodic_task/neat_periodic_task.dart';
@@ -467,43 +468,8 @@ class _EnterState extends State<EnterPage>
         return Positioned(
             child: Column(
               children: [
-                GestureDetector(
-                  child: Container(
-                    child: Wrap(
-                      children: [
-                        Text(
-                          context.l10n.connect,
-                          style: TextStyle(
-                              color: _isConnectPressed
-                                  ? Colors.white
-                                  : Color(0xff949494),
-                              fontSize: 14),
-                        ),
-                        Container(
-                          child: Image.asset("assets/icons/ic_right_arrow.png",
-                              width: 15, height: 15),
-                          margin: EdgeInsets.only(left: 3),
-                        )
-                      ],
-                      direction: Axis.horizontal,
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                    ),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        border:
-                            Border.all(color: Color(0xffe5e5e5), width: 1.5),
-                        color: _isConnectPressed
-                            ? Color(0xff6989e2)
-                            : Color(0xfffefefe),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Color(0xffe5e5e5),
-                              offset: Offset(0, 0),
-                              blurRadius: 1.0)
-                        ]),
-                    padding: EdgeInsets.fromLTRB(14, 6, 10, 6),
-                  ),
+                ConnectButton(
+                    context.l10n.connect,
                   onTap: () {
                     if (devices.isEmpty) return;
 
@@ -540,23 +506,8 @@ class _EnterState extends State<EnterPage>
 
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return HomePage();
-                    }));
-                  },
-                  onTapDown: (event) {
-                    setState(() {
-                      _isConnectPressed = true;
-                    });
-                  },
-                  onTapCancel: () {
-                    setState(() {
-                      _isConnectPressed = false;
-                    });
-                  },
-                  onTapUp: (event) {
-                    setState(() {
-                      _isConnectPressed = false;
-                    });
+                          return HomePage();
+                        }));
                   },
                 ),
                 Container(
