@@ -117,9 +117,9 @@ class HomeView extends StatelessWidget {
                   Column(children: [
                     Container(
                         child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: Alignment.center,
                             child: Text(
-                                "${DeviceConnectionManager.instance.currentDevice?.name}",
+                                "",
                                 style: TextStyle(color: "#656565".toColor()))),
                         height: 40.0,
                         padding: EdgeInsets.fromLTRB(10, 0, 0, 0)),
