@@ -176,13 +176,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.8"
-  desktop_window:
-    dependency: "direct main"
-    description:
-      name: desktop_window
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.4.0"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -1057,15 +1050,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.3.8"
-  window_size:
+  window_manager:
     dependency: "direct main"
     description:
-      path: "plugins/window_size"
-      ref: HEAD
-      resolved-ref: "5c51870ced62a00e809ba4b81a846a052d241c9f"
-      url: "https://github.com/google/flutter-desktop-embedding"
-    source: git
-    version: "0.1.0"
+      name: window_manager
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.1"
   xdg_directories:
     dependency: transitive
     description:

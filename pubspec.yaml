@@ -33,11 +33,6 @@ dependencies:
   shelf: ^1.2.0
   shelf_web_socket: ^1.0.1
   device_info_plus: ^2.1.0
-  desktop_window: ^0.4.0
-  window_size:
-    git:
-      url: https://github.com/google/flutter-desktop-embedding
-      path: plugins/window_size
   connectivity_plus: ^2.0.2
   network_info_plus: ^2.0.2
   fluttertoast: ^8.0.8
@@ -68,6 +63,7 @@ dependencies:
   flutter_bloc: ^8.0.1
   equatable: ^2.0.3
   package_info_plus: ^1.4.0
+  window_manager: ^0.2.1
 
 dev_dependencies:
   flutter_test:

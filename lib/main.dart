@@ -2,29 +2,25 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_assistant_client/bootstrap.dart';
-import 'package:window_size/window_size.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'constant.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Screen? screen = await getCurrentScreen();
+  await windowManager.ensureInitialized();
 
-  if (null != screen) {
-    log("Screen frame: ${screen.frame}");
-
-    double screenWidth = screen.frame.right - screen.frame.left;
-    double screenHeight = screen.frame.bottom - screen.frame.top;
-
-    double left = (screenWidth - Constant.DEFAULT_WINDOW_WIDTH) / 2;
-    double top = (screenHeight - Constant.DEFAULT_WINDOW_HEIGHT) / 2;
-    double right = left + Constant.DEFAULT_WINDOW_WIDTH;
-    double bottom = top + Constant.DEFAULT_WINDOW_HEIGHT;
-
-    setWindowFrame(Rect.fromLTRB(left, top, right, bottom));
-  }
-  setWindowMinSize(Size(Constant.MIN_WINDOW_WIDTH, Constant.MIN_WINDOW_HEIGHT));
+  windowManager.waitUntilReadyToShow().then((_) async {
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    await windowManager.setMinimumSize(Size(Constant.MIN_WINDOW_WIDTH, Constant.MIN_WINDOW_HEIGHT));
+    await windowManager.setSize(Size(Constant.DEFAULT_WINDOW_WIDTH, Constant.DEFAULT_WINDOW_HEIGHT));
+    await windowManager.center();
+    await windowManager.setHasShadow(true);
+    await windowManager.setBrightness(Brightness.light);
+    await windowManager.show();
+    await windowManager.setSkipTaskbar(false);
+  });
 
   bootstrap();
 }
