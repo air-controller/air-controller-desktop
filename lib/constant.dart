@@ -42,6 +42,15 @@ class Constant {
   static const double DEFAULT_WINDOW_HEIGHT = 824.4;
 
   static const String DEFAULT_LANGUAGE_CODE = "en";
+
+  static const String URL_UPDATE_CHECK = "https://api.github.com/repos/air-controller/air-controller-desktop/releases/latest";
+
+  static const String CURRENT_VERSION_NAME = "0.2.1";
+
+  static const String URL_VERSION_LIST = "https://github.com/air-controller/air-controller-desktop/releases";
+
+  // The sharedPreferences key for the update download directory.
+  static const String KEY_UPDATE_DOWNLOAD_DIR = "aircontroller_update_download_directory";
 }
 
 class ImagePageRoute {

@@ -79,5 +79,11 @@
   "daily": "按天排列",
   "monthly": "按月排列",
   "sortByDate": "按时间排列",
-  "sortByDuration": "按时长排列"
+  "sortByDuration": "按时长排列",
+  "chooseDownloadDir": "选择下载目录",
+  "downloadUpdateFailure": "下载更新失败！",
+  "install": "安装",
+  "packageHasReady": "安装包已准备就绪",
+  "iKnow": "我知道了",
+  "updateDialogTitle": "发现新版本"
 }

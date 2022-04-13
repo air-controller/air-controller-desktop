@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
 
+import 'package:flowder/flowder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:mobile_assistant_client/ext/string-ext.dart';
 import 'package:mobile_assistant_client/file_home/file_home.dart';
 import 'package:mobile_assistant_client/home/bloc/home_bloc.dart';
@@ -12,12 +16,16 @@ import 'package:mobile_assistant_client/repository/audio_repository.dart';
 import 'package:mobile_assistant_client/repository/common_repository.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 import 'package:mobile_assistant_client/repository/video_repository.dart';
+import 'package:mobile_assistant_client/util/common_util.dart';
+import 'package:mobile_assistant_client/util/system_app_launcher.dart';
 import 'package:mobile_assistant_client/video_home/video_home.dart';
+import 'package:mobile_assistant_client/widget/update_check_dialog_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant.dart';
+import '../../enter/view/enter_page.dart';
 import '../../event/exit_cmd_service.dart';
 import '../../event/exit_heartbeat_service.dart';
-import '../../event/update_mobile_info.dart';
 import '../../help_and_feedback/help_and_feedback_page.dart';
 import '../../home_image/view/home_image_flow.dart';
 import '../../model/mobile_info.dart';
@@ -57,7 +65,8 @@ class HomeBlocProviderView extends StatelessWidget {
     return BlocProvider(
       create: (_) =>
           HomeBloc(commonRepository: context.read<CommonRepository>())
-            ..add(const HomeSubscriptionRequested()),
+            ..add(const HomeSubscriptionRequested())
+            ..add(HomeCheckUpdateRequested()),
       child: HomeView(),
     );
   }
@@ -73,7 +82,8 @@ class HomeView extends StatelessWidget {
   bool _isPopupIconDown = false;
   bool _isPopupIconHover = false;
 
-  StreamSubscription<UpdateMobileInfo>? _updateMobileInfoStream;
+  DownloaderCore? _downloaderCore;
+  String? _downloadUpdateDir;
 
   HomeView({Key? key}) : super(key: key);
 
@@ -84,6 +94,10 @@ class HomeView extends StatelessWidget {
         context.select((HomeBloc bloc) => bloc.state.mobileInfo);
     String? appVersion =
         context.select((HomeBloc bloc) => bloc.state.appVersion);
+    Stream<HomeLinearProgressIndicatorStatus> progressIndicatorStream =
+        context.select((HomeBloc bloc) => bloc.progressIndicatorStream);
+    Stream<UpdateDownloadStatusUnit> updateDownloadStatusStream =
+    context.select((HomeBloc bloc) => bloc.updateDownloadStatusStream);
 
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == tab.index) {
@@ -107,311 +121,595 @@ class HomeView extends StatelessWidget {
 
     Color hoverIconBgColor = Color(0xfffafafa);
 
-    return Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Container(
-              child: Stack(
-                children: [
-                  Column(children: [
-                    Container(
-                        child: Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                                "",
-                                style: TextStyle(color: "#656565".toColor()))),
-                        height: 40.0,
-                        padding: EdgeInsets.fromLTRB(10, 0, 0, 0)),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset(
-                                      "assets/icons/icon_image.png",
-                                      width: _icons_size,
-                                      height: _icons_size),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.pictures,
-                                  style: TextStyle(
-                                      color: Color(0xff636363),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.image.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.image));
+    final pageContext = context;
+
+    return MultiBlocListener(
+        listeners: [
+          BlocListener<HomeBloc, HomeState>(
+            listener: (context, state) {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    int publishTime = state.updateCheckResult.publishTime ?? 0;
+
+                    final enterContext = EnterPage.enterKey.currentContext;
+                    String languageCode = "en";
+
+                    if (null != enterContext) {
+                      languageCode = Localizations.localeOf(enterContext).languageCode;
+                    }
+
+                    String publishTimeStr = "";
+
+                    if (languageCode == "en") {
+                      publishTimeStr = CommonUtil.convertToUSTime(publishTime);
+                    } else {
+                      publishTimeStr = CommonUtil.formatTime(publishTime, "YYYY MM dd");
+                    }
+
+                    return UpdateCheckDialogUI(
+                      title: context.l10n.updateDialogTitle,
+                      version: state.updateCheckResult.version ?? "",
+                      date: publishTimeStr,
+                      updateInfo: state.updateCheckResult.updateInfo ?? "",
+                      updateButtonText: "Download update",
+                      onCloseClick: () {
+                        Navigator.of(context).pop();
                       },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset(
-                                      "assets/icons/icon_music.png",
-                                      width: _icons_size,
-                                      height: _icons_size),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.musics,
-                                  style: TextStyle(
-                                      color: "#636363".toColor(),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.music.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.music));
+                      onSeeMoreClick: () {
+                        SystemAppLauncher.openUrl(Constant.URL_VERSION_LIST);
                       },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset(
-                                      "assets/icons/icon_video.png",
-                                      width: _icons_size,
-                                      height: _icons_size),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.videos,
-                                  style: TextStyle(
-                                      color: "#636363".toColor(),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.video.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.video));
+                      onUpdateClick: () {
+                        String? name = state.updateCheckResult.name;
+                        String? url = state.updateCheckResult.url;
+
+                        if (null != name && null != url) {
+                          _tryToDownloadUpdate(pageContext, name, url);
+                        } else {
+                          log("HomePage, onUpdateClick, $name, $url");
+                        }
                       },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset(
-                                      "assets/icons/icon_download.png",
-                                      width: _icons_size - 3,
-                                      height: _icons_size - 3),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.downloads,
-                                  style: TextStyle(
-                                      color: "#636363".toColor(),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.download.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.download));
-                      },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset(
-                                      "assets/icons/icon_all_file.png",
-                                      width: _icons_size - 5,
-                                      height: _icons_size - 5),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.files,
-                                  style: TextStyle(
-                                      color: "#636363".toColor(),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.allFile.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.allFile));
-                      },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                    GestureDetector(
-                      child: Container(
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                  child: Image.asset("assets/icons/ic_help.png",
-                                      width: _icons_size - 4,
-                                      height: _icons_size - 4),
-                                  margin: EdgeInsets.fromLTRB(_icon_margin_hor,
-                                      0, _icon_margin_hor, 0)),
-                              Text(context.l10n.helpAndFeedback,
-                                  style: TextStyle(
-                                      color: "#636363".toColor(),
-                                      fontSize: _tab_font_size))
-                            ]),
-                        height: _tab_height,
-                        color: getTabBgColor(HomeTab.helpAndFeedback.index),
-                      ),
-                      onTap: () {
-                        context
-                            .read<HomeBloc>()
-                            .add(HomeTabChanged(HomeTab.helpAndFeedback));
-                      },
-                    ),
-                    Divider(height: 1, color: "#e0e0e0".toColor()),
-                  ]),
-                  Positioned(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    );
+                  },
+                  barrierDismissible: false
+              );
+            },
+            listenWhen: (previous, current) {
+              return previous.updateCheckResult != current.updateCheckResult
+                  && current.updateCheckResult.hasUpdateAvailable;
+            },
+          ),
+        ],
+        child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Container(
+                  child: Stack(
+                    children: [
+                      Column(children: [
                         Container(
-                            child: Text(
-                              appVersion == null ? "" : "v${appVersion}",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 18, color: Color(0xff666333)),
-                            ),
-                            padding: EdgeInsets.only(right: 20),
-                            width: _tab_width - 20,
-                            margin: EdgeInsets.only(bottom: 20)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                            child: Align(
+                                alignment: Alignment.center,
+                                child: Text("",
+                                    style:
+                                    TextStyle(color: "#656565".toColor()))),
+                            height: 40.0,
+                            padding: EdgeInsets.fromLTRB(10, 0, 0, 0)),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_image.png",
+                                          width: _icons_size,
+                                          height: _icons_size),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.pictures,
+                                      style: TextStyle(
+                                          color: Color(0xff636363),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.image.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.image));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_music.png",
+                                          width: _icons_size,
+                                          height: _icons_size),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.musics,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.music.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.music));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_video.png",
+                                          width: _icons_size,
+                                          height: _icons_size),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.videos,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.video.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.video));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_download.png",
+                                          width: _icons_size - 3,
+                                          height: _icons_size - 3),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.downloads,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.download.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.download));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_all_file.png",
+                                          width: _icons_size - 5,
+                                          height: _icons_size - 5),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.files,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.allFile.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.allFile));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
+                                          "assets/icons/ic_help.png",
+                                          width: _icons_size - 4,
+                                          height: _icons_size - 4),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.helpAndFeedback,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.helpAndFeedback.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.helpAndFeedback));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                      ]),
+                      Positioned(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              child: Text(
-                                "${DeviceConnectionManager.instance.currentDevice?.name}",
-                                style: TextStyle(
-                                    fontSize: 16, color: Color(0xff656568)),
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.left,
-                              ),
-                              width: 100,
-                              // color: Colors.blue,
-                            ),
-                            StatefulBuilder(builder: (context, setState) {
-                              if (_isPopupIconDown) {
-                                hoverIconBgColor = Color(0xffe4e4e4);
-                              }
-
-                              if (!_isPopupIconDown && _isPopupIconHover) {
-                                hoverIconBgColor = Color(0xffededed);
-                              }
-
-                              if (!_isPopupIconDown && !_isPopupIconHover) {
-                                hoverIconBgColor = Color(0xfffafafa);
-                              }
-
-                              return InkWell(
-                                child: Container(
-                                  child: Image.asset(
-                                      "assets/icons/ic_popup.png",
-                                      width: 13,
-                                      height: 13),
-                                  // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
-                                  // 方式进行处理
-                                  margin: EdgeInsets.only(left: 30),
-                                  decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(2)),
-                                      color: hoverIconBgColor),
-                                  padding: EdgeInsets.all(3.0),
-                                  // color: Colors.yellow,
+                                child: Text(
+                                  appVersion == null ? "" : "v${appVersion}",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 18, color: Color(0xff666333)),
                                 ),
-                                onTap: () {
-                                  _exitFileManager(context);
+                                padding: EdgeInsets.only(right: 20),
+                                width: _tab_width - 20,
+                                margin: EdgeInsets.only(bottom: 20)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  child: Text(
+                                    "${DeviceConnectionManager.instance.currentDevice?.name}",
+                                    style: TextStyle(
+                                        fontSize: 16, color: Color(0xff656568)),
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  width: 100,
+                                  // color: Colors.blue,
+                                ),
+                                StatefulBuilder(builder: (context, setState) {
+                                  if (_isPopupIconDown) {
+                                    hoverIconBgColor = Color(0xffe4e4e4);
+                                  }
 
-                                  setState(() {
-                                    _isPopupIconDown = false;
-                                  });
-                                },
-                                onTapDown: (detail) {
-                                  setState(() {
-                                    _isPopupIconDown = true;
-                                  });
-                                },
-                                onTapCancel: () {
-                                  setState(() {
-                                    _isPopupIconDown = false;
-                                  });
-                                },
-                                onHover: (isHover) {
-                                  setState(() {
-                                    _isPopupIconHover = isHover;
-                                  });
-                                },
-                                autofocus: true,
-                              );
-                            })
+                                  if (!_isPopupIconDown && _isPopupIconHover) {
+                                    hoverIconBgColor = Color(0xffededed);
+                                  }
+
+                                  if (!_isPopupIconDown && !_isPopupIconHover) {
+                                    hoverIconBgColor = Color(0xfffafafa);
+                                  }
+
+                                  return InkWell(
+                                    child: Container(
+                                      child: Image.asset(
+                                          "assets/icons/ic_popup.png",
+                                          width: 13,
+                                          height: 13),
+                                      // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
+                                      // 方式进行处理
+                                      margin: EdgeInsets.only(left: 30),
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(2)),
+                                          color: hoverIconBgColor),
+                                      padding: EdgeInsets.all(3.0),
+                                      // color: Colors.yellow,
+                                    ),
+                                    onTap: () {
+                                      _exitFileManager(context);
+
+                                      setState(() {
+                                        _isPopupIconDown = false;
+                                      });
+                                    },
+                                    onTapDown: (detail) {
+                                      setState(() {
+                                        _isPopupIconDown = true;
+                                      });
+                                    },
+                                    onTapCancel: () {
+                                      setState(() {
+                                        _isPopupIconDown = false;
+                                      });
+                                    },
+                                    onHover: (isHover) {
+                                      setState(() {
+                                        _isPopupIconHover = isHover;
+                                      });
+                                    },
+                                    autofocus: true,
+                                  );
+                                })
+                              ],
+                            ),
+                            Container(
+                              child: Text(
+                                batteryInfo,
+                                style: TextStyle(
+                                    color: Color(0xff8b8b8e), fontSize: 13),
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Text(
+                                storageInfo,
+                                style: TextStyle(
+                                    color: Color(0xff8b8b8e), fontSize: 13),
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            )
                           ],
                         ),
-                        Container(
-                          child: Text(
-                            batteryInfo,
-                            style: TextStyle(
-                                color: Color(0xff8b8b8e), fontSize: 13),
-                          ),
-                          margin: EdgeInsets.only(top: 10),
-                        ),
-                        Container(
-                          child: Text(
-                            storageInfo,
-                            style: TextStyle(
-                                color: Color(0xff8b8b8e), fontSize: 13),
-                          ),
-                          margin: EdgeInsets.only(top: 10),
-                        )
-                      ],
-                    ),
-                    bottom: 20,
-                    left: 20,
-                  )
-                ],
-              ),
-              width: _tab_width,
-              height: double.infinity,
-              color: "#fafafa".toColor()),
-          VerticalDivider(
-              width: 1.0, thickness: 1.0, color: "#e1e1d3".toColor()),
-          Expanded(
-              child: IndexedStack(
-            index: tab.index,
-            children: [
-              HomeImageFlow(),
-              MusicHomePage(),
-              VideoHomePage(),
-              FileHomePage(true),
-              FileHomePage(false),
-              HelpAndFeedbackPage()
-            ],
-          ))
-        ]);
+                        bottom: 20,
+                        left: 20,
+                      )
+                    ],
+                  ),
+                  width: _tab_width,
+                  height: double.infinity,
+                  color: "#fafafa".toColor()),
+              VerticalDivider(
+                  width: 1.0, thickness: 1.0, color: "#e1e1d3".toColor()),
+              Expanded(
+                  child: Stack(
+                    children: [
+                      IndexedStack(
+                        index: tab.index,
+                        children: [
+                          HomeImageFlow(),
+                          MusicHomePage(),
+                          VideoHomePage(),
+                          FileHomePage(true),
+                          FileHomePage(false),
+                          HelpAndFeedbackPage()
+                        ],
+                      ),
+
+                      StreamBuilder(
+                          builder: (context, snapshot) {
+                            HomeLinearProgressIndicatorStatus? status = null;
+
+                            if (snapshot.hasData) {
+                              status = snapshot.data as HomeLinearProgressIndicatorStatus;
+                            }
+
+                            return Visibility(child: Positioned(
+                              top: Constant.HOME_NAVI_BAR_HEIGHT,
+                              left: 0,
+                              right: 0,
+                              child: LinearProgressIndicator(
+                                value: status == null || status.total == 0 ? 0 : status.current / status.total,
+                                color: Color(0xff3174de),
+                                backgroundColor: Color(0xfffe3e3e3),
+                                minHeight: 2,
+                              ),
+                            ),
+                              visible: status?.visible == true,
+                            );
+                          },
+                          stream: progressIndicatorStream,
+                      ),
+
+                      StreamBuilder(
+                        stream: updateDownloadStatusStream,
+                          builder: (context, snapshot) {
+                              UpdateDownloadStatusUnit? updateDownloadStatus = null;
+
+                              if (snapshot.hasData) {
+                                updateDownloadStatus = snapshot.data as UpdateDownloadStatusUnit;
+                              }
+
+                              return Visibility(
+                                  child: Positioned(
+                                      top: Constant.HOME_NAVI_BAR_HEIGHT,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  context.l10n.packageHasReady,
+                                                  style: TextStyle(
+                                                      color: Colors.white
+                                                  ),
+                                                ),
+
+                                                Container(
+                                                  child: Text(
+                                                    "$_downloadUpdateDir",
+                                                    style: TextStyle(
+                                                        color: Colors.white
+                                                    ),
+                                                  ),
+                                                  margin: EdgeInsets.only(left: 10),
+                                                )
+                                              ],
+                                            ),
+
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  child: OutlinedButton(
+                                                    onPressed: () {
+                                                      context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+                                                          UpdateDownloadStatusUnit(status: UpdateDownloadStatus.initial)
+                                                      ));
+                                                    },
+                                                    child: Text(
+                                                      context.l10n.iKnow,
+                                                      style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14
+                                                      ),
+                                                    ),
+                                                    style: ButtonStyle(
+                                                        backgroundColor: MaterialStateColor.resolveWith((states) {
+                                                          if (states.contains(MaterialState.pressed)) {
+                                                            return Color(0xbbd5362c);
+                                                          }
+
+                                                          return Color(0xffd5362c);
+                                                        }),
+                                                        fixedSize: MaterialStateProperty.all(Size(80, 26)),
+                                                        minimumSize: MaterialStateProperty.all(Size(0, 0))
+                                                    ),
+                                                  ),
+                                                  margin: EdgeInsets.only(left: 15),
+                                                )
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                        height: 40,
+                                        color: Color(0xff3174de),
+                                        padding: EdgeInsets.only(left: 15, right: 15),
+                                      )
+                                  ),
+                                  visible: updateDownloadStatus?.status == UpdateDownloadStatus.success,
+                              );
+                          }
+                      )
+                    ],
+                  )),
+
+            ])
+    );
+  }
+
+  void _tryToDownloadUpdate(BuildContext context, String name, String url) {
+    CommonUtil.openFilePicker(context.l10n.chooseDownloadDir, (dir) async {
+      Navigator.pop(context);
+      _downloadUpdateToDir(context, name, url, dir);
+
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      pref.setString(Constant.KEY_UPDATE_DOWNLOAD_DIR, dir);
+
+      _downloadUpdateDir = dir;
+    }, (error) {
+      log("Home page, _tryToDownloadUpdate, error: $error");
+    });
+  }
+
+  void _downloadUpdateToDir(BuildContext context, String name, String url, String dir) async {
+    context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+      HomeLinearProgressIndicatorStatus(
+        visible: true
+      )
+    ));
+
+    context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+        UpdateDownloadStatusUnit(
+          status: UpdateDownloadStatus.start
+        )
+    ));
+
+    var options = DownloaderUtils(
+          progress: ProgressImplementation(),
+          file: File("$dir/$name"),
+          onDone: () {
+            context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                HomeLinearProgressIndicatorStatus(
+                    visible: false,
+                    current: 0,
+                    total: 0
+                )
+            ));
+
+            context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+                UpdateDownloadStatusUnit(
+                    status: UpdateDownloadStatus.success,
+                  name: name,
+                  path: "$dir/$name"
+                )
+            ));
+          },
+          progressCallback: (current, total) {
+            log("_downloadUpdateToDir, name: $name, current: $current, total: $total");
+            context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                HomeLinearProgressIndicatorStatus(
+                    visible: true,
+                  current: current,
+                  total: total
+                )
+            ));
+
+            context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+                UpdateDownloadStatusUnit(
+                    status: UpdateDownloadStatus.downloading,
+                )
+            ));
+          }
+    );
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(url, options);
+      } else {
+        _downloaderCore?.download(url, options);
+      }
+    } catch (e) {
+      context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+          HomeLinearProgressIndicatorStatus(
+              visible: false,
+              current: 0,
+              total: 0
+          )
+      ));
+
+      context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+          UpdateDownloadStatusUnit(
+            status: UpdateDownloadStatus.failure,
+            failureReason: "${e.toString()}"
+          )
+      ));
+
+      SmartDialog.showToast(context.l10n.downloadUpdateFailure);
+    }
   }
 
   void _exitFileManager(BuildContext context) {

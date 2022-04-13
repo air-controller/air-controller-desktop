@@ -79,5 +79,11 @@
   "daily": "Daily",
   "monthly": "Monthly",
   "sortByDate": "Sort by date",
-  "sortByDuration": "Sort by duration"
+  "sortByDuration": "Sort by duration",
+  "chooseDownloadDir": "Choose download directory",
+  "downloadUpdateFailure": "Download update failure!",
+  "install": "Install",
+  "packageHasReady": "The install package is ready.",
+  "iKnow": "Ok",
+  "updateDialogTitle": "Update ready to download"
 }

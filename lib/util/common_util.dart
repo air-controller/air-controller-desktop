@@ -1,9 +1,12 @@
 
+import 'dart:developer';
+
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/constant.dart';
 import 'package:mobile_assistant_client/l10n/l10n.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../widget/confirm_dialog_builder.dart';
 
@@ -115,5 +118,77 @@ class CommonUtil {
 
       return context.l10n.placeholderS.replaceFirst("%s", "$sec");
     }
+  }
+
+  static Future<String> currentVersion() async {
+    String appVersion = Constant.CURRENT_VERSION_NAME;
+
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      appVersion = packageInfo.version;
+    } catch (e) {
+      log("HomeBloc: get the app version failure!");
+    }
+
+    return appVersion;
+  }
+
+  // Not that common!!!
+  static String convertToUSTime(int timeInMills) {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
+
+    String mon = "Jan";
+
+    switch (dateTime.month) {
+      case DateTime.february: {
+        mon = "Feb";
+        break;
+      }
+      case DateTime.march: {
+        mon = "Mar";
+        break;
+      }
+      case DateTime.april: {
+        mon = "Apr";
+        break;
+      }
+      case DateTime.may: {
+        mon = "May";
+        break;
+      }
+      case DateTime.june: {
+        mon = "Jun";
+        break;
+      }
+      case DateTime.july: {
+        mon = "Jul";
+        break;
+      }
+      case DateTime.august: {
+        mon = "Aug";
+        break;
+      }
+      case DateTime.september: {
+        mon = "Sept";
+        break;
+      }
+      case DateTime.october: {
+        mon = "Oct";
+        break;
+      }
+      case DateTime.november: {
+        mon = "Nov";
+        break;
+      }
+      case DateTime.december: {
+        mon = "Nov";
+        break;
+      }
+      default: {
+        mon = "Jan";
+      }
+    }
+
+    return "$mon ${dateTime.day} ${dateTime.year}";
   }
 }

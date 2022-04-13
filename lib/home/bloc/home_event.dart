@@ -19,3 +19,37 @@ class HomeTabChanged extends HomeEvent {
 class HomeSubscriptionRequested extends HomeEvent {
   const HomeSubscriptionRequested();
 }
+
+class HomeCheckUpdateRequested extends HomeEvent {
+  const HomeCheckUpdateRequested();
+}
+
+class HomeNewVersionAvailable extends HomeEvent {
+  final int publishTime;
+  final String version;
+  final List<UpdateAsset> assets;
+  final String updateInfo;
+
+  const HomeNewVersionAvailable(this.publishTime, this.version, this.assets, this.updateInfo);
+
+  @override
+  List<Object?> get props => [publishTime, version, assets, updateInfo];
+}
+
+class HomeProgressIndicatorStatusChanged extends HomeEvent {
+  final HomeLinearProgressIndicatorStatus status;
+
+  const HomeProgressIndicatorStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
+
+class HomeUpdateDownloadStatusChanged extends HomeEvent {
+  final UpdateDownloadStatusUnit status;
+
+  const HomeUpdateDownloadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
