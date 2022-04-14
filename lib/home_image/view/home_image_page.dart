@@ -12,6 +12,8 @@ import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/model/arrangement_mode.dart';
 import 'package:mobile_assistant_client/widget/unified_delete_button.dart';
 
+import '../widget/arrangement_segmented_control.dart';
+
 class HomeImagePage extends StatelessWidget {
   final GlobalKey<NavigatorState> _navigatorKey;
 
@@ -94,38 +96,6 @@ class HomeImageView extends StatelessWidget {
         return Color(0xffffffff);
       } else {
         return Color(0xff5b5c62);
-      }
-    }
-
-    String _getArrangeModeIcon(ArrangementMode mode) {
-      if (mode == ArrangementMode.grid) {
-        if (mode == currentArrangement) {
-          return "assets/icons/icon_grid_selected.png";
-        } else {
-          return "assets/icons/icon_grid_normal.png";
-        }
-      }
-
-      if (mode == ArrangementMode.groupByDay) {
-        if (mode == currentArrangement) {
-          return "assets/icons/icon_weekly_selected.png";
-        } else {
-          return "assets/icons/icon_weekly_normal.png";
-        }
-      }
-
-      if (mode == currentArrangement) {
-        return "assets/icons/icon_monthly_selected.png";
-      } else {
-        return "assets/icons/icon_monthly_normal.png";
-      }
-    }
-
-    Color _getArrangeModeBgColor(ArrangementMode mode) {
-      if (currentArrangement == mode) {
-        return Color(0xffc2c2c2);
-      } else {
-        return Color(0xfff5f5f5);
       }
     }
 
@@ -239,81 +209,12 @@ class HomeImageView extends StatelessWidget {
                   child: Row(
                     children: [
                       Visibility(
-                        child: Row(
-                          children: [
-                            Tooltip(
-                              child: GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(
-                                          ArrangementMode.grid),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(4.0),
-                                        bottomLeft: Radius.circular(4.0)),
-                                    color: _getArrangeModeBgColor(
-                                        ArrangementMode.grid),
-                                  ),
-                                ),
-                                onTap: () {
-                                  _setArrangementChecked(context, currentArrangement, ArrangementMode.grid);
-                                },
-                              ),
-                              message: context.l10n.defaultType,
-                            ),
-                            Tooltip(
-                              child: GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(
-                                          ArrangementMode.groupByDay),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    color: _getArrangeModeBgColor(
-                                        ArrangementMode.groupByDay),
-                                  ),
-                                ),
-                                onTap: () {
-                                  _setArrangementChecked(context, currentArrangement, ArrangementMode.groupByDay);
-                                },
-                              ),
-                              message: context.l10n.daily,
-                            ),
-                            Tooltip(
-                              child: GestureDetector(
-                                child: Container(
-                                  child: Image.asset(
-                                      _getArrangeModeIcon(
-                                          ArrangementMode.groupByMonth),
-                                      width: 20,
-                                      height: 20),
-                                  padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Color(0xffdddedf), width: 1.0),
-                                    color: _getArrangeModeBgColor(
-                                        ArrangementMode.groupByMonth),
-                                    borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(4.0),
-                                        bottomRight: Radius.circular(4.0)),
-                                  ),
-                                ),
-                                onTap: () {
-                                  _setArrangementChecked(context, currentArrangement, ArrangementMode.groupByMonth);
-                                },
-                              ),
-                              message: context.l10n.monthly,
-                            ),
-                          ],
+                        child: ArrangementSegmentedControl(
+                          initMode: currentArrangement,
+                          onChange: (previous, current) {
+                            log("HomeImagePage, $previous : $current");
+                            context.read<HomeImageBloc>().add(HomeImageArrangementChanged(arrangement: current));
+                          },
                         ),
                         maintainSize: true,
                         maintainState: true,
@@ -365,11 +266,5 @@ class HomeImageView extends StatelessWidget {
         )
       ],
     );
-  }
-
-  void _setArrangementChecked(BuildContext context, ArrangementMode current, ArrangementMode arrangement) {
-    if (current == arrangement) return;
-
-    context.read<HomeImageBloc>().add(HomeImageArrangementChanged(arrangement: arrangement));
   }
 }
