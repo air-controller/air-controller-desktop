@@ -261,7 +261,7 @@ class VideoHomeView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      width: 160,
+                      width: 139,
                     ),
                   )
                 ],

@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_assistant_client/model/FileItem.dart';
+import 'package:mobile_assistant_client/model/display_type.dart';
 import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 
@@ -23,7 +24,7 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
         _fileRepository = fileRepository,
   isOnlyDownloadDir = isOnlyDownloadDir,
         super(FileHomeState()) {
-    on<FileHomeTabChanged>(_onTabChanged);
+    on<FileHomeDisplayTypeChanged>(_onDisplayTypeChanged);
     on<FileHomeSubscriptionRequested>(_onSubscriptionRequested);
     on<FileHomeCheckedChanged>(_onCheckedChanged);
     on<FileHomeKeyStatusChanged>(_onKeyStatusChanged);
@@ -45,8 +46,8 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeSortInfoChanged>(_onSortInfoChanged);
   }
 
-  void _onTabChanged(FileHomeTabChanged event, Emitter<FileHomeState> emit) {
-    emit(state.copyWith(tab: event.tab));
+  void _onDisplayTypeChanged(FileHomeDisplayTypeChanged event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(displayType: event.displayType));
   }
 
   void _onSubscriptionRequested(

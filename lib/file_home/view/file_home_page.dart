@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
 import 'package:mobile_assistant_client/grid_mode_files/view/grid_mode_files_page.dart';
 import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:mobile_assistant_client/list_mode_files/list_mode_files.dart';
+import 'package:mobile_assistant_client/model/display_type.dart';
 import 'package:mobile_assistant_client/repository/file_repository.dart';
 
 import '../../constant.dart';
@@ -19,6 +21,7 @@ import '../../util/system_app_launcher.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/unified_delete_button.dart';
+import '../widget/display_type_segmented_control.dart';
 
 class FileHomePage extends StatelessWidget {
   final bool isOnlyDownloadDir;
@@ -37,6 +40,7 @@ class FileHomePage extends StatelessWidget {
   }
 }
 
+// ignore: must_be_immutable
 class FileHomeView extends StatelessWidget {
   final bool isOnlyDownloadDir;
 
@@ -56,15 +60,15 @@ class FileHomeView extends StatelessWidget {
         context.select((FileHomeBloc bloc) => bloc.state.files);
     List<FileNode> checkedFiles =
         context.select((FileHomeBloc bloc) => bloc.state.checkedFiles);
-    FileHomeTab currentTab =
-        context.select((FileHomeBloc bloc) => bloc.state.tab);
+    DisplayType displayType =
+        context.select((FileHomeBloc bloc) => bloc.state.displayType);
     FileHomeStatus status =
         context.select((FileHomeBloc bloc) => bloc.state.status);
     List<FileNode> dirStack =
         context.select((FileHomeBloc bloc) => bloc.state.dirStack);
 
     Widget content = _createContent(
-        context, currentTab, files, checkedFiles, dirStack);
+        context, displayType, files, checkedFiles, dirStack);
 
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
@@ -135,11 +139,11 @@ class FileHomeView extends StatelessWidget {
             ),
             BlocListener<FileHomeBloc, FileHomeState>(
               listener: (context, state) {
-                FileHomeTab tab = context.read<FileHomeBloc>().state.tab;
+                DisplayType displayType = context.read<FileHomeBloc>().state.displayType;
                 bool isRenamingMode =
                     context.read<FileHomeBloc>().state.isRenamingMode;
 
-                if (tab == FileHomeTab.gridMode) {
+                if (displayType == DisplayType.icon) {
                   if (isRenamingMode) {
                     FileNode? file =
                         context.read<FileHomeBloc>().state.currentRenamingFile;
@@ -330,14 +334,8 @@ class FileHomeView extends StatelessWidget {
     );
   }
 
-  Widget _createContent(BuildContext context, FileHomeTab currentTab,
+  Widget _createContent(BuildContext context, DisplayType displayType,
       List<FileNode> files, List<FileNode> checkedFiles, List<FileNode> dirStack) {
-    final _icon_display_mode_size = 10.0;
-    final _segment_control_radius = 4.0;
-    final _segment_control_height = 26.0;
-    final _segment_control_width = 32.0;
-    final _segment_control_padding_hor = 8.0;
-    final _segment_control_padding_vertical = 6.0;
     final _divider_line_color = Color(0xffe0e0e0);
 
     String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${files.length}");
@@ -345,39 +343,7 @@ class FileHomeView extends StatelessWidget {
       itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${checkedFiles.length}")
           .replaceFirst("%d", "${files.length}");
     }
-
-    String getIconModeIcon() {
-      if (currentTab == FileHomeTab.gridMode) {
-        return "assets/icons/icon_image_text_selected.png";
-      }
-
-      return "assets/icons/icon_image_text_normal.png";
-    }
-
-    String getListModeIcon() {
-      if (currentTab == FileHomeTab.listMode) {
-        return "assets/icons/icon_list_selected.png";
-      }
-
-      return "assets/icons/icon_list_normal.png";
-    }
-
-    Color getModeBtnBgColor(FileHomeTab tab) {
-      if (tab == FileHomeTab.gridMode) {
-        if (currentTab == FileHomeTab.gridMode) {
-          return Color(0xffc1c1c1);
-        }
-
-        return Color(0xfff5f6f5);
-      }
-
-      if (currentTab == FileHomeTab.listMode) {
-        return Color(0xffc1c1c1);
-      }
-
-      return Color(0xfff5f6f5);
-    }
-
+    
     bool isDeleteEnabled = checkedFiles.length > 0;
 
     return Column(children: [
@@ -445,59 +411,12 @@ class FileHomeView extends StatelessWidget {
                 child: Container(
                     child: Row(
                         children: [
-                          GestureDetector(
-                            child: Container(
-                                child: Image.asset(getIconModeIcon(),
-                                    width: _icon_display_mode_size,
-                                    height: _icon_display_mode_size),
-                                decoration: BoxDecoration(
-                                    color:
-                                        getModeBtnBgColor(FileHomeTab.gridMode),
-                                    border: new Border.all(
-                                        color: Color(0xffababab), width: 1.0),
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(
-                                            _segment_control_radius),
-                                        bottomLeft: Radius.circular(
-                                            _segment_control_radius))),
-                                height: _segment_control_height,
-                                width: _segment_control_width,
-                                padding: EdgeInsets.fromLTRB(
-                                    _segment_control_padding_hor,
-                                    _segment_control_padding_vertical,
-                                    _segment_control_padding_hor,
-                                    _segment_control_padding_vertical)),
-                            onTap: () {
-                              context.read<FileHomeBloc>().add(
-                                  FileHomeTabChanged(FileHomeTab.gridMode));
-                            },
-                          ),
-                          GestureDetector(
-                            child: Container(
-                                child: Image.asset(getListModeIcon(),
-                                    width: _icon_display_mode_size,
-                                    height: _icon_display_mode_size),
-                                decoration: BoxDecoration(
-                                    color:
-                                        getModeBtnBgColor(FileHomeTab.listMode),
-                                    border: new Border.all(
-                                        color: Color(0xffdededd), width: 1.0),
-                                    borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(
-                                            _segment_control_radius),
-                                        bottomRight: Radius.circular(
-                                            _segment_control_radius))),
-                                height: _segment_control_height,
-                                width: _segment_control_width,
-                                padding: EdgeInsets.fromLTRB(
-                                    _segment_control_padding_hor,
-                                    _segment_control_padding_vertical,
-                                    _segment_control_padding_hor,
-                                    _segment_control_padding_vertical)),
-                            onTap: () {
-                              context.read<FileHomeBloc>().add(
-                                  FileHomeTabChanged(FileHomeTab.listMode));
-                            },
+                          DisplayTypeSegmentedControl(
+                            displayType: displayType,
+                            onChange: ((displayType) {
+                              log("FileHomePage, displayType: $displayType");
+                              context.read<FileHomeBloc>().add(FileHomeDisplayTypeChanged(displayType));
+                            }),
                           ),
                           UnifiedDeleteButton(
                             isEnable: isDeleteEnabled,
@@ -507,12 +426,12 @@ class FileHomeView extends StatelessWidget {
                                 _tryToDeleteFiles(context, checkedFiles);
                               }
                             },
-                            margin: EdgeInsets.fromLTRB(20, 0, 10, 0),
+                            margin: EdgeInsets.fromLTRB(10, 0, 10, 0),
                           ),
                         ],
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center),
-                    width: 135),
+                    width: 133),
                 alignment: Alignment.centerRight)
           ]),
           color: Color(0xfff4f4f4),
@@ -524,7 +443,7 @@ class FileHomeView extends StatelessWidget {
       ),
       Expanded(
           child: IndexedStack(
-        index: currentTab.index,
+        index: displayType.index,
         children: [GridModeFilesPage(), ListModeFilesPage()],
       )),
       Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),

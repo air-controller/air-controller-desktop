@@ -229,7 +229,7 @@ class MusicHomeView extends StatelessWidget {
                                               _delete_btn_padding_vertical,
                                               _delete_btn_padding_hor,
                                               _delete_btn_padding_vertical),
-                                          margin: EdgeInsets.fromLTRB(0, 0, 10, 0)),
+                                          margin: EdgeInsets.fromLTRB(0, 0, 15, 0)),
                                     ),
                                     onTap: () {
                                       if (isDeleteEnabled) {

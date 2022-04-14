@@ -1,7 +1,5 @@
 part of 'file_home_bloc.dart';
 
-enum FileHomeTab { gridMode, listMode }
-
 enum FileHomeStatus { initial, loading, success, failure }
 
 enum FileHomeKeyStatus { none, ctrlDown, shiftDown }
@@ -64,7 +62,7 @@ extension FileHomeSortColumnX on FileHomeSortColumn {
 enum FileHomeSortDirection { ascending, descending }
 
 class FileHomeState extends Equatable {
-  final FileHomeTab tab;
+  final DisplayType displayType;
   final List<FileNode> files;
   final List<FileNode> checkedFiles;
   final FileHomeStatus status;
@@ -86,7 +84,7 @@ class FileHomeState extends Equatable {
   final bool isRootDir;
 
   FileHomeState({
-    this.tab = FileHomeTab.gridMode,
+    this.displayType = DisplayType.icon,
     this.files = const [],
     this.checkedFiles = const [],
     this.status = FileHomeStatus.initial,
@@ -109,13 +107,13 @@ class FileHomeState extends Equatable {
   });
 
   @override
-  List<Object?> get props => [tab, files, checkedFiles, status,
+  List<Object?> get props => [displayType, files, checkedFiles, status,
     failureReason, dirStack, keyStatus, currentDir, openDirStatus, renameStatus,
     enterTapStatus, deleteStatus, menuStatus, copyStatus, currentRenamingFile ,isRenamingMode,
     newFileName, sortColumn, sortDirection, isRootDir];
 
   FileHomeState copyWith({
-    FileHomeTab? tab,
+    DisplayType? displayType,
     List<FileNode>? files,
     List<FileNode>? checkedFiles,
     FileHomeStatus? status,
@@ -137,7 +135,7 @@ class FileHomeState extends Equatable {
     bool? isRootDir
   }) {
     return FileHomeState(
-      tab: tab ?? this.tab,
+      displayType: displayType ?? this.displayType,
       files: files ?? this.files,
       checkedFiles: checkedFiles ?? this.checkedFiles,
       status: status ?? this.status,

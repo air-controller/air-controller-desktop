@@ -7,13 +7,13 @@ class FileHomeEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class FileHomeTabChanged extends FileHomeEvent {
-  final FileHomeTab tab;
+class FileHomeDisplayTypeChanged extends FileHomeEvent {
+  final DisplayType displayType;
 
-  const FileHomeTabChanged(this.tab);
+  const FileHomeDisplayTypeChanged(this.displayType);
 
   @override
-  List<Object?> get props => [tab];
+  List<Object?> get props => [displayType];
 }
 
 class FileHomeSubscriptionRequested extends FileHomeEvent {

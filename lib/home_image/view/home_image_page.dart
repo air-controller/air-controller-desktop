@@ -234,7 +234,7 @@ class HomeImageView extends StatelessWidget {
                       )
                     ],
                   ),
-                  width: 210,
+                  width: 180,
                 ),
               )
             ],
