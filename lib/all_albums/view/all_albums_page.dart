@@ -20,6 +20,7 @@ import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 
 import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
+import '../../enter/view/enter_page.dart';
 import '../../model/ImageItem.dart';
 import '../../network/device_connection_manager.dart';
 import '../../widget/image_flow_widget.dart';
@@ -915,7 +916,15 @@ class AllAlbumsView extends StatelessWidget {
     List<ImageItem> checkedImages = context.select((AllAlbumsBloc bloc) =>
         bloc.state.loadImagesInAlbumStatus.checkedImages);
 
+    final enterContext = EnterPage.enterKey.currentContext;
+    String languageCode = "en";
+
+    if (null != enterContext) {
+      languageCode = Localizations.localeOf(enterContext).languageCode;
+    }
+
     return ImageFlowWidget(
+      languageCode: languageCode,
       rootUrl:
           "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
       arrangeMode: arrangementMode,

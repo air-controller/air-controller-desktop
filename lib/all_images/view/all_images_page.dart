@@ -21,6 +21,7 @@ import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
 import 'package:mobile_assistant_client/widget/overlay_menu_item.dart';
 
 import '../../constant.dart';
+import '../../enter/view/enter_page.dart';
 import '../../model/arrangement_mode.dart';
 import '../../network/device_connection_manager.dart';
 import '../../widget/progress_indictor_dialog.dart';
@@ -85,6 +86,13 @@ class AllImagesView extends StatelessWidget {
     if ((currentTab == HomeImageTab.allImages && !isFromCamera)
     || currentTab == HomeImageTab.cameraImages && isFromCamera) {
       _rootFocusNode?.requestFocus();
+    }
+
+    final enterContext = EnterPage.enterKey.currentContext;
+    String languageCode = "en";
+
+    if (null != enterContext) {
+      languageCode = Localizations.localeOf(enterContext).languageCode;
     }
 
     return Scaffold(
@@ -288,6 +296,7 @@ class AllImagesView extends StatelessWidget {
                 autofocus: true,
                 focusNode: _rootFocusNode,
                 child: ImageFlowWidget(
+                  languageCode: languageCode,
                   rootUrl:
                       "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
                   arrangeMode: arrangement,

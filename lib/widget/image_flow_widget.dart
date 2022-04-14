@@ -4,6 +4,7 @@ import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:intl/intl.dart';
+import 'package:mobile_assistant_client/util/common_util.dart';
 import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
@@ -14,7 +15,9 @@ import '../model/arrangement_mode.dart';
  *
  * @author Scott Smith 2021/11/23 22:52
  */
+// ignore: must_be_immutable
 class ImageFlowWidget extends StatelessWidget {
+  final String languageCode;
   ArrangementMode arrangeMode = ArrangementMode.grid;
   List<ImageItem> images = [];
   Function(ImageItem imageItem) onImageDoubleTap;
@@ -40,7 +43,8 @@ class ImageFlowWidget extends StatelessWidget {
   Function(PointerDownEvent event, ImageItem imageItem)? onPointerDown;
 
   ImageFlowWidget(
-      {required this.arrangeMode,
+      {required this.languageCode,
+      required this.arrangeMode,
       required this.images,
       required this.checkedImages,
       required this.onImageDoubleTap,
@@ -62,17 +66,84 @@ class ImageFlowWidget extends StatelessWidget {
     return _createGridContent();
   }
 
+  String _convertToUSTimeYM(int timeInMills) {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
+
+    String mon = "Jan";
+
+    switch (dateTime.month) {
+      case DateTime.february: {
+        mon = "Feb";
+        break;
+      }
+      case DateTime.march: {
+        mon = "Mar";
+        break;
+      }
+      case DateTime.april: {
+        mon = "Apr";
+        break;
+      }
+      case DateTime.may: {
+        mon = "May";
+        break;
+      }
+      case DateTime.june: {
+        mon = "Jun";
+        break;
+      }
+      case DateTime.july: {
+        mon = "Jul";
+        break;
+      }
+      case DateTime.august: {
+        mon = "Aug";
+        break;
+      }
+      case DateTime.september: {
+        mon = "Sept";
+        break;
+      }
+      case DateTime.october: {
+        mon = "Oct";
+        break;
+      }
+      case DateTime.november: {
+        mon = "Nov";
+        break;
+      }
+      case DateTime.december: {
+        mon = "Nov";
+        break;
+      }
+      default: {
+        mon = "Jan";
+      }
+    }
+
+    return "${dateTime.year} $mon";
+  }
+
   Widget _createDailyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = context.l10n.yMdPattern;
 
+    images.sort((imageA, imageB) {
+      return imageB.createTime - imageA.createTime;
+    });
+
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
-      String createTimeStr =
-          df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      String createTimeStr = "";
+
+      if (languageCode == "en") {
+        createTimeStr = CommonUtil.convertToUSTime(createTime);
+      } else {
+        createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      }
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
@@ -85,29 +156,13 @@ class ImageFlowWidget extends StatelessWidget {
       }
     }
 
-    List<String> keys = map.keys.toList();
-    keys.sort((String a, String b) {
-      final df = DateFormat(timeFormat);
-      DateTime dateTimeA = df.parse(a);
-      DateTime dateTimeB = df.parse(b);
-
-      return dateTimeB.millisecondsSinceEpoch -
-          dateTimeA.millisecondsSinceEpoch;
-    });
-
-    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
-
-    keys.forEach((key) {
-      sortedMap[key] = map[key]!;
-    });
-
     return Container(
       color: backgroundColor,
       width: double.infinity,
       height: double.infinity,
       child: ListView.builder(
         itemBuilder: (BuildContext context, int index) {
-          final entry = sortedMap.entries.toList()[index];
+          final entry = map.entries.toList()[index];
           String dateTime = entry.key;
           List<ImageItem> images = entry.value;
 
@@ -133,7 +188,8 @@ class ImageFlowWidget extends StatelessWidget {
                             child: SimpleGestureDetector(
                               child: Container(
                                   child: CachedNetworkImage(
-                                    imageUrl: "$rootUrl/stream/image/thumbnail/${image.id}/200/200",
+                                    imageUrl:
+                                        "$rootUrl/stream/image/thumbnail/${image.id}/200/200",
                                     fit: BoxFit.cover,
                                     width: 100,
                                     height: 100,
@@ -162,7 +218,8 @@ class ImageFlowWidget extends StatelessWidget {
                                     color: _isChecked(image)
                                         ? _CHECKED_BORDER_COLOR
                                         : Colors.transparent,
-                                    width: _IMAGE_GRID_BORDER_WIDTH_CHECKED - 1.5),
+                                    width:
+                                        _IMAGE_GRID_BORDER_WIDTH_CHECKED - 1.5),
                                 borderRadius: new BorderRadius.all(
                                     Radius.circular(
                                         _IMAGE_GRID_RADIUS_CHECKED / 2))),
@@ -193,12 +250,21 @@ class ImageFlowWidget extends StatelessWidget {
 
     final timeFormat = context.l10n.yMPattern;
 
+    images.sort((imageA, imageB) {
+      return imageB.createTime - imageA.createTime;
+    });
+
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
-      String createTimeStr =
-          df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      String createTimeStr = "";
+
+      if (languageCode == "en") {
+        createTimeStr = _convertToUSTimeYM(createTime);
+      } else {
+        createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+      }
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
@@ -211,26 +277,10 @@ class ImageFlowWidget extends StatelessWidget {
       }
     }
 
-    List<String> keys = map.keys.toList();
-    keys.sort((String a, String b) {
-      final df = DateFormat(timeFormat);
-      DateTime dateTimeA = df.parse(a);
-      DateTime dateTimeB = df.parse(b);
-
-      return dateTimeB.millisecondsSinceEpoch -
-          dateTimeA.millisecondsSinceEpoch;
-    });
-
-    Map<String, List<ImageItem>> sortedMap = LinkedHashMap();
-
-    keys.forEach((key) {
-      sortedMap[key] = map[key]!;
-    });
-
     return Container(
       child: ListView.builder(
         itemBuilder: (BuildContext context, int index) {
-          final entry = sortedMap.entries.toList()[index];
+          final entry = map.entries.toList()[index];
           String dateTime = entry.key;
           List<ImageItem> images = entry.value;
 
@@ -288,7 +338,8 @@ class ImageFlowWidget extends StatelessWidget {
                                     color: _isChecked(image)
                                         ? Color(0xff5d86ec)
                                         : Colors.transparent,
-                                    width: _IMAGE_GRID_BORDER_WIDTH_CHECKED - 2.0),
+                                    width:
+                                        _IMAGE_GRID_BORDER_WIDTH_CHECKED - 2.0),
                                 borderRadius: new BorderRadius.all(
                                     Radius.circular(
                                         _IMAGE_GRID_RADIUS_CHECKED / 3))),
@@ -318,6 +369,10 @@ class ImageFlowWidget extends StatelessWidget {
   }
 
   Widget _createGridContent() {
+    images.sort((imageA, imageB) {
+      return imageB.createTime - imageA.createTime;
+    });
+
     return Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
