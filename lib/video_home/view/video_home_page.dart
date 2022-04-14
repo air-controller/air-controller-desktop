@@ -45,16 +45,16 @@ class VideoHomeView extends StatelessWidget {
     String _getSortOrderIcon(VideoOrderType orderType) {
       if (orderType == VideoOrderType.createTime) {
         if (currentOrderType == orderType) {
-          return "assets/icons/icon_grid_selected.png";
+          return "assets/icons/ic_order_create_time_selected.png";
         } else {
-          return "assets/icons/icon_grid_normal.png";
+          return "assets/icons/ic_order_create_time_normal.png";
         }
       }
 
       if (currentOrderType == orderType) {
-        return "assets/icons/icon_monthly_selected.png";
+        return "assets/icons/ic_order_duration_selected.png";
       } else {
-        return "assets/icons/icon_monthly_normal.png";
+        return "assets/icons/ic_order_duration_normal.png";
       }
     }
 
@@ -62,7 +62,7 @@ class VideoHomeView extends StatelessWidget {
       if (currentOrderType == orderType) {
         return Color(0xffc2c2c2);
       } else {
-        return Color(0xfff5f5f5);
+        return Color(0xfff7f6f6);
       }
     }
 
@@ -191,9 +191,9 @@ class VideoHomeView extends StatelessWidget {
                                       child: Container(
                                         child: Image.asset(
                                             _getSortOrderIcon(VideoOrderType.createTime),
-                                            width: 20,
-                                            height: 20),
-                                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                            width: 19,
+                                            height: 19),
+                                        padding: EdgeInsets.fromLTRB(8, 3, 8, 3),
                                         decoration: BoxDecoration(
                                           border: Border.all(
                                               color: Color(0xffdddedf), width: 1.0),
@@ -219,9 +219,9 @@ class VideoHomeView extends StatelessWidget {
                                       child: Container(
                                         child: Image.asset(
                                             _getSortOrderIcon(VideoOrderType.duration),
-                                            width: 20,
-                                            height: 20),
-                                        padding: EdgeInsets.fromLTRB(13, 3, 13, 3),
+                                            width: 19,
+                                            height: 19),
+                                        padding: EdgeInsets.fromLTRB(8, 3, 8, 3),
                                         decoration: BoxDecoration(
                                           border: Border.all(
                                               color: Color(0xffdddedf), width: 1.0),
