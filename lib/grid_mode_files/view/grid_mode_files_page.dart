@@ -164,7 +164,7 @@ class GridModeFilesView extends StatelessWidget {
                           fadeInDuration: Duration.zero,
                         ),
                         Positioned(
-                          child: Image.asset("icons/ic_video_indictor.png",
+                          child: Image.asset("assets/icons/ic_video_indictor.png",
                               width: 20, height: 20),
                           left: 15,
                           bottom: 8,
