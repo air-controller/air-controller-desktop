@@ -52,7 +52,15 @@ class ImageFlowWidget extends StatelessWidget {
       required this.onOutsideTap,
       this.onPointerDown,
       required this.rootUrl,
-      this.backgroundColor = Colors.white});
+      this.backgroundColor = Colors.white}) {
+    List<ImageItem> sortedImages = List.from(images);
+
+    sortedImages.sort((imageA, imageB) {
+      return imageB.createTime - imageA.createTime;
+    });
+
+    images = sortedImages;
+  }
 
   Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
     if (arrangeMode == ArrangementMode.groupByDay) {
@@ -128,10 +136,6 @@ class ImageFlowWidget extends StatelessWidget {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = context.l10n.yMdPattern;
-
-    images.sort((imageA, imageB) {
-      return imageB.createTime - imageA.createTime;
-    });
 
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
@@ -249,10 +253,6 @@ class ImageFlowWidget extends StatelessWidget {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = context.l10n.yMPattern;
-
-    images.sort((imageA, imageB) {
-      return imageB.createTime - imageA.createTime;
-    });
 
     for (ImageItem imageItem in images) {
       int createTime = imageItem.createTime;
