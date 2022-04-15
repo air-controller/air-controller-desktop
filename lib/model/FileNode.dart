@@ -1,6 +1,4 @@
-
-
-import 'package:mobile_assistant_client/model/FileItem.dart';
+import 'FileItem.dart';
 
 class FileNode extends Comparable<FileNode> {
   FileNode? parent;

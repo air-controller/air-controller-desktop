@@ -1,13 +1,13 @@
 
 import 'dart:developer';
 
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_assistant_client/constant.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../constant.dart';
 import '../widget/confirm_dialog_builder.dart';
 
 class CommonUtil {

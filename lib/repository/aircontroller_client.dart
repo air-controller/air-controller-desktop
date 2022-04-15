@@ -5,17 +5,17 @@ import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile_assistant_client/constant.dart';
-import 'package:mobile_assistant_client/enter/enter.dart';
-import 'package:mobile_assistant_client/model/AlbumItem.dart';
-import 'package:mobile_assistant_client/model/video_folder_item.dart';
-import 'package:mobile_assistant_client/model/video_item.dart';
 
+import '../constant.dart';
+import '../enter/view/enter_page.dart';
+import '../model/AlbumItem.dart';
 import '../model/AudioItem.dart';
 import '../model/FileItem.dart';
 import '../model/ImageItem.dart';
 import '../model/ResponseEntity.dart';
 import '../model/mobile_info.dart';
+import '../model/video_folder_item.dart';
+import '../model/video_item.dart';
 
 class BusinessError implements Exception {
   final String? message;

@@ -1,6 +1,7 @@
 
 import 'package:equatable/equatable.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
+
+import '../../model/ImageItem.dart';
 
 enum Source { allImages, cameraImages, albums }
 

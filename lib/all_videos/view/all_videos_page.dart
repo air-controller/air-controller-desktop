@@ -1,28 +1,28 @@
 
 import 'dart:io';
 
+import 'package:air_controller/ext/pointer_down_event_x.dart';
+import 'package:air_controller/ext/string-ext.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:mobile_assistant_client/all_videos/bloc/all_videos_bloc.dart';
-import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
-import 'package:mobile_assistant_client/ext/string-ext.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/video_item.dart';
-import 'package:mobile_assistant_client/model/video_order_type.dart';
-import 'package:mobile_assistant_client/repository/file_repository.dart';
-import 'package:mobile_assistant_client/repository/video_repository.dart';
-import 'package:mobile_assistant_client/util/system_app_launcher.dart';
-import 'package:mobile_assistant_client/video_home/bloc/video_home_bloc.dart';
-import 'package:mobile_assistant_client/widget/video_flow_widget.dart';
 
 import '../../constant.dart';
+import '../../model/video_item.dart';
+import '../../model/video_order_type.dart';
 import '../../network/device_connection_manager.dart';
+import '../../repository/file_repository.dart';
+import '../../repository/video_repository.dart';
 import '../../util/common_util.dart';
+import '../../util/system_app_launcher.dart';
+import '../../video_home/bloc/video_home_bloc.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
+import '../../widget/video_flow_widget.dart';
+import '../bloc/all_videos_bloc.dart';
 
 class AllVideosPage extends StatelessWidget {
   @override

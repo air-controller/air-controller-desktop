@@ -4,8 +4,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
-import 'package:mobile_assistant_client/constant.dart';
-import 'package:mobile_assistant_client/model/cmd.dart';
+
+import '../constant.dart';
+import '../model/cmd.dart';
 
 class CmdClient {
   Socket? _socket;

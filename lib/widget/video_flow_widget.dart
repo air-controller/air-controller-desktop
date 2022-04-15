@@ -1,14 +1,12 @@
 
+import 'package:air_controller/widget/simple_gesture_detector.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/model/video_item.dart';
-import 'package:mobile_assistant_client/model/video_order_type.dart';
-import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../constant.dart';
+import '../model/video_item.dart';
+import '../model/video_order_type.dart';
 
 class VideoFlowWidget extends StatelessWidget {
   final _OUT_PADDING = 20.0;

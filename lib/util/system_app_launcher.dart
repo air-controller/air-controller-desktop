@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:mobile_assistant_client/model/AudioItem.dart';
-import 'package:mobile_assistant_client/model/FileItem.dart';
-import 'package:mobile_assistant_client/model/video_item.dart';
-import 'package:mobile_assistant_client/network/device_connection_manager.dart';
-import 'package:mobile_assistant_client/util/file_util.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constant.dart';
+import '../model/AudioItem.dart';
+import '../model/FileItem.dart';
+import '../model/video_item.dart';
+import '../network/device_connection_manager.dart';
 
 class SystemAppLauncher {
   static void openVideo(VideoItem videoItem) async {

@@ -4,9 +4,10 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:mobile_assistant_client/model/heartbeat.dart';
-import 'package:mobile_assistant_client/util/count_down_timer.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+
+import '../model/heartbeat.dart';
+import '../util/count_down_timer.dart';
 
 abstract class HeartbeatClient {
   void connectToServer();

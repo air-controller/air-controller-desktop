@@ -1,32 +1,31 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:air_controller/ext/pointer_down_event_x.dart';
+import 'package:air_controller/ext/string-ext.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:mobile_assistant_client/all_images/all_images.dart';
-import 'package:mobile_assistant_client/all_images/model/all_image_copy_status.dart';
-import 'package:mobile_assistant_client/all_images/model/image_detail_arguments.dart';
-import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
-import 'package:mobile_assistant_client/ext/string-ext.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
-import 'package:mobile_assistant_client/repository/image_repository.dart';
-import 'package:mobile_assistant_client/util/common_util.dart';
-import 'package:mobile_assistant_client/widget/image_flow_widget.dart';
-import 'package:mobile_assistant_client/widget/overlay_menu_item.dart';
 
 import '../../constant.dart';
 import '../../enter/view/enter_page.dart';
+import '../../home_image/bloc/home_image_bloc.dart';
+import '../../model/ImageItem.dart';
 import '../../model/arrangement_mode.dart';
 import '../../network/device_connection_manager.dart';
+import '../../repository/image_repository.dart';
+import '../../util/common_util.dart';
+import '../../widget/image_flow_widget.dart';
+import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
+import '../bloc/all_images_bloc.dart';
+import '../model/all_image_copy_status.dart';
 import '../model/all_image_delete_status.dart';
 import '../model/all_image_menu_arguments.dart';
+import '../model/image_detail_arguments.dart';
 
 class AllImagesPage extends StatelessWidget {
   final bool isFromCamera;

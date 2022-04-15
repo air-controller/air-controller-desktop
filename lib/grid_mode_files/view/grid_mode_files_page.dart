@@ -1,17 +1,17 @@
+import 'package:air_controller/ext/pointer_down_event_x.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
-import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/util/system_app_launcher.dart';
-import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 
 import '../../constant.dart';
 import '../../constant_pool.dart';
+import '../../file_home/bloc/file_home_bloc.dart';
 import '../../model/FileNode.dart';
 import '../../network/device_connection_manager.dart';
 import '../../util/file_util.dart';
+import '../../util/system_app_launcher.dart';
+import '../../widget/simple_gesture_detector.dart';
 
 class GridModeFilesPage extends StatelessWidget {
   @override

@@ -1,15 +1,15 @@
 
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
-import 'package:mobile_assistant_client/all_videos/view/all_videos_page.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/video_order_type.dart';
-import 'package:mobile_assistant_client/video_folders/view/video_folders_page.dart';
-import 'package:mobile_assistant_client/video_home/bloc/video_home_bloc.dart';
 
+import '../../all_videos/view/all_videos_page.dart';
 import '../../constant.dart';
+import '../../model/video_order_type.dart';
+import '../../video_folders/view/video_folders_page.dart';
 import '../../widget/unified_delete_button.dart';
+import '../bloc/video_home_bloc.dart';
 
 class VideoHomePage extends StatelessWidget {
 

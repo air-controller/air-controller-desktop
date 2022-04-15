@@ -1,17 +1,17 @@
 import 'dart:developer';
 
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
-import 'package:mobile_assistant_client/all_albums/view/all_albums_page.dart';
-import 'package:mobile_assistant_client/all_images/all_images.dart';
-import 'package:mobile_assistant_client/constant.dart';
-import 'package:mobile_assistant_client/home_image/bloc/home_image_bloc.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/arrangement_mode.dart';
-import 'package:mobile_assistant_client/widget/unified_delete_button.dart';
 
+import '../../all_albums/view/all_albums_page.dart';
+import '../../all_images/view/all_images_page.dart';
+import '../../constant.dart';
+import '../../model/arrangement_mode.dart';
+import '../../widget/unified_delete_button.dart';
+import '../bloc/home_image_bloc.dart';
 import '../widget/arrangement_segmented_control.dart';
 
 class HomeImagePage extends StatelessWidget {

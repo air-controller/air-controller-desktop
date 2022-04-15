@@ -1,9 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/bootstrap.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'bootstrap.dart';
 import 'constant.dart';
 
 void main() async {

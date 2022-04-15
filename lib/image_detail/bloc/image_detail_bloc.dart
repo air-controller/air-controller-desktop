@@ -1,12 +1,12 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/image_detail/model/delete_images_result.dart';
-import 'package:mobile_assistant_client/image_detail/model/image_detail_copy_status.dart';
-import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
-import 'package:mobile_assistant_client/repository/image_repository.dart';
 
 import '../../model/ImageItem.dart';
+import '../../repository/aircontroller_client.dart';
+import '../../repository/image_repository.dart';
+import '../model/delete_images_result.dart';
+import '../model/image_detail_copy_status.dart';
 
 part 'image_detail_event.dart';
 part 'image_detail_state.dart';

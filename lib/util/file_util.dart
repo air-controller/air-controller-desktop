@@ -1,5 +1,4 @@
-
-import 'package:mobile_assistant_client/model/FileItem.dart';
+import '../model/FileItem.dart';
 
 class FileUtil {
 

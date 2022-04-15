@@ -4,11 +4,11 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/repository/common_repository.dart';
-import 'package:mobile_assistant_client/util/common_util.dart';
-import 'package:mobile_assistant_client/util/update_checker.dart';
 
 import '../../model/mobile_info.dart';
+import '../../repository/common_repository.dart';
+import '../../util/common_util.dart';
+import '../../util/update_checker.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';

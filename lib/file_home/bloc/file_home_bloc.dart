@@ -4,12 +4,12 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/model/FileItem.dart';
-import 'package:mobile_assistant_client/model/display_type.dart';
-import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
-import 'package:mobile_assistant_client/repository/file_repository.dart';
 
+import '../../model/FileItem.dart';
 import '../../model/FileNode.dart';
+import '../../model/display_type.dart';
+import '../../repository/aircontroller_client.dart';
+import '../../repository/file_repository.dart';
 
 part 'file_home_event.dart';
 part 'file_home_state.dart';

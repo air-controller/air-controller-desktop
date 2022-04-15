@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/all_images/model/image_detail_arguments.dart';
-import 'package:mobile_assistant_client/home_image/view/home_image_page.dart';
 
+import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
 import '../../image_detail/view/image_detail_page.dart';
+import 'home_image_page.dart';
 
 class HomeImageFlow extends StatefulWidget {
 

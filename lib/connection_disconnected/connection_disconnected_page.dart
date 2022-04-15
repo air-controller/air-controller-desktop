@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/constant.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
+
+import '../constant.dart';
 
 class ConnectionDisconnectedPage extends StatefulWidget {
 

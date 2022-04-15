@@ -1,27 +1,27 @@
 import 'dart:developer';
 
+import 'package:air_controller/ext/pointer_down_event_x.dart';
+import 'package:air_controller/ext/string-ext.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:mobile_assistant_client/all_images/all_images.dart';
-import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
-import 'package:mobile_assistant_client/ext/string-ext.dart';
-import 'package:mobile_assistant_client/image_detail/bloc/image_detail_bloc.dart';
-import 'package:mobile_assistant_client/image_detail/model/delete_images_result.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
-import 'package:mobile_assistant_client/repository/image_repository.dart';
-import 'package:mobile_assistant_client/util/common_util.dart';
 
 import '../../all_albums/bloc/all_albums_bloc.dart';
+import '../../all_images/bloc/all_images_bloc.dart';
 import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
+import '../../model/ImageItem.dart';
 import '../../network/device_connection_manager.dart';
+import '../../repository/image_repository.dart';
+import '../../util/common_util.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/upward_triangle.dart';
+import '../bloc/image_detail_bloc.dart';
+import '../model/delete_images_result.dart';
 import '../model/image_detail_copy_status.dart';
 
 class ImageDetailPage extends StatelessWidget {

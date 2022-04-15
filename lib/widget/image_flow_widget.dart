@@ -1,14 +1,14 @@
+import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/widget/simple_gesture_detector.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:intl/intl.dart';
-import 'package:mobile_assistant_client/util/common_util.dart';
-import 'package:mobile_assistant_client/widget/simple_gesture_detector.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import '../model/ImageItem.dart';
 import '../model/arrangement_mode.dart';
+import '../util/common_util.dart';
 
 /**
  * 图片瀑布流，用于首页不同类型排列图片列表展示.

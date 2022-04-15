@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:mobile_assistant_client/util/count_down_timer.dart';
+
+import '../util/count_down_timer.dart';
 
 // ignore: must_be_immutable
 class SimpleGestureDetector extends StatelessWidget {

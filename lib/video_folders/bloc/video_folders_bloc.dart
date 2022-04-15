@@ -1,13 +1,13 @@
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/model/video_folder_item.dart';
-import 'package:mobile_assistant_client/model/video_item.dart';
-import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
-import 'package:mobile_assistant_client/repository/file_repository.dart';
-import 'package:mobile_assistant_client/repository/video_repository.dart';
+
+import '../../model/video_folder_item.dart';
+import '../../model/video_item.dart';
+import '../../repository/aircontroller_client.dart';
+import '../../repository/file_repository.dart';
+import '../../repository/video_repository.dart';
 
 part 'video_folders_event.dart';
 

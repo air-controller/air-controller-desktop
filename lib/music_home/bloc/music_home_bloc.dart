@@ -4,10 +4,11 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/model/AudioItem.dart';
-import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
-import 'package:mobile_assistant_client/repository/audio_repository.dart';
-import 'package:mobile_assistant_client/repository/file_repository.dart';
+
+import '../../model/AudioItem.dart';
+import '../../repository/aircontroller_client.dart';
+import '../../repository/audio_repository.dart';
+import '../../repository/file_repository.dart';
 
 part 'music_home_event.dart';
 part 'music_home_state.dart';

@@ -1,26 +1,26 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:air_controller/ext/string-ext.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:mobile_assistant_client/ext/string-ext.dart';
-import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
-import 'package:mobile_assistant_client/grid_mode_files/view/grid_mode_files_page.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/list_mode_files/list_mode_files.dart';
-import 'package:mobile_assistant_client/model/display_type.dart';
-import 'package:mobile_assistant_client/repository/file_repository.dart';
 
 import '../../constant.dart';
+import '../../grid_mode_files/view/grid_mode_files_page.dart';
+import '../../list_mode_files/view/list_mode_files_page.dart';
 import '../../model/FileNode.dart';
+import '../../model/display_type.dart';
+import '../../repository/file_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/system_app_launcher.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/unified_delete_button.dart';
+import '../bloc/file_home_bloc.dart';
 import '../widget/display_type_segmented_control.dart';
 
 class FileHomePage extends StatelessWidget {

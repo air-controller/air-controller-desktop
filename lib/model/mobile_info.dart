@@ -1,5 +1,6 @@
 
-import 'package:mobile_assistant_client/model/storage_size.dart';
+
+import 'package:air_controller/model/storage_size.dart';
 
 class MobileInfo {
   int batteryLevel;

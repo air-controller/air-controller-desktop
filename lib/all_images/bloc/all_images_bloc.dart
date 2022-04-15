@@ -2,10 +2,10 @@ import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/model/ImageItem.dart';
-import 'package:mobile_assistant_client/repository/image_repository.dart';
 
+import '../../model/ImageItem.dart';
 import '../../repository/aircontroller_client.dart';
+import '../../repository/image_repository.dart';
 import '../model/all_image_copy_status.dart';
 import '../model/all_image_menu_arguments.dart';
 import '../model/all_image_delete_status.dart';

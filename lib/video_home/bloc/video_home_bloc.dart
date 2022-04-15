@@ -1,7 +1,8 @@
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/model/video_order_type.dart';
+
+import '../../model/video_order_type.dart';
 
 part 'video_home_event.dart';
 part 'video_home_state.dart';

@@ -1,6 +1,6 @@
 
-import 'package:mobile_assistant_client/repository/aircontroller_client.dart';
 import '../model/AudioItem.dart';
+import 'aircontroller_client.dart';
 
 class AudioRepository {
   final AirControllerClient client;

@@ -1,14 +1,14 @@
 
+import 'package:air_controller/ext/pointer_down_event_x.dart';
+import 'package:air_controller/l10n/l10n.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_assistant_client/ext/pointer_down_event_x.dart';
-import 'package:mobile_assistant_client/file_home/bloc/file_home_bloc.dart';
-import 'package:mobile_assistant_client/l10n/l10n.dart';
-import 'package:mobile_assistant_client/util/common_util.dart';
 
+import '../../file_home/bloc/file_home_bloc.dart';
 import '../../model/FileItem.dart';
 import '../../model/FileNode.dart';
+import '../../util/common_util.dart';
 import '../../util/system_app_launcher.dart';
 
 class ListModeFilesPage extends StatelessWidget {

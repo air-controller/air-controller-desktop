@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_assistant_client/model/display_type.dart';
+
+import '../../model/display_type.dart';
 
 // ignore: must_be_immutable
 class DisplayTypeSegmentedControl extends StatelessWidget {
