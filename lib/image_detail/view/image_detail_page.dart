@@ -13,7 +13,7 @@ import '../../all_albums/bloc/all_albums_bloc.dart';
 import '../../all_images/bloc/all_images_bloc.dart';
 import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
-import '../../model/ImageItem.dart';
+import '../../model/image_item.dart';
 import '../../network/device_connection_manager.dart';
 import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';

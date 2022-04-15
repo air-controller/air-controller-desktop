@@ -1,7 +1,6 @@
-
 import 'package:equatable/equatable.dart';
 
-import '../../model/ImageItem.dart';
+import '../../model/image_item.dart';
 
 enum DeleteImagesStatus { initial, loading, success, failure }
 

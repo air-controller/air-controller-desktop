@@ -5,7 +5,7 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../model/AudioItem.dart';
+import '../../model/audio_item.dart';
 import '../../repository/aircontroller_client.dart';
 import '../../repository/audio_repository.dart';
 import '../../repository/file_repository.dart';

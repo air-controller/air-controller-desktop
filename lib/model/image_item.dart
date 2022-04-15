@@ -1,5 +1,3 @@
-
-
 class ImageItem {
   String id;
   String mimeType;

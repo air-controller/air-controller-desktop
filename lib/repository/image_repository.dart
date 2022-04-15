@@ -1,6 +1,6 @@
-import '../model/AlbumItem.dart';
-import '../model/ImageItem.dart';
-import '../model/ResponseEntity.dart';
+import '../model/album_item.dart';
+import '../model/image_item.dart';
+import '../model/response_entity.dart';
 import 'aircontroller_client.dart';
 
 class ImageRepository {

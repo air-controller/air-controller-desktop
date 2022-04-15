@@ -1,4 +1,4 @@
-import 'FileItem.dart';
+import 'file_item.dart';
 
 class FileNode extends Comparable<FileNode> {
   FileNode? parent;

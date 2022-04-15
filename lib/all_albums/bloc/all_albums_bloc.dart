@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../model/AlbumItem.dart';
-import '../../model/ImageItem.dart';
+import '../../model/album_item.dart';
+import '../../model/image_item.dart';
 import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/image_repository.dart';

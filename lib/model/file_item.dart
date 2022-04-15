@@ -1,5 +1,3 @@
-
-
 class FileItem {
   String name;
   String folder;

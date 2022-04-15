@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 
-import '../../model/FileNode.dart';
+import '../../model/file_node.dart';
 
 class GridModeFilesMenuStatus extends Equatable {
   final bool isOpened;

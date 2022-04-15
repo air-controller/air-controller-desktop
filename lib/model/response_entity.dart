@@ -1,5 +1,3 @@
-
-
 class ResponseEntity<T> {
   int code = -1;
   String? msg;

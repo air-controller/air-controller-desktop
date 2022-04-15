@@ -6,8 +6,8 @@ import 'dart:collection';
 import 'package:intl/intl.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
-import '../model/ImageItem.dart';
 import '../model/arrangement_mode.dart';
+import '../model/image_item.dart';
 import '../util/common_util.dart';
 
 /**

@@ -1,4 +1,4 @@
-import '../model/FileItem.dart';
+import '../model/file_item.dart';
 
 class FileUtil {
 

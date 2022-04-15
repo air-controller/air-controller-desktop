@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../constant.dart';
 import '../../constant_pool.dart';
 import '../../file_home/bloc/file_home_bloc.dart';
-import '../../model/FileNode.dart';
+import '../../model/file_node.dart';
 import '../../network/device_connection_manager.dart';
 import '../../util/file_util.dart';
 import '../../util/system_app_launcher.dart';

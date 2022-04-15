@@ -13,7 +13,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../constant.dart';
-import '../../model/AudioItem.dart';
+import '../../model/audio_item.dart';
 import '../../repository/audio_repository.dart';
 import '../../repository/file_repository.dart';
 import '../../util/common_util.dart';

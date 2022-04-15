@@ -1,5 +1,5 @@
-import '../model/FileItem.dart';
-import '../model/ResponseEntity.dart';
+import '../model/file_item.dart';
+import '../model/response_entity.dart';
 import 'aircontroller_client.dart';
 
 class FileRepository {

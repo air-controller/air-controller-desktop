@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constant.dart';
-import '../model/AudioItem.dart';
-import '../model/FileItem.dart';
+import '../model/audio_item.dart';
+import '../model/file_item.dart';
 import '../model/video_item.dart';
 import '../network/device_connection_manager.dart';
 

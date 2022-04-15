@@ -1,7 +1,7 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../model/ImageItem.dart';
+import '../../model/image_item.dart';
 
 enum Source { allImages, cameraImages, albums }
 

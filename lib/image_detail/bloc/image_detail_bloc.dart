@@ -2,7 +2,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../model/ImageItem.dart';
+import '../../model/image_item.dart';
 import '../../repository/aircontroller_client.dart';
 import '../../repository/image_repository.dart';
 import '../model/delete_images_result.dart';

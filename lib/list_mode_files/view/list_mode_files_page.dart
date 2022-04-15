@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../file_home/bloc/file_home_bloc.dart';
-import '../../model/FileItem.dart';
-import '../../model/FileNode.dart';
+import '../../model/file_item.dart';
+import '../../model/file_node.dart';
 import '../../util/common_util.dart';
 import '../../util/system_app_launcher.dart';
 

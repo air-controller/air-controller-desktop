@@ -8,12 +8,12 @@ import 'package:intl/intl.dart';
 
 import '../constant.dart';
 import '../enter/view/enter_page.dart';
-import '../model/AlbumItem.dart';
-import '../model/AudioItem.dart';
-import '../model/FileItem.dart';
-import '../model/ImageItem.dart';
-import '../model/ResponseEntity.dart';
+import '../model/album_item.dart';
+import '../model/audio_item.dart';
+import '../model/file_item.dart';
+import '../model/image_item.dart';
 import '../model/mobile_info.dart';
+import '../model/response_entity.dart';
 import '../model/video_folder_item.dart';
 import '../model/video_item.dart';
 

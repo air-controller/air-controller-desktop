@@ -5,9 +5,9 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../model/FileItem.dart';
-import '../../model/FileNode.dart';
 import '../../model/display_type.dart';
+import '../../model/file_item.dart';
+import '../../model/file_node.dart';
 import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
 

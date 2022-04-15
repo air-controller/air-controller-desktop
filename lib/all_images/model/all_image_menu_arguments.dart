@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 
-import '../../model/ImageItem.dart';
+import '../../model/image_item.dart';
 
 class AllImageMenuArguments extends Equatable {
   final Offset position;

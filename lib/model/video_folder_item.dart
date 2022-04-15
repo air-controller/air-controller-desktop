@@ -1,5 +1,3 @@
-
-
 class VideoFolderItem {
   String id;
   String name;

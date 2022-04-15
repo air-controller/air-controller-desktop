@@ -1,4 +1,3 @@
-import '../model/ResponseEntity.dart';
 import '../model/mobile_info.dart';
 import 'aircontroller_client.dart';
 

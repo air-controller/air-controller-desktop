@@ -1,4 +1,4 @@
-import 'FileItem.dart';
+import 'file_item.dart';
 
 /**
  * 用于完成特定UI需求，例如缩进等
