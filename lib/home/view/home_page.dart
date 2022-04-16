@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:air_controller/event/update_mobile_info.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:flowder/flowder.dart';
@@ -91,12 +92,17 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
-    MobileInfo? mobileInfo =
-        context.select((HomeBloc bloc) => bloc.state.mobileInfo);
     Stream<HomeLinearProgressIndicatorStatus> progressIndicatorStream =
         context.select((HomeBloc bloc) => bloc.progressIndicatorStream);
     Stream<UpdateDownloadStatusUnit> updateDownloadStatusStream =
-    context.select((HomeBloc bloc) => bloc.updateDownloadStatusStream);
+        context.select((HomeBloc bloc) => bloc.updateDownloadStatusStream);
+    Stream<MobileInfo> updateMobileInfoStream =
+      context.select((HomeBloc bloc) => bloc.updateMobileInfoStream);
+
+    eventBus.on<UpdateMobileInfo>().listen((event) {
+      log("HomePage, eventBus#UpdateMobileInfo, batteryLevel: ${event.mobileInfo.batteryLevel}");
+      context.read<HomeBloc>().add(HomeUpdateMobileInfo(event.mobileInfo));
+    });
 
     Color getTabBgColor(int currentIndex) {
       if (currentIndex == tab.index) {
@@ -104,18 +110,6 @@ class HomeView extends StatelessWidget {
       } else {
         return Color(0xfffafafa);
       }
-    }
-
-    String batteryInfo = "";
-    if (null != mobileInfo) {
-      batteryInfo = "${context.l10n.batteryLabel}${mobileInfo.batteryLevel}%";
-    }
-
-    String storageInfo = "";
-    if (null != mobileInfo) {
-      storageInfo =
-          "${context.l10n.storageLabel}${(mobileInfo.storageSize.availableSize ~/ (1024 * 1024 * 1024)).toStringAsFixed(1)}/" +
-              "${mobileInfo.storageSize.totalSize ~/ (1024 * 1024 * 1024)}GB";
     }
 
     Color hoverIconBgColor = Color(0xfffafafa);
@@ -404,97 +398,120 @@ class HomeView extends StatelessWidget {
                         Divider(height: 1, color: "#e0e0e0".toColor()),
                       ]),
                       Positioned(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                        child: StreamBuilder(
+                          stream: updateMobileInfoStream,
+                          builder: (context, snapshot) {
+                            MobileInfo? mobileInfo;
+
+                            if (snapshot.hasData) {
+                              mobileInfo = snapshot.data as MobileInfo;
+                            }
+
+                            String batteryInfo = "";
+                            if (null != mobileInfo) {
+                              batteryInfo = "${context.l10n.batteryLabel}${mobileInfo.batteryLevel}%";
+                            }
+
+                            String storageInfo = "";
+                            if (null != mobileInfo) {
+                              storageInfo =
+                                  "${context.l10n.storageLabel}${(mobileInfo.storageSize.availableSize ~/ (1024 * 1024 * 1024)).toStringAsFixed(1)}/" +
+                                      "${mobileInfo.storageSize.totalSize ~/ (1024 * 1024 * 1024)}GB";
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      child: Text(
+                                        "${DeviceConnectionManager.instance.currentDevice?.name}",
+                                        style: TextStyle(
+                                            fontSize: 16, color: Color(0xff656568)),
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.left,
+                                      ),
+                                      width: 100,
+                                      // color: Colors.blue,
+                                    ),
+                                    StatefulBuilder(builder: (context, setState) {
+                                      if (_isPopupIconDown) {
+                                        hoverIconBgColor = Color(0xffe4e4e4);
+                                      }
+
+                                      if (!_isPopupIconDown && _isPopupIconHover) {
+                                        hoverIconBgColor = Color(0xffededed);
+                                      }
+
+                                      if (!_isPopupIconDown && !_isPopupIconHover) {
+                                        hoverIconBgColor = Color(0xfffafafa);
+                                      }
+
+                                      return InkWell(
+                                        child: Container(
+                                          child: Image.asset(
+                                              "assets/icons/ic_popup.png",
+                                              width: 13,
+                                              height: 13),
+                                          // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
+                                          // 方式进行处理
+                                          margin: EdgeInsets.only(left: 30),
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(2)),
+                                              color: hoverIconBgColor),
+                                          padding: EdgeInsets.all(3.0),
+                                          // color: Colors.yellow,
+                                        ),
+                                        onTap: () {
+                                          _exitFileManager(context);
+
+                                          setState(() {
+                                            _isPopupIconDown = false;
+                                          });
+                                        },
+                                        onTapDown: (detail) {
+                                          setState(() {
+                                            _isPopupIconDown = true;
+                                          });
+                                        },
+                                        onTapCancel: () {
+                                          setState(() {
+                                            _isPopupIconDown = false;
+                                          });
+                                        },
+                                        onHover: (isHover) {
+                                          setState(() {
+                                            _isPopupIconHover = isHover;
+                                          });
+                                        },
+                                        autofocus: true,
+                                      );
+                                    })
+                                  ],
+                                ),
                                 Container(
                                   child: Text(
-                                    "${DeviceConnectionManager.instance.currentDevice?.name}",
+                                    batteryInfo,
                                     style: TextStyle(
-                                        fontSize: 16, color: Color(0xff656568)),
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.left,
+                                        color: Color(0xff8b8b8e), fontSize: 13),
                                   ),
-                                  width: 100,
-                                  // color: Colors.blue,
+                                  margin: EdgeInsets.only(top: 10),
                                 ),
-                                StatefulBuilder(builder: (context, setState) {
-                                  if (_isPopupIconDown) {
-                                    hoverIconBgColor = Color(0xffe4e4e4);
-                                  }
-
-                                  if (!_isPopupIconDown && _isPopupIconHover) {
-                                    hoverIconBgColor = Color(0xffededed);
-                                  }
-
-                                  if (!_isPopupIconDown && !_isPopupIconHover) {
-                                    hoverIconBgColor = Color(0xfffafafa);
-                                  }
-
-                                  return InkWell(
-                                    child: Container(
-                                      child: Image.asset(
-                                          "assets/icons/ic_popup.png",
-                                          width: 13,
-                                          height: 13),
-                                      // 注意：这里尚未找到方案，让该控件靠右排列，暂时使用margin
-                                      // 方式进行处理
-                                      margin: EdgeInsets.only(left: 30),
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(2)),
-                                          color: hoverIconBgColor),
-                                      padding: EdgeInsets.all(3.0),
-                                      // color: Colors.yellow,
-                                    ),
-                                    onTap: () {
-                                      _exitFileManager(context);
-
-                                      setState(() {
-                                        _isPopupIconDown = false;
-                                      });
-                                    },
-                                    onTapDown: (detail) {
-                                      setState(() {
-                                        _isPopupIconDown = true;
-                                      });
-                                    },
-                                    onTapCancel: () {
-                                      setState(() {
-                                        _isPopupIconDown = false;
-                                      });
-                                    },
-                                    onHover: (isHover) {
-                                      setState(() {
-                                        _isPopupIconHover = isHover;
-                                      });
-                                    },
-                                    autofocus: true,
-                                  );
-                                })
+                                Container(
+                                  child: Text(
+                                    storageInfo,
+                                    style: TextStyle(
+                                        color: Color(0xff8b8b8e), fontSize: 13),
+                                  ),
+                                  margin: EdgeInsets.only(top: 10),
+                                )
                               ],
-                            ),
-                            Container(
-                              child: Text(
-                                batteryInfo,
-                                style: TextStyle(
-                                    color: Color(0xff8b8b8e), fontSize: 13),
-                              ),
-                              margin: EdgeInsets.only(top: 10),
-                            ),
-                            Container(
-                              child: Text(
-                                storageInfo,
-                                style: TextStyle(
-                                    color: Color(0xff8b8b8e), fontSize: 13),
-                              ),
-                              margin: EdgeInsets.only(top: 10),
-                            )
-                          ],
+                            );
+                          },
                         ),
                         bottom: 20,
                         left: 20,

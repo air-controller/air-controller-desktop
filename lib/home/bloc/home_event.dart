@@ -69,3 +69,12 @@ class HomeCheckUpdateStatusChanged extends HomeEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class HomeUpdateMobileInfo extends HomeEvent {
+  final MobileInfo mobileInfo;
+
+  const HomeUpdateMobileInfo(this.mobileInfo);
+
+  @override
+  List<Object?> get props => [mobileInfo];
+}

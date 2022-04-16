@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/mobile_info.dart';
 import '../../repository/common_repository.dart';
-import '../../util/common_util.dart';
 import '../../util/update_checker.dart';
 
 part 'home_event.dart';
@@ -50,9 +49,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final UpdateChecker _updateChecker = UpdateChecker.create();
   final StreamController<HomeLinearProgressIndicatorStatus> _progressIndicatorStreamController = StreamController();
   final StreamController<UpdateDownloadStatusUnit> _updateDownloadStatusController = StreamController();
+  final StreamController<MobileInfo> _updateMobileInfoStreamController = StreamController();
 
   Stream<HomeLinearProgressIndicatorStatus> get progressIndicatorStream => _progressIndicatorStreamController.stream;
   Stream<UpdateDownloadStatusUnit> get updateDownloadStatusStream => _updateDownloadStatusController.stream;
+  Stream<MobileInfo> get updateMobileInfoStream => _updateMobileInfoStreamController.stream;
 
   HomeBloc({required CommonRepository commonRepository})
       : _commonRepository = commonRepository,
@@ -64,6 +65,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeProgressIndicatorStatusChanged>(_onProgressIndicatorStatusChanged);
     on<HomeUpdateDownloadStatusChanged>(_onUpdateDownloadStatusChanged);
     on<HomeCheckUpdateStatusChanged>(_onUpdateCheckStatusChanged);
+    on<HomeUpdateMobileInfo>(_onUpdateMobileInfo);
   }
 
   void _onHomeTabChanged(HomeTabChanged event, Emitter<HomeState> emit) {
@@ -74,7 +76,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       HomeSubscriptionRequested event, Emitter<HomeState> emit) async {
     MobileInfo mobileInfo = await _commonRepository.getMobileInfo();
 
-    emit(state.copyWith(mobileInfo: mobileInfo));
+    _updateMobileInfoStreamController.add(mobileInfo);
   }
 
   void _onCheckUpdateRequested(
@@ -183,6 +185,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(
       updateCheckStatus: event.status
     ));
+  }
+
+  void _onUpdateMobileInfo(
+      HomeUpdateMobileInfo event,
+      Emitter<HomeState> emit) {
+    _updateMobileInfoStreamController.add(event.mobileInfo);
   }
 
   @override

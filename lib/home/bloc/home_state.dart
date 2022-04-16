@@ -45,27 +45,23 @@ class UpdateCheckStatusUnit extends Equatable {
 
 class HomeState extends Equatable {
   final HomeTab tab;
-  final MobileInfo? mobileInfo;
   final UpdateCheckStatusUnit updateCheckStatus;
 
   const HomeState({
     this.tab = HomeTab.image,
-    this.mobileInfo = null,
     this.updateCheckStatus = const UpdateCheckStatusUnit()
   });
 
   @override
-  List<Object?> get props => [tab, mobileInfo, updateCheckStatus];
+  List<Object?> get props => [tab, updateCheckStatus];
 
   HomeState copyWith({
     HomeTab? tab,
-    MobileInfo? mobileInfo,
     UpdateDownloadStatusUnit? updateDownloadStatus,
     UpdateCheckStatusUnit? updateCheckStatus
   }) {
     return HomeState(
       tab: tab ?? this.tab,
-      mobileInfo: mobileInfo ?? this.mobileInfo,
       updateCheckStatus: updateCheckStatus ?? this.updateCheckStatus
     );
   }
