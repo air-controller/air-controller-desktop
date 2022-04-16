@@ -45,7 +45,7 @@ class Constant {
 
   static const String URL_UPDATE_CHECK = "https://api.github.com/repos/air-controller/air-controller-desktop/releases/latest";
 
-  static const String CURRENT_VERSION_NAME = "0.2.1";
+  static const String CURRENT_VERSION_NAME = "0.2.2";
 
   static const String URL_VERSION_LIST = "https://github.com/air-controller/air-controller-desktop/releases";
 
