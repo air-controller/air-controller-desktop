@@ -72,6 +72,7 @@ class HomeBlocProviderView extends StatelessWidget {
   }
 }
 
+// ignore: must_be_immutable
 class HomeView extends StatelessWidget {
   final _icons_size = 30.0;
   final _tab_height = 50.0;
@@ -92,8 +93,6 @@ class HomeView extends StatelessWidget {
     HomeTab tab = context.select((HomeBloc bloc) => bloc.state.tab);
     MobileInfo? mobileInfo =
         context.select((HomeBloc bloc) => bloc.state.mobileInfo);
-    String? appVersion =
-        context.select((HomeBloc bloc) => bloc.state.appVersion);
     Stream<HomeLinearProgressIndicatorStatus> progressIndicatorStream =
         context.select((HomeBloc bloc) => bloc.progressIndicatorStream);
     Stream<UpdateDownloadStatusUnit> updateDownloadStatusStream =
@@ -127,56 +126,82 @@ class HomeView extends StatelessWidget {
         listeners: [
           BlocListener<HomeBloc, HomeState>(
             listener: (context, state) {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    int publishTime = state.updateCheckResult.publishTime ?? 0;
+              UpdateCheckStatusUnit updateCheckStatus = state.updateCheckStatus;
 
-                    final enterContext = EnterPage.enterKey.currentContext;
-                    String languageCode = "en";
+              if (updateCheckStatus.status == UpdateCheckStatus.success) {
+                if (!updateCheckStatus.isAutoCheck) {
+                  SmartDialog.dismiss();
+                }
 
-                    if (null != enterContext) {
-                      languageCode = Localizations.localeOf(enterContext).languageCode;
-                    }
+                if (updateCheckStatus.hasUpdateAvailable) {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
 
-                    String publishTimeStr = "";
+                        int publishTime = state.updateCheckStatus.publishTime ?? 0;
 
-                    if (languageCode == "en") {
-                      publishTimeStr = CommonUtil.convertToUSTime(publishTime);
-                    } else {
-                      publishTimeStr = CommonUtil.formatTime(publishTime, "YYYY MM dd");
-                    }
+                        final enterContext = EnterPage.enterKey.currentContext;
+                        String languageCode = "en";
 
-                    return UpdateCheckDialogUI(
-                      title: context.l10n.updateDialogTitle,
-                      version: state.updateCheckResult.version ?? "",
-                      date: publishTimeStr,
-                      updateInfo: state.updateCheckResult.updateInfo ?? "",
-                      updateButtonText: "Download update",
-                      onCloseClick: () {
-                        Navigator.of(context).pop();
-                      },
-                      onSeeMoreClick: () {
-                        SystemAppLauncher.openUrl(Constant.URL_VERSION_LIST);
-                      },
-                      onUpdateClick: () {
-                        String? name = state.updateCheckResult.name;
-                        String? url = state.updateCheckResult.url;
-
-                        if (null != name && null != url) {
-                          _tryToDownloadUpdate(pageContext, name, url);
-                        } else {
-                          log("HomePage, onUpdateClick, $name, $url");
+                        if (null != enterContext) {
+                          languageCode = Localizations.localeOf(enterContext).languageCode;
                         }
+
+                        String publishTimeStr = "";
+
+                        if (languageCode == "en") {
+                          publishTimeStr = CommonUtil.convertToUSTime(publishTime);
+                        } else {
+                          publishTimeStr = CommonUtil.formatTime(publishTime, "YYYY MM dd");
+                        }
+
+                        return UpdateCheckDialogUI(
+                          title: context.l10n.updateDialogTitle,
+                          version: state.updateCheckStatus.version ?? "",
+                          date: publishTimeStr,
+                          updateInfo: state.updateCheckStatus.updateInfo ?? "",
+                          updateButtonText: "Download update",
+                          onCloseClick: () {
+                            Navigator.of(context).pop();
+                          },
+                          onSeeMoreClick: () {
+                            SystemAppLauncher.openUrl(Constant.URL_VERSION_LIST);
+                          },
+                          onUpdateClick: () {
+                            String? name = state.updateCheckStatus.name;
+                            String? url = state.updateCheckStatus.url;
+
+                            if (null != name && null != url) {
+                              _tryToDownloadUpdate(pageContext, name, url);
+                            } else {
+                              log("HomePage, onUpdateClick, $name, $url");
+                            }
+                          },
+                        );
                       },
-                    );
-                  },
-                  barrierDismissible: false
-              );
+                      barrierDismissible: false
+                  );
+                } else {
+                  if (!updateCheckStatus.isAutoCheck) {
+                    SmartDialog.showToast(context.l10n.noUpdatesAvailable);
+                  }
+                }
+              }
+
+              if (updateCheckStatus.status == UpdateCheckStatus.start
+                  && !updateCheckStatus.isAutoCheck) {
+                SmartDialog.showLoading();
+              }
+
+              if (updateCheckStatus.status == UpdateCheckStatus.failure
+                  && !updateCheckStatus.isAutoCheck) {
+                SmartDialog.dismiss();
+
+                SmartDialog.showToast(updateCheckStatus.failureReason ?? context.l10n.failedToCheckForUpdates);
+              }
             },
             listenWhen: (previous, current) {
-              return previous.updateCheckResult != current.updateCheckResult
-                  && current.updateCheckResult.hasUpdateAvailable;
+              return previous.updateCheckStatus != current.updateCheckStatus;
             },
           ),
         ],
@@ -382,16 +407,6 @@ class HomeView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                                child: Text(
-                                  appVersion == null ? "" : "v${appVersion}",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 18, color: Color(0xff666333)),
-                                ),
-                                padding: EdgeInsets.only(right: 20),
-                                width: _tab_width - 20,
-                                margin: EdgeInsets.only(bottom: 20)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,

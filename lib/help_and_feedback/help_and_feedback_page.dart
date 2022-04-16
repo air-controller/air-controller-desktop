@@ -1,12 +1,15 @@
 import 'dart:developer';
 
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/util/common_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../constant.dart';
 import '../enter/view/enter_page.dart';
+import '../home/bloc/home_bloc.dart';
 import '../util/system_app_launcher.dart';
 
 class HelpAndFeedbackPage extends StatefulWidget {
@@ -22,6 +25,8 @@ class HelpAndFeedbackPage extends StatefulWidget {
 
 class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   String? _mdContent;
+  String? _currentVersion;
+  bool _isCheckUpdateHover = false;
 
   @override
   void initState() {
@@ -53,6 +58,12 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
 
   @override
   Widget build(BuildContext context) {
+    CommonUtil.currentVersion().then((value) {
+      setState(() {
+        _currentVersion = value;
+      });
+    });
+
     return Column(
       children: [
         Container(
@@ -77,6 +88,52 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
               },
             ),
           ),
+        ),
+
+        Container(
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                    context.l10n.placeholderCurrentVersion.replaceFirst("%s", _currentVersion ?? ""),
+                  style: TextStyle(
+                    color: Color(0xff333333),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+
+                Container(
+                  child: InkWell(
+                    child: Text(
+                      context.l10n.checkUpdate,
+                      style: TextStyle(
+                          decoration: _isCheckUpdateHover
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                          color: Color(0xff2a6ad3),
+                          fontSize: 14
+                      ),
+                    ),
+                    onHover: (isHover) {
+                      setState(() {
+                        _isCheckUpdateHover = isHover;
+                      });
+                    },
+                    onTap: () {
+                      // eventBus.fire(CheckForUpdatesEvent(false));
+                      context.read<HomeBloc>().add(HomeCheckUpdateRequested(isAutoCheck: false));
+                    },
+                  ),
+                  margin: EdgeInsets.only(left: 10),
+                )
+
+              ],
+            ),
+          ),
+          padding: EdgeInsets.only(bottom: 20, top: 10),
+          color: Colors.white,
         )
       ],
     );

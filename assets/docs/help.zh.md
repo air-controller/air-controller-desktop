@@ -25,7 +25,8 @@
 
 BTW：如果你还没有一个Github账号，点击star需要先完成注册。
 
-# 检查更新
-点击右上角菜单关于，可以知道当前应用版本，如需更新新版本，需要手动前往[Github](https://github.com/air-controller/air-controller-desktop/releases)下载并安装。
+# 更新日志
+你可以点击下方链接查看最新版本更新记录：
 
 [点击前往](https://github.com/air-controller/air-controller-desktop/releases)
+

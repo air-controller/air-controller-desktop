@@ -63,6 +63,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeNewVersionAvailable>(_onNewVersionAvailable);
     on<HomeProgressIndicatorStatusChanged>(_onProgressIndicatorStatusChanged);
     on<HomeUpdateDownloadStatusChanged>(_onUpdateDownloadStatusChanged);
+    on<HomeCheckUpdateStatusChanged>(_onUpdateCheckStatusChanged);
   }
 
   void _onHomeTabChanged(HomeTabChanged event, Emitter<HomeState> emit) {
@@ -73,26 +74,47 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       HomeSubscriptionRequested event, Emitter<HomeState> emit) async {
     MobileInfo mobileInfo = await _commonRepository.getMobileInfo();
 
-    String appVersion = await CommonUtil.currentVersion();
-    emit(state.copyWith(mobileInfo: mobileInfo, version: appVersion));
+    emit(state.copyWith(mobileInfo: mobileInfo));
   }
 
   void _onCheckUpdateRequested(
       HomeCheckUpdateRequested event,
       Emitter<HomeState> emit) async {
+    add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
+        status: UpdateCheckStatus.start,
+      isAutoCheck: event.isAutoCheck
+    )));
+
     _updateChecker.onCheckFailure((error) {
+      if (isClosed) return;
+
       log("HomeBloc, _onCheckUpdateRequested, onCheckFailure: $error");
+
+      add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
+        status: UpdateCheckStatus.failure,
+        isAutoCheck: event.isAutoCheck,
+        failureReason: "${error.toString()}"
+      )));
     });
 
     _updateChecker.onNoUpdateAvailable(() {
+      if (isClosed) return;
+
       log("HomeBloc, _onCheckUpdateRequested, onNoUpdateAvailable");
+
+      add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
+          status: UpdateCheckStatus.success,
+          isAutoCheck: event.isAutoCheck,
+          hasUpdateAvailable: false
+      )));
     });
 
     _updateChecker.onUpdateAvailable((publishTime, version, assets, updateInfo) {
+      if (isClosed) return;
+
       log("HomeBloc, _onCheckUpdateRequested, onUpdateAvailable, version: $version, assets size: ${assets.length}, updateInfo: $updateInfo");
 
-
-      add(HomeNewVersionAvailable(publishTime, version, assets, updateInfo));
+      add(HomeNewVersionAvailable(publishTime, version, assets, updateInfo, event.isAutoCheck));
     });
 
     _updateChecker.check();
@@ -126,7 +148,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
 
     emit(
-      state.copyWith(updateCheckStatus: UpdateCheckResult(
+      state.copyWith(updateCheckStatus: UpdateCheckStatusUnit(
+        status: UpdateCheckStatus.success,
+        isAutoCheck: event.isAutoCheck,
         hasUpdateAvailable: true,
         publishTime: event.publishTime,
         version: event.version,
@@ -151,6 +175,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (_updateDownloadStatusController.isClosed) return;
 
     _updateDownloadStatusController.add(event.status);
+  }
+
+  void _onUpdateCheckStatusChanged(
+      HomeCheckUpdateStatusChanged event,
+      Emitter<HomeState> emit) async {
+    emit(state.copyWith(
+      updateCheckStatus: event.status
+    ));
   }
 
   @override

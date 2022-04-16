@@ -13,7 +13,12 @@ extension HomeTabX  on HomeTab {
   }
 }
 
-class UpdateCheckResult extends Equatable {
+enum UpdateCheckStatus { initial, start, failure, success }
+
+class UpdateCheckStatusUnit extends Equatable {
+  final UpdateCheckStatus status;
+  final bool isAutoCheck;
+  final String? failureReason;
   final bool hasUpdateAvailable;
   final String? version;
   final int? publishTime;
@@ -21,47 +26,47 @@ class UpdateCheckResult extends Equatable {
   final String? url;
   final String? name;
 
-  const UpdateCheckResult({
+  const UpdateCheckStatusUnit({
+     this.status = UpdateCheckStatus.initial,
+    this.isAutoCheck = true,
+    this.failureReason,
     this.hasUpdateAvailable = false,
     this.version = null,
     this.publishTime = null,
     this.updateInfo = null,
     this.url = null,
-    this.name = null
+    this.name = null,
   });
 
   @override
-  List<Object?> get props => [hasUpdateAvailable, version, publishTime, updateInfo, url, name];
+  List<Object?> get props => [status, isAutoCheck, failureReason, hasUpdateAvailable,
+    version, publishTime, updateInfo, url, name];
 }
 
 class HomeState extends Equatable {
   final HomeTab tab;
   final MobileInfo? mobileInfo;
-  final String? appVersion;
-  final UpdateCheckResult updateCheckResult;
+  final UpdateCheckStatusUnit updateCheckStatus;
 
   const HomeState({
     this.tab = HomeTab.image,
     this.mobileInfo = null,
-    this.appVersion,
-    this.updateCheckResult = const UpdateCheckResult()
+    this.updateCheckStatus = const UpdateCheckStatusUnit()
   });
 
   @override
-  List<Object?> get props => [tab, mobileInfo, appVersion, updateCheckResult];
+  List<Object?> get props => [tab, mobileInfo, updateCheckStatus];
 
   HomeState copyWith({
     HomeTab? tab,
     MobileInfo? mobileInfo,
-    String? version,
-    UpdateCheckResult? updateCheckStatus,
-    UpdateDownloadStatusUnit? updateDownloadStatus
+    UpdateDownloadStatusUnit? updateDownloadStatus,
+    UpdateCheckStatusUnit? updateCheckStatus
   }) {
     return HomeState(
       tab: tab ?? this.tab,
       mobileInfo: mobileInfo ?? this.mobileInfo,
-      appVersion: version ?? this.appVersion,
-      updateCheckResult: updateCheckStatus ?? this.updateCheckResult,
+      updateCheckStatus: updateCheckStatus ?? this.updateCheckStatus
     );
   }
 }

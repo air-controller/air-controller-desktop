@@ -85,5 +85,9 @@
   "install": "Install",
   "packageHasReady": "The install package is ready.",
   "iKnow": "Ok",
-  "updateDialogTitle": "Update ready to download"
+  "updateDialogTitle": "Update ready to download",
+  "placeholderCurrentVersion": "Current version: %s",
+  "checkUpdate": "Check for updates",
+  "failedToCheckForUpdates": "Failed to check for updates!",
+  "noUpdatesAvailable": "No updates available."
 }

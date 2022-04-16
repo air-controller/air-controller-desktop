@@ -17,7 +17,7 @@ So if you need to copy multiple files, instead use [FileTransfer](https://www.an
 # Feedback
 If you got any questions when using, please feedback to us by clicking the link below:
 
-[Click Here](https://github.com/air-controller/air-controller-desktop/issues)
+[Click here](https://github.com/air-controller/air-controller-desktop/issues)
 
 # Support Developers
 This is an open source software, and you can free to use it.
@@ -34,3 +34,8 @@ Click the about button, you can see the current app version.
 If you want to update to the latest version, click the link below to find the latest version, download and install it.
 
 [Click Here](https://github.com/air-controller/air-controller-desktop/releases)
+
+# Update log
+You can click the link below to see all update logs:
+
+[Click here](https://github.com/air-controller/air-controller-desktop/releases)
