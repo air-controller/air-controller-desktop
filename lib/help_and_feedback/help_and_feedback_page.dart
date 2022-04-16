@@ -31,7 +31,17 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   @override
   void initState() {
     super.initState();
+
+    _updateVersionInfo();
     _loadHelpMdText();
+  }
+
+  void _updateVersionInfo() {
+    CommonUtil.currentVersion().then((value) {
+      setState(() {
+        _currentVersion = value;
+      });
+    });
   }
 
   void _loadHelpMdText() {
@@ -58,11 +68,7 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
 
   @override
   Widget build(BuildContext context) {
-    CommonUtil.currentVersion().then((value) {
-      setState(() {
-        _currentVersion = value;
-      });
-    });
+
 
     return Column(
       children: [

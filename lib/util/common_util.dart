@@ -127,7 +127,7 @@ class CommonUtil {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       appVersion = packageInfo.version;
     } catch (e) {
-      log("HomeBloc: get the app version failure!");
+      log("CommonUtil: get the app version failure! error: ${e.toString()}");
     }
 
     return appVersion;
