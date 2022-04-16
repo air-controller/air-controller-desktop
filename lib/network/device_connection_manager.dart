@@ -1,7 +1,8 @@
-import '../model/Device.dart';
+import '../model/device.dart';
 
 abstract class DeviceConnectionManager {
-  static final DeviceConnectionManager _instance = DeviceConnectionManagerImpl();
+  static final DeviceConnectionManager _instance =
+      DeviceConnectionManagerImpl();
 
   static DeviceConnectionManager get instance {
     return _instance;

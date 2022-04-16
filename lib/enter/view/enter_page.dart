@@ -18,7 +18,7 @@ import '../../event/exit_heartbeat_service.dart';
 import '../../event/update_mobile_info.dart';
 import '../../connection_disconnected/connection_disconnected_page.dart';
 import '../../home/view/home_page.dart';
-import '../../model/Device.dart';
+import '../../model/device.dart';
 import '../../model/cmd.dart';
 import '../../model/mobile_info.dart';
 import '../../network/cmd_client.dart';
@@ -470,7 +470,7 @@ class _EnterState extends State<EnterPage>
             child: Column(
               children: [
                 ConnectButton(
-                    context.l10n.connect,
+                  context.l10n.connect,
                   onTap: () {
                     if (devices.isEmpty) return;
 
@@ -507,8 +507,8 @@ class _EnterState extends State<EnterPage>
 
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                          return HomePage();
-                        }));
+                      return HomePage();
+                    }));
                   },
                 ),
                 Container(

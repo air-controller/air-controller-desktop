@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
-import '../model/Device.dart';
+import '../model/device.dart';
 import 'package:web_socket_channel/io.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -88,9 +88,13 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
       ip = await networkInfo.getWifiIP();
     }
 
-    String data = "${Constant.CMD_SEARCH_RES_PREFIX}${Constant.RADNOM_STR_RES_SEARCH}#${Constant.PLATFORM_MACOS}#$deviceName#$ip";
-    
-    this.udpSocket?.send(utf8.encode(data), InternetAddress(address, type: InternetAddressType.IPv4), Constant.PORT_SEARCH);
+    String data =
+        "${Constant.CMD_SEARCH_RES_PREFIX}${Constant.RADNOM_STR_RES_SEARCH}#${Constant.PLATFORM_MACOS}#$deviceName#$ip";
+
+    this.udpSocket?.send(
+        utf8.encode(data),
+        InternetAddress(address, type: InternetAddressType.IPv4),
+        Constant.PORT_SEARCH);
   }
 
   bool _isValidData(String data) {
