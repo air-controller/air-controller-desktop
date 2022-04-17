@@ -86,8 +86,8 @@ flutter config --enable-<platform>-desktop
 [![Support Me](https://raw.githubusercontent.com/yuanhoujun/material/main/Sponsor/aifadian.png)](https://afdian.net/@ouyangfeng2016)
 
 # 联系开发者
-[QQ群](https://im.qq.com/index): 329673958
+QQ群: 329673958
 
-[小飞机](https://t.me/aircontroller2022)
+小飞机: [https://t.me/aircontroller2022](https://t.me/aircontroller2022)
 
-[邮箱](mailto:ouyangfeng2016@gmail.com): ouyangfeng2016@gmail.com
+邮箱: [ouyangfeng2016@gmail.com]([](mailto:ouyangfeng2016@gmail.com))
