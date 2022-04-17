@@ -94,9 +94,9 @@ If you are a UI designer, and you can provide me with a better design resource, 
 [![Support Me](https://raw.githubusercontent.com/yuanhoujun/material/main/Sponsor/aifadian.png)](https://afdian.net/@ouyangfeng2016)
 
 # Stay In Touch
-[QQ Group](https://im.qq.com/index): 329673958
+QQ Group: [329673958](https://im.qq.com/index)
 
-[Telegram Channel](https://t.me/aircontroller2022)
+Telegram Channel: [Telegram Channel](https://t.me/aircontroller2022)
 
-[Email](mailto:ouyangfeng2016@gmail.com): ouyangfeng2016@gmail.com
+Email: [ouyangfeng2016@gmail.com](mailto:ouyangfeng2016@gmail.com)
 
