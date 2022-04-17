@@ -8,7 +8,7 @@ Inspired by HandShaker, this is absolutely a handy and powerful tool and deserve
 
 # Product Screenshot
 
-![Desktop app screenshot](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/desktop_image_list_page.en.png)
+![Desktop app screenshot](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/demo.gif)
 
 
 # How to use
