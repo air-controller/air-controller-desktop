@@ -96,7 +96,7 @@ If you are a UI designer, and you can provide me with a better design resource, 
 # Stay In Touch
 QQ Group: [329673958](https://im.qq.com/index)
 
-Telegram Channel: [Telegram Channel](https://t.me/aircontroller2022)
+Telegram Channel: [AirController](https://t.me/aircontroller2022)
 
 Email: [ouyangfeng2016@gmail.com](mailto:ouyangfeng2016@gmail.com)
 

@@ -88,6 +88,6 @@ flutter config --enable-<platform>-desktop
 # 联系开发者
 QQ群: 329673958
 
-小飞机: [https://t.me/aircontroller2022](https://t.me/aircontroller2022)
+小飞机: [AirController](https://t.me/aircontroller2022)
 
 邮箱: [ouyangfeng2016@gmail.com](mailto:ouyangfeng2016@gmail.com)
