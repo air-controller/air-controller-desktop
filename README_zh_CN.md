@@ -1,33 +1,23 @@
 # AirController
-AirController是一个通过无线网络连接对安卓设备文件进行远程管理的桌面应用，其受启发于[HandShaker](https://www.smartisan.com/apps/#/handshaker).
-由于罗老师的锤子科技出现了问题，该产品已经在18年停止开发。因此，我在使用的时候发生了经常无故退出奔溃的问题。
-这么好的产品放弃维护实在是一个遗憾，尤其是在Mac平台上，对Android设备支持有限的情况下。因此，我决定仿制一个出来，满足自己的需求，这就是该产品设计的初衷。
+AirController是一个开源版本的[HandShaker](https://www.smartisan.com/apps/#/handshaker)，如果你使用过HandShaker，
+应该对AirController不会感到陌生！
 
-# 产品截图
-![手机端准备就绪状态](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/mobile_ready_status.jpeg)
-
-![桌面端准备就绪状态](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/desktop_search_page.png)
-
-![手机端已连接状态](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/mobile_connect_status.jpeg)
-
-![桌面端图片列表页](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/desktop_image_list_page.png)
-
-![桌面端视频列表页](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/desktop_video_list_page.png)
+![Preview](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/demo.gif)
 
 # 使用步骤
-> 如果你已经使用过HandShaker，以下内容可跳过，其使用方式与HandShaker几乎完全一致。
+由于AirController是通过无线网络连接并管理你的手机，所以，你需要先在手机端安装AirController应用。
 
 1）在手机端下载并安装AirController应用
 
-打开以下链接，选择最新版本apk文件下载安装即可。
+打开以下链接，选择apk文件下载安装即可。
 
-[https://github.com/air-controller/air-controller-mobile/releases](https://github.com/air-controller/air-controller-mobile/releases)
+[https://github.com/air-controller/air-controller-mobile/releases](https://github.com/air-controller/air-controller-mobile/releases/latest)
 
 2）下载最新版本的AirController桌面应用并安装
 
-打开以下链接，下载对应操作系统最新版本应用安装即可。
+打开以下链接，下载对应操作系统的应用安装即可。
 
-[https://github.com/air-controller/air-controller-desktop/releases](https://github.com/air-controller/air-controller-desktop/releases)
+[https://github.com/air-controller/air-controller-desktop/releases](https://github.com/air-controller/air-controller-desktop/releases/latest)
 
 * Windows用户请下载exe格式文件
 * Linux用户请下载AppImage格式文件
@@ -36,12 +26,12 @@ AirController是一个通过无线网络连接对安卓设备文件进行远程�
 3）安装成功后，在桌面端打开AirController应用
 
 * Windows与MacOS平台用户直接双击安装后运行即可
-* Linux用户可先尝试双击运行AppImage格式文件，如果提示无法运行，请先执行命令`chmod +x AirController...AppImage`再尝试双击运行
+* Linux用户可先尝试双击运行AppImage格式文件，如果提示无法运行，请先执行命令`chmod +x AirController...AppImage`再尝试运行
 
 4）将手机与电脑连接至同一网络，并在手机端打开AirController应用。
 如果你使用台式机，请确保台式机与手机连接到了同一路由器，或者手机与电脑处于同一网段。
 
-以上操作如果全部正确的话，你将看到类似上面应用截图中的画面。在雷达扫描的区域会出现一个闪动的手机图标，点击上方连接即可连接。
+以上操作如果全部正确的话，你将看到类似上面应用截图中的画面。在雷达扫描的区域会出现一个闪动的手机图标，点击上方连接按钮即可完成连接。
 接下来你就可以使用你的电脑管理手机中的文件了，Enjoying!
 
 # 编译运行
@@ -49,7 +39,7 @@ AirController是一个通过无线网络连接对安卓设备文件进行远程�
 
 * 你已经安装了最新版本Flutter SDK
 * 你已经安装了最新版本Dart SDK
-* 使用`flutter doctor`命令检查正常
+* 使用`flutter doctor`命令提示无异常
 
 2）配置好开发环境之后，你需要安装[Android Studio](https://developer.android.com/studio)，并在Android Studio中安装Flutter插件。
 
@@ -79,12 +69,6 @@ flutter config --enable-<platform>-desktop
 
 **注意：编译到不同平台需要到指定平台电脑上进行**
 
-# 捐赠
-该应用完全开源，并承诺永久免费。如果你觉得该应用对你应用，请提供支持，你的支持对我非常重要。目前，最简单的支持就是点亮项目上方star。
-
-除此之外，由于该应用目前是由我一个人开发完成，我并不会UI设计，如果你是一个UI设计者，有更好的UI设计建议，请联系我提供UI设计图。
-或者帮助设计一个更好的图标，也不胜感激。
-
 # 问题反馈
 如果你在使用过程中，遇到了任何问题，可点击以下链接，提交问题详情，我会第一时间关注并尝试修复。
 
@@ -93,9 +77,17 @@ flutter config --enable-<platform>-desktop
 # 功能建议
 如果你期望应用提供一些你想要的功能，也可以使用上述连接，通过提交issue的方式给我反馈。
 
-# 联系开发者
-邮箱: `ouyangfeng2016@gmail.com` OR `626306805@qq.com`
+# 支持
+该应用完全开源，并承诺永久免费。如果你觉得该应用对你应用，请提供支持，你的支持对我非常重要。目前，最简单的支持就是点亮项目上方star。
 
-# Ubuntu
-该应用的主要目标平台是Ubuntu与MacOS，对我而言，Ubuntu平台的重要性甚至超过了MacOS，非常欢迎使用Ubuntu平台的同学提供建议及反馈，我会尽可能确保
-其在Ubuntu平台运行良好。
+除此之外，由于该应用目前是由我一个人开发完成，我并不会UI设计，如果你是一个UI设计者，有更好的UI设计建议，请联系我提供UI设计图。
+或者帮助设计一个更好的图标，也不胜感激。
+
+[![Support Me](https://raw.githubusercontent.com/yuanhoujun/material/main/Sponsor/aifadian.png)](https://afdian.net/@ouyangfeng2016)
+
+# 联系开发者
+[QQ群](https://im.qq.com/index): 329673958
+
+[小飞机](https://t.me/aircontroller2022)
+
+[邮箱](mailto:ouyangfeng2016@gmail.com): ouyangfeng2016@gmail.com
