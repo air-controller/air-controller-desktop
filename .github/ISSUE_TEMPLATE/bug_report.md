@@ -21,7 +21,11 @@ Steps to reproduce the behavior:
 If applicable, add screenshots to help explain your problem.
 
 **OS (please complete the OS information):**
- - OS: [e.g. macOS 11.2]
+OS: [e.g. macOS 11.2]
+
+**App version（please complete the versions information):**
+- AirController desktop: [e.g. 0.2.0]
+- AirController mobile: [e.g. 0.2.2]
 
 **Additional context**
 Add any other context about the problem here.
