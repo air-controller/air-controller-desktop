@@ -167,7 +167,9 @@ class _EnterState extends State<EnterPage>
     DeviceDiscoverManager.instance.onDeviceFind((device) {
       List<Device> devices = context.read<EnterBloc>().state.devices;
       if (!devices.contains(device)) {
-        log("Find new device, ip: ${device.ip}");
+        if (Constant.ENABLE_UDP_DISCOVER_LOG) {
+          log("Find new device, ip: ${device.ip}");
+        }
 
         context.read<EnterBloc>().add(EnterFindMobile(device));
       }
@@ -414,8 +416,6 @@ class _EnterState extends State<EnterPage>
           children: List.generate(devices.length, (index) {
         Device device = devices[index];
 
-        debugPrint("List.generate => Device ip: ${device.ip}");
-
         Rect? rect = _deviceRectMap[device.ip];
 
         double left = 0;
@@ -484,8 +484,6 @@ class _EnterState extends State<EnterPage>
 
                     _cmdClient!.connect(device.ip);
                     _cmdClient!.onCmdReceive((data) {
-                      debugPrint(
-                          "onCmdReceive, cmd: ${data.cmd}, data: ${data.data}");
                       _processCmd(data);
                     });
                     _cmdClient!.onConnected(() {
@@ -539,10 +537,6 @@ class _EnterState extends State<EnterPage>
       MobileInfo mobileInfo = MobileInfo.fromJson(cmd.data);
       UpdateMobileInfo updateMobileInfo = UpdateMobileInfo(mobileInfo);
       eventBus.fire(updateMobileInfo);
-
-      debugPrint(
-          "BatteryLevel: ${mobileInfo.batteryLevel}, totalSize: ${mobileInfo.storageSize.totalSize}, "
-          "availableSize: ${mobileInfo.storageSize.availableSize}");
     }
   }
 

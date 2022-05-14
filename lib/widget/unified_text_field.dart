@@ -37,6 +37,8 @@ class UnifiedTextField extends StatelessWidget {
     return StatefulBuilder(builder: (context, setState) {
       var realClearIcon = clearIcon;
 
+      _needShowClearIcon = controller?.text.isNotEmpty == true;
+
       if (_needShowClearIcon) {
         if (null == realClearIcon) {
           realClearIcon = IconButton(
@@ -45,6 +47,7 @@ class UnifiedTextField extends StatelessWidget {
                 setState(() {
                   _needShowClearIcon = false;
                 });
+                onChange?.call("");
               },
               icon: Icon(Icons.close, size: 15, color: Color(0xff666666)));
         }
@@ -53,7 +56,7 @@ class UnifiedTextField extends StatelessWidget {
       }
 
       var realBorderColor = MaterialStateProperty.resolveWith<Color>((states) {
-        const Set<MaterialState> interactiveStates = <MaterialState> {
+        const Set<MaterialState> interactiveStates = <MaterialState>{
           MaterialState.pressed,
           MaterialState.hovered,
           MaterialState.focused,
@@ -67,6 +70,7 @@ class UnifiedTextField extends StatelessWidget {
       if (null != borderColor) realBorderColor = borderColor!;
 
       return TextField(
+          autofocus: true,
           cursorColor: cursorColor,
           cursorHeight: cursorHeight,
           style: style,
@@ -77,19 +81,26 @@ class UnifiedTextField extends StatelessWidget {
             hintText: hintText,
             hintStyle: hintStyle,
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: realBorderColor.resolve(<MaterialState>[].toSet())),
+              borderSide: BorderSide(
+                  color: realBorderColor.resolve(<MaterialState>[].toSet())),
               borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
             ),
             disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: realBorderColor.resolve(<MaterialState>[MaterialState.disabled].toSet())),
+              borderSide: BorderSide(
+                  color: realBorderColor.resolve(
+                      <MaterialState>[MaterialState.disabled].toSet())),
               borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: realBorderColor.resolve(<MaterialState>[MaterialState.focused].toSet())),
+              borderSide: BorderSide(
+                  color: realBorderColor
+                      .resolve(<MaterialState>[MaterialState.focused].toSet())),
               borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
             ),
             errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: realBorderColor.resolve(<MaterialState>[MaterialState.error].toSet())),
+              borderSide: BorderSide(
+                  color: realBorderColor
+                      .resolve(<MaterialState>[MaterialState.error].toSet())),
               borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
             ),
             contentPadding: contentPadding,

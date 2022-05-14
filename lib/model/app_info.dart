@@ -19,4 +19,12 @@ class AppInfo {
       _$AppInfoFromJson(json);
 
   Map<String, dynamic> toJson() => _$AppInfoToJson(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is AppInfo) {
+      return other.packageName == this.packageName;
+    }
+    return super == other;
+  }
 }

@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:air_controller/event/update_mobile_info.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/toolbox_home/view/toolbox_flow.dart';
+import 'package:air_controller/toolbox_home/view/toolbox_home_page.dart';
 import 'package:flowder/flowder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -373,6 +375,36 @@ class HomeView extends StatelessWidget {
                                 children: [
                                   Container(
                                       child: Image.asset(
+                                          "assets/icons/ic_toolbox.png",
+                                          width: _icons_size - 5,
+                                          height: _icons_size - 5),
+                                      margin: EdgeInsets.fromLTRB(
+                                          _icon_margin_hor,
+                                          0,
+                                          _icon_margin_hor,
+                                          0)),
+                                  Text(context.l10n.toolbox,
+                                      style: TextStyle(
+                                          color: "#636363".toColor(),
+                                          fontSize: _tab_font_size))
+                                ]),
+                            height: _tab_height,
+                            color: getTabBgColor(HomeTab.toolbox.index),
+                          ),
+                          onTap: () {
+                            context
+                                .read<HomeBloc>()
+                                .add(HomeTabChanged(HomeTab.toolbox));
+                          },
+                        ),
+                        Divider(height: 1, color: "#e0e0e0".toColor()),
+                        GestureDetector(
+                          child: Container(
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                      child: Image.asset(
                                           "assets/icons/ic_help.png",
                                           width: _icons_size - 4,
                                           height: _icons_size - 4),
@@ -534,6 +566,7 @@ class HomeView extends StatelessWidget {
                           VideoHomePage(),
                           FileHomePage(true),
                           FileHomePage(false),
+                          ToolboxFlow(),
                           HelpAndFeedbackPage()
                         ],
                       ),

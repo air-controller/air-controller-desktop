@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
+import '../bootstrap.dart';
 import '../model/device.dart';
 import 'package:web_socket_channel/io.dart';
 import 'dart:io';
@@ -37,7 +38,7 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
   @override
   void startDiscover() {
     if (_isDiscovering) {
-      debugPrint("It's discovering, start discover is invalid!");
+      _log("It's discovering, start discover is invalid!");
       return;
     }
 
@@ -52,7 +53,7 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
 
         if (null != data) {
           String str = String.fromCharCodes(data);
-          debugPrint(str + ", ip: ${udpSocket.address.address}");
+          _log(str + ", ip: ${udpSocket.address.address}");
 
           if (_isValidData(str)) {
             Device device = _convertToDevice(str);
@@ -60,18 +61,18 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
 
             _responseToDesktop(device.ip);
 
-            debugPrint("Device: $device");
+            _log("Device: $device");
           } else {
-            debugPrint("It's not valid, str: ${str}");
+            _log("It's not valid, str: ${str}");
           }
         }
 
-        debugPrint("ip: ${udpSocket.address.address}");
+        _log("ip: ${udpSocket.address.address}");
       });
 
-      debugPrint("Udp listen started, port: ${Constant.PORT_SEARCH}");
+      _log("Udp listen started, port: ${Constant.PORT_SEARCH}");
     }).catchError((error) {
-      debugPrint("startDiscover error: $error");
+      _log("startDiscover error: $error");
     });
   }
 
@@ -103,12 +104,12 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
   }
 
   Device _convertToDevice(String searchStr) {
-    debugPrint("Search str: ${searchStr}");
+    _log("Search str: ${searchStr}");
     int start =
         "${Constant.CMD_SEARCH_PREFIX}${Constant.RANDOM_STR_SEARCH}#".length;
     String deviceStr = searchStr.substring(start);
 
-    debugPrint(deviceStr);
+    _log(deviceStr);
 
     List<String> strList = deviceStr.split("#");
     int platform = Device.PLATFORM_UNKNOWN;
@@ -130,6 +131,12 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
     return device;
   }
 
+  void _log(String msg) {
+    if (Constant.ENABLE_UDP_DISCOVER_LOG) {
+      logger.d("HeartBeat: $msg");
+    }
+  }
+  
   @override
   void stopDiscover() {
     udpSocket?.close();

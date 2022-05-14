@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:network_info_plus/network_info_plus.dart';
 
+import '../bootstrap.dart';
+import '../constant.dart';
 import '../model/heartbeat.dart';
 import '../util/count_down_timer.dart';
 
@@ -66,8 +68,10 @@ class HeartbeatClientImpl extends HeartbeatClient {
     try {
       _socket = await Socket.connect(ip, port);
     } catch (e) {
-      log("connectToServer: ${e.toString()}");
-      listeners.forEach((listener) { listener.onError(e.toString()); });
+      _log("connectToServer: ${e.toString()}");
+      listeners.forEach((listener) {
+        listener.onError(e.toString());
+      });
     }
 
     isConnected = true;
@@ -82,7 +86,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
     try {
       currentIp = await networkInfo.getWifiIP() ?? "Unknown ip";
     } catch (e) {
-      log("HeartClient: get wifi ip failure: ${e.toString()}");
+      _log("HeartClient: get wifi ip failure: ${e.toString()}");
     }
     _lastHeartbeat = Heartbeat(currentIp, 0, _currentTimeInMills());
     _sendToServer(_lastHeartbeat!);
@@ -103,7 +107,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       dynamic map = jsonDecode(str);
       _lastHeartbeatResponse = Heartbeat.fromJson(map);
 
-      log("Heartbeat response, value: ${_lastHeartbeatResponse?.value}");
+      _log("Heartbeat response, value: ${_lastHeartbeatResponse?.value}");
 
       int currentTimeInMills = _currentTimeInMills();
 
@@ -112,7 +116,8 @@ class HeartbeatClientImpl extends HeartbeatClient {
         listeners.forEach((listener) {
           listener.onRequestTimeout();
         });
-        log("Hit single timeout!");
+
+        _log("Hit single timeout!");
       }
 
       Heartbeat heartbeat = Heartbeat(
@@ -121,7 +126,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
 
       Future.delayed(Duration(seconds: 2), () {
         if (_isQuit) {
-          log("Heartbeat: heartbeat service had quit, don't need start timeout timer again!");
+          _log("Heartbeat: heartbeat service had quit, don't need start timeout timer again!");
           return;
         }
         _sendToServer(_lastHeartbeat!);
@@ -140,7 +145,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
 
   void _startTimeoutTimer() {
     if (_isQuit) {
-      log("Heartbeat: _startTimeoutTimer, heartbeat service had quit.");
+      _log("Heartbeat: _startTimeoutTimer, heartbeat service had quit.");
       return;
     }
     _timeoutTimer = CountDownTimer(TIMEOUT_IN_MILLS, 1000);
@@ -148,7 +153,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
       listeners.forEach((listener) {
         listener.onRequestTimeout();
       });
-      log("Start retry heartbeat!");
+      _log("Start retry heartbeat!");
       _retryHeartbeat();
     });
     _timeoutTimer?.start();
@@ -160,7 +165,7 @@ class HeartbeatClientImpl extends HeartbeatClient {
 
   void _retryHeartbeat() async {
     if (_isQuit) {
-      log("Heartbeat: _retryHeartbeat, heartbeat service had quit.");
+      _log("Heartbeat: _retryHeartbeat, heartbeat service had quit.");
       return;
     }
     if (!_isRetryTimerStarted) {
@@ -191,14 +196,14 @@ class HeartbeatClientImpl extends HeartbeatClient {
     _retryTimeoutTimer = CountDownTimer(RETRY_TIMEOUT_IN_MILLS, 1000);
 
     _retryTimeoutTimer?.onTick((millisUntilFinished) {
-      log("_startRetryTimer, millisUntilFinished: $millisUntilFinished");
+      _log("_startRetryTimer, millisUntilFinished: $millisUntilFinished");
     });
 
     _retryTimeoutTimer?.onFinish(() {
       listeners.forEach((listener) {
         listener.onRetryTimeout();
       });
-      log("Hit retry timeout!");
+      _log("Hit retry timeout!");
     });
     _retryTimeoutTimer?.start();
     _isRetryTimerStarted = true;
@@ -215,9 +220,15 @@ class HeartbeatClientImpl extends HeartbeatClient {
 
   void _sendToServer(Heartbeat heartbeat) async {
     String heartbeatStr = jsonEncode(heartbeat);
-    log("Heartbeat => _sendToServer, $heartbeatStr, socket: $_socket");
+    _log("Heartbeat => _sendToServer, $heartbeatStr, socket: $_socket");
     _socket?.write(heartbeatStr);
     _socket?.flush();
+  }
+
+  void _log(String msg) {
+    if (Constant.ENABLE_HEARTBEAT_LOG) {
+      logger.d("HeartBeat: $msg");
+    }
   }
 
   @override

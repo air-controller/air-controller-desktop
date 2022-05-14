@@ -27,7 +27,6 @@ class CmdClient {
       if (!_isConnected) return;
 
       String str = String.fromCharCodes(data);
-      debugPrint("CmdClient listen str: $str\n");
 
       try {
         dynamic map = jsonDecode(str);

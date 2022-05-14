@@ -1,6 +1,6 @@
 part of 'home_bloc.dart';
 
-enum HomeTab { image, music, video, download, allFile, helpAndFeedback }
+enum HomeTab { image, music, video, download, allFile, toolbox, helpAndFeedback }
 
 extension HomeTabX  on HomeTab {
   static HomeTab convertToHomeTab(int index) {

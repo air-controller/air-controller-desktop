@@ -66,10 +66,18 @@ dependencies:
   window_manager: ^0.2.1
   async: ^2.8.2
   shared_preferences: ^2.0.13
+  json_annotation: ^4.4.0
+  font_awesome_flutter: ^10.1.0
+  bot_toast: ^4.0.1
+  dio: ^4.0.6
+  logger: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Your other dev_dependencies here
+  build_runner: ^2.0.0
+  json_serializable: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

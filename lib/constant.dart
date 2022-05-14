@@ -1,5 +1,3 @@
-
-
 class Constant {
   static const int PORT_SEARCH = 20000;
 
@@ -43,14 +41,21 @@ class Constant {
 
   static const String DEFAULT_LANGUAGE_CODE = "en";
 
-  static const String URL_UPDATE_CHECK = "https://api.github.com/repos/air-controller/air-controller-desktop/releases/latest";
+  static const String URL_UPDATE_CHECK =
+      "https://api.github.com/repos/air-controller/air-controller-desktop/releases/latest";
 
   static const String CURRENT_VERSION_NAME = "0.2.2";
 
-  static const String URL_VERSION_LIST = "https://github.com/air-controller/air-controller-desktop/releases";
+  static const String URL_VERSION_LIST =
+      "https://github.com/air-controller/air-controller-desktop/releases";
 
   // The sharedPreferences key for the update download directory.
-  static const String KEY_UPDATE_DOWNLOAD_DIR = "aircontroller_update_download_directory";
+  static const String KEY_UPDATE_DOWNLOAD_DIR =
+      "aircontroller_update_download_directory";
+
+  static const bool ENABLE_HEARTBEAT_LOG = false;
+
+  static const bool ENABLE_UDP_DISCOVER_LOG = false;
 }
 
 class ImagePageRoute {
@@ -62,4 +67,12 @@ class ImagePageRoute {
    * Image list page in the someone album.
    */
   static const String IMAGE_ALBUM_IMAGES = "/image/album/images";
+}
+
+class ToolboxPageRoute {
+  static const String HOME = "/toolbox";
+
+  static const String MANAGE_APPS = "/toolbox/manageApps";
+
+  static const String MANAGE_CONTACTS = "/toolbox/contacts";
 }

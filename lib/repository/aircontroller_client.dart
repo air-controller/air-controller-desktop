@@ -1,10 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:air_controller/bootstrap.dart';
+import 'package:air_controller/model/app_info.dart';
+import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:crypto/crypto.dart';
+import 'package:convert/convert.dart';
 
 import '../constant.dart';
 import '../enter/view/enter_page.dart';
@@ -26,14 +32,19 @@ class BusinessError implements Exception {
 class AirControllerClient {
   final String _domain;
   DownloaderCore? _downloaderCore;
+  late DioCore.Dio dio;
 
-  AirControllerClient({required String domain}) : _domain = domain;
+  AirControllerClient({required String domain}) : _domain = domain {
+    dio = DioCore.Dio();
+    dio.options.baseUrl = domain;
+    dio.options.connectTimeout = 5000;
+    dio.options.receiveTimeout = 3000;
+  }
 
   Future<List<ImageItem>> getAllImages() async {
-
     var uri = Uri.parse("${_domain}/image/all");
-    Response response = await post(uri,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(uri, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -62,8 +73,8 @@ class AirControllerClient {
 
   Future<MobileInfo> getMobileInfo() async {
     var uri = Uri.parse("${_domain}/common/mobileInfo");
-    Response response = await post(uri,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(uri, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -90,8 +101,8 @@ class AirControllerClient {
 
   Future<List<ImageItem>> getCameraImages() async {
     var uri = Uri.parse("${_domain}/image/albumImages");
-    Response response = await post(uri,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(uri, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -206,8 +217,8 @@ class AirControllerClient {
 
   Future<List<AlbumItem>> getAllAlbums() async {
     var url = Uri.parse("${_domain}/image/albums");
-    Response response = await post(url,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -236,8 +247,7 @@ class AirControllerClient {
   Future<List<ImageItem>> getImagesInAlbum(AlbumItem albumItem) async {
     var url = Uri.parse("${_domain}/image/imagesOfAlbum");
     Response response = await post(url,
-        headers: _commonHeaders(),
-        body: json.encode({"id": albumItem.id}));
+        headers: _commonHeaders(), body: json.encode({"id": albumItem.id}));
 
     if (response.statusCode == 200) {
       var body = response.body;
@@ -266,8 +276,7 @@ class AirControllerClient {
   Future<ResponseEntity> deleteFiles(List<String> paths) async {
     var url = Uri.parse("${_domain}/file/deleteMulti");
     Response response = await post(url,
-        headers: _commonHeaders(),
-        body: json.encode({"paths": paths}));
+        headers: _commonHeaders(), body: json.encode({"paths": paths}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -291,8 +300,8 @@ class AirControllerClient {
 
   Future<List<AudioItem>> getAllAudios() async {
     var url = Uri.parse("$_domain/audio/all");
-    Response response = await post(url,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -320,8 +329,8 @@ class AirControllerClient {
 
   Future<List<VideoItem>> getAllVideos() async {
     var url = Uri.parse("${_domain}/video/videos");
-    Response response = await post(url,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -349,8 +358,8 @@ class AirControllerClient {
 
   Future<List<VideoFolderItem>> getAllVideoFolders() async {
     var url = Uri.parse("${_domain}/video/folders");
-    Response response = await post(url,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -379,8 +388,7 @@ class AirControllerClient {
   Future<List<VideoItem>> getVideosInFolder(String folderId) async {
     var url = Uri.parse("${_domain}/video/videosInFolder");
     Response response = await post(url,
-        headers: _commonHeaders(),
-        body: json.encode({"folderId": folderId}));
+        headers: _commonHeaders(), body: json.encode({"folderId": folderId}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -438,8 +446,8 @@ class AirControllerClient {
 
   Future<List<FileItem>> getDownloadFiles() async {
     var url = Uri.parse("${_domain}/file/downloadedFiles");
-    Response response = await post(url,
-        headers: _commonHeaders(), body: json.encode({}));
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
 
     if (response.statusCode != 200) {
       throw BusinessError(response.reasonPhrase != null
@@ -496,6 +504,225 @@ class AirControllerClient {
     }
   }
 
+  Future<List<AppInfo>> getInstalledApps() async {
+    var url = Uri.parse("${_domain}/common/installedApps");
+    Response response =
+        await post(url, headers: _commonHeaders(), body: json.encode({}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        final data = httpResponseEntity.data as List<dynamic>;
+
+        return data
+            .map((e) => AppInfo.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<DioCore.CancelToken> uploadAndInstall(
+      {required File bundle,
+      Function(int sent, int total)? onUploadProgress,
+      VoidCallback? onSuccess,
+      Function(String? error)? onError,
+      VoidCallback? onCancel}) async {
+    final headers = _commonHeaders();
+    headers.remove("Content-Type");
+
+    final digest = await md5.bind(bundle.openRead()).first;
+    final md5Sum = hex.encode(digest.bytes);
+
+    final formData = DioCore.FormData.fromMap({
+      "bundle": await DioCore.MultipartFile.fromFile(bundle.path),
+      "md5": md5Sum
+    });
+
+    final cancelToken = DioCore.CancelToken();
+    dio.post("/common/install",
+        data: formData, options: DioCore.Options(headers: headers),
+        onSendProgress: (int sent, int total) {
+      onUploadProgress?.call(sent, total);
+    }, cancelToken: cancelToken).then((response) {
+      if (response.statusCode != 200) {
+        onError?.call("${response.statusMessage}");
+      } else {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess?.call();
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).onError((error, stackTrace) {
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call(error?.toString());
+      }
+    });
+
+    return cancelToken;
+  }
+
+  Future<DioCore.CancelToken> tryToInstallFromCache(
+      {required File bundle,
+      VoidCallback? onSuccess,
+      Function(String? error)? onError,
+      VoidCallback? onCancel}) async {
+    final headers = _commonHeaders();
+    headers.remove("Content-Type");
+
+    final digest = await md5.bind(bundle.openRead()).first;
+    final md5Sum = hex.encode(digest.bytes);
+
+    int pointIndex = bundle.path.lastIndexOf(".");
+    String name = bundle.path;
+
+    if (pointIndex >= 0) {
+      name = bundle.path.substring(pointIndex + 1);
+    }
+
+    final formData =
+        DioCore.FormData.fromMap({"fileName": name, "md5": md5Sum});
+
+    final cancelToken = DioCore.CancelToken();
+    dio
+        .post("/common/tryToInstallFromCache",
+            data: formData,
+            options: DioCore.Options(headers: headers),
+            cancelToken: cancelToken)
+        .then((response) {
+      if (response.statusCode != 200) {
+        onError?.call("${response.statusMessage}");
+      } else {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess?.call();
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).onError((error, stackTrace) {
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call(error?.toString());
+      }
+    });
+
+    return cancelToken;
+  }
+
+  void exportApk(
+      {required String packageName,
+      required String dir,
+      required String fileName,
+      Function(int current, int total)? onExportProgress,
+      Function(String dir, String name)? onSuccess,
+      Function(String error)? onError}) async {
+    final response = await dio.download(
+        "$_domain/stream/downloadApk?package=$packageName", "$dir/$fileName",
+        deleteOnError: false, options: DioCore.Options(receiveTimeout: 0),
+        onReceiveProgress: (count, total) {
+      onExportProgress?.call(count, total);
+    });
+
+    if (response.statusCode == 200) {
+      onSuccess?.call(dir, fileName);
+    } else {
+      onError?.call("Export apk file failure.");
+    }
+  }
+
+  Future<DioCore.CancelToken> exportApks(
+      {required List<String> packages,
+      required String dir,
+      required String fileName,
+      Function(int current, int total)? onExportProgress,
+      Function(String dir, String name)? onSuccess,
+      Function(String error)? onError}) async {
+    String packagesStr = Uri.encodeComponent(jsonEncode(packages));
+
+    final cancelToken = DioCore.CancelToken();
+
+    dio.download(
+        "$_domain/stream/downloadApks?packages=$packagesStr", "$dir/$fileName",
+        deleteOnError: false,
+        options: DioCore.Options(receiveTimeout: 0),
+        cancelToken: cancelToken, onReceiveProgress: (count, total) {
+      onExportProgress?.call(count, total);
+    }).then((response) {
+      if (response.statusCode == 200) {
+        onSuccess?.call(dir, fileName);
+      } else {
+        onError?.call("Export apk files failure.");
+      }
+    }).onError((error, stackTrace) {
+      logger.e("Export apks failure, error: ${error.toString()}");
+      onError?.call("Export apk files failure.");
+    });
+
+    return cancelToken;
+  }
+
+  Future<DioCore.CancelToken> batchUninstall(
+      {required List<String> packages,
+      Function()? onSuccess,
+      Function(String error)? onError}) async {
+
+    final cancelToken = DioCore.CancelToken();
+
+    dio
+        .post("/common/uninstall",
+            data: packages,
+            options: DioCore.Options(receiveTimeout: 0),
+            cancelToken: cancelToken)
+        .then((response) {
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess?.call();
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        onError?.call("Batch uninstall failure.");
+      }
+    }).onError((error, stackTrace) {
+      logger.e("Batch uninstall failure, error: ${error.toString()}");
+      onError?.call("Batch uninstall failure.");
+    });
+
+    return cancelToken;
+  }
+
   Map<String, String> _commonHeaders() {
     BuildContext? context = EnterPage.enterKey.currentContext;
 
@@ -504,9 +731,6 @@ class AirControllerClient {
       languageCode = Localizations.localeOf(context).languageCode;
     }
 
-    return {
-      "Content-Type": "application/json",
-      "languageCode": languageCode
-    };
+    return {"Content-Type": "application/json", "languageCode": languageCode};
   }
 }
