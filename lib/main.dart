@@ -19,8 +19,10 @@ void main() async {
     await windowManager.setSize(
         Size(Constant.DEFAULT_WINDOW_WIDTH, Constant.DEFAULT_WINDOW_HEIGHT));
     await windowManager.center();
+    if (Platform.isMacOS || Platform.isWindows) {
     await windowManager.setHasShadow(true);
     await windowManager.setBrightness(Brightness.light);
+    }
     await windowManager.show();
     await windowManager.setSkipTaskbar(false);
   });
