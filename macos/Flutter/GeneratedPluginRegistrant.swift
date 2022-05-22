@@ -5,6 +5,7 @@
 import FlutterMacOS
 import Foundation
 
+import audioplayers
 import connectivity_plus_macos
 import device_info_plus_macos
 import network_info_plus_macos
@@ -17,6 +18,7 @@ import wakelock_macos
 import window_manager
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
+  AudioplayersPlugin.register(with: registry.registrar(forPlugin: "AudioplayersPlugin"))
   ConnectivityPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlugin"))
   DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
   NetworkInfoPlusPlugin.register(with: registry.registrar(forPlugin: "NetworkInfoPlusPlugin"))

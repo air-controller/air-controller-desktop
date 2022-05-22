@@ -1,4 +1,4 @@
-import 'package:air_controller/manage_apps/view/manage_apps_page.dart';
+import 'package:air_controller/manage_apps/view/manage_apps_home_page.dart';
 import 'package:air_controller/manage_contacts/view/manage_apps_page.dart';
 import 'package:air_controller/toolbox_home/view/toolbox_home_page.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +47,7 @@ class ToolboxFlowState extends State<ToolboxFlow>
     if (settings.name == ToolboxPageRoute.MANAGE_APPS) {
       return PageRouteBuilder(
           pageBuilder: (_, __, ___) {
-            return ManageAppsPage(_navigatorKey);
+            return ManageAppsHomePage(_navigatorKey);
           },
           settings: settings);
     }

@@ -30,7 +30,7 @@ class AppSortItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: ((context, setState) {
       final labelWidth = 60.0;
-      final checkedIconSize = 15.0;
+      final checkedIconSize = 18.0;
 
       Color backgroundColor = color;
 
@@ -54,6 +54,7 @@ class AppSortItem extends StatelessWidget {
                     "assets/icons/ic_checked_mark.png",
                     width: checkedIconSize,
                     height: checkedIconSize,
+                    color: Color(0xff575757),
                   ),
                   margin: EdgeInsets.only(left: 10),
                 ),
@@ -67,18 +68,19 @@ class AppSortItem extends StatelessWidget {
                   title,
                   textAlign: TextAlign.start,
                 ),
-                margin: EdgeInsets.only(left: 10),
+                margin: EdgeInsets.only(left: 15),
                 width: labelWidth,
               ),
               Visibility(
                 child: Container(
-                  child: Icon(
+                  child: Image.asset(
                       isAscending
-                          ? FontAwesomeIcons.arrowUp
-                          : FontAwesomeIcons.arrowDown,
-                      size: 15,
+                          ? "assets/icons/ic_arrow_up.png"
+                          : "assets/icons/ic_arrow_down.png",
+                      width: 16,
+                      height: 16,
                       color: Color(0xff666666)),
-                  margin: EdgeInsets.only(left: 30),
+                  margin: EdgeInsets.only(left: 70),
                 ),
                 visible: isChecked,
               )

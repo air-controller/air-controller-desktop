@@ -14,7 +14,7 @@ class ManageContactsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ManageAppsBloc(context.read<CommonRepository>())
+      create: (context) => ManageAppsHomeBloc(context.read<CommonRepository>())
         ..add(ManageAppsSubscriptionRequested()),
       child: _ManageContactsView(this.navigatorKey),
     );

@@ -71,6 +71,8 @@ dependencies:
   bot_toast: ^4.0.1
   dio: ^4.0.6
   logger: ^1.1.0
+  syncfusion_flutter_datagrid: 20.1.55
+  audioplayers: ^0.20.1
 
 dev_dependencies:
   flutter_test:
@@ -95,6 +97,7 @@ flutter:
      - assets/icons/
      - assets/fonts/
      - assets/docs/
+     - assets/audios/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

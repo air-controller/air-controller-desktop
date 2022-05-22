@@ -98,7 +98,7 @@
   "operate": "操作",
   "phoneNotInstallAnyApp": "你的手机似乎没有安装任何软件！",
   "myApps": "我的应用",
-  "preInstalledApps": "预装应用",
+  "preInstalledApps": "系统应用",
   "installApp": "安装应用",
   "uninstall": "卸载",
   "export": "导出",

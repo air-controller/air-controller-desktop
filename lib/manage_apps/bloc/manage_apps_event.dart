@@ -12,17 +12,14 @@ class ManageAppsSubscriptionRequested extends ManageAppsEvent {
 }
 
 class ManageAppsSortChanged extends ManageAppsEvent {
-  final bool isUserApps;
   final ManageAppsSortColumn sortColumn;
   final ManageAppsSortDirection sortDirection;
 
   const ManageAppsSortChanged(
-      {this.isUserApps = true,
-      required this.sortColumn,
-      required this.sortDirection});
+      {required this.sortColumn, required this.sortDirection});
 
   @override
-  List<Object?> get props => [isUserApps, sortColumn, sortDirection];
+  List<Object?> get props => [sortColumn, sortDirection];
 }
 
 class ManageAppsInstallStatusChanged extends ManageAppsEvent {
@@ -47,30 +44,17 @@ class ManageAppsIndicatorStatusChanged extends ManageAppsEvent {
   List<Object?> get props => [status];
 }
 
-class ManageAppsUserAppCheckChanged extends ManageAppsEvent {
-  final AppInfo app;
+class ManageAppsCheckChanged extends ManageAppsEvent {
+  final List<AppInfo> checkedApps;
+  final bool isUserApps;
 
-  const ManageAppsUserAppCheckChanged(this.app);
-
-  @override
-  List<Object?> get props => [app];
-}
-
-class ManageAppsKeyStatusChanged extends ManageAppsEvent {
-  final ManageAppsKeyStatus keyStatus;
-
-  const ManageAppsKeyStatusChanged(this.keyStatus);
+  const ManageAppsCheckChanged({
+    required this.checkedApps,
+    required this.isUserApps
+  });
 
   @override
-  List<Object?> get props => [this.keyStatus];
-}
-
-class ManageAppsCtrlAStatusChanged extends ManageAppsEvent {
-  final ManageAppsCtrlAStatus status;
-  const ManageAppsCtrlAStatusChanged(this.status);
-
-  @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [checkedApps, isUserApps];
 }
 
 class ManageAppsExportStatusChanged extends ManageAppsEvent {
@@ -86,10 +70,10 @@ class ManageAppsCancelExport extends ManageAppsEvent {
   const ManageAppsCancelExport();
 }
 
-class ManageAppsUserAppsKeyWordChanged extends ManageAppsEvent {
+class ManageAppsKeyWordChanged extends ManageAppsEvent {
   final String keyword;
 
-  const ManageAppsUserAppsKeyWordChanged(this.keyword);
+  const ManageAppsKeyWordChanged(this.keyword);
 
   @override
   List<Object?> get props => [keyword];
@@ -102,4 +86,13 @@ class ManageAppsItemCountChanged extends ManageAppsEvent {
 
   @override
   List<Object?> get props => [itemCount];
+}
+
+class ManageAppsTabChanged extends ManageAppsEvent {
+  final ManageAppsTab tab;
+
+  const ManageAppsTabChanged(this.tab);
+
+  @override
+  List<Object?> get props => [tab];
 }

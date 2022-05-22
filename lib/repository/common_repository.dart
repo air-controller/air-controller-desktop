@@ -65,12 +65,14 @@ class CommonRepository {
       required String fileName,
       Function(int current, int total)? onExportProgress,
       Function(String dir, String name)? onSuccess,
+      Function()? onCancel,
       Function(String error)? onError}) {
     return this.client.exportApks(
         packages: packages,
         dir: dir,
         fileName: fileName,
         onExportProgress: onExportProgress,
+        onCancel: onCancel,
         onSuccess: onSuccess,
         onError: onError);
   }
@@ -78,8 +80,12 @@ class CommonRepository {
   Future<DioCore.CancelToken> batchUninstall(
       {required List<String> packages,
       Function()? onSuccess,
+      Function()? onCancel,
       Function(String error)? onError}) {
     return this.client.batchUninstall(
-        packages: packages, onError: onError, onSuccess: onSuccess);
+        packages: packages,
+        onError: onError,
+        onCancel: onCancel,
+        onSuccess: onSuccess);
   }
 }

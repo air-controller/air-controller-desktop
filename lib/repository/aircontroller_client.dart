@@ -663,6 +663,7 @@ class AirControllerClient {
       required String fileName,
       Function(int current, int total)? onExportProgress,
       Function(String dir, String name)? onSuccess,
+      Function()? onCancel,
       Function(String error)? onError}) async {
     String packagesStr = Uri.encodeComponent(jsonEncode(packages));
 
@@ -682,7 +683,13 @@ class AirControllerClient {
       }
     }).onError((error, stackTrace) {
       logger.e("Export apks failure, error: ${error.toString()}");
-      onError?.call("Export apk files failure.");
+
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call("Export apk files failure.");
+      }
     });
 
     return cancelToken;
@@ -691,8 +698,8 @@ class AirControllerClient {
   Future<DioCore.CancelToken> batchUninstall(
       {required List<String> packages,
       Function()? onSuccess,
+      Function()? onCancel,
       Function(String error)? onError}) async {
-
     final cancelToken = DioCore.CancelToken();
 
     dio
@@ -717,7 +724,13 @@ class AirControllerClient {
       }
     }).onError((error, stackTrace) {
       logger.e("Batch uninstall failure, error: ${error.toString()}");
-      onError?.call("Batch uninstall failure.");
+
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call("Batch uninstall failure.");
+      }
     });
 
     return cancelToken;

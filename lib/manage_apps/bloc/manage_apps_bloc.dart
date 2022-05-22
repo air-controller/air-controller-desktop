@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:air_controller/manage_apps/view/data_grid_holder.dart';
 import 'package:air_controller/model/app_info.dart';
 import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:air_controller/repository/common_repository.dart';
@@ -31,7 +32,7 @@ class ManageAppsItemCount extends Equatable {
   List<Object?> get props => [checkedCount, total];
 }
 
-class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
+class ManageAppsHomeBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
   final CommonRepository _repository;
 
   final StreamController<ManageAppsProgressIndicatorStatus>
@@ -39,12 +40,12 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
   Stream<ManageAppsProgressIndicatorStatus> get progressIndicatorStream =>
       _progressIndicatorStreamController.stream;
 
-  final StreamController<ManageAppsItemCount>
-      _itemCountStreamController = StreamController();
+  final StreamController<ManageAppsItemCount> _itemCountStreamController =
+      StreamController();
   Stream<ManageAppsItemCount> get itemCountStream =>
-      _itemCountStreamController.stream;    
+      _itemCountStreamController.stream;
 
-  ManageAppsBloc(CommonRepository repository)
+  ManageAppsHomeBloc(CommonRepository repository)
       : _repository = repository,
         super(ManageAppsState()) {
     on<ManageAppsSubscriptionRequested>(_onSubscriptionRequested);
@@ -52,13 +53,12 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
     on<ManageAppsInstallStatusChanged>(_onInstallStatusChanged);
     on<ManageAppsCancelInstallation>(_onCancelInstallation);
     on<ManageAppsIndicatorStatusChanged>(_onProgressIndicatorStatusChanged);
-    on<ManageAppsUserAppCheckChanged>(_onUserAppCheckChanged);
-    on<ManageAppsKeyStatusChanged>(_onKeyStatusChanged);
-    on<ManageAppsCtrlAStatusChanged>(_onCtrlAStatusChanged);
+    on<ManageAppsCheckChanged>(_onUserAppCheckChanged);
     on<ManageAppsExportStatusChanged>(_onExportStatusChanged);
     on<ManageAppsCancelExport>(_onExportCancelled);
-    on<ManageAppsUserAppsKeyWordChanged>(_onUserAppsKeywordChanged);
+    on<ManageAppsKeyWordChanged>(_onUserAppsKeywordChanged);
     on<ManageAppsItemCountChanged>(_onItemCountChanged);
+    on<ManageAppsTabChanged>(_onTabChanged);
   }
 
   void _onSubscriptionRequested(ManageAppsSubscriptionRequested event,
@@ -68,12 +68,12 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
     try {
       final apps = await _repository.getInstalledApps();
       List<AppInfo> userApps = apps.where((app) => !app.isSystemApp).toList();
-      _sortApps(userApps, ManageAppsSortColumn.appName,
-          ManageAppsSortDirection.ascending);
+      _sortApps(
+          userApps, state.userAppsSortColumn, state.userAppsSortDirection);
 
       List<AppInfo> systemApps = apps.where((app) => app.isSystemApp).toList();
-      _sortApps(systemApps, ManageAppsSortColumn.appName,
-          ManageAppsSortDirection.ascending);
+      _sortApps(systemApps, state.systemAppsSortColumn,
+          state.systemAppsSortDirection);
 
       emit(state.copyWith(
           userApps: userApps,
@@ -88,22 +88,23 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
 
   void _onSortChanged(
       ManageAppsSortChanged event, Emitter<ManageAppsState> emit) async {
-    if (event.isUserApps) {
+    bool isUserApps = state.tab == ManageAppsTab.mine;
+    if (isUserApps) {
       List<AppInfo> userApps = [...state.userApps];
       _sortApps(userApps, event.sortColumn, event.sortDirection);
 
       emit(state.copyWith(
           userApps: userApps,
-          sortColumn: event.sortColumn,
-          sortDirection: event.sortDirection));
+          userAppsSortColumn: event.sortColumn,
+          userAppsSortDirection: event.sortDirection));
     } else {
       List<AppInfo> systemApps = [...state.systemApps];
       _sortApps(systemApps, event.sortColumn, event.sortDirection);
 
       emit(state.copyWith(
           systemApps: systemApps,
-          sortColumn: event.sortColumn,
-          sortDirection: event.sortDirection));
+          systemAppsSortColumn: event.sortColumn,
+          systemAppsSortDirection: event.sortDirection));
     }
   }
 
@@ -150,93 +151,18 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
   }
 
   void _onUserAppCheckChanged(
-      ManageAppsUserAppCheckChanged event, Emitter<ManageAppsState> emit) {
-    List<AppInfo> userApps = [...state.userApps];
-    List<AppInfo> checkedUserApps = [...state.checkedUserApps];
-    AppInfo app = event.app;
+      ManageAppsCheckChanged event, Emitter<ManageAppsState> emit) {
+    bool isUserApps = event.isUserApps;
 
-    ManageAppsKeyStatus keyStatus = state.keyStatus;
+    if (isUserApps) {
+      List<AppInfo> checkedUserApps = [...event.checkedApps];
 
-    if (!checkedUserApps.contains(app)) {
-      if (keyStatus == ManageAppsKeyStatus.ctrlDown) {
-        checkedUserApps.add(app);
-      } else if (keyStatus == ManageAppsKeyStatus.shiftDown) {
-        if (checkedUserApps.length == 0) {
-          checkedUserApps.add(app);
-        } else if (checkedUserApps.length == 1) {
-          int index = userApps.indexOf(checkedUserApps[0]);
-
-          int current = userApps.indexOf(app);
-
-          if (current > index) {
-            checkedUserApps = userApps.sublist(index, current + 1);
-          } else {
-            checkedUserApps = userApps.sublist(current, index + 1);
-          }
-        } else {
-          int maxIndex = 0;
-          int minIndex = 0;
-
-          for (int i = 0; i < checkedUserApps.length; i++) {
-            AppInfo current = checkedUserApps[i];
-            int index = userApps.indexOf(current);
-            if (index < 0) {
-              continue;
-            }
-
-            if (index > maxIndex) {
-              maxIndex = index;
-            }
-
-            if (index < minIndex) {
-              minIndex = index;
-            }
-          }
-
-          int current = userApps.indexOf(app);
-
-          if (current >= minIndex && current <= maxIndex) {
-            checkedUserApps = userApps.sublist(current, maxIndex + 1);
-          } else if (current < minIndex) {
-            checkedUserApps = userApps.sublist(current, maxIndex + 1);
-          } else if (current > maxIndex) {
-            checkedUserApps = userApps.sublist(minIndex, current + 1);
-          }
-        }
-      } else {
-        checkedUserApps.clear();
-        checkedUserApps.add(app);
-      }
+      emit(state.copyWith(checkedUserApps: checkedUserApps));
     } else {
-      if (keyStatus == ManageAppsKeyStatus.ctrlDown) {
-        checkedUserApps.remove(app);
-      } else if (keyStatus == ManageAppsKeyStatus.shiftDown) {
-        checkedUserApps.remove(app);
-      } else {
-        checkedUserApps.clear();
-        checkedUserApps.add(app);
-      }
+      List<AppInfo> checkedSystemApps = [...event.checkedApps];
+
+      emit(state.copyWith(checkedSystemApps: checkedSystemApps));
     }
-    emit(state.copyWith(checkedUserApps: checkedUserApps));
-  }
-
-  void _onKeyStatusChanged(
-      ManageAppsKeyStatusChanged event, Emitter<ManageAppsState> emit) {
-    emit(state.copyWith(keyStatus: event.keyStatus));
-  }
-
-  void _onCtrlAStatusChanged(
-      ManageAppsCtrlAStatusChanged event, Emitter<ManageAppsState> emit) {
-    if (event.status == ManageAppsCtrlAStatus.tap) {
-      if (state.tab == ManageAppsTab.mine) {
-        final checkedUserApps = [...state.userApps];
-        emit(state.copyWith(
-            checkedUserApps: checkedUserApps, ctrlAStatus: event.status));
-      }
-      return;
-    }
-
-    emit(state.copyWith(ctrlAStatus: event.status));
   }
 
   void _onExportStatusChanged(
@@ -252,21 +178,40 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
   }
 
   void _onUserAppsKeywordChanged(
-      ManageAppsUserAppsKeyWordChanged event, Emitter<ManageAppsState> emit) {
+      ManageAppsKeyWordChanged event, Emitter<ManageAppsState> emit) {
+    bool isUserApps = state.tab == ManageAppsTab.mine;
     String keyword = event.keyword.trim();
 
-    if (keyword.isEmpty) {
-      final userApps =
-          state.apps.where((element) => !element.isSystemApp).toList();
-      _sortApps(userApps, state.sortColumn, state.sortDirection);
+    if (isUserApps) {
+      if (keyword.isEmpty) {
+        final userApps =
+            state.apps.where((element) => !element.isSystemApp).toList();
+        _sortApps(
+            userApps, state.userAppsSortColumn, state.userAppsSortDirection);
 
-      emit(state.copyWith(userAppsKeyword: keyword, userApps: userApps));
+        emit(state.copyWith(userAppsKeyword: keyword, userApps: userApps));
+      } else {
+        final userApps = state.userApps
+            .where((element) =>
+                element.name.toLowerCase().contains(keyword.toLowerCase()))
+            .toList();
+        emit(state.copyWith(userApps: userApps, userAppsKeyword: keyword));
+      }
     } else {
-      final userApps = state.userApps
-          .where((element) =>
-              element.name.toLowerCase().contains(keyword.toLowerCase()))
-          .toList();
-      emit(state.copyWith(userApps: userApps, userAppsKeyword: keyword));
+      if (keyword.isEmpty) {
+        final systemApps =
+            state.apps.where((element) => element.isSystemApp).toList();
+        _sortApps(
+            systemApps, state.userAppsSortColumn, state.userAppsSortDirection);
+
+        emit(state.copyWith(userAppsKeyword: keyword, systemApps: systemApps));
+      } else {
+        final systemApps = state.systemApps
+            .where((element) =>
+                element.name.toLowerCase().contains(keyword.toLowerCase()))
+            .toList();
+        emit(state.copyWith(systemApps: systemApps, userAppsKeyword: keyword));
+      }
     }
   }
 
@@ -275,5 +220,16 @@ class ManageAppsBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
     if (_itemCountStreamController.isClosed) return;
 
     _itemCountStreamController.add(event.itemCount);
+  }
+
+  void _onTabChanged(
+      ManageAppsTabChanged event, Emitter<ManageAppsState> emit) {
+    emit(state.copyWith(tab: event.tab));
+  }
+
+  @override
+  Future<void> close() {
+    DataGridHolder.dispose();
+    return super.close();
   }
 }

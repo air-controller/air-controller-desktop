@@ -4,6 +4,16 @@ enum ManageAppsStatus { initial, loading, success, failure }
 
 enum ManageAppsTab { mine, preInstalled }
 
+extension ManageAppsTabX on ManageAppsTab {
+  static ManageAppsTab converIndexTo(int index) {
+    try {
+      return ManageAppsTab.values.firstWhere((tab) => tab.index == index);
+    } catch (e) {
+      return ManageAppsTab.mine;
+    }
+  }
+}
+
 enum ManageAppsSortColumn { appName, size }
 
 enum ManageAppsSortDirection { ascending, descending }
@@ -48,10 +58,6 @@ class ManageAppsInstallStatusUnit extends Equatable {
         isRunInBackground: isRunInBackground ?? this.isRunInBackground);
   }
 }
-
-enum ManageAppsKeyStatus { none, ctrlDown, shiftDown }
-
-enum ManageAppsCtrlAStatus { none, tap }
 
 enum ManageAppsExportApksStatus {
   initial,
@@ -99,38 +105,34 @@ class ManageAppsState extends Equatable {
   final ManageAppsStatus status;
   final List<AppInfo> apps;
   final List<AppInfo> userApps;
-  final List<AppInfo> filterUserApps;
   final List<AppInfo> checkedUserApps;
   final List<AppInfo> systemApps;
-  final List<AppInfo> filterSystemApps;
   final List<AppInfo> checkedSystemApps;
   final String? failureReason;
-  final ManageAppsSortColumn sortColumn;
-  final ManageAppsSortDirection sortDirection;
+  final ManageAppsSortColumn userAppsSortColumn;
+  final ManageAppsSortDirection userAppsSortDirection;
+  final ManageAppsSortColumn systemAppsSortColumn;
+  final ManageAppsSortDirection systemAppsSortDirection;
   final ManageAppsInstallStatusUnit installStatus;
-  final ManageAppsKeyStatus keyStatus;
-  final ManageAppsCtrlAStatus ctrlAStatus;
   final ManageAppsExportApksStatusUnit exportApksStatus;
-  final String userAppsKeyword;
+  final String keyWord;
 
   const ManageAppsState(
       {this.tab = ManageAppsTab.mine,
       this.status = ManageAppsStatus.initial,
       this.apps = const [],
       this.userApps = const [],
-      this.filterUserApps = const [],
       this.checkedUserApps = const [],
       this.systemApps = const [],
-      this.filterSystemApps = const [],
       this.checkedSystemApps = const [],
       this.failureReason = null,
-      this.sortColumn = ManageAppsSortColumn.appName,
-      this.sortDirection = ManageAppsSortDirection.ascending,
+      this.userAppsSortColumn = ManageAppsSortColumn.appName,
+      this.userAppsSortDirection = ManageAppsSortDirection.ascending,
+      this.systemAppsSortColumn = ManageAppsSortColumn.appName,
+      this.systemAppsSortDirection = ManageAppsSortDirection.ascending,
       this.installStatus = const ManageAppsInstallStatusUnit(),
-      this.keyStatus = ManageAppsKeyStatus.none,
-      this.ctrlAStatus = ManageAppsCtrlAStatus.none,
       this.exportApksStatus = const ManageAppsExportApksStatusUnit(),
-      this.userAppsKeyword = ""});
+      this.keyWord = ""});
 
   @override
   List<Object?> get props => [
@@ -138,19 +140,17 @@ class ManageAppsState extends Equatable {
         status,
         apps,
         userApps,
-        filterUserApps,
         checkedUserApps,
         systemApps,
-        filterSystemApps,
         checkedSystemApps,
         failureReason,
-        sortColumn,
-        sortDirection,
+        userAppsSortColumn,
+        userAppsSortDirection,
+        systemAppsSortColumn,
+        systemAppsSortDirection,
         installStatus,
-        keyStatus,
-        ctrlAStatus,
         exportApksStatus,
-        userAppsKeyword
+        keyWord
       ];
 
   ManageAppsState copyWith(
@@ -158,36 +158,33 @@ class ManageAppsState extends Equatable {
       ManageAppsStatus? status,
       List<AppInfo>? apps,
       List<AppInfo>? userApps,
-      List<AppInfo>? filterUserApps,
       List<AppInfo>? checkedUserApps,
       List<AppInfo>? systemApps,
-      List<AppInfo>? filterSystemApps,
       List<AppInfo>? checkedSystemApps,
       String? failureReason,
-      ManageAppsSortColumn? sortColumn,
-      ManageAppsSortDirection? sortDirection,
+      ManageAppsSortColumn? userAppsSortColumn,
+      ManageAppsSortDirection? userAppsSortDirection,
       ManageAppsInstallStatusUnit? installStatus,
-      ManageAppsKeyStatus? keyStatus,
-      ManageAppsCtrlAStatus? ctrlAStatus,
       ManageAppsExportApksStatusUnit? exportApksStatus,
-      String? userAppsKeyword}) {
+      String? userAppsKeyword,
+      ManageAppsSortColumn? systemAppsSortColumn,
+      ManageAppsSortDirection? systemAppsSortDirection}) {
     return ManageAppsState(
         tab: tab ?? this.tab,
         status: status ?? this.status,
         apps: apps ?? this.apps,
         userApps: userApps ?? this.userApps,
-        filterUserApps: filterUserApps ?? this.filterUserApps,
         checkedUserApps: checkedUserApps ?? this.checkedUserApps,
         systemApps: systemApps ?? this.systemApps,
-        filterSystemApps: filterSystemApps ?? this.filterSystemApps,
         checkedSystemApps: checkedSystemApps ?? this.checkedSystemApps,
         failureReason: failureReason ?? this.failureReason,
-        sortColumn: sortColumn ?? this.sortColumn,
-        sortDirection: sortDirection ?? this.sortDirection,
+        userAppsSortColumn: userAppsSortColumn ?? this.userAppsSortColumn,
+        userAppsSortDirection: userAppsSortDirection ?? this.userAppsSortDirection,
         installStatus: installStatus ?? this.installStatus,
-        keyStatus: keyStatus ?? this.keyStatus,
-        ctrlAStatus: ctrlAStatus ?? this.ctrlAStatus,
         exportApksStatus: exportApksStatus ?? this.exportApksStatus,
-        userAppsKeyword: userAppsKeyword ?? this.userAppsKeyword);
+        keyWord: userAppsKeyword ?? this.keyWord,
+        systemAppsSortColumn: systemAppsSortColumn ?? this.systemAppsSortColumn,
+        systemAppsSortDirection:
+            systemAppsSortDirection ?? this.systemAppsSortDirection);
   }
 }
