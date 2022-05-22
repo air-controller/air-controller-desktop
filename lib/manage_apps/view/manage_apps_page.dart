@@ -803,8 +803,9 @@ class ManageAppsPage extends StatelessWidget {
                                 cursorColor: Color(0xff999999),
                                 cursorHeight: 15,
                                 onChange: (value) {
-                                  context.read<ManageAppsHomeBloc>().add(
-                                      ManageAppsKeyWordChanged(value));
+                                  context
+                                      .read<ManageAppsHomeBloc>()
+                                      .add(ManageAppsKeyWordChanged(value));
                                 },
                               );
                             }),
@@ -813,18 +814,16 @@ class ManageAppsPage extends StatelessWidget {
                           height: 30,
                           margin: EdgeInsets.only(left: 10, right: 10),
                         ),
-                       
-
                         UnifiedIconButton(
-                          width: 25, 
-                          height: 25, 
-                          iconPath: "assets/icons/ic_search.png",
-                          padding: EdgeInsets.all(5),
-                          onTap: () {
+                            width: 25,
+                            height: 25,
+                            iconPath: "assets/icons/ic_search.png",
+                            padding: EdgeInsets.all(5),
+                            onTap: () {
                               context.read<ManageAppsHomeBloc>().add(
                                   ManageAppsKeyWordChanged(
                                       searchEditingController.text));
-                          })    
+                            })
                       ],
                     ),
                     width: 350,
@@ -1039,7 +1038,8 @@ class AppInfoDataSource extends DataGridSource {
 
       Color textColor = false ? Colors.white : Color(0xff313237);
 
-      TextStyle textStyle = TextStyle(fontSize: 14, color: textColor);
+      TextStyle textStyle = TextStyle(
+          fontSize: 14, color: textColor, fontWeight: FontWeight.normal);
 
       switch (column) {
         case AppInfoColumn.iconAndName:
