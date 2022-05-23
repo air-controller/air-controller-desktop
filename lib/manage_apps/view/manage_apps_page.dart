@@ -570,6 +570,7 @@ class ManageAppsPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
+                      if (isUserApps)
                       UnifiedIconButtonWithText(
                         iconPath: "assets/icons/ic_install.png",
                         iconSize: 17,
@@ -587,7 +588,7 @@ class ManageAppsPage extends StatelessWidget {
                         iconSize: 19,
                         text: context.l10n.export,
                         space: 10,
-                        margin: EdgeInsets.only(left: 10),
+                        margin: EdgeInsets.only(left: isUserApps ? 10 : 20),
                         enable: checkedApps.isNotEmpty,
                         onTap: () {
                           _exportApks(context);
@@ -1033,13 +1034,11 @@ class AppInfoDataSource extends DataGridSource {
       AppInfoColumn column = AppInfoColumn.values
           .where((column) => column.toString() == cell.columnName)
           .first;
-      final TextStyle headerStyle =
-          TextStyle(fontSize: 14, color: Colors.black);
-
-      Color textColor = false ? Colors.white : Color(0xff313237);
 
       TextStyle textStyle = TextStyle(
-          fontSize: 14, color: textColor, fontWeight: FontWeight.normal);
+          fontSize: 14,
+          color: Color(0xff313237),
+          fontWeight: FontWeight.normal);
 
       switch (column) {
         case AppInfoColumn.iconAndName:

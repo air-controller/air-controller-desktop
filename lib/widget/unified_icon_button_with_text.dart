@@ -48,7 +48,7 @@ class UnifiedIconButtonWithText extends StatelessWidget {
       return InkResponse(
         child: Container(
           child: Row(
-            children: childWidgets(isIconAtLeft),
+            children: childWidgets(color, isIconAtLeft),
           ),
           color: backgroundColor,
           padding: EdgeInsets.only(left: 5, right: 5, top: 3, bottom: 3),
@@ -88,7 +88,7 @@ class UnifiedIconButtonWithText extends StatelessWidget {
     }));
   }
 
-  List<Widget> childWidgets(bool isIconAtLeft) {
+  List<Widget> childWidgets(Color color, bool isIconAtLeft) {
     if (isIconAtLeft) {
       return [
         Image.asset(
