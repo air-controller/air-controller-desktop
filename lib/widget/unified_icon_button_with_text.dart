@@ -46,6 +46,9 @@ class UnifiedIconButtonWithText extends StatelessWidget {
       if (!enable) backgroundColor = Colors.transparent;
 
       return InkResponse(
+        splashColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: Container(
           child: Row(
             children: childWidgets(color, isIconAtLeft),

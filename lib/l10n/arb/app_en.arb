@@ -110,5 +110,9 @@
   "uploadingWait": "Uploading...",
   "unknownError": "Unknown error!",
   "installationPackageUploadSuccess": "The installation package is uploaded successfully, please go to the mobile phone to install",
-  "uninstallConfirmTip": "The uninstall request has been sent, please confirm on the mobile phone and complete the uninstall!"
+  "uninstallConfirmTip": "The uninstall request has been sent, please confirm on the mobile phone and complete the uninstall!",
+  "newContact": "New contact",
+  "placeHolderAllContacts": "All contacts(%s)",
+  "accountLabel": "Accounts: ",
+  "groupLabel": "Groups: "
 }

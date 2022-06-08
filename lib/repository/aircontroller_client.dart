@@ -3,12 +3,13 @@ import 'dart:io';
 
 import 'package:air_controller/bootstrap.dart';
 import 'package:air_controller/model/app_info.dart';
+import 'package:air_controller/model/contact_basic_info.dart';
+import 'package:air_controller/model/contact_detail.dart';
 import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
 
@@ -16,6 +17,7 @@ import '../constant.dart';
 import '../enter/view/enter_page.dart';
 import '../model/album_item.dart';
 import '../model/audio_item.dart';
+import '../model/contact_summary_info.dart';
 import '../model/file_item.dart';
 import '../model/image_item.dart';
 import '../model/mobile_info.dart';
@@ -734,6 +736,170 @@ class AirControllerClient {
     });
 
     return cancelToken;
+  }
+
+  Future<ContactSummaryInfo> getContactAccounts() async {
+    try {
+      final response = await dio.post("/contact/accountsAndGroups",
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final map = httpResponseEntity.data;
+            return ContactSummaryInfo.fromJson(map);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get contact accounts failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get contact accounts failure.");
+    }
+  }
+
+  Future<List<ContactBasicInfo>> getAllContacts() async {
+    try {
+      final response = await dio.post("/contact/allContacts",
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final list = httpResponseEntity.data as List;
+            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get all contacts failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get all contacts failure.");
+    }
+  }
+
+  Future<List<ContactBasicInfo>> getContactsByAccount(
+      String name, String type) async {
+    try {
+      final response = await dio.post("/contact/contactsByAccount",
+          data: {"name": name, "type": type},
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final list = httpResponseEntity.data as List;
+            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get contacts failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get contacts failure.");
+    }
+  }
+
+  Future<List<ContactBasicInfo>> getContactsByGroupId(int groupId) async {
+    try {
+      final response = await dio.post("/contact/contactsByGroupId",
+          data: {"id": groupId},
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final list = httpResponseEntity.data as List;
+            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get contacts failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get contacts failure.");
+    }
+  }
+
+  Future<ContactDetail> getContactDetail(int id) async {
+    try {
+      final response = await dio.post("/contact/contactDetail",
+          data: {"id": id},
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+            return ContactDetail.fromJson(dataMap);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get contact detail failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get contact detail failure.");
+    }
   }
 
   Map<String, String> _commonHeaders() {

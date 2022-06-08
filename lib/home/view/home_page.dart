@@ -5,8 +5,8 @@ import 'dart:io';
 import 'package:air_controller/event/update_mobile_info.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/repository/contact_repository.dart';
 import 'package:air_controller/toolbox_home/view/toolbox_flow.dart';
-import 'package:air_controller/toolbox_home/view/toolbox_home_page.dart';
 import 'package:flowder/flowder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,7 +55,9 @@ class HomePage extends StatelessWidget {
       RepositoryProvider<AudioRepository>(
           create: (context) => AudioRepository(client: client)),
       RepositoryProvider<VideoRepository>(
-          create: (context) => VideoRepository(client: client))
+          create: (context) => VideoRepository(client: client)),
+      RepositoryProvider<ContactRepository>(
+          create: (context) => ContactRepository(client: client))    
     ], child: HomeBlocProviderView());
   }
 }

@@ -1,5 +1,5 @@
 import 'package:air_controller/manage_apps/view/manage_apps_home_page.dart';
-import 'package:air_controller/manage_contacts/view/manage_apps_page.dart';
+import 'package:air_controller/manage_contacts/view/manage_contacts_page.dart';
 import 'package:air_controller/toolbox_home/view/toolbox_home_page.dart';
 import 'package:flutter/material.dart';
 import '../../constant.dart';

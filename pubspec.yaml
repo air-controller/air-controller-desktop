@@ -71,15 +71,16 @@ dependencies:
   bot_toast: ^4.0.1
   dio: ^4.0.6
   logger: ^1.1.0
-  syncfusion_flutter_datagrid: 20.1.55
+  syncfusion_flutter_datagrid: ^20.1.55
   audioplayers: ^0.20.1
+  grouped_list: ^5.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   # Your other dev_dependencies here
   build_runner: ^2.0.0
-  json_serializable: ^6.0.0
+  json_serializable: ^6.2.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

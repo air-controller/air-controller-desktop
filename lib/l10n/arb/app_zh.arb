@@ -110,5 +110,9 @@
   "uploadingWait": "正在上传中，请稍后...",
   "unknownError": "未知错误",
   "installationPackageUploadSuccess": "安装包已上传成功，请前往手机安装！",
-  "uninstallConfirmTip": "卸载请求已发起，请在手机端确认并完成卸载！"
+  "uninstallConfirmTip": "卸载请求已发起，请在手机端确认并完成卸载！",
+  "newContact": "新建联系人" ,
+  "placeHolderAllContacts": "全部联系人（%s）",
+  "accountLabel": "账号：",
+  "groupLabel": "分组："
 }
