@@ -114,5 +114,19 @@
   "newContact": "New contact",
   "placeHolderAllContacts": "All contacts(%s)",
   "accountLabel": "Accounts: ",
-  "groupLabel": "Groups: "
+  "groupLabel": "Groups: ",
+  "selectImage": "Please select an image",
+  "editContact": "Edit contact",
+  "addContact": "Add contact",
+  "singleAccountLabel": "Account: ",
+  "singleGroupLabel": "Group: ",
+  "phoneLabel": "Phone: ",
+  "emailLabel": "Email: ",
+  "imLabel": "IM: ",
+  "addressLabel": "Address: ",
+  "relationLabel": "Relation: ",
+  "noteLabel": "Note: ",
+  "sure": "Ok",
+  "addCategory": "Add category",
+  "allContacts": "All contacts"
 }

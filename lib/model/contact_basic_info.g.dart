@@ -9,19 +9,15 @@ part of 'contact_basic_info.dart';
 ContactBasicInfo _$ContactBasicInfoFromJson(Map<String, dynamic> json) =>
     ContactBasicInfo(
       id: json['id'] as int,
-      lookupKey: json['lookupKey'] as String?,
-      phoneNumber: json['phoneNumber'] as String?,
-      photoUri: json['photoUri'] as String?,
-      photoThumbnailUri: json['photoThumbnailUri'] as String?,
+      contactId: json['contactId'] as int,
+      phoneNumber: json['phoneNumber'] as String,
       displayNamePrimary: json['displayNamePrimary'] as String?,
     );
 
 Map<String, dynamic> _$ContactBasicInfoToJson(ContactBasicInfo instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'lookupKey': instance.lookupKey,
+      'contactId': instance.contactId,
       'phoneNumber': instance.phoneNumber,
-      'photoUri': instance.photoUri,
-      'photoThumbnailUri': instance.photoThumbnailUri,
       'displayNamePrimary': instance.displayNamePrimary,
     };

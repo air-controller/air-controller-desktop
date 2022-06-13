@@ -5,20 +5,15 @@ part 'contact_basic_info.g.dart';
 @JsonSerializable()
 class ContactBasicInfo {
   final int id;
-  final String? lookupKey;
-  final String? phoneNumber;
-  final String? photoUri;
-  final String? photoThumbnailUri;
+  final int contactId;
+  final String phoneNumber;
   final String? displayNamePrimary;
 
-  const ContactBasicInfo({
-    required this.id,
-    this.lookupKey,
-    this.phoneNumber,
-    this.photoUri,
-    this.photoThumbnailUri,
-    this.displayNamePrimary,
-  });
+  const ContactBasicInfo(
+      {required this.id,
+      required this.contactId,
+      required this.phoneNumber,
+      this.displayNamePrimary});
 
   factory ContactBasicInfo.fromJson(Map<String, dynamic> json) =>
       _$ContactBasicInfoFromJson(json);

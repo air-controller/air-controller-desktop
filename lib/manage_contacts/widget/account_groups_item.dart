@@ -48,7 +48,7 @@ class AccountGroupsItem extends StatelessWidget {
               GestureDetector(
                 child: SizedBox(
                   child: Text(
-                    "${accountInfo.account.name}(${accountInfo.count})",
+                    "${accountInfo.account.name}",
                     style: TextStyle(
                       color:
                           textColor,
@@ -78,7 +78,7 @@ class AccountGroupsItem extends StatelessWidget {
                   child: ListTile(
                     dense: true,
                     title: Padding(
-                      child: Text("${group.title}(${group.count})"),
+                      child: Text("${group.title}"),
                       padding: EdgeInsets.only(left: 35),
                     ),
                     tileColor: Colors.white,

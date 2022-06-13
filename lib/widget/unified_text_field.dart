@@ -15,6 +15,8 @@ class UnifiedTextField extends StatelessWidget {
   final Color? cursorColor;
   final double? cursorHeight;
   final ValueChanged<String>? onChange;
+  final String? initialValue;
+  final int maxLines;
 
   bool _needShowClearIcon = false;
 
@@ -30,7 +32,9 @@ class UnifiedTextField extends StatelessWidget {
       this.contentPadding = const EdgeInsets.fromLTRB(15, 5, 15, 5),
       this.cursorColor,
       this.cursorHeight,
-      this.onChange});
+      this.onChange,
+      this.initialValue,
+      this.maxLines = 1});
 
   @override
   Widget build(BuildContext context) {
@@ -69,13 +73,15 @@ class UnifiedTextField extends StatelessWidget {
 
       if (null != borderColor) realBorderColor = borderColor!;
 
-      return TextField(
+      return TextFormField(
           autofocus: true,
           cursorColor: cursorColor,
           cursorHeight: cursorHeight,
+          maxLines: maxLines,
           style: style,
           textAlignVertical: TextAlignVertical.center,
           controller: controller,
+          initialValue: initialValue,
           decoration: InputDecoration(
             suffixIcon: realClearIcon,
             hintText: hintText,

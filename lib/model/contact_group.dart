@@ -9,7 +9,8 @@ class ContactGroup extends Equatable {
   final String title;
   final int count;
 
-  const ContactGroup({required this.id, required this.title, required this.count});
+  const ContactGroup(
+      {required this.id, required this.title, required this.count});
 
   factory ContactGroup.fromJson(Map<String, dynamic> json) =>
       _$ContactGroupFromJson(json);
@@ -17,5 +18,9 @@ class ContactGroup extends Equatable {
   Map<String, dynamic> toJson() => _$ContactGroupToJson(this);
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, title, count];
+
+  @override
+  operator ==(Object other) =>
+      identical(this, other) || other is ContactGroup && id == other.id;
 }

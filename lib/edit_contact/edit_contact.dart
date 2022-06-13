@@ -1,0 +1,1 @@
+export 'view/edit_contact_view.dart';

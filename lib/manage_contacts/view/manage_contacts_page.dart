@@ -1,9 +1,13 @@
+import 'package:air_controller/edit_contact/view/edit_contact_view.dart';
 import 'package:air_controller/ext/scaffoldx.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/manage_contacts/bloc/manage_contacts_bloc.dart';
+import 'package:air_controller/manage_contacts/view/view.dart';
 import 'package:air_controller/manage_contacts/widget/account_groups_item.dart';
 import 'package:air_controller/model/account.dart';
 import 'package:air_controller/model/contact_account_info.dart';
+import 'package:air_controller/model/contact_detail.dart';
+import 'package:air_controller/model/contact_field_value.dart';
 import 'package:air_controller/model/contact_group.dart';
 import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/repository/contact_repository.dart';
@@ -17,7 +21,7 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
 import '../../constant.dart';
-import '../../model/phone.dart';
+import '../../edit_contact/bloc/bloc/edit_contact_bloc.dart';
 import '../../network/device_connection_manager.dart';
 import '../../widget/unified_icon_button.dart';
 import '../../widget/unified_icon_button_with_text.dart';
@@ -103,7 +107,9 @@ class _ManageContactsView extends StatelessWidget {
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
             _ContactActionBar(
               onCheckChanged: (isChecked) {},
-              onNewContact: () {},
+              onNewContact: () {
+                _showEditContactDialog(pageContext: context, isNew: true);
+              },
               onDeleteClick: () {},
               onRefresh: () {
                 context.read<ManageContactsBloc>().add(
@@ -131,7 +137,9 @@ class _ManageContactsView extends StatelessWidget {
                 ),
                 VerticalDivider(
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
-                _ContactDetailView()
+                _ContactDetailView(onEdit: (value) {
+                  _showEditContactDialog(pageContext: context, isNew: false);
+                })
               ],
             )),
             BottomCountView(
@@ -139,6 +147,35 @@ class _ManageContactsView extends StatelessWidget {
                 totalCount: contacts.length),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditContactDialog(
+      {required BuildContext pageContext, required bool isNew}) {
+    final accounts = pageContext.read<ManageContactsBloc>().state.accounts;
+
+    showDialog(
+      context: pageContext,
+      builder: (context) => BlocProvider(
+        create: (context) {
+          if (isNew) {
+            return EditContactBloc.newForNewContact(
+                contactRepository: pageContext.read<ContactRepository>(),
+                accountInfoList: accounts)
+              ..add(SubscriptionRequested());
+          } else {
+            final contactDetail =
+                pageContext.read<ManageContactsBloc>().state.contactDetail;
+
+            return EditContactBloc.newForEditContact(
+                contactRepository: pageContext.read<ContactRepository>(),
+                contactDetail: contactDetail,
+                accountInfoList: accounts)
+              ..add(SubscriptionRequested());
+          }
+        },
+        child: EditContactView(),
       ),
     );
   }
@@ -159,7 +196,9 @@ class _ManageContactsView extends StatelessWidget {
 }
 
 class _ContactDetailView extends StatelessWidget {
-  const _ContactDetailView();
+  final Function(ContactDetail) onEdit;
+
+  const _ContactDetailView({required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -180,8 +219,6 @@ class _ContactDetailView extends StatelessWidget {
       ));
     }
 
-    String imageUrl = "$_rootURL/stream/photoUri?uri=${contactDetail.photoUri}";
-
     return Expanded(
         child: SingleChildScrollView(
       child: Column(
@@ -191,9 +228,12 @@ class _ContactDetailView extends StatelessWidget {
           _buildBasicInfo(
               context: context,
               displayName: contactDetail.displayNamePrimary,
-              imageUrl: imageUrl,
+              rawContactId: contactDetail.id,
               groups: contactDetail.groups,
-              accounts: contactDetail.accounts),
+              accounts: contactDetail.accounts,
+              onEdit: () {
+                onEdit(contactDetail);
+              }),
           _buildOtherInfo(context, contactDetail.phones)
         ],
       ),
@@ -203,9 +243,10 @@ class _ContactDetailView extends StatelessWidget {
   Widget _buildBasicInfo(
       {required BuildContext context,
       required String? displayName,
-      required String imageUrl,
+      required int rawContactId,
       required List<Account>? accounts,
-      required List<ContactGroup>? groups}) {
+      required List<ContactGroup>? groups,
+      required VoidCallback onEdit}) {
     final accountsText = accounts?.map((account) {
       return account.name.toString();
     }).join(', ');
@@ -220,7 +261,7 @@ class _ContactDetailView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPhotoView(imageUrl),
+            ContactAvatarView(rawContactId: rawContactId, width: 100, height: 100, iconSize: 50),
             Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: Column(
@@ -228,7 +269,10 @@ class _ContactDetailView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       _buildNameView(
-                          displayName: displayName ?? "", onTap: () {}),
+                          displayName: displayName ?? "",
+                          onTap: () {
+                            onEdit();
+                          }),
                       _buildLabelView(
                           top: 5,
                           label: context.l10n.accountLabel,
@@ -244,30 +288,6 @@ class _ContactDetailView extends StatelessWidget {
       ),
       padding: EdgeInsets.only(left: 15, top: 15),
     );
-  }
-
-  Widget _buildPhotoView(String imageUrl) {
-    final imageSize = 100.0;
-
-    return CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: imageSize,
-        height: imageSize,
-        fit: BoxFit.cover,
-        errorWidget: (context, url, error) {
-          return Container(
-            color: Color(0xff34a9ff),
-            alignment: Alignment.center,
-            width: imageSize,
-            height: imageSize,
-            child: Image.asset(
-              "assets/icons/default_contact.png",
-              width: 50,
-              height: 50,
-              color: Colors.white,
-            ),
-          );
-        });
   }
 
   Widget _buildNameView(
@@ -303,7 +323,8 @@ class _ContactDetailView extends StatelessWidget {
         ));
   }
 
-  Widget _buildOtherInfo(BuildContext context, List<Phone>? phones) {
+  Widget _buildOtherInfo(
+      BuildContext context, List<ContactFieldValue>? phones) {
     final labelColor = Color(0xff999999);
     final phoneColor = Color(0xff474747);
     final fontSize = 14.0;
@@ -323,12 +344,12 @@ class _ContactDetailView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(phone.label ?? "",
+                      Text(phone.type?.typeLabel ?? "",
                           style: TextStyle(
                             color: labelColor,
                             fontSize: fontSize,
                           )),
-                      Text(phone.normalizedNumber ?? "",
+                      Text(phone.value,
                           style: TextStyle(
                             color: phoneColor,
                             fontSize: fontSize,
@@ -421,7 +442,6 @@ class _ContactGroupList extends StatelessWidget {
   }
 
   Widget _buildAllContacts({required BuildContext context}) {
-    final total = context.select((ManageContactsBloc bloc) => bloc.state.total);
     final isExpanded = context
         .select((ManageContactsBloc bloc) => bloc.state.isAllContactsExpanded);
 
@@ -449,8 +469,7 @@ class _ContactGroupList extends StatelessWidget {
           GestureDetector(
             child: SizedBox(
               child: Text(
-                context.l10n.placeHolderAllContacts
-                    .replaceFirst("%s", "$total"),
+                context.l10n.allContacts,
                 style: TextStyle(
                   color:
                       isAllContactsChecked ? Colors.white : Color(0xff777777),
@@ -480,9 +499,6 @@ class ContactsDataSource extends DataGridSource {
   final BuildContext context;
   List<DataGridRow> dataGridRows = [];
   final double dataGridWidth;
-
-  final _rootURL =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
 
   ContactsDataSource(
       {required this.context,
@@ -516,64 +532,44 @@ class ContactsDataSource extends DataGridSource {
         cells: row.getCells().map<Widget>((cell) {
       final contactInfo = cell.value as ContactBasicInfo;
 
-      return Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.fromLTRB(0, 6, 0, 6),
-        child: Row(
-          children: [
-            CachedNetworkImage(
-              imageUrl:
-                  "$_rootURL/stream/photoUri?uri=${contactInfo.photoThumbnailUri}",
-              width: 60,
-              height: 60,
-              errorWidget: (context, url, error) {
-                return Padding(
-                    padding: EdgeInsets.only(left: 6, right: 6),
-                    child: Container(
-                      color: Color(0xff34a9ff),
-                      alignment: Alignment.center,
-                      width: 60,
-                      height: 60,
-                      child: Image.asset(
-                        "assets/icons/default_contact.png",
-                        width: 25,
-                        height: 25,
-                        color: Colors.white,
-                      ),
-                    ));
-              },
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(contactInfo.displayNamePrimary ?? "",
+      return Row(
+        children: [
+          Padding(
+              padding: EdgeInsets.only(left: 10, right: 5),
+              child: ContactAvatarView(
+                  rawContactId: contactInfo.id,
+                  width: 45,
+                  height: 45,
+                  iconSize: 25)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(contactInfo.displayNamePrimary ?? "",
+                  style: TextStyle(
+                      color: Color(0xff474747),
+                      fontSize: 14,
+                      overflow: TextOverflow.ellipsis),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              SizedBox(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 3, right: 10),
+                  child: Text(
+                    contactInfo.phoneNumber,
                     style: TextStyle(
-                        color: Color(0xff474747),
+                        color: Color(0xff999999),
                         fontSize: 14,
                         overflow: TextOverflow.ellipsis),
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                SizedBox(
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 3, right: 10),
-                    child: Text(
-                      contactInfo.phoneNumber ?? "",
-                      style: TextStyle(
-                          color: Color(0xff999999),
-                          fontSize: 14,
-                          overflow: TextOverflow.ellipsis),
-                      maxLines: 1,
-                      softWrap: false,
-                    ),
+                    softWrap: false,
                   ),
-                  width: dataGridWidth - 70,
                 ),
-              ],
-            ),
-          ],
-        ),
-        color: Colors.transparent,
+                width: dataGridWidth - 70,
+              ),
+            ],
+          ),
+        ],
       );
     }).toList());
   }
@@ -639,6 +635,8 @@ class _ContactActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedContacts = context
         .select((ManageContactsBloc bloc) => bloc.state.selectedContacts);
+    final isInitDone =
+        context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
 
     return Container(
       child: Row(
@@ -651,7 +649,10 @@ class _ContactActionBar extends StatelessWidget {
                 text: context.l10n.newContact,
                 space: 10,
                 margin: EdgeInsets.only(left: 20),
-                onTap: () {},
+                enable: isInitDone,
+                onTap: () {
+                  onNewContact();
+                },
               ),
               UnifiedIconButtonWithText(
                 iconPath: "assets/icons/ic_delete.png",
@@ -684,7 +685,6 @@ class _ContactActionBar extends StatelessWidget {
                   child: UnifiedTextField(
                     style: TextStyle(fontSize: 14, color: Color(0xff333333)),
                     hintText: context.l10n.search,
-                    // controller: searchEditingController,
                     borderRadius: 3,
                     cursorColor: Color(0xff999999),
                     cursorHeight: 15,
@@ -744,6 +744,7 @@ class _ContactsGridView extends StatelessWidget {
                 rowHeight: 60,
                 selectionMode: SelectionMode.multiple,
                 controller: controller,
+                shrinkWrapRows: false,
                 onSelectionChanged: (addedRows, removedRows) {
                   final selectedContacts = controller.selectedRows
                       .map((e) => e.getCells().first.value as ContactBasicInfo)

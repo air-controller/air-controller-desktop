@@ -114,5 +114,19 @@
   "newContact": "新建联系人" ,
   "placeHolderAllContacts": "全部联系人（%s）",
   "accountLabel": "账号：",
-  "groupLabel": "分组："
+  "groupLabel": "分组：",
+  "selectImage": "选择图片",
+  "editContact": "编辑联系人",
+  "addContact": "添加联系人",
+  "singleAccountLabel": "账户：",
+  "singleGroupLabel": "分组：",
+  "phoneLabel": "手机：",
+  "emailLabel": "邮箱：",
+  "imLabel": "聊天：",
+  "addressLabel": "地址：",
+  "relationLabel": "关系：",
+  "noteLabel": "备注：",
+  "sure": "确定",
+  "addCategory": "添加分类",
+  "allContacts": "所有联系人"
 }

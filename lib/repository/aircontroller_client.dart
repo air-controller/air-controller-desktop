@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:air_controller/bootstrap.dart';
 import 'package:air_controller/model/app_info.dart';
 import 'package:air_controller/model/contact_basic_info.dart';
+import 'package:air_controller/model/contact_data_type_map.dart';
 import 'package:air_controller/model/contact_detail.dart';
+import 'package:air_controller/model/update_contact_request_entity.dart';
 import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
@@ -21,6 +23,7 @@ import '../model/contact_summary_info.dart';
 import '../model/file_item.dart';
 import '../model/image_item.dart';
 import '../model/mobile_info.dart';
+import '../model/new_contact_request_entity.dart';
 import '../model/response_entity.dart';
 import '../model/video_folder_item.dart';
 import '../model/video_item.dart';
@@ -899,6 +902,178 @@ class AirControllerClient {
       }
     } catch (e) {
       throw BusinessError("Get contact detail failure.");
+    }
+  }
+
+  Future<ContactDataTypeMap> getContactDataTypes() async {
+    try {
+      final response = await dio.post("/contact/contactDataTypes",
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+            return ContactDataTypeMap.fromJson(dataMap);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Get contact data types failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Get contact data types failure.");
+    }
+  }
+
+  Future<ContactDetail> createNewContact(
+      NewContactRequestEntity requestEntity) async {
+    try {
+      final response = await dio.post("/contact/createNewContact",
+          data: requestEntity.toJson(),
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+            return ContactDetail.fromJson(dataMap);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Create new contact failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Create new contact failure.");
+    }
+  }
+
+  Future<ContactDetail> uploadPhotoAndNewContact(File photo) async {
+    try {
+      final formData = DioCore.FormData.fromMap(
+          {"avatar": await DioCore.MultipartFile.fromFile(photo.path)});
+      final headers = _commonHeaders();
+      headers.remove("Content-Type");
+      final response = await dio.post("/contact/uploadPhotoAndNewContract",
+          data: formData, options: DioCore.Options(headers: headers));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+            return ContactDetail.fromJson(dataMap);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Upload photo failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Upload photo failure.");
+    }
+  }
+
+  Future<ContactDetail> updatePhotoForContact(
+      {required File photo, required int contactId}) async {
+    try {
+      final formData = DioCore.FormData.fromMap({
+        "avatar": await DioCore.MultipartFile.fromFile(photo.path),
+        "contactId": contactId
+      });
+      final headers = _commonHeaders();
+      headers.remove("Content-Type");
+      final response = await dio.post("/contact/uploadPhotoAndNewContract",
+          data: formData, options: DioCore.Options(headers: headers));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+            return ContactDetail.fromJson(dataMap);
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Upload photo failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Upload photo failure.");
+    }
+  }
+
+  Future<void> updateNewContact(
+      UpdateContactRequestEntity requestEntity) async {
+    try {
+      final response = await dio.post("/contact/updateContact",
+          data: requestEntity.toJson(),
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            return;
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Update contact failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Update contact failure.");
     }
   }
 

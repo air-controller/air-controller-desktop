@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:air_controller/model/contact_account_info.dart';
 import 'package:air_controller/model/contact_detail.dart';
 import 'package:air_controller/model/contact_group.dart';
@@ -42,6 +44,7 @@ class ManageContactsBloc
           accounts: accounts.accounts,
           isAllContactsChecked: true,
           contacts: allContacts,
+          isInitDone: true,
           status: ManageContactsStatus.success));
     } catch (e) {
       emit(ManageContactsState(
@@ -189,9 +192,8 @@ class ManageContactsBloc
       } else {
         final checkedItem = state.checkedItem;
         if (checkedItem is ContactAccountInfo) {
-          final newContacts =
-              await _contactRepository.getContactsByAccount(
-                  checkedItem.account.name, checkedItem.account.type);
+          final newContacts = await _contactRepository.getContactsByAccount(
+              checkedItem.account.name, checkedItem.account.type);
           contacts.addAll(newContacts);
         } else if (checkedItem is ContactGroup) {
           final newContacts =
@@ -201,8 +203,7 @@ class ManageContactsBloc
       }
 
       emit(state.copyWith(
-          contacts: contacts,
-          status: ManageContactsStatus.success));
+          contacts: contacts, status: ManageContactsStatus.success));
     } catch (e) {
       emit(state.copyWith(
           failureReason: (e as BusinessError).message,

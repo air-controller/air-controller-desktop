@@ -14,6 +14,7 @@ class ManageContactsState extends Equatable {
   final List<ContactBasicInfo> contacts;
   final List<ContactBasicInfo> selectedContacts;
   final ContactDetail? contactDetail;
+  final bool isInitDone;
 
   const ManageContactsState(
       {this.total = 0,
@@ -26,7 +27,8 @@ class ManageContactsState extends Equatable {
       this.isAllContactsChecked = false,
       this.contacts = const [],
       this.selectedContacts = const [],
-      this.contactDetail});
+      this.contactDetail,
+      this.isInitDone = false});
 
   @override
   List<Object?> get props => [
@@ -40,7 +42,8 @@ class ManageContactsState extends Equatable {
         isAllContactsChecked,
         contacts,
         selectedContacts,
-        contactDetail
+        contactDetail,
+        isInitDone
       ];
 
   ManageContactsState copyWith({
@@ -55,6 +58,7 @@ class ManageContactsState extends Equatable {
     List<ContactBasicInfo>? contacts,
     List<ContactBasicInfo>? selectedContacts,
     ContactDetail? contactDetail,
+    bool? isInitDone,
   }) {
     return ManageContactsState(
         total: total ?? this.total,
@@ -68,6 +72,7 @@ class ManageContactsState extends Equatable {
         isAllContactsChecked: isAllContactsChecked ?? this.isAllContactsChecked,
         contacts: contacts ?? this.contacts,
         selectedContacts: selectedContacts ?? this.selectedContacts,
-        contactDetail: contactDetail ?? this.contactDetail);
+        contactDetail: contactDetail ?? this.contactDetail,
+        isInitDone: isInitDone ?? this.isInitDone);
   }
 }

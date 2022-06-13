@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'account.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Account {
   final String name;
   final String type;
@@ -12,5 +12,5 @@ class Account {
 
   factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
   
-  Map<String, dynamic> tojson() => _$AccountToJson(this);
+  Map<String, dynamic> toJson() => _$AccountToJson(this);
 }
