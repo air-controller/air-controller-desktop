@@ -81,3 +81,12 @@ class GetContactDetailRequested extends ManageContactsEvent {
 class RefreshRequested extends ManageContactsEvent {
   const RefreshRequested();
 }
+
+class KeywordChanged extends ManageContactsEvent {
+  final String keyword;
+
+  KeywordChanged(this.keyword);
+
+  @override
+  List<Object?> get props => [keyword];
+}

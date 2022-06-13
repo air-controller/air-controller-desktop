@@ -13,7 +13,6 @@ import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/repository/contact_repository.dart';
 import 'package:air_controller/widget/bottom_count_view.dart';
 import 'package:air_controller/widget/unfied_back_button.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -60,17 +59,26 @@ class _ManageContactsView extends StatelessWidget {
     final selectedContacts = context.select(
       (ManageContactsBloc bloc) => bloc.state.selectedContacts,
     );
+    final keyword = context.select(
+      (ManageContactsBloc bloc) => bloc.state.keyword,
+    );
 
     final dataGridWidth = 250.0;
     ContactsDataSource? dataSource = DataGridHolder.dataSource;
     DataGridController? dataGridController = DataGridHolder.controller;
 
+    List<ContactBasicInfo> filteredContacts =
+        contacts.where((contact) => _filterContact(contact, keyword)).toList();
+    ;
+
     if (null == dataSource) {
       dataSource = ContactsDataSource(
-          dataGridWidth: dataGridWidth, contacts: contacts, context: context);
+          dataGridWidth: dataGridWidth,
+          contacts: filteredContacts,
+          context: context);
       DataGridHolder.dataSource = dataSource;
     } else {
-      dataSource.updataDataSource(contacts);
+      dataSource.updataDataSource(filteredContacts);
     }
 
     if (null == dataGridController) {
@@ -116,7 +124,11 @@ class _ManageContactsView extends StatelessWidget {
                       RefreshRequested(),
                     );
               },
-              onKeywordChanged: (value) {},
+              onKeywordChanged: (value) {
+                context.read<ManageContactsBloc>().add(
+                      KeywordChanged(value),
+                    );
+              },
               onSearchClick: () {},
             ),
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
@@ -144,11 +156,27 @@ class _ManageContactsView extends StatelessWidget {
             )),
             BottomCountView(
                 checkedCount: selectedContacts.length,
-                totalCount: contacts.length),
+                totalCount: filteredContacts.length),
           ],
         ),
       ),
     );
+  }
+
+  bool _filterContact(ContactBasicInfo contact, String keyword) {
+    if (keyword.isEmpty) {
+      return true;
+    }
+
+    if (contact.displayNamePrimary == null) return false;
+
+    if ((contact.displayNamePrimary!
+        .toLowerCase()
+        .contains(keyword.toLowerCase()))) return true;
+
+    if (contact.phoneNumber.contains(keyword)) return true;
+
+    return false;
   }
 
   void _showEditContactDialog(
@@ -261,7 +289,11 @@ class _ContactDetailView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ContactAvatarView(rawContactId: rawContactId, width: 100, height: 100, iconSize: 50),
+            ContactAvatarView(
+                rawContactId: rawContactId,
+                width: 100,
+                height: 100,
+                iconSize: 50),
             Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: Column(
@@ -688,7 +720,9 @@ class _ContactActionBar extends StatelessWidget {
                     borderRadius: 3,
                     cursorColor: Color(0xff999999),
                     cursorHeight: 15,
-                    onChange: (value) {},
+                    onChange: (value) {
+                      onKeywordChanged(value);
+                    },
                   ),
                   width: 200,
                   height: 30,

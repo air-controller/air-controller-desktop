@@ -30,6 +30,7 @@ class ManageContactsBloc
     on<SelectedContactsChanged>(_onSelectedContactChanged);
     on<GetContactDetailRequested>(_onGetContactDetailRequested);
     on<RefreshRequested>(_onRefreshRequested);
+    on<KeywordChanged>(_onKeywordChanged);
   }
 
   void _onSubscriptionRequested(ManageContactsSubscriptionRequested event,
@@ -209,5 +210,9 @@ class ManageContactsBloc
           failureReason: (e as BusinessError).message,
           status: ManageContactsStatus.failure));
     }
+  }
+
+  void _onKeywordChanged(KeywordChanged event, Emitter<ManageContactsState> emit) {
+    emit(state.copyWith(keyword: event.keyword));
   }
 }
