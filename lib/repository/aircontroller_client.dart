@@ -6,6 +6,7 @@ import 'package:air_controller/model/app_info.dart';
 import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/model/contact_data_type_map.dart';
 import 'package:air_controller/model/contact_detail.dart';
+import 'package:air_controller/model/delete_contacts_request_entity.dart';
 import 'package:air_controller/model/update_contact_request_entity.dart';
 import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
@@ -1074,6 +1075,38 @@ class AirControllerClient {
       }
     } catch (e) {
       throw BusinessError("Update contact failure.");
+    }
+  }
+
+  Future<void> deleteRawContacts(DeleteContactsRequestEntity requestEntity) async {
+    try {
+      final response = await dio.post("/contact/deleteRawContact",
+          data: requestEntity.toJson(),
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final map = response.data;
+          final httpResponseEntity = ResponseEntity.fromJson(map);
+
+          if (httpResponseEntity.isSuccessful()) {
+            return;
+          } else {
+            throw BusinessError(httpResponseEntity.msg);
+          }
+        } else {
+          throw BusinessError(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      } else {
+        throw BusinessError("Delete contacts failure.");
+      }
+    } catch (e) {
+      throw BusinessError("Delete contact failure.");
     }
   }
 

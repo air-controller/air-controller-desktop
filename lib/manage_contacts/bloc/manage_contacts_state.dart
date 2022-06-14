@@ -2,6 +2,8 @@ part of 'manage_contacts_bloc.dart';
 
 enum ManageContactsStatus { initial, loading, success, failure }
 
+enum ManageContactsRequestType { initial, deleteContacts, refreshContacts }
+
 class ManageContactsState extends Equatable {
   final int total;
   final List<ContactAccountInfo> accounts;
@@ -16,6 +18,7 @@ class ManageContactsState extends Equatable {
   final ContactDetail? contactDetail;
   final bool isInitDone;
   final String keyword;
+  final ManageContactsRequestType requestType;
 
   const ManageContactsState(
       {this.total = 0,
@@ -30,7 +33,8 @@ class ManageContactsState extends Equatable {
       this.selectedContacts = const [],
       this.contactDetail,
       this.isInitDone = false,
-      this.keyword = ''});
+      this.keyword = '',
+      this.requestType = ManageContactsRequestType.initial});
 
   @override
   List<Object?> get props => [
@@ -47,6 +51,7 @@ class ManageContactsState extends Equatable {
         contactDetail,
         isInitDone,
         keyword,
+        requestType
       ];
 
   ManageContactsState copyWith({
@@ -63,6 +68,7 @@ class ManageContactsState extends Equatable {
     ContactDetail? contactDetail,
     bool? isInitDone,
     String? keyword,
+    ManageContactsRequestType? requestType,
   }) {
     return ManageContactsState(
         total: total ?? this.total,
@@ -78,6 +84,7 @@ class ManageContactsState extends Equatable {
         selectedContacts: selectedContacts ?? this.selectedContacts,
         contactDetail: contactDetail ?? this.contactDetail,
         isInitDone: isInitDone ?? this.isInitDone,
-        keyword: keyword ?? this.keyword);
+        keyword: keyword ?? this.keyword,
+        requestType: requestType ?? this.requestType);
   }
 }

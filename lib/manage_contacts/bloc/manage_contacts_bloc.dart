@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:air_controller/model/contact_account_info.dart';
 import 'package:air_controller/model/contact_detail.dart';
 import 'package:air_controller/model/contact_group.dart';
+import 'package:air_controller/model/delete_contacts_request_entity.dart';
 import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:air_controller/repository/contact_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -31,11 +30,14 @@ class ManageContactsBloc
     on<GetContactDetailRequested>(_onGetContactDetailRequested);
     on<RefreshRequested>(_onRefreshRequested);
     on<KeywordChanged>(_onKeywordChanged);
+    on<DeleteContactsRequested>(_onDeleteContactsRequested);
   }
 
   void _onSubscriptionRequested(ManageContactsSubscriptionRequested event,
       Emitter<ManageContactsState> emit) async {
-    emit(state.copyWith(status: ManageContactsStatus.loading));
+    emit(state.copyWith(
+        requestType: ManageContactsRequestType.initial,
+        status: ManageContactsStatus.loading));
     try {
       final accounts = await _contactRepository.getContactAccounts();
       final allContacts = await _contactRepository.getAllContacts();
@@ -46,10 +48,12 @@ class ManageContactsBloc
           isAllContactsChecked: true,
           contacts: allContacts,
           isInitDone: true,
+          requestType: ManageContactsRequestType.initial,
           status: ManageContactsStatus.success));
     } catch (e) {
       emit(ManageContactsState(
           failureReason: (e as BusinessError).message,
+          requestType: ManageContactsRequestType.initial,
           status: ManageContactsStatus.failure));
     }
   }
@@ -212,7 +216,36 @@ class ManageContactsBloc
     }
   }
 
-  void _onKeywordChanged(KeywordChanged event, Emitter<ManageContactsState> emit) {
+  void _onKeywordChanged(
+      KeywordChanged event, Emitter<ManageContactsState> emit) {
     emit(state.copyWith(keyword: event.keyword));
+  }
+
+  void _onDeleteContactsRequested(
+      DeleteContactsRequested event, Emitter<ManageContactsState> emit) async {
+    emit(state.copyWith(
+        requestType: ManageContactsRequestType.deleteContacts,
+        status: ManageContactsStatus.loading));
+
+    try {
+      final selectedContacts = state.selectedContacts;
+      final ids = selectedContacts.map((contact) => contact.id).toList();
+      await _contactRepository
+          .deleteRawContacts(DeleteContactsRequestEntity(ids));
+
+      final contacts = [...state.contacts];
+      contacts.removeWhere((contact) => selectedContacts.contains(contact));
+
+      emit(state.copyWith(
+          contacts: contacts,
+          selectedContacts: [],
+          requestType: ManageContactsRequestType.deleteContacts,
+          status: ManageContactsStatus.success));
+    } on BusinessError catch (e) {
+      emit(state.copyWith(
+          requestType: ManageContactsRequestType.deleteContacts,
+          status: ManageContactsStatus.failure,
+          failureReason: e.message));
+    }
   }
 }

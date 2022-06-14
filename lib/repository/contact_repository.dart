@@ -4,6 +4,7 @@ import '../model/contact_basic_info.dart';
 import '../model/contact_data_type_map.dart';
 import '../model/contact_detail.dart';
 import '../model/contact_summary_info.dart';
+import '../model/delete_contacts_request_entity.dart';
 import '../model/new_contact_request_entity.dart';
 import '../model/update_contact_request_entity.dart';
 import 'aircontroller_client.dart';
@@ -46,4 +47,7 @@ class ContactRepository {
 
   Future<void> updateNewContact(UpdateContactRequestEntity requestEntity) =>
       this.client.updateNewContact(requestEntity);
+
+  Future<void> deleteRawContacts(DeleteContactsRequestEntity requestEntity) =>
+      this.client.deleteRawContacts(requestEntity);
 }

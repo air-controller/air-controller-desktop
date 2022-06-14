@@ -13,6 +13,7 @@ import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/repository/contact_repository.dart';
 import 'package:air_controller/widget/bottom_count_view.dart';
 import 'package:air_controller/widget/unfied_back_button.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -54,6 +55,9 @@ class _ManageContactsView extends StatelessWidget {
 
     final status =
         context.select((ManageContactsBloc bloc) => bloc.state.status);
+    final requestType =
+        context.select((ManageContactsBloc bloc) => bloc.state.requestType);
+
     final contacts =
         context.select((ManageContactsBloc bloc) => bloc.state.contacts);
     final selectedContacts = context.select(
@@ -88,6 +92,18 @@ class _ManageContactsView extends StatelessWidget {
 
     _initSelection(selectedContacts);
 
+    bool needLoading = false;
+
+    if (requestType == ManageContactsRequestType.initial &&
+        status == ManageContactsStatus.loading) {
+      needLoading = true;
+    }
+
+    final isInitDone =
+        context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
+
+    needLoading = !isInitDone;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: MultiBlocListener(
@@ -95,9 +111,22 @@ class _ManageContactsView extends StatelessWidget {
           BlocListener<ManageContactsBloc, ManageContactsState>(
             listener: (context, state) {
               if (state.status == ManageContactsStatus.failure) {
+                BotToast.closeAllLoading();
+
                 ScaffoldMessenger.of(context).showSnackBarText(
                   state.failureReason ?? context.l10n.unknownError,
                 );
+              }
+
+              final requestType = state.requestType;
+              if (requestType != ManageContactsRequestType.initial) {
+                if (state.status == ManageContactsStatus.loading) {
+                  BotToast.showLoading();
+                }
+
+                if (state.status == ManageContactsStatus.success) {
+                  BotToast.closeAllLoading();
+                }
               }
             },
             listenWhen: (previous, current) =>
@@ -118,7 +147,11 @@ class _ManageContactsView extends StatelessWidget {
               onNewContact: () {
                 _showEditContactDialog(pageContext: context, isNew: true);
               },
-              onDeleteClick: () {},
+              onDeleteClick: () {
+                context.read<ManageContactsBloc>().add(
+                      DeleteContactsRequested(),
+                    );
+              },
               onRefresh: () {
                 context.read<ManageContactsBloc>().add(
                       RefreshRequested(),
@@ -143,7 +176,7 @@ class _ManageContactsView extends StatelessWidget {
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
                 _ContactsGridView(
                   dataGridWidth: dataGridWidth,
-                  isLoading: status == ManageContactsStatus.loading,
+                  isLoading: needLoading,
                   dataSource: dataSource,
                   controller: dataGridController!,
                 ),
@@ -693,7 +726,9 @@ class _ContactActionBar extends StatelessWidget {
                 space: 6,
                 margin: EdgeInsets.only(left: 10),
                 enable: selectedContacts.isNotEmpty,
-                onTap: () {},
+                onTap: () {
+                  onDeleteClick();
+                },
               ),
               UnifiedIconButtonWithText(
                 iconPath: "assets/icons/ic_refresh.png",

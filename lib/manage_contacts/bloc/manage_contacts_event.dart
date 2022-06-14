@@ -90,3 +90,7 @@ class KeywordChanged extends ManageContactsEvent {
   @override
   List<Object?> get props => [keyword];
 }
+
+class DeleteContactsRequested extends ManageContactsEvent {
+  const DeleteContactsRequested();
+}
