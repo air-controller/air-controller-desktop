@@ -49,3 +49,4 @@ ios/
 web/
 .metadata
 pubspec.lock
+.viscode/
