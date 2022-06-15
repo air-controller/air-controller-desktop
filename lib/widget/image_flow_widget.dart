@@ -1,3 +1,4 @@
+import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/widget/simple_gesture_detector.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -15,138 +16,58 @@ import '../util/common_util.dart';
  *
  * @author Scott Smith 2021/11/23 22:52
  */
-// ignore: must_be_immutable
-class ImageFlowWidget extends StatelessWidget {
+class ImageFlowWidget extends StatefulWidget {
   final String languageCode;
-  ArrangementMode arrangeMode = ArrangementMode.grid;
-  List<ImageItem> images = [];
-  Function(ImageItem imageItem) onImageDoubleTap;
-  Function(ImageItem imageItem) onImageSelected;
-  Function() onOutsideTap;
-  String rootUrl;
-  Color backgroundColor;
-
-  final _OUT_PADDING = 20.0;
-  final _IMAGE_SPACE = 10.0;
-
-  List<ImageItem> checkedImages = [];
-
-  final _IMAGE_GRID_RADIUS_CHECKED = 5.0;
-  final _IMAGE_GRID_BORDER_WIDTH_CHECKED = 3.4;
-
-  final _IMAGE_GRID_RADIUS = 1.0;
-  final _IMAGE_GRID_BORDER_WIDTH = 1.0;
-
-  final _CHECKED_BORDER_COLOR = Color(0xff5d86ec);
-  final _BORDER_COLOR = Color(0xffdedede);
-
-  Function(PointerDownEvent event, ImageItem imageItem)? onPointerDown;
+  final ArrangementMode arrangeMode;
+  final List<ImageItem> images;
+  final Function(ImageItem imageItem) onImageDoubleTap;
+  final Function(ImageItem imageItem) onImageSelected;
+  final Function() onOutsideTap;
+  final String rootUrl;
+  final Color backgroundColor;
+  final List<ImageItem> checkedImages;
+  final Function(Offset, ImageItem)? onRightMouseClick;
 
   ImageFlowWidget(
       {required this.languageCode,
-      required this.arrangeMode,
+      this.arrangeMode = ArrangementMode.grid,
       required this.images,
-      required this.checkedImages,
+      this.checkedImages = const [],
       required this.onImageDoubleTap,
       required this.onImageSelected,
       required this.onOutsideTap,
-      this.onPointerDown,
+      this.onRightMouseClick,
       required this.rootUrl,
-      this.backgroundColor = Colors.white}) {
-    List<ImageItem> sortedImages = List.from(images);
+      this.backgroundColor = Colors.white});
 
-    sortedImages.sort((imageA, imageB) {
-      return imageB.createTime - imageA.createTime;
-    });
-
-    images = sortedImages;
+  @override
+  State<StatefulWidget> createState() {
+    return _ImageFlowState();
   }
+}
 
-  Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
-    if (arrangeMode == ArrangementMode.groupByDay) {
-      return _createDailyContent(context);
-    }
-
-    if (arrangeMode == ArrangementMode.groupByMonth) {
-      return _createMonthlyContent(context);
-    }
-
-    return _createGridContent();
-  }
-
-  String _convertToUSTimeYM(int timeInMills) {
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
-
-    String mon = "Jan";
-
-    switch (dateTime.month) {
-      case DateTime.february: {
-        mon = "Feb";
-        break;
-      }
-      case DateTime.march: {
-        mon = "Mar";
-        break;
-      }
-      case DateTime.april: {
-        mon = "Apr";
-        break;
-      }
-      case DateTime.may: {
-        mon = "May";
-        break;
-      }
-      case DateTime.june: {
-        mon = "Jun";
-        break;
-      }
-      case DateTime.july: {
-        mon = "Jul";
-        break;
-      }
-      case DateTime.august: {
-        mon = "Aug";
-        break;
-      }
-      case DateTime.september: {
-        mon = "Sept";
-        break;
-      }
-      case DateTime.october: {
-        mon = "Oct";
-        break;
-      }
-      case DateTime.november: {
-        mon = "Nov";
-        break;
-      }
-      case DateTime.december: {
-        mon = "Nov";
-        break;
-      }
-      default: {
-        mon = "Jan";
-      }
-    }
-
-    return "${dateTime.year} $mon";
-  }
+class _ImageFlowState extends State<ImageFlowWidget> {
+  final _outPadding = 20.0;
+  final _imageSpace = 10.0;
+  List<ImageItem> _images = [];
 
   Widget _createDailyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = context.l10n.yMdPattern;
 
-    for (ImageItem imageItem in images) {
+    for (ImageItem imageItem in _images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = "";
 
+      final languageCode = widget.languageCode;
       if (languageCode == "en") {
         createTimeStr = CommonUtil.convertToUSTime(createTime);
       } else {
-        createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+        createTimeStr =
+            df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
       }
 
       List<ImageItem>? images = map[createTimeStr];
@@ -161,7 +82,7 @@ class ImageFlowWidget extends StatelessWidget {
     }
 
     return Container(
-      color: backgroundColor,
+      color: widget.backgroundColor,
       width: double.infinity,
       height: double.infinity,
       child: ListView.builder(
@@ -182,56 +103,27 @@ class ImageFlowWidget extends StatelessWidget {
                     child: GridView.builder(
                       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 100,
-                          crossAxisSpacing: _IMAGE_SPACE,
+                          crossAxisSpacing: _imageSpace,
                           childAspectRatio: 1.0,
-                          mainAxisSpacing: _IMAGE_SPACE),
+                          mainAxisSpacing: _imageSpace),
                       itemBuilder: (BuildContext context, int index) {
                         ImageItem image = images[index];
-                        return Listener(
-                          child: Container(
-                            child: SimpleGestureDetector(
-                              child: Container(
-                                  child: CachedNetworkImage(
-                                    imageUrl:
-                                        "$rootUrl/stream/image/thumbnail/${image.id}/200/200",
-                                    fit: BoxFit.cover,
-                                    width: 100,
-                                    height: 100,
-                                    memCacheWidth: 200,
-                                    fadeOutDuration: Duration.zero,
-                                    fadeInDuration: Duration.zero,
-                                  ),
-                                  decoration: BoxDecoration(
-                                      border: new Border.all(
-                                          color: _isChecked(image)
-                                              ? _CHECKED_BORDER_COLOR
-                                              : _BORDER_COLOR,
-                                          width: _IMAGE_GRID_BORDER_WIDTH),
-                                      borderRadius: new BorderRadius.all(
-                                          Radius.circular(
-                                              _IMAGE_GRID_RADIUS)))),
-                              onTap: () {
-                                onImageSelected.call(image);
-                              },
-                              onDoubleTap: () {
-                                onImageDoubleTap.call(image);
-                              },
-                            ),
-                            decoration: BoxDecoration(
-                                border: new Border.all(
-                                    color: _isChecked(image)
-                                        ? _CHECKED_BORDER_COLOR
-                                        : Colors.transparent,
-                                    width:
-                                        _IMAGE_GRID_BORDER_WIDTH_CHECKED - 1.5),
-                                borderRadius: new BorderRadius.all(
-                                    Radius.circular(
-                                        _IMAGE_GRID_RADIUS_CHECKED / 2))),
-                          ),
-                          onPointerDown: (event) {
-                            onPointerDown?.call(event, image);
-                          },
-                        );
+
+                        return _ImageGridItem(
+                            rootUrl: widget.rootUrl,
+                            width: 100,
+                            height: 100,
+                            image: image,
+                            isChecked: _isChecked(image),
+                            onRightMenuClick: (position) {
+                              widget.onRightMouseClick?.call(position, image);
+                            },
+                            onTap: (image) {
+                              widget.onImageSelected.call(image);
+                            },
+                            onDoubleTap: (image) {
+                              widget.onImageDoubleTap.call(image);
+                            });
                       },
                       itemCount: images.length,
                       shrinkWrap: true,
@@ -254,16 +146,18 @@ class ImageFlowWidget extends StatelessWidget {
 
     final timeFormat = context.l10n.yMPattern;
 
-    for (ImageItem imageItem in images) {
+    for (ImageItem imageItem in _images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
       String createTimeStr = "";
 
+      final languageCode = widget.languageCode;
       if (languageCode == "en") {
         createTimeStr = _convertToUSTimeYM(createTime);
       } else {
-        createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
+        createTimeStr =
+            df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
       }
 
       List<ImageItem>? images = map[createTimeStr];
@@ -296,58 +190,27 @@ class ImageFlowWidget extends StatelessWidget {
                     child: GridView.builder(
                       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 80,
-                          crossAxisSpacing: _IMAGE_SPACE,
+                          crossAxisSpacing: _imageSpace,
                           childAspectRatio: 1.0,
-                          mainAxisSpacing: _IMAGE_SPACE),
+                          mainAxisSpacing: _imageSpace),
                       itemBuilder: (BuildContext context, int index) {
                         ImageItem image = images[index];
-                        return Listener(
-                          child: Container(
-                            child: SimpleGestureDetector(
-                              child: Container(
-                                  child: CachedNetworkImage(
-                                    imageUrl:
-                                        "$rootUrl/stream/image/thumbnail/${image.id}/200/200"
-                                            .replaceAll(
-                                                "storage/emulated/0/", ""),
-                                    fit: BoxFit.cover,
-                                    width: 80,
-                                    height: 80,
-                                    memCacheWidth: 200,
-                                    fadeOutDuration: Duration.zero,
-                                    fadeInDuration: Duration.zero,
-                                  ),
-                                  decoration: BoxDecoration(
-                                      border: new Border.all(
-                                          color: _isChecked(image)
-                                              ? _CHECKED_BORDER_COLOR
-                                              : _BORDER_COLOR,
-                                          width: _IMAGE_GRID_BORDER_WIDTH),
-                                      borderRadius: new BorderRadius.all(
-                                          Radius.circular(
-                                              _IMAGE_GRID_RADIUS)))),
-                              onTap: () {
-                                onImageSelected.call(image);
-                              },
-                              onDoubleTap: () {
-                                onImageDoubleTap.call(image);
-                              },
-                            ),
-                            decoration: BoxDecoration(
-                                border: new Border.all(
-                                    color: _isChecked(image)
-                                        ? Color(0xff5d86ec)
-                                        : Colors.transparent,
-                                    width:
-                                        _IMAGE_GRID_BORDER_WIDTH_CHECKED - 2.0),
-                                borderRadius: new BorderRadius.all(
-                                    Radius.circular(
-                                        _IMAGE_GRID_RADIUS_CHECKED / 3))),
-                          ),
-                          onPointerDown: (event) {
-                            onPointerDown?.call(event, image);
-                          },
-                        );
+
+                        return _ImageGridItem(
+                            rootUrl: widget.rootUrl,
+                            width: 80,
+                            height: 80,
+                            image: image,
+                            isChecked: _isChecked(image),
+                            onRightMenuClick: (position) {
+                              widget.onRightMouseClick?.call(position, image);
+                            },
+                            onTap: (image) {
+                              widget.onImageSelected.call(image);
+                            },
+                            onDoubleTap: (image) {
+                              widget.onImageDoubleTap.call(image);
+                            });
                       },
                       itemCount: images.length,
                       shrinkWrap: true,
@@ -364,95 +227,228 @@ class ImageFlowWidget extends StatelessWidget {
       ),
       width: double.infinity,
       height: double.infinity,
-      color: backgroundColor,
+      color: widget.backgroundColor,
     );
   }
 
   Widget _createGridContent() {
-    images.sort((imageA, imageB) {
-      return imageB.createTime - imageA.createTime;
-    });
-
     return Container(
       child: GridView.builder(
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 160,
-            crossAxisSpacing: _IMAGE_SPACE,
+            crossAxisSpacing: _imageSpace,
             childAspectRatio: 1.0,
-            mainAxisSpacing: _IMAGE_SPACE),
+            mainAxisSpacing: _imageSpace),
         itemBuilder: (BuildContext context, int index) {
-          ImageItem image = images[index];
-          return Listener(
-            child: Container(
-              child: SimpleGestureDetector(
-                child: Container(
-                    child: CachedNetworkImage(
-                      imageUrl:
-                          "$rootUrl/stream/image/thumbnail/${image.id}/400/400"
-                              .replaceAll("storage/emulated/0/", ""),
-                      fit: BoxFit.cover,
-                      width: 160,
-                      height: 160,
-                      memCacheWidth: 400,
-                      fadeOutDuration: Duration.zero,
-                      fadeInDuration: Duration.zero,
-                    ),
-                    decoration: BoxDecoration(
-                        border: new Border.all(
-                            color: _isChecked(image)
-                                ? _CHECKED_BORDER_COLOR
-                                : _BORDER_COLOR,
-                            width: _IMAGE_GRID_BORDER_WIDTH),
-                        borderRadius: new BorderRadius.all(
-                            Radius.circular(_IMAGE_GRID_RADIUS)))),
-                onTap: () {
-                  onImageSelected.call(image);
-                },
-                onDoubleTap: () {
-                  onImageDoubleTap.call(image);
-                },
-              ),
-              decoration: BoxDecoration(
-                  border: new Border.all(
-                      color: _isChecked(image)
-                          ? _CHECKED_BORDER_COLOR
-                          : Colors.transparent,
-                      width: _IMAGE_GRID_BORDER_WIDTH_CHECKED),
-                  borderRadius: new BorderRadius.all(
-                      Radius.circular(_IMAGE_GRID_RADIUS_CHECKED))),
-            ),
-            onPointerDown: (event) {
-              onPointerDown?.call(event, image);
-            },
-          );
+          ImageItem image = _images[index];
+
+          return _ImageGridItem(
+              rootUrl: widget.rootUrl,
+              width: 160,
+              height: 160,
+              image: image,
+              isChecked: _isChecked(image),
+              onRightMenuClick: (position) {
+                widget.onRightMouseClick?.call(position, image);
+              },
+              onTap: (image) {
+                widget.onImageSelected.call(image);
+              },
+              onDoubleTap: (image) {
+                widget.onImageDoubleTap.call(image);
+              });
         },
-        itemCount: images.length,
+        itemCount: _images.length,
         shrinkWrap: true,
         primary: false,
       ),
-      color: backgroundColor,
+      color: widget.backgroundColor,
       width: double.infinity,
       height: double.infinity,
-      padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
+      padding: EdgeInsets.fromLTRB(_outPadding, _outPadding, _outPadding, 0),
     );
   }
 
   bool _isChecked(ImageItem image) {
-    return checkedImages.contains(image);
+    return widget.checkedImages.contains(image);
+  }
+
+  String _convertToUSTimeYM(int timeInMills) {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
+
+    String mon = "Jan";
+
+    switch (dateTime.month) {
+      case DateTime.february:
+        {
+          mon = "Feb";
+          break;
+        }
+      case DateTime.march:
+        {
+          mon = "Mar";
+          break;
+        }
+      case DateTime.april:
+        {
+          mon = "Apr";
+          break;
+        }
+      case DateTime.may:
+        {
+          mon = "May";
+          break;
+        }
+      case DateTime.june:
+        {
+          mon = "Jun";
+          break;
+        }
+      case DateTime.july:
+        {
+          mon = "Jul";
+          break;
+        }
+      case DateTime.august:
+        {
+          mon = "Aug";
+          break;
+        }
+      case DateTime.september:
+        {
+          mon = "Sept";
+          break;
+        }
+      case DateTime.october:
+        {
+          mon = "Oct";
+          break;
+        }
+      case DateTime.november:
+        {
+          mon = "Nov";
+          break;
+        }
+      case DateTime.december:
+        {
+          mon = "Nov";
+          break;
+        }
+      default:
+        {
+          mon = "Jan";
+        }
+    }
+
+    return "${dateTime.year} $mon";
+  }
+
+  Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
+    final images = widget.images;
+
+    List<ImageItem> sortedImages = [...images];
+
+    sortedImages.sort((imageA, imageB) {
+      return imageB.createTime - imageA.createTime;
+    });
+
+    _images = sortedImages;
+
+    if (arrangeMode == ArrangementMode.groupByDay) {
+      return _createDailyContent(context);
+    }
+
+    if (arrangeMode == ArrangementMode.groupByMonth) {
+      return _createMonthlyContent(context);
+    }
+
+    return _createGridContent();
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget widget = _createContent(context, arrangeMode);
+    Widget content = _createContent(context, widget.arrangeMode);
     return Listener(
       child: GestureDetector(
-        child: widget,
+        child: content,
         onTap: () {
-          onOutsideTap.call();
+          widget.onOutsideTap.call();
         },
       ),
       onPointerDown: (event) {
         // onOutsideTap.call();
+      },
+    );
+  }
+}
+
+class _ImageGridItem extends StatelessWidget {
+  final String rootUrl;
+  final double width;
+  final double height;
+  final ImageItem image;
+  final bool isChecked;
+  final Function(Offset position) onRightMenuClick;
+  final Function(ImageItem) onTap;
+  final Function(ImageItem) onDoubleTap;
+
+  final _checkedBorderColor = const Color(0xff5d86ec);
+  final _borderColor = const Color(0xffdedede);
+  final _radiusChecked = 5.0;
+  final _borderWidthChecked = 3.4;
+  final _radius = 1.0;
+  final _radiusBorderWidth = 1.0;
+
+  const _ImageGridItem(
+      {required this.rootUrl,
+      required this.width,
+      required this.height,
+      required this.image,
+      required this.isChecked,
+      required this.onRightMenuClick,
+      required this.onTap,
+      required this.onDoubleTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      child: Container(
+        child: SimpleGestureDetector(
+          child: Container(
+              child: CachedNetworkImage(
+                imageUrl: "$rootUrl/stream/image/thumbnail/${image.id}/200/200",
+                fit: BoxFit.cover,
+                width: width,
+                height: height,
+                memCacheWidth:
+                    (width > height ? width * 4 : height * 4).toInt(),
+                fadeOutDuration: Duration.zero,
+                fadeInDuration: Duration.zero,
+              ),
+              decoration: BoxDecoration(
+                  border: new Border.all(
+                      color: isChecked ? _checkedBorderColor : _borderColor,
+                      width: _radiusBorderWidth),
+                  borderRadius:
+                      new BorderRadius.all(Radius.circular(_radius)))),
+          onTap: () {
+            onTap(image);
+          },
+          onDoubleTap: () {
+            onDoubleTap(image);
+          },
+        ),
+        decoration: BoxDecoration(
+            border: new Border.all(
+                color: isChecked ? Color(0xff5d86ec) : Colors.transparent,
+                width: _borderWidthChecked - 2.0),
+            borderRadius:
+                new BorderRadius.all(Radius.circular(_radiusChecked / 3))),
+      ),
+      onPointerDown: (event) {
+        if (event.isRightMouseClick()) {
+          onRightMenuClick.call(event.position);
+        }
       },
     );
   }

@@ -1,9 +1,9 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/util/context_menu_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,7 +19,6 @@ import '../../network/device_connection_manager.dart';
 import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';
 import '../../widget/image_flow_widget.dart';
-import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../bloc/all_images_bloc.dart';
 import '../model/all_image_copy_status.dart';
@@ -41,7 +40,7 @@ class AllImagesPage extends StatelessWidget {
           isFromCamera: this.isFromCamera)
         ..add(AllImageSubscriptionRequested()),
       child: AllImagesView(
-          navigatorKey: navigatorKey,
+        navigatorKey: navigatorKey,
         isFromCamera: this.isFromCamera,
       ),
     );
@@ -57,11 +56,9 @@ class AllImagesView extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   final bool isFromCamera;
 
-  AllImagesView({
-    Key? key,
-    required this.navigatorKey,
-    this.isFromCamera = false
-  }) : super(key: key);
+  AllImagesView(
+      {Key? key, required this.navigatorKey, this.isFromCamera = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -76,14 +73,15 @@ class AllImagesView extends StatelessWidget {
         context.select((AllImagesBloc bloc) => bloc.state.checkedImages);
     bool isLoadingComplete = context.select(
         (AllImagesBloc bloc) => bloc.state.status == AllImagesStatus.success);
-    HomeImageTab currentTab = context.select((HomeImageBloc bloc) => bloc.state.tab);
+    HomeImageTab currentTab =
+        context.select((HomeImageBloc bloc) => bloc.state.tab);
 
     _rootFocusNode = FocusNode();
 
     _rootFocusNode?.canRequestFocus = true;
 
-    if ((currentTab == HomeImageTab.allImages && !isFromCamera)
-    || currentTab == HomeImageTab.cameraImages && isFromCamera) {
+    if ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
+        currentTab == HomeImageTab.cameraImages && isFromCamera) {
       _rootFocusNode?.requestFocus();
     }
 
@@ -144,44 +142,41 @@ class AllImagesView extends StatelessWidget {
           ),
           BlocListener<AllImagesBloc, AllImagesState>(
             listener: (context, state) {
-              _openMenu(
-                  pageContext: context,
-                  position: state.contextMenuArguments!.position,
-                  images: state.images,
-                  checkedImages: state.checkedImages,
-                  current: state.contextMenuArguments!.targetImage);
+              _openMenu(context, state.contextMenuArguments!.targetImage,
+                  state.contextMenuArguments!.position);
             },
             listenWhen: (previous, current) =>
                 previous.contextMenuArguments != current.contextMenuArguments &&
                 current.contextMenuArguments != null,
           ),
-
           BlocListener<AllImagesBloc, AllImagesState>(
             listener: (context, state) {
-              if (state.deleteStatus.status == AllImageDeleteImagesStatus.failure) {
+              if (state.deleteStatus.status ==
+                  AllImageDeleteImagesStatus.failure) {
                 SmartDialog.dismiss();
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.deleteStatus.failureReason ?? "Delete image fail"
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.deleteStatus.failureReason ??
+                          "Delete image fail")));
               }
 
-              if (state.deleteStatus.status == AllImageDeleteImagesStatus.loading) {
+              if (state.deleteStatus.status ==
+                  AllImageDeleteImagesStatus.loading) {
                 SmartDialog.showLoading();
               }
 
-              if (state.deleteStatus.status == AllImageDeleteImagesStatus.success) {
+              if (state.deleteStatus.status ==
+                  AllImageDeleteImagesStatus.success) {
                 SmartDialog.dismiss();
               }
             },
             listenWhen: (previous, current) =>
-            previous.deleteStatus != current.deleteStatus &&
-                current.deleteStatus.status != AllImageDeleteImagesStatus.initial,
+                previous.deleteStatus != current.deleteStatus &&
+                current.deleteStatus.status !=
+                    AllImageDeleteImagesStatus.initial,
           ),
-
-
           BlocListener<AllImagesBloc, AllImagesState>(
             listener: (context, state) {
               if (state.copyStatus?.status == AllImageCopyStatus.start) {
@@ -199,26 +194,29 @@ class AllImagesView extends StatelessWidget {
                     if (state.checkedImages.length == 1) {
                       String name = "";
 
-                      int index = state.checkedImages.single.path.lastIndexOf("/");
+                      int index =
+                          state.checkedImages.single.path.lastIndexOf("/");
                       if (index != -1) {
-                        name = state.checkedImages.single.path.substring(index + 1);
+                        name = state.checkedImages.single.path
+                            .substring(index + 1);
                       }
 
-                      title = context.l10n.placeholderExporting.replaceFirst("%s", name);
+                      title = context.l10n.placeholderExporting
+                          .replaceFirst("%s", name);
                     }
 
                     if (state.checkedImages.length > 1) {
-                      String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                          "${state.checkedImages.length}");
-                      title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                      String itemStr = context.l10n.placeHolderItemCount03
+                          .replaceFirst("%d", "${state.checkedImages.length}");
+                      title = context.l10n.placeholderExporting
+                          .replaceFirst("%s", itemStr);
                     }
 
                     _progressIndicatorDialog?.title = title;
                   }
 
                   _progressIndicatorDialog?.subtitle =
-                  "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
-                      .convertToReadableSize(total)}";
+                      "${CommonUtil.convertToReadableSize(current)}/${CommonUtil.convertToReadableSize(total)}";
                   _progressIndicatorDialog?.updateProgress(current / total);
                 }
               }
@@ -228,9 +226,9 @@ class AllImagesView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus!.error ?? "Copy images failure."
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(
+                          state.copyStatus!.error ?? "Copy images failure.")));
               }
 
               if (state.copyStatus?.status == AllImageCopyStatus.success) {
@@ -238,56 +236,56 @@ class AllImagesView extends StatelessWidget {
               }
             },
             listenWhen: (previous, current) =>
-            previous.copyStatus != current.copyStatus
-                && current.copyStatus != null
-                && current.copyStatus?.status != AllImageCopyStatus.initial,
+                previous.copyStatus != current.copyStatus &&
+                current.copyStatus != null &&
+                current.copyStatus?.status != AllImageCopyStatus.initial,
           ),
-
           BlocListener<HomeImageBloc, HomeImageState>(
             listener: (context, state) {
-              if ((state.tab == HomeImageTab.allImages && !isFromCamera)
-              || (state.tab == HomeImageTab.cameraImages && isFromCamera)) {
-                _deleteImage(context, context.read<AllImagesBloc>().state.checkedImages);
+              if ((state.tab == HomeImageTab.allImages && !isFromCamera) ||
+                  (state.tab == HomeImageTab.cameraImages && isFromCamera)) {
+                _deleteImage(
+                    context, context.read<AllImagesBloc>().state.checkedImages);
               }
             },
             listenWhen: (previous, current) =>
-            previous.deleteTapStatus != current.deleteTapStatus
-                && (current.deleteTapStatus.tab == HomeImageTab.allImages
-                || current.deleteTapStatus.tab == HomeImageTab.cameraImages
-            )
-            && current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap
-            ,
+                previous.deleteTapStatus != current.deleteTapStatus &&
+                (current.deleteTapStatus.tab == HomeImageTab.allImages ||
+                    current.deleteTapStatus.tab == HomeImageTab.cameraImages) &&
+                current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap,
           ),
-
           BlocListener<HomeImageBloc, HomeImageState>(
-            listener: (context, state) {
-              if ((state.tab == HomeImageTab.allImages && !this.isFromCamera)
-              || (state.tab == HomeImageTab.cameraImages && this.isFromCamera)) {
-                List<ImageItem> images = context.read<AllImagesBloc>().state.images;
-                List<ImageItem> checkedImages = context.read<AllImagesBloc>().state.checkedImages;
+              listener: (context, state) {
+                if ((state.tab == HomeImageTab.allImages &&
+                        !this.isFromCamera) ||
+                    (state.tab == HomeImageTab.cameraImages &&
+                        this.isFromCamera)) {
+                  List<ImageItem> images =
+                      context.read<AllImagesBloc>().state.images;
+                  List<ImageItem> checkedImages =
+                      context.read<AllImagesBloc>().state.checkedImages;
 
-                context.read<HomeImageBloc>().add(HomeImageCountChanged(
-                  HomeImageCount(
-                    checkedCount: checkedImages.length,
-                    totalCount: images.length
-                  )
-                ));
+                  context.read<HomeImageBloc>().add(HomeImageCountChanged(
+                      HomeImageCount(
+                          checkedCount: checkedImages.length,
+                          totalCount: images.length)));
 
-                context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
-                    isDeleteEnabled: checkedImages.length > 0
-                ));
+                  context.read<HomeImageBloc>().add(
+                      HomeImageDeleteStatusChanged(
+                          isDeleteEnabled: checkedImages.length > 0));
 
-                context.read<HomeImageBloc>().add(HomeImageArrangementVisibilityChanged(
-                  true
-                ));
+                  context
+                      .read<HomeImageBloc>()
+                      .add(HomeImageArrangementVisibilityChanged(true));
 
-                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(false));
+                  context
+                      .read<HomeImageBloc>()
+                      .add(HomeImageBackVisibilityChanged(false));
 
-                _rootFocusNode?.requestFocus();
-              }
-            },
-            listenWhen: (previous, current) => previous.tab != current.tab
-          ),
+                  _rootFocusNode?.requestFocus();
+                }
+              },
+              listenWhen: (previous, current) => previous.tab != current.tab),
         ],
         child: Stack(
           children: [
@@ -296,24 +294,20 @@ class AllImagesView extends StatelessWidget {
                 focusNode: _rootFocusNode,
                 child: ImageFlowWidget(
                   languageCode: languageCode,
-                  rootUrl:
-                      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
+                  rootUrl: DeviceConnectionManager.instance.rootURL,
                   arrangeMode: arrangement,
                   images: images,
                   checkedImages: checkedImages,
-                  onPointerDown: (event, image) {
-                    if (event.isRightMouseClick()) {
-                      if (!checkedImages.contains(image)) {
-                        context
-                            .read<AllImagesBloc>()
-                            .add(AllImagesCheckedImagesChanged(image));
-                      }
-
-                      context.read<AllImagesBloc>().add(AllImagesOpenMenu(
-                          AllImageMenuArguments(
-                              position: event.position, targetImage: image)));
-                      // _openMenu(context, event.position, checkedImages);
+                  onRightMouseClick: (position, image) {
+                    if (!checkedImages.contains(image)) {
+                      context
+                          .read<AllImagesBloc>()
+                          .add(AllImagesCheckedImagesChanged(image));
                     }
+
+                    context.read<AllImagesBloc>().add(AllImagesOpenMenu(
+                        AllImageMenuArguments(
+                            position: position, targetImage: image)));
                   },
                   onImageDoubleTap: (image) {
                     _openImageDetailPage(images.indexOf(image), images,
@@ -376,7 +370,8 @@ class AllImagesView extends StatelessWidget {
     );
   }
 
-  void _showDownloadProgressDialog(BuildContext context, List<ImageItem> images) {
+  void _showDownloadProgressDialog(
+      BuildContext context, List<ImageItem> images) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -399,11 +394,17 @@ class AllImagesView extends StatelessWidget {
   }
 
   void _deleteImage(BuildContext pageContext, List<ImageItem> checkedImages) {
-    CommonUtil.showConfirmDialog(pageContext, "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedImages.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
+    CommonUtil.showConfirmDialog(
+        pageContext,
+        "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedImages.length}")}",
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
-      pageContext.read<AllImagesBloc>().add(AllImagesDeleteSubmitted(checkedImages));
+      pageContext
+          .read<AllImagesBloc>()
+          .add(AllImagesDeleteSubmitted(checkedImages));
     }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
     });
@@ -417,12 +418,15 @@ class AllImagesView extends StatelessWidget {
         ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
   }
 
-  void _openMenu(
-      {required BuildContext pageContext,
-      required Offset position,
-      required List<ImageItem> images,
-      required List<ImageItem> checkedImages,
-      required ImageItem current}) {
+  void _openMenu(BuildContext context, ImageItem current, Offset position) {
+    final images = context.read<AllImagesBloc>().state.images;
+    List<ImageItem> checkedImages =
+        context.read<AllImagesBloc>().state.checkedImages;
+
+    if (!checkedImages.contains(current)) {
+      context.read<AllImagesBloc>().add(AllImagesCheckedImagesChanged(current));
+    }
+
     String copyTitle = "";
 
     if (checkedImages.length == 1) {
@@ -435,106 +439,53 @@ class AllImagesView extends StatelessWidget {
         name = imageItem.path.substring(index + 1);
       }
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedImages.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = context.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedImages.length}");
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: context.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _openImageDetailPage(
+              images.indexOf(current), images, context.read<AllImagesBloc>());
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            _closeMenu(dialogContext);
+          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+            _startCopy(context, checkedImages, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            _openImageDetailPage(images.indexOf(current),
-                                images, pageContext.read<AllImagesBloc>());
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            _closeMenu(dialogContext);
-
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopy(pageContext, checkedImages, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            _closeMenu(dialogContext);
-
-                            _deleteImage(pageContext, checkedImages);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _deleteImage(context, checkedImages);
+        },
+      )
+    ]);
   }
 
   void _startCopy(BuildContext context, List<ImageItem> images, String dir) {
-    context.read<AllImagesBloc>().add(AllImagesCopyImagesSubmitted(images, dir));
-  }
-
-  void _closeMenu(BuildContext context) {
-    Navigator.of(context).pop();
+    context
+        .read<AllImagesBloc>()
+        .add(AllImagesCopyImagesSubmitted(images, dir));
   }
 }

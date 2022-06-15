@@ -21,8 +21,8 @@ import '../../network/device_connection_manager.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';
+import '../../util/context_menu_helper.dart';
 import '../../widget/image_flow_widget.dart';
-import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/simple_gesture_detector.dart';
 import '../bloc/all_albums_bloc.dart';
@@ -37,8 +37,8 @@ class AllAlbumsPage extends StatelessWidget {
     return BlocProvider<AllAlbumsBloc>(
       create: (context) => AllAlbumsBloc(
           imageRepository: context.read<ImageRepository>(),
-        fileRepository: context.read<FileRepository>()
-      )..add(AllAlbumSubscriptionRequested()),
+          fileRepository: context.read<FileRepository>())
+        ..add(AllAlbumSubscriptionRequested()),
       child: AllAlbumsView(navigatorKey: navigatorKey),
     );
   }
@@ -81,8 +81,8 @@ class AllAlbumsView extends StatelessWidget {
     final color = Color(0xff85a8d0);
     final spinKit = SpinKitCircle(color: color, size: 60.0);
 
-    bool isAlbumImagesOpened = context.select(
-        (AllAlbumsBloc bloc) => bloc.state.albumOpenStatus.isOpened);
+    bool isAlbumImagesOpened = context
+        .select((AllAlbumsBloc bloc) => bloc.state.albumOpenStatus.isOpened);
     AllAlbumsStatus allAlbumsStatus =
         context.select((AllAlbumsBloc bloc) => bloc.state.status);
     AlbumItem? currentAlbum = context
@@ -90,7 +90,8 @@ class AllAlbumsView extends StatelessWidget {
     LoadImagesInAlbumStatusUnit loadImagesInAlbumStatusUnit = context
         .select((AllAlbumsBloc bloc) => bloc.state.loadImagesInAlbumStatus);
 
-    HomeImageTab currentTab = context.select((HomeImageBloc bloc) => bloc.state.tab);
+    HomeImageTab currentTab =
+        context.select((HomeImageBloc bloc) => bloc.state.tab);
 
     _rootFocusNode = FocusNode();
     _rootFocusNode?.canRequestFocus = true;
@@ -108,60 +109,54 @@ class AllAlbumsView extends StatelessWidget {
                 context.read<HomeImageBloc>().add(HomeImageCountChanged(
                     HomeImageCount(
                         totalCount: state.loadImagesInAlbumStatus.images.length,
-                        checkedCount: state.loadImagesInAlbumStatus.checkedImages.length
-                    )
-                ));
+                        checkedCount: state
+                            .loadImagesInAlbumStatus.checkedImages.length)));
 
                 context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
-                    isDeleteEnabled: state.loadImagesInAlbumStatus.checkedImages.length > 0
-                ));
+                    isDeleteEnabled:
+                        state.loadImagesInAlbumStatus.checkedImages.length >
+                            0));
 
-                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(true));
+                context
+                    .read<HomeImageBloc>()
+                    .add(HomeImageBackVisibilityChanged(true));
               } else {
                 context.read<HomeImageBloc>().add(HomeImageCountChanged(
                     HomeImageCount(
                         totalCount: state.albums.length,
-                        checkedCount: state.checkedAlbums.length
-                    )
-                ));
+                        checkedCount: state.checkedAlbums.length)));
 
                 context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
-                    isDeleteEnabled: state.checkedAlbums.length > 0
-                ));
+                    isDeleteEnabled: state.checkedAlbums.length > 0));
 
-                context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(false));
+                context
+                    .read<HomeImageBloc>()
+                    .add(HomeImageBackVisibilityChanged(false));
               }
             },
-            listenWhen: (previous, current) => _needListenItemCountChange(previous, current),
+            listenWhen: (previous, current) =>
+                _needListenItemCountChange(previous, current),
           ),
-
           BlocListener<AllAlbumsBloc, AllAlbumsState>(
             listener: (context, state) {
               dynamic current = state.openMenuStatus.target;
 
               if (current is AlbumItem) {
                 _openMenu(
-                    pageContext: context,
+                    context: context,
                     position: state.openMenuStatus.position!,
-                    albums: state.albums,
-                    checkedAlbums: state.checkedAlbums,
-                    current: state.openMenuStatus.target!
-                );
+                    current: state.openMenuStatus.target!);
               } else {
                 _openMenuForImages(
-                    pageContext: context,
+                    context: context,
                     position: state.openMenuStatus.position!,
-                    images: state.loadImagesInAlbumStatus.images,
-                    checkedImages: state.loadImagesInAlbumStatus.checkedImages,
-                    current: state.openMenuStatus.target!
-                );
+                    current: state.openMenuStatus.target!);
               }
             },
             listenWhen: (previous, current) =>
-            previous.openMenuStatus != current.openMenuStatus &&
+                previous.openMenuStatus != current.openMenuStatus &&
                 current.openMenuStatus.isOpened,
           ),
-
           BlocListener<AllAlbumsBloc, AllAlbumsState>(
             listener: (context, state) {
               if (state.albumOpenStatus.isOpened) {
@@ -169,18 +164,17 @@ class AllAlbumsView extends StatelessWidget {
                     AllAlbumsImagesRequested(state.albumOpenStatus.current!));
               }
 
-              context.read<HomeImageBloc>().add(HomeImageArrangementVisibilityChanged(
-                  state.albumOpenStatus.isOpened
-              ));
+              context.read<HomeImageBloc>().add(
+                  HomeImageArrangementVisibilityChanged(
+                      state.albumOpenStatus.isOpened));
             },
             listenWhen: (previous, current) =>
-            previous.albumOpenStatus != current.albumOpenStatus,
+                previous.albumOpenStatus != current.albumOpenStatus,
           ),
-
           BlocListener<AllAlbumsBloc, AllAlbumsState>(
             listener: (context, state) {
-              if (state.deleteAlbumStatus == AllAlbumsDeleteStatus.loading
-              || state.deleteAlbumStatus == AllAlbumsDeleteStatus.success) {
+              if (state.deleteAlbumStatus == AllAlbumsDeleteStatus.loading ||
+                  state.deleteAlbumStatus == AllAlbumsDeleteStatus.success) {
                 SmartDialog.showLoading();
               }
 
@@ -189,16 +183,15 @@ class AllAlbumsView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.failureReason ?? "Delete image fail"
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content:
+                          Text(state.failureReason ?? "Delete image fail")));
               }
             },
             listenWhen: (previous, current) =>
-            previous.deleteAlbumStatus != current.deleteAlbumStatus
-                && current.deleteAlbumStatus != AllAlbumsDeleteStatus.initial,
+                previous.deleteAlbumStatus != current.deleteAlbumStatus &&
+                current.deleteAlbumStatus != AllAlbumsDeleteStatus.initial,
           ),
-
           BlocListener<AllAlbumsBloc, AllAlbumsState>(
             listener: (context, state) {
               if (state.copyStatus.status == AllAlbumsCopyStatus.start) {
@@ -215,18 +208,19 @@ class AllAlbumsView extends StatelessWidget {
                   List<AlbumItem> checkedAlbums = state.checkedAlbums;
 
                   if (checkedAlbums.length == 1) {
-                    title = context.l10n.placeholderExporting.replaceFirst("%s", checkedAlbums.single.name);
+                    title = context.l10n.placeholderExporting
+                        .replaceFirst("%s", checkedAlbums.single.name);
                   } else {
-                    String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                        "${state.checkedAlbums.length}");
-                    title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                    String itemStr = context.l10n.placeHolderItemCount03
+                        .replaceFirst("%d", "${state.checkedAlbums.length}");
+                    title = context.l10n.placeholderExporting
+                        .replaceFirst("%s", itemStr);
                   }
 
                   _progressIndicatorDialog?.title = title;
 
                   _progressIndicatorDialog?.subtitle =
-                  "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
-                      .convertToReadableSize(total)}";
+                      "${CommonUtil.convertToReadableSize(current)}/${CommonUtil.convertToReadableSize(total)}";
                   _progressIndicatorDialog?.updateProgress(current / total);
                 }
               }
@@ -236,9 +230,9 @@ class AllAlbumsView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? context.l10n.copyFileFailure
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.copyStatus.error ??
+                          context.l10n.copyFileFailure)));
               }
 
               if (state.copyStatus.status == AllAlbumsCopyStatus.success) {
@@ -246,10 +240,9 @@ class AllAlbumsView extends StatelessWidget {
               }
             },
             listenWhen: (previous, current) =>
-            previous.copyStatus != current.copyStatus
-                && current.copyStatus.status != AllAlbumsCopyStatus.initial,
+                previous.copyStatus != current.copyStatus &&
+                current.copyStatus.status != AllAlbumsCopyStatus.initial,
           ),
-
           BlocListener<HomeImageBloc, HomeImageState>(
               listener: (context, state) {
                 if (state.tab == HomeImageTab.allAlbums) {
@@ -268,75 +261,73 @@ class AllAlbumsView extends StatelessWidget {
                     context.read<HomeImageBloc>().add(HomeImageCountChanged(
                         HomeImageCount(
                             checkedCount: checkedImages.length,
-                            totalCount: images.length
-                        )
-                    ));
+                            totalCount: images.length)));
 
-                    context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
-                        isDeleteEnabled: checkedImages.length > 0
-                    ));
+                    context.read<HomeImageBloc>().add(
+                        HomeImageDeleteStatusChanged(
+                            isDeleteEnabled: checkedImages.length > 0));
 
-                    context.read<HomeImageBloc>().add(HomeImageArrangementVisibilityChanged(
-                        true
-                    ));
+                    context
+                        .read<HomeImageBloc>()
+                        .add(HomeImageArrangementVisibilityChanged(true));
                   } else {
-                    List<AlbumItem> albums = context
-                        .read<AllAlbumsBloc>()
-                        .state
-                        .albums;
-                    List<AlbumItem> checkedAlbums = context
-                        .read<AllAlbumsBloc>()
-                        .state
-                        .checkedAlbums;
+                    List<AlbumItem> albums =
+                        context.read<AllAlbumsBloc>().state.albums;
+                    List<AlbumItem> checkedAlbums =
+                        context.read<AllAlbumsBloc>().state.checkedAlbums;
 
                     context.read<HomeImageBloc>().add(HomeImageCountChanged(
                         HomeImageCount(
                             checkedCount: checkedAlbums.length,
-                            totalCount: albums.length
-                        )
-                    ));
-                    context.read<HomeImageBloc>().add(HomeImageDeleteStatusChanged(
-                        isDeleteEnabled: checkedAlbums.length > 0
-                    ));
+                            totalCount: albums.length)));
+                    context.read<HomeImageBloc>().add(
+                        HomeImageDeleteStatusChanged(
+                            isDeleteEnabled: checkedAlbums.length > 0));
 
-                    context.read<HomeImageBloc>().add(HomeImageArrangementVisibilityChanged(
-                        false
-                    ));
+                    context
+                        .read<HomeImageBloc>()
+                        .add(HomeImageArrangementVisibilityChanged(false));
                   }
 
-                  context.read<HomeImageBloc>().add(HomeImageBackVisibilityChanged(isAlbumImagesOpened));
+                  context
+                      .read<HomeImageBloc>()
+                      .add(HomeImageBackVisibilityChanged(isAlbumImagesOpened));
 
                   _rootFocusNode?.requestFocus();
                 }
               },
-              listenWhen: (previous, current) => previous.tab != current.tab
-          ),
-
+              listenWhen: (previous, current) => previous.tab != current.tab),
           BlocListener<HomeImageBloc, HomeImageState>(
             listener: (context, state) {
-              context.read<AllAlbumsBloc>().add(AllAlbumsOpenStatusChanged(isOpened: false));
+              context
+                  .read<AllAlbumsBloc>()
+                  .add(AllAlbumsOpenStatusChanged(isOpened: false));
             },
             listenWhen: (previous, current) =>
-            previous.backTapStatus != current.backTapStatus
-            && current.backTapStatus == HomeImageBackTapStatus.tap,
+                previous.backTapStatus != current.backTapStatus &&
+                current.backTapStatus == HomeImageBackTapStatus.tap,
           ),
-
           BlocListener<HomeImageBloc, HomeImageState>(
             listener: (context, state) {
-              bool isAlbumImagesOpened = context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+              bool isAlbumImagesOpened =
+                  context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
               if (isAlbumImagesOpened) {
-                List<ImageItem> checkedImages = context.read<AllAlbumsBloc>().state.loadImagesInAlbumStatus.checkedImages;
+                List<ImageItem> checkedImages = context
+                    .read<AllAlbumsBloc>()
+                    .state
+                    .loadImagesInAlbumStatus
+                    .checkedImages;
                 _tryToDeleteImages(context, checkedImages);
               } else {
-                List<AlbumItem> checkedAlbums = context.read<AllAlbumsBloc>().state.checkedAlbums;
+                List<AlbumItem> checkedAlbums =
+                    context.read<AllAlbumsBloc>().state.checkedAlbums;
                 _tryToDeleteAlbums(context, checkedAlbums);
               }
             },
             listenWhen: (previous, current) =>
-            previous.deleteTapStatus != current.deleteTapStatus
-                && current.deleteTapStatus.tab == HomeImageTab.allAlbums
-                && current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap
-            ,
+                previous.deleteTapStatus != current.deleteTapStatus &&
+                current.deleteTapStatus.tab == HomeImageTab.allAlbums &&
+                current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap,
           ),
         ],
         child: Focus(
@@ -374,7 +365,8 @@ class AllAlbumsView extends StatelessWidget {
                               padding: EdgeInsets.only(left: 10),
                             ),
                             onTap: () {
-                              context.read<AllAlbumsBloc>().add(AllAlbumsOpenStatusChanged(isOpened: false));
+                              context.read<AllAlbumsBloc>().add(
+                                  AllAlbumsOpenStatusChanged(isOpened: false));
                             },
                           ),
                           Image.asset("assets/icons/ic_right_arrow.png",
@@ -413,9 +405,8 @@ class AllAlbumsView extends StatelessWidget {
             ],
           ),
           onKey: (node, event) {
-            _isControlPressed = Platform.isMacOS
-                ? event.isMetaPressed
-                : event.isControlPressed;
+            _isControlPressed =
+                Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
             _isShiftPressed = event.isShiftPressed;
 
             AllAlbumsBoardKeyStatus status = AllAlbumsBoardKeyStatus.none;
@@ -433,15 +424,17 @@ class AllAlbumsView extends StatelessWidget {
             if (Platform.isMacOS) {
               if (event.isMetaPressed &&
                   event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                context.read<AllAlbumsBloc>().add(
-                    AllAlbumsShortcutKeyTriggered(ShortcutKey.ctrlAndA));
+                context
+                    .read<AllAlbumsBloc>()
+                    .add(AllAlbumsShortcutKeyTriggered(ShortcutKey.ctrlAndA));
                 return KeyEventResult.handled;
               }
             } else {
               if (event.isControlPressed &&
                   event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                context.read<AllAlbumsBloc>().add(
-                    AllAlbumsShortcutKeyTriggered(ShortcutKey.ctrlAndA));
+                context
+                    .read<AllAlbumsBloc>()
+                    .add(AllAlbumsShortcutKeyTriggered(ShortcutKey.ctrlAndA));
                 return KeyEventResult.handled;
               }
             }
@@ -453,7 +446,8 @@ class AllAlbumsView extends StatelessWidget {
     );
   }
 
-  void _showDownloadProgressDialog(BuildContext context, List<AlbumItem> albums) {
+  void _showDownloadProgressDialog(
+      BuildContext context, List<AlbumItem> albums) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -471,26 +465,27 @@ class AllAlbumsView extends StatelessWidget {
     }
   }
 
-  bool _needListenItemCountChange(AllAlbumsState previous, AllAlbumsState current) {
+  bool _needListenItemCountChange(
+      AllAlbumsState previous, AllAlbumsState current) {
     if (previous.albums.length != current.albums.length) return true;
 
-    if (previous.checkedAlbums.length != current.checkedAlbums.length) return true;
+    if (previous.checkedAlbums.length != current.checkedAlbums.length)
+      return true;
 
-    if (previous.loadImagesInAlbumStatus.images.length
-        != current.loadImagesInAlbumStatus.images.length) return true;
+    if (previous.loadImagesInAlbumStatus.images.length !=
+        current.loadImagesInAlbumStatus.images.length) return true;
 
-    if (previous.loadImagesInAlbumStatus.checkedImages.length
-        != current.loadImagesInAlbumStatus.checkedImages.length) return true;
+    if (previous.loadImagesInAlbumStatus.checkedImages.length !=
+        current.loadImagesInAlbumStatus.checkedImages.length) return true;
 
     return false;
   }
 
   void _openMenu(
-      {required BuildContext pageContext,
-        required Offset position,
-        required List<AlbumItem> albums,
-        required List<AlbumItem> checkedAlbums,
-        required AlbumItem current}) {
+      {required BuildContext context,
+      required Offset position,
+      required AlbumItem current}) {
+    final checkedAlbums = context.read<AllAlbumsBloc>().state.checkedAlbums;
     String copyTitle = "";
 
     if (checkedAlbums.length == 1) {
@@ -498,110 +493,64 @@ class AllAlbumsView extends StatelessWidget {
 
       String name = albumItem.name;
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedAlbums.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = context.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedAlbums.length}");
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: context.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
+          context.read<AllAlbumsBloc>().add(
+              AllAlbumsOpenStatusChanged(isOpened: true, current: current));
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            pageContext.read<AllAlbumsBloc>().add(
-                                AllAlbumsOpenStatusChanged(isOpened: true, current: current)
-                            );
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
+          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+            _startCopy(context, checkedAlbums, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            CommonUtil.openFilePicker(
-                                pageContext.l10n.chooseDir, (dir) {
-                                  _startCopy(pageContext, checkedAlbums, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            _tryToDeleteAlbums(pageContext, checkedAlbums);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _tryToDeleteAlbums(context, checkedAlbums);
+        },
+      )
+    ]);
   }
 
   void _openMenuForImages(
-      {required BuildContext pageContext,
-        required Offset position,
-        required List<ImageItem> images,
-        required List<ImageItem> checkedImages,
-        required ImageItem current}) {
+      {required BuildContext context,
+      required Offset position,
+      required ImageItem current}) {
     String copyTitle = "";
+
+    final images =
+        context.read<AllAlbumsBloc>().state.loadImagesInAlbumStatus.images;
+    final checkedImages = context
+        .read<AllAlbumsBloc>()
+        .state
+        .loadImagesInAlbumStatus
+        .checkedImages;
 
     if (checkedImages.length == 1) {
       ImageItem imageItem = checkedImages.single;
@@ -613,133 +562,93 @@ class AllAlbumsView extends StatelessWidget {
         name = imageItem.path.substring(index + 1);
       }
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedImages.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = context.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedImages.length}");
+      copyTitle = context.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: context.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
+          _openImageDetailPage(context, images, images.indexOf(current));
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            _openImageDetailPage(pageContext, images, images.indexOf(current));
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
+          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+            _startCopyImages(context, checkedImages, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            CommonUtil.openFilePicker(
-                                pageContext.l10n.chooseDir, (dir) {
-                              _startCopyImages(pageContext, checkedImages, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            _tryToDeleteImages(pageContext, checkedImages);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _tryToDeleteImages(context, checkedImages);
+        },
+      )
+    ]);
   }
 
   void _startCopy(BuildContext context, List<AlbumItem> albums, String dir) {
     context.read<AllAlbumsBloc>().add(AllAlbumsCopySubmitted(albums, dir));
   }
 
-  void _startCopyImages(BuildContext context, List<ImageItem> images, String dir) {
-    context.read<AllAlbumsBloc>().add(AllAlbumsCopyImagesSubmitted(images, dir));
+  void _startCopyImages(
+      BuildContext context, List<ImageItem> images, String dir) {
+    context
+        .read<AllAlbumsBloc>()
+        .add(AllAlbumsCopyImagesSubmitted(images, dir));
   }
 
-  void _tryToDeleteAlbums(BuildContext pageContext, List<AlbumItem> checkedAlbums) {
+  void _tryToDeleteAlbums(
+      BuildContext pageContext, List<AlbumItem> checkedAlbums) {
     CommonUtil.showConfirmDialog(
         pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedAlbums.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
-            (context) {
-          Navigator.of(context, rootNavigator: true).pop();
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
 
-          pageContext.read<AllAlbumsBloc>().add(AllAlbumsDeleteSubmitted(checkedAlbums));
-        }, (context) {
-          Navigator.of(context, rootNavigator: true).pop();
-        });
+      pageContext
+          .read<AllAlbumsBloc>()
+          .add(AllAlbumsDeleteSubmitted(checkedAlbums));
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
   }
 
-  void _tryToDeleteImages(BuildContext pageContext, List<ImageItem> checkedImages) {
+  void _tryToDeleteImages(
+      BuildContext pageContext, List<ImageItem> checkedImages) {
     CommonUtil.showConfirmDialog(
         pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedImages.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
-            (context) {
-          Navigator.of(context, rootNavigator: true).pop();
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
 
-          pageContext.read<AllAlbumsBloc>().add(AllAlbumsDeleteImagesSubmitted(checkedImages));
-        }, (context) {
+      pageContext
+          .read<AllAlbumsBloc>()
+          .add(AllAlbumsDeleteImagesSubmitted(checkedImages));
+    }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
     });
   }
@@ -837,12 +746,14 @@ class AllAlbumsView extends StatelessWidget {
                       padding: EdgeInsets.all(8),
                     ),
                     onTap: () {
-                      context.read<AllAlbumsBloc>().add(AllAlbumsCheckedChanged(album));
+                      context
+                          .read<AllAlbumsBloc>()
+                          .add(AllAlbumsCheckedChanged(album));
                     },
                     onDoubleTap: () {
                       context.read<AllAlbumsBloc>().add(
-                          AllAlbumsOpenStatusChanged(isOpened: true, current: album)
-                      );
+                          AllAlbumsOpenStatusChanged(
+                              isOpened: true, current: album));
                     },
                   ),
                   GestureDetector(
@@ -884,16 +795,16 @@ class AllAlbumsView extends StatelessWidget {
               onPointerDown: (event) {
                 if (event.isRightMouseClick()) {
                   if (!checkedAlbums.contains(album)) {
-                    context.read<AllAlbumsBloc>().add(AllAlbumsCheckedChanged(album));
+                    context
+                        .read<AllAlbumsBloc>()
+                        .add(AllAlbumsCheckedChanged(album));
                   }
 
                   context.read<AllAlbumsBloc>().add(AllAlbumsMenuStatusChanged(
                       AllAlbumsOpenMenuStatus(
-                        isOpened: true,
-                        position: event.position,
-                        target: album
-                      )
-                  ));
+                          isOpened: true,
+                          position: event.position,
+                          target: album)));
                 }
               });
         },
@@ -925,8 +836,7 @@ class AllAlbumsView extends StatelessWidget {
 
     return ImageFlowWidget(
       languageCode: languageCode,
-      rootUrl:
-          "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
+      rootUrl: DeviceConnectionManager.instance.rootURL,
       arrangeMode: arrangementMode,
       images: images,
       checkedImages: checkedImages,
@@ -941,31 +851,30 @@ class AllAlbumsView extends StatelessWidget {
       onOutsideTap: () {
         context.read<AllAlbumsBloc>().add(AllAlbumsImageClearChecked());
       },
-      onPointerDown: (event, image) {
-        if (event.isRightMouseClick()) {
-          if (!checkedImages.contains(image)) {
+      onRightMouseClick: (position, image) {
+        if (!checkedImages.contains(image)) {
             context.read<AllAlbumsBloc>().add(AllAlbumsImageCheckedChanged(image));
           }
 
           context.read<AllAlbumsBloc>().add(AllAlbumsMenuStatusChanged(
               AllAlbumsOpenMenuStatus(
                   isOpened: true,
-                  position: event.position,
+                  position: position,
                   target: image
               )
           ));
-        }
       },
     );
   }
 
-  void _openImageDetailPage(BuildContext context, List<ImageItem> images, int currentIndex) {
+  void _openImageDetailPage(
+      BuildContext context, List<ImageItem> images, int currentIndex) {
     final arguments = ImageDetailArguments(
         index: currentIndex,
         images: images,
         source: Source.albums,
-      extra: context.read<AllAlbumsBloc>()
-    );
-    navigatorKey.currentState?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
+        extra: context.read<AllAlbumsBloc>());
+    navigatorKey.currentState
+        ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
   }
 }
