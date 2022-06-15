@@ -45,6 +45,7 @@ class ContextMenuHelper {
             width: 320,
           );
         },
+        allowClick: false,
         target: globalOffset,
         preferDirection: PreferDirection.bottomLeft);
     _isShow = true;

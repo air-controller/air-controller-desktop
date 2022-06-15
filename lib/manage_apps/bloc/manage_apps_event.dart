@@ -48,10 +48,8 @@ class ManageAppsCheckChanged extends ManageAppsEvent {
   final List<AppInfo> checkedApps;
   final bool isUserApps;
 
-  const ManageAppsCheckChanged({
-    required this.checkedApps,
-    required this.isUserApps
-  });
+  const ManageAppsCheckChanged(
+      {required this.checkedApps, required this.isUserApps});
 
   @override
   List<Object?> get props => [checkedApps, isUserApps];
@@ -95,4 +93,14 @@ class ManageAppsTabChanged extends ManageAppsEvent {
 
   @override
   List<Object?> get props => [tab];
+}
+
+class ManageAppsOpenContextMenu extends ManageAppsEvent {
+  final bool isUserApp;
+  final ManageAppContextMenuInfo info;
+
+  const ManageAppsOpenContextMenu({required this.isUserApp, required this.info});
+
+  @override
+  List<Object?> get props => [info];
 }

@@ -100,6 +100,16 @@ class ManageAppsExportApksStatusUnit extends Equatable {
   }
 }
 
+class ManageAppContextMenuInfo extends Equatable {
+  final Offset position;
+  final AppInfo app;
+
+  const ManageAppContextMenuInfo({required this.position, required this.app});
+
+  @override
+  List<Object?> get props => [position, app];
+}
+
 class ManageAppsState extends Equatable {
   final ManageAppsTab tab;
   final ManageAppsStatus status;
@@ -116,6 +126,7 @@ class ManageAppsState extends Equatable {
   final ManageAppsInstallStatusUnit installStatus;
   final ManageAppsExportApksStatusUnit exportApksStatus;
   final String keyWord;
+  final ManageAppContextMenuInfo? contextMenuInfo;
 
   const ManageAppsState(
       {this.tab = ManageAppsTab.mine,
@@ -132,7 +143,8 @@ class ManageAppsState extends Equatable {
       this.systemAppsSortDirection = ManageAppsSortDirection.ascending,
       this.installStatus = const ManageAppsInstallStatusUnit(),
       this.exportApksStatus = const ManageAppsExportApksStatusUnit(),
-      this.keyWord = ""});
+      this.keyWord = "",
+      this.contextMenuInfo});
 
   @override
   List<Object?> get props => [
@@ -150,7 +162,8 @@ class ManageAppsState extends Equatable {
         systemAppsSortDirection,
         installStatus,
         exportApksStatus,
-        keyWord
+        keyWord,
+        contextMenuInfo
       ];
 
   ManageAppsState copyWith(
@@ -168,7 +181,8 @@ class ManageAppsState extends Equatable {
       ManageAppsExportApksStatusUnit? exportApksStatus,
       String? userAppsKeyword,
       ManageAppsSortColumn? systemAppsSortColumn,
-      ManageAppsSortDirection? systemAppsSortDirection}) {
+      ManageAppsSortDirection? systemAppsSortDirection,
+      ManageAppContextMenuInfo? contextMenuInfo}) {
     return ManageAppsState(
         tab: tab ?? this.tab,
         status: status ?? this.status,
@@ -179,12 +193,14 @@ class ManageAppsState extends Equatable {
         checkedSystemApps: checkedSystemApps ?? this.checkedSystemApps,
         failureReason: failureReason ?? this.failureReason,
         userAppsSortColumn: userAppsSortColumn ?? this.userAppsSortColumn,
-        userAppsSortDirection: userAppsSortDirection ?? this.userAppsSortDirection,
+        userAppsSortDirection:
+            userAppsSortDirection ?? this.userAppsSortDirection,
         installStatus: installStatus ?? this.installStatus,
         exportApksStatus: exportApksStatus ?? this.exportApksStatus,
         keyWord: userAppsKeyword ?? this.keyWord,
         systemAppsSortColumn: systemAppsSortColumn ?? this.systemAppsSortColumn,
         systemAppsSortDirection:
-            systemAppsSortDirection ?? this.systemAppsSortDirection);
+            systemAppsSortDirection ?? this.systemAppsSortDirection,
+        contextMenuInfo: contextMenuInfo ?? this.contextMenuInfo);
   }
 }

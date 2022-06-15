@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/scaffoldx.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/manage_apps/view/data_grid_holder.dart';
 import 'package:air_controller/manage_apps/widget/app_sort_item.dart';
+import 'package:air_controller/manage_contacts/bloc/manage_contacts_bloc.dart';
 import 'package:air_controller/repository/common_repository.dart';
 import 'package:air_controller/util/sound_effect.dart';
 import 'package:air_controller/widget/unified_icon_button.dart';
@@ -22,16 +24,13 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
 import '../../bootstrap.dart';
-import '../../constant.dart';
 import '../../model/app_info.dart';
 import '../../network/device_connection_manager.dart';
 import '../../util/common_util.dart';
+import '../../util/context_menu_helper.dart';
 import '../bloc/manage_apps_bloc.dart';
 
 class ManageAppsPage extends StatelessWidget {
-  final _rootURL =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
-
   UnifiedLinearIndicator? _progressIndicator;
   CancelToken? _uploadAndInstallCancelToken;
   CancelToken? _directlyInstallCancelToken;
@@ -252,13 +251,47 @@ class ManageAppsPage extends StatelessWidget {
     context.read<ManageAppsHomeBloc>().add(ManageAppsCancelExport());
   }
 
+  void _openMenu(BuildContext context, Offset position, AppInfo app) {
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: context.l10n.installApp,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _selectInstallationPackage(context, (path) async {
+            _install(context, path);
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.export,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _exportApks(context);
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.uninstall,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+
+          List<AppInfo> checkedApps;
+          if (isUserApps) {
+            checkedApps =
+                context.read<ManageAppsHomeBloc>().state.checkedUserApps;
+          } else {
+            checkedApps =
+                context.read<ManageAppsHomeBloc>().state.checkedSystemApps;
+          }
+          _batchUninstall(context, checkedApps);
+        },
+      )
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final dividerLineColor = Color(0xffe0e0e0);
-    final TextStyle headerStyle = TextStyle(fontSize: 14, color: Colors.black);
-
-    final currentTab =
-        context.select((ManageAppsHomeBloc bloc) => bloc.state.tab);
     List<AppInfo> apps = [];
     List<AppInfo> checkedApps = [];
 
@@ -277,7 +310,14 @@ class ManageAppsPage extends StatelessWidget {
             isUserApps: isUserApps,
             apps: apps,
             checkedApps: checkedApps,
-            context: context);
+            context: context,
+            onRightMouseTap: (position, app) {
+              context.read<ManageAppsHomeBloc>().add(ManageAppsOpenContextMenu(
+                    isUserApp: isUserApps,
+                    info:
+                        ManageAppContextMenuInfo(position: position, app: app),
+                  ));
+            });
         DataGridHolder.userAppsDataSource = dataSource;
       } else {
         userAppsDataSource.updataDataSource(apps);
@@ -304,7 +344,14 @@ class ManageAppsPage extends StatelessWidget {
             isUserApps: isUserApps,
             apps: apps,
             checkedApps: checkedApps,
-            context: context);
+            context: context,
+            onRightMouseTap: (position, app) {
+              context.read<ManageAppsHomeBloc>().add(ManageAppsOpenContextMenu(
+                    isUserApp: isUserApps,
+                    info:
+                        ManageAppContextMenuInfo(position: position, app: app),
+                  ));
+            });
         DataGridHolder.systemAppsDataSource = dataSource;
       } else {
         systemAppsDataSource.updataDataSource(apps);
@@ -561,7 +608,19 @@ class ManageAppsPage extends StatelessWidget {
                 previous.exportApksStatus != current.exportApksStatus &&
                 current.exportApksStatus.status !=
                     ManageAppsExportApksStatus.initial,
-          )
+          ),
+
+          BlocListener<ManageAppsHomeBloc, ManageAppsState>(
+              listener: (context, state) {
+                if ((isUserApps && state.tab == ManageAppsTab.preInstalled) ||
+                    (!isUserApps && state.tab == ManageAppsTab.mine)) return;
+
+                _openMenu(context, state.contextMenuInfo!.position,
+                    state.contextMenuInfo!.app);
+              },
+              listenWhen: (previous, current) =>
+                  previous.contextMenuInfo != current.contextMenuInfo &&
+                  null != current.contextMenuInfo)
         ],
         child: Column(
           children: [
@@ -571,18 +630,18 @@ class ManageAppsPage extends StatelessWidget {
                   Row(
                     children: [
                       if (isUserApps)
-                      UnifiedIconButtonWithText(
-                        iconPath: "assets/icons/ic_install.png",
-                        iconSize: 17,
-                        text: context.l10n.installApp,
-                        space: 10,
-                        margin: EdgeInsets.only(left: 20),
-                        onTap: () {
-                          _selectInstallationPackage(context, (path) async {
-                            _install(context, path);
-                          });
-                        },
-                      ),
+                        UnifiedIconButtonWithText(
+                          iconPath: "assets/icons/ic_install.png",
+                          iconSize: 17,
+                          text: context.l10n.installApp,
+                          space: 10,
+                          margin: EdgeInsets.only(left: 20),
+                          onTap: () {
+                            _selectInstallationPackage(context, (path) async {
+                              _install(context, path);
+                            });
+                          },
+                        ),
                       UnifiedIconButtonWithText(
                         iconPath: "assets/icons/ic_export.png",
                         iconSize: 19,
@@ -983,14 +1042,14 @@ class AppInfoDataSource extends DataGridSource {
   final List<AppInfo> checkedApps;
   final BuildContext context;
   List<DataGridRow> dataGridRows = [];
-  final _rootURL =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
+  final Function(Offset, AppInfo) onRightMouseTap;
 
   AppInfoDataSource(
       {required this.isUserApps,
       required this.apps,
       required this.checkedApps,
-      required this.context}) {
+      required this.context,
+      required this.onRightMouseTap}) {
     dataGridRows = apps
         .map<DataGridRow>((app) => DataGridRow(cells: [
               DataGridCell(
@@ -1016,10 +1075,9 @@ class AppInfoDataSource extends DataGridSource {
               DataGridCell(
                   columnName: AppInfoColumn.iconAndName.toString(), value: app),
               DataGridCell(
-                  columnName: AppInfoColumn.size.toString(), value: app.size),
+                  columnName: AppInfoColumn.size.toString(), value: app),
               DataGridCell(
-                  columnName: AppInfoColumn.version.toString(),
-                  value: app.versionName),
+                  columnName: AppInfoColumn.version.toString(), value: app),
               DataGridCell(
                   columnName: AppInfoColumn.action.toString(), value: app),
             ]))
@@ -1044,71 +1102,99 @@ class AppInfoDataSource extends DataGridSource {
         case AppInfoColumn.iconAndName:
           {
             final app = cell.value as AppInfo;
-            return Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(0, 6, 0, 6),
-              child: Row(
-                children: [
-                  CachedNetworkImage(
-                    imageUrl:
-                        "$_rootURL/stream/drawable?package=${app.packageName}",
-                    width: 60,
-                    height: 60,
-                  ),
-                  SizedBox(
-                    child: Flexible(
-                      child: Text(app.name, style: textStyle),
+            return Listener(
+              child: Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.fromLTRB(0, 6, 0, 6),
+                child: Row(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl:
+                          "${DeviceConnectionManager.instance.rootURL}/stream/drawable?package=${app.packageName}",
+                      width: 60,
+                      height: 60,
                     ),
-                  )
-                ],
+                    SizedBox(
+                      child: Flexible(
+                        child: Text(app.name, style: textStyle),
+                      ),
+                    )
+                  ],
+                ),
+                color: Colors.transparent,
               ),
-              color: Colors.transparent,
+              onPointerDown: (event) {
+                if (event.isRightMouseClick()) {
+                  onRightMouseTap(event.position, app);
+                }
+              },
             );
           }
         case AppInfoColumn.size:
           {
-            final size = cell.value as int;
-            return Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(CommonUtil.convertToReadableSize(size),
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: textStyle),
-              color: Colors.transparent,
-            );
+            final app = cell.value as AppInfo;
+            return Listener(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                  child: Text(CommonUtil.convertToReadableSize(app.size),
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: textStyle),
+                  color: Colors.transparent,
+                ),
+                onPointerDown: (event) {
+                  if (event.isRightMouseClick()) {
+                    onRightMouseTap(event.position, app);
+                  }
+                });
           }
         case AppInfoColumn.version:
           {
-            final version = cell.value as String;
-            return Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: Text(
-                  "${context.l10n.placeHolderVersionName.replaceAll("%s", version)}",
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                  style: textStyle),
-              color: Colors.transparent,
-            );
+            final app = cell.value as AppInfo;
+
+            return Listener(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                  child: Text(
+                      "${context.l10n.placeHolderVersionName.replaceAll("%s", app.versionName)}",
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: textStyle),
+                  color: Colors.transparent,
+                ),
+                onPointerDown: (event) {
+                  if (event.isRightMouseClick()) {
+                    onRightMouseTap(event.position, app);
+                  }
+                });
           }
         default:
           {
-            return Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-              child: OutlinedButton(
-                child: Text(context.l10n.uninstall,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                    style: textStyle),
-                onPressed: () {
-                  final app = cell.value as AppInfo;
-                  _batchUninstall(context, [app]);
-                },
-              ),
-              color: Colors.transparent,
-            );
+            final app = cell.value as AppInfo;
+
+            return Listener(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                  child: OutlinedButton(
+                    child: Text(context.l10n.uninstall,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                        style: textStyle),
+                    onPressed: () {
+                      final app = cell.value as AppInfo;
+                      _batchUninstall(context, [app]);
+                    },
+                  ),
+                  color: Colors.transparent,
+                ),
+                onPointerDown: (event) {
+                  if (event.isRightMouseClick()) {
+                    onRightMouseTap(event.position, app);
+                  }
+                });
           }
       }
     }).toList());

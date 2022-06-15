@@ -5,6 +5,7 @@ import 'package:air_controller/model/app_info.dart';
 import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:air_controller/repository/common_repository.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'manage_apps_event.dart';
@@ -59,6 +60,7 @@ class ManageAppsHomeBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
     on<ManageAppsKeyWordChanged>(_onUserAppsKeywordChanged);
     on<ManageAppsItemCountChanged>(_onItemCountChanged);
     on<ManageAppsTabChanged>(_onTabChanged);
+    on<ManageAppsOpenContextMenu>(_onOpenContextMenu);
   }
 
   void _onSubscriptionRequested(ManageAppsSubscriptionRequested event,
@@ -231,5 +233,30 @@ class ManageAppsHomeBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
   Future<void> close() {
     DataGridHolder.dispose();
     return super.close();
+  }
+
+  void _onOpenContextMenu(
+      ManageAppsOpenContextMenu event, Emitter<ManageAppsState> emit) {
+    final app = event.info.app;
+
+    if (event.isUserApp) {
+      final checkedUserApps = [...state.checkedUserApps];
+
+      if (!checkedUserApps.contains(app)) {
+        checkedUserApps.add(app);
+      }
+
+      emit(state.copyWith(
+          contextMenuInfo: event.info, checkedUserApps: checkedUserApps));
+    } else {
+      final checkedSystemApps = [...state.checkedSystemApps];
+
+      if (!checkedSystemApps.contains(app)) {
+        checkedSystemApps.add(app);
+      }
+
+      emit(state.copyWith(
+          contextMenuInfo: event.info, checkedSystemApps: checkedSystemApps));
+    }
   }
 }
