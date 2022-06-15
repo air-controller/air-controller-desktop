@@ -1,10 +1,9 @@
-
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/util/context_menu_helper.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,14 +22,13 @@ import '../../widget/progress_indictor_dialog.dart';
 import '../bloc/music_home_bloc.dart';
 
 class MusicHomePage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MusicHomeBloc>(
-        create: (context) => MusicHomeBloc(
-            audioRepository: context.read<AudioRepository>(),
-            fileRepository: context.read<FileRepository>()
-        )..add(MusicHomeSubscriptionRequested()),
+      create: (context) => MusicHomeBloc(
+          audioRepository: context.read<AudioRepository>(),
+          fileRepository: context.read<FileRepository>())
+        ..add(MusicHomeSubscriptionRequested()),
       child: MusicHomeView(),
     );
   }
@@ -60,22 +58,28 @@ class MusicHomeView extends StatelessWidget {
     _rootFocusNode?.canRequestFocus = true;
     _rootFocusNode?.requestFocus();
 
-    MusicHomeStatus status = context.select((MusicHomeBloc bloc) => bloc.state.status);
-    List<AudioItem> musics = context.select((MusicHomeBloc bloc) => bloc.state.musics);
-    List<AudioItem> checkedMusics = context.select((MusicHomeBloc bloc) => bloc.state.checkedMusics);
-    MusicHomeSortColumn sortColumn = context.select((MusicHomeBloc bloc) => bloc.state.sortColumn);
-    MusicHomeSortDirection sortDirection = context.select((MusicHomeBloc bloc) => bloc.state.sortDirection);
+    MusicHomeStatus status =
+        context.select((MusicHomeBloc bloc) => bloc.state.status);
+    List<AudioItem> musics =
+        context.select((MusicHomeBloc bloc) => bloc.state.musics);
+    List<AudioItem> checkedMusics =
+        context.select((MusicHomeBloc bloc) => bloc.state.checkedMusics);
+    MusicHomeSortColumn sortColumn =
+        context.select((MusicHomeBloc bloc) => bloc.state.sortColumn);
+    MusicHomeSortDirection sortDirection =
+        context.select((MusicHomeBloc bloc) => bloc.state.sortDirection);
 
     bool isDeleteEnabled = checkedMusics.length > 0;
 
-    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${musics.length}");
+    String itemNumStr = context.l10n.placeHolderItemCount01
+        .replaceFirst("%d", "${musics.length}");
     if (checkedMusics.length > 0) {
-      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${checkedMusics.length}")
+      itemNumStr = context.l10n.placeHolderItemCount02
+          .replaceFirst("%d", "${checkedMusics.length}")
           .replaceFirst("%d", "${musics.length}");
     }
 
-    TextStyle headerStyle =
-    TextStyle(fontSize: 14, color: Colors.black);
+    TextStyle headerStyle = TextStyle(fontSize: 14, color: Colors.black);
 
     return Scaffold(
       body: MultiBlocListener(
@@ -84,52 +88,51 @@ class MusicHomeView extends StatelessWidget {
               listener: (context, state) {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.failureReason ?? "Load musics failure."
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content:
+                          Text(state.failureReason ?? "Load musics failure.")));
               },
               listenWhen: (previous, current) =>
-              previous.status != current.status && current.status == MusicHomeStatus.failure,
+                  previous.status != current.status &&
+                  current.status == MusicHomeStatus.failure,
             ),
-
             BlocListener<MusicHomeBloc, MusicHomeState>(
               listener: (context, state) {
                 _openMenu(
                     pageContext: context,
                     position: state.openMenuStatus.position!,
-                    musics: state.musics,
-                    checkedMusics: state.checkedMusics,
-                    current: state.openMenuStatus.target
-                );
+                    current: state.openMenuStatus.target);
               },
               listenWhen: (previous, current) =>
-              previous.openMenuStatus != current.openMenuStatus && current.openMenuStatus.isOpened,
+                  previous.openMenuStatus != current.openMenuStatus &&
+                  current.openMenuStatus.isOpened,
             ),
-
             BlocListener<MusicHomeBloc, MusicHomeState>(
               listener: (context, state) {
-                if (state.deleteStatus.status == MusicHomeDeleteStatus.loading) {
+                if (state.deleteStatus.status ==
+                    MusicHomeDeleteStatus.loading) {
                   SmartDialog.showLoading();
                 }
 
-                if (state.deleteStatus.status == MusicHomeDeleteStatus.failure) {
+                if (state.deleteStatus.status ==
+                    MusicHomeDeleteStatus.failure) {
                   SmartDialog.dismiss();
 
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(
-                        state.failureReason ?? "Delete musics failure."
-                    )));
+                    ..showSnackBar(SnackBar(
+                        content: Text(
+                            state.failureReason ?? "Delete musics failure.")));
                 }
 
-                if (state.deleteStatus.status == MusicHomeDeleteStatus.success) {
+                if (state.deleteStatus.status ==
+                    MusicHomeDeleteStatus.success) {
                   SmartDialog.dismiss();
                 }
               },
               listenWhen: (previous, current) =>
-              previous.deleteStatus != current.deleteStatus,
+                  previous.deleteStatus != current.deleteStatus,
             ),
-
             BlocListener<MusicHomeBloc, MusicHomeState>(
               listener: (context, state) {
                 if (state.copyStatus.status == MusicHomeCopyStatus.start) {
@@ -147,21 +150,23 @@ class MusicHomeView extends StatelessWidget {
                       if (state.checkedMusics.length == 1) {
                         String name = state.checkedMusics.single.name;
 
-                        title = context.l10n.placeholderExporting.replaceFirst("%s", name);
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", name);
                       }
 
                       if (state.checkedMusics.length > 1) {
-                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                            "${state.checkedMusics.length}");
-                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                        String itemStr = context.l10n.placeHolderItemCount03
+                            .replaceFirst(
+                                "%d", "${state.checkedMusics.length}");
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", itemStr);
                       }
 
                       _progressIndicatorDialog?.title = title;
                     }
 
                     _progressIndicatorDialog?.subtitle =
-                    "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
-                        .convertToReadableSize(total)}";
+                        "${CommonUtil.convertToReadableSize(current)}/${CommonUtil.convertToReadableSize(total)}";
                     _progressIndicatorDialog?.updateProgress(current / total);
                   }
                 }
@@ -171,9 +176,9 @@ class MusicHomeView extends StatelessWidget {
 
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(
-                        state.copyStatus.error ?? "Copy musics failure."
-                    )));
+                    ..showSnackBar(SnackBar(
+                        content: Text(
+                            state.copyStatus.error ?? "Copy musics failure.")));
                 }
 
                 if (state.copyStatus.status == MusicHomeCopyStatus.success) {
@@ -181,10 +186,9 @@ class MusicHomeView extends StatelessWidget {
                 }
               },
               listenWhen: (previous, current) =>
-              previous.copyStatus != current.copyStatus
-                  && current.copyStatus.status != MusicHomeCopyStatus.initial,
+                  previous.copyStatus != current.copyStatus &&
+                  current.copyStatus.status != MusicHomeCopyStatus.initial,
             ),
-
           ],
           child: Stack(children: [
             Focus(
@@ -199,66 +203,73 @@ class MusicHomeView extends StatelessWidget {
                             child: Text(context.l10n.musics,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: Color(0xff616161),
-                                    fontSize: 16.0))),
+                                    color: Color(0xff616161), fontSize: 16.0))),
                         Align(
-                            child: StatefulBuilder(
-                                builder: (context, setState) {
-                                  double opacity = _isDeleteBtnTapDown ? 0.6 : 1.0;
+                            child:
+                                StatefulBuilder(builder: (context, setState) {
+                              double opacity = _isDeleteBtnTapDown ? 0.6 : 1.0;
 
-                                  if (!isDeleteEnabled) {
-                                    opacity = 0.6;
+                              if (!isDeleteEnabled) {
+                                opacity = 0.6;
+                              }
+
+                              return GestureDetector(
+                                child: Opacity(
+                                  opacity: opacity,
+                                  child: Container(
+                                      child: Image.asset(
+                                          "assets/icons/icon_delete.png",
+                                          width: _icon_delete_btn_size,
+                                          height: _icon_delete_btn_size),
+                                      decoration: BoxDecoration(
+                                          color: Color(0xffcb6357),
+                                          border: new Border.all(
+                                              color: Color(0xffb43f32),
+                                              width: 1.0),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(4.0))),
+                                      width: _delete_btn_width,
+                                      height: _delete_btn_height,
+                                      padding: EdgeInsets.fromLTRB(
+                                          _delete_btn_padding_hor,
+                                          _delete_btn_padding_vertical,
+                                          _delete_btn_padding_hor,
+                                          _delete_btn_padding_vertical),
+                                      margin: EdgeInsets.fromLTRB(0, 0, 15, 0)),
+                                ),
+                                onTap: () {
+                                  if (isDeleteEnabled) {
+                                    _tryToDeleteMusics(
+                                        context,
+                                        context
+                                            .read<MusicHomeBloc>()
+                                            .state
+                                            .checkedMusics);
                                   }
-
-                                  return GestureDetector(
-                                    child: Opacity(
-                                      opacity: opacity,
-                                      child: Container(
-                                          child: Image.asset("assets/icons/icon_delete.png",
-                                              width: _icon_delete_btn_size,
-                                              height: _icon_delete_btn_size),
-                                          decoration: BoxDecoration(
-                                              color: Color(0xffcb6357),
-                                              border: new Border.all(
-                                                  color: Color(0xffb43f32), width: 1.0),
-                                              borderRadius: BorderRadius.all(Radius.circular(4.0))),
-                                          width: _delete_btn_width,
-                                          height: _delete_btn_height,
-                                          padding: EdgeInsets.fromLTRB(
-                                              _delete_btn_padding_hor,
-                                              _delete_btn_padding_vertical,
-                                              _delete_btn_padding_hor,
-                                              _delete_btn_padding_vertical),
-                                          margin: EdgeInsets.fromLTRB(0, 0, 15, 0)),
-                                    ),
-                                    onTap: () {
-                                      if (isDeleteEnabled) {
-                                        _tryToDeleteMusics(context, context.read<MusicHomeBloc>().state.checkedMusics);
-                                      }
-                                    },
-                                    onTapDown: (details) {
-                                      if (isDeleteEnabled) {
-                                        setState(() {
-                                          _isDeleteBtnTapDown = true;
-                                        });
-                                      }
-                                    },
-                                    onTapCancel: () {
-                                      if (isDeleteEnabled) {
-                                        setState(() {
-                                          _isDeleteBtnTapDown = false;
-                                        });
-                                      }
-                                    },
-                                    onTapUp: (details) {
-                                      if (isDeleteEnabled) {
-                                        setState(() {
-                                          _isDeleteBtnTapDown = false;
-                                        });
-                                      }
-                                    },
-                                  );
-                                }),
+                                },
+                                onTapDown: (details) {
+                                  if (isDeleteEnabled) {
+                                    setState(() {
+                                      _isDeleteBtnTapDown = true;
+                                    });
+                                  }
+                                },
+                                onTapCancel: () {
+                                  if (isDeleteEnabled) {
+                                    setState(() {
+                                      _isDeleteBtnTapDown = false;
+                                    });
+                                  }
+                                },
+                                onTapUp: (details) {
+                                  if (isDeleteEnabled) {
+                                    setState(() {
+                                      _isDeleteBtnTapDown = false;
+                                    });
+                                  }
+                                },
+                              );
+                            }),
                             alignment: Alignment.centerRight)
                       ]),
                       color: Color(0xfff4f4f4),
@@ -271,382 +282,407 @@ class MusicHomeView extends StatelessWidget {
 
                   Expanded(
                       child: Container(
-                        color: Colors.white,
-                        child: DataTable2(
-                          dividerThickness: 1,
-                          bottomMargin: 10,
-                          columnSpacing: 0,
-                          sortColumnIndex: sortColumn.index,
-                          sortAscending: sortDirection == MusicHomeSortDirection.ascending,
-                          showCheckboxColumn: false,
-                          showBottomBorder: false,
-                          columns: [
-                            DataColumn2(
-                                label: Container(
-                                  child: Text(
-                                    context.l10n.folder,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'
-                                    ),
-                                  ),
+                    color: Colors.white,
+                    child: DataTable2(
+                      dividerThickness: 1,
+                      bottomMargin: 10,
+                      columnSpacing: 0,
+                      sortColumnIndex: sortColumn.index,
+                      sortAscending:
+                          sortDirection == MusicHomeSortDirection.ascending,
+                      showCheckboxColumn: false,
+                      showBottomBorder: false,
+                      columns: [
+                        DataColumn2(
+                            label: Container(
+                              child: Text(
+                                context.l10n.folder,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    inherit: true, fontFamily: 'NotoSansSC'),
+                              ),
+                            ),
+                            onSort: (sortColumnIndex, isSortAscending) {
+                              MusicHomeSortColumn sortColumn =
+                                  MusicHomeSortColumnX.convertToColumn(
+                                      sortColumnIndex);
+                              MusicHomeSortDirection sortDirection =
+                                  isSortAscending
+                                      ? MusicHomeSortDirection.ascending
+                                      : MusicHomeSortDirection.descending;
+
+                              _performSort(context, sortColumn, sortDirection);
+                            },
+                            size: ColumnSize.L),
+                        DataColumn2(
+                            label: Container(
+                                child: Text(
+                                  context.l10n.name,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      inherit: true, fontFamily: 'NotoSansSC'),
                                 ),
-                                onSort: (sortColumnIndex, isSortAscending) {
-                                  MusicHomeSortColumn sortColumn = MusicHomeSortColumnX.convertToColumn(sortColumnIndex);
-                                  MusicHomeSortDirection sortDirection = isSortAscending ? MusicHomeSortDirection.ascending
+                                padding: EdgeInsets.only(left: 15)),
+                            onSort: (sortColumnIndex, isSortAscending) {
+                              MusicHomeSortColumn sortColumn =
+                                  MusicHomeSortColumnX.convertToColumn(
+                                      sortColumnIndex);
+                              MusicHomeSortDirection sortDirection =
+                                  isSortAscending
+                                      ? MusicHomeSortDirection.ascending
                                       : MusicHomeSortDirection.descending;
 
-                                  _performSort(context, sortColumn, sortDirection);
-                                },
-                                size: ColumnSize.L),
-                            DataColumn2(
-                                label: Container(
-                                    child: Text(
-                                      context.l10n.name,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          inherit: true,
-                                          fontFamily: 'NotoSansSC'
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.only(left: 15)),
-                                onSort: (sortColumnIndex, isSortAscending) {
-                                  MusicHomeSortColumn sortColumn = MusicHomeSortColumnX.convertToColumn(sortColumnIndex);
-                                  MusicHomeSortDirection sortDirection = isSortAscending ? MusicHomeSortDirection.ascending
+                              _performSort(context, sortColumn, sortDirection);
+                            }),
+                        DataColumn2(
+                            label: Container(
+                          child: Text(
+                            context.l10n.type,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                inherit: true, fontFamily: 'NotoSansSC'),
+                          ),
+                          padding: EdgeInsets.only(left: 15),
+                        )),
+                        DataColumn2(
+                            label: Container(
+                              child: Text(
+                                context.l10n.duration,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    inherit: true, fontFamily: 'NotoSansSC'),
+                              ),
+                              padding: EdgeInsets.only(left: 15),
+                            ),
+                            onSort: (sortColumnIndex, isSortAscending) {
+                              MusicHomeSortColumn sortColumn =
+                                  MusicHomeSortColumnX.convertToColumn(
+                                      sortColumnIndex);
+                              MusicHomeSortDirection sortDirection =
+                                  isSortAscending
+                                      ? MusicHomeSortDirection.ascending
                                       : MusicHomeSortDirection.descending;
 
-                                  _performSort(context, sortColumn, sortDirection);
-                                }),
-                            DataColumn2(
-                                label: Container(
-                                  child: Text(
-                                    context.l10n.type,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(left: 15),
-                                )),
-                            DataColumn2(
-                                label: Container(
-                                  child: Text(
-                                    context.l10n.duration,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(left: 15),
-                                ),
-                                onSort: (sortColumnIndex, isSortAscending) {
-                                  MusicHomeSortColumn sortColumn = MusicHomeSortColumnX.convertToColumn(sortColumnIndex);
-                                  MusicHomeSortDirection sortDirection = isSortAscending ? MusicHomeSortDirection.ascending
+                              _performSort(context, sortColumn, sortDirection);
+                            }),
+                        DataColumn2(
+                            label: Container(
+                              child: Text(
+                                context.l10n.size,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    inherit: true, fontFamily: 'NotoSansSC'),
+                              ),
+                              padding: EdgeInsets.only(left: 15),
+                            ),
+                            onSort: (sortColumnIndex, isSortAscending) {
+                              MusicHomeSortColumn sortColumn =
+                                  MusicHomeSortColumnX.convertToColumn(
+                                      sortColumnIndex);
+                              MusicHomeSortDirection sortDirection =
+                                  isSortAscending
+                                      ? MusicHomeSortDirection.ascending
                                       : MusicHomeSortDirection.descending;
 
-                                  _performSort(context, sortColumn, sortDirection);
-                                }),
-                            DataColumn2(
-                                label: Container(
-                                  child: Text(
-                                    context.l10n.size,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(left: 15),
-                                ),
-                                onSort: (sortColumnIndex, isSortAscending) {
-                                  MusicHomeSortColumn sortColumn = MusicHomeSortColumnX.convertToColumn(sortColumnIndex);
-                                  MusicHomeSortDirection sortDirection = isSortAscending ? MusicHomeSortDirection.ascending
+                              _performSort(context, sortColumn, sortDirection);
+                            }),
+                        DataColumn2(
+                            label: Container(
+                              child: Text(
+                                context.l10n.dateModified,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    inherit: true, fontFamily: 'NotoSansSC'),
+                              ),
+                              padding: EdgeInsets.only(left: 15),
+                            ),
+                            onSort: (sortColumnIndex, isSortAscending) {
+                              MusicHomeSortColumn sortColumn =
+                                  MusicHomeSortColumnX.convertToColumn(
+                                      sortColumnIndex);
+                              MusicHomeSortDirection sortDirection =
+                                  isSortAscending
+                                      ? MusicHomeSortDirection.ascending
                                       : MusicHomeSortDirection.descending;
 
-                                  _performSort(context, sortColumn, sortDirection);
-                                }),
-                            DataColumn2(
-                                label: Container(
-                                  child: Text(
-                                    context.l10n.dateModified,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(left: 15),
-                                ),
-                                onSort: (sortColumnIndex, isSortAscending) {
-                                  MusicHomeSortColumn sortColumn = MusicHomeSortColumnX.convertToColumn(sortColumnIndex);
-                                  MusicHomeSortDirection sortDirection = isSortAscending ? MusicHomeSortDirection.ascending
-                                      : MusicHomeSortDirection.descending;
+                              _performSort(context, sortColumn, sortDirection);
+                            })
+                      ],
+                      rows: List<DataRow>.generate(musics.length, (index) {
+                        AudioItem audioItem = musics[index];
 
-                                  _performSort(context, sortColumn, sortDirection);
-                                })
-                          ],
-                          rows: List<DataRow>.generate(musics.length, (index) {
-                            AudioItem audioItem = musics[index];
-
-                            bool isChecked = checkedMusics.contains(audioItem);
-                            Color textColor = isChecked ? Colors.white : Color(0xff313237);
-                            TextStyle textStyle =
+                        bool isChecked = checkedMusics.contains(audioItem);
+                        Color textColor =
+                            isChecked ? Colors.white : Color(0xff313237);
+                        TextStyle textStyle =
                             TextStyle(fontSize: 14, color: textColor);
 
-                            String folderName = audioItem.folder;
-                            int pointIndex0 = folderName.lastIndexOf("/");
-                            if (pointIndex0 != -1) {
-                              folderName = folderName.substring(pointIndex0 + 1);
-                            }
+                        String folderName = audioItem.folder;
+                        int pointIndex0 = folderName.lastIndexOf("/");
+                        if (pointIndex0 != -1) {
+                          folderName = folderName.substring(pointIndex0 + 1);
+                        }
 
-                            String type = "";
-                            String name = audioItem.name;
-                            int pointIndex = name.lastIndexOf(".");
-                            if (pointIndex != -1) {
-                              type = name.substring(pointIndex + 1);
-                            }
+                        String type = "";
+                        String name = audioItem.name;
+                        int pointIndex = name.lastIndexOf(".");
+                        if (pointIndex != -1) {
+                          type = name.substring(pointIndex + 1);
+                        }
 
-                            final inputController = TextEditingController();
+                        final inputController = TextEditingController();
 
-                            inputController.text = audioItem.name;
+                        inputController.text = audioItem.name;
 
-                            final focusNode = FocusNode();
+                        final focusNode = FocusNode();
 
-                            focusNode.addListener(() {
-                              if (focusNode.hasFocus) {
-                                inputController.selection = TextSelection(
-                                    baseOffset: 0,
-                                    extentOffset: inputController.text.length);
-                              }
-                            });
+                        focusNode.addListener(() {
+                          if (focusNode.hasFocus) {
+                            inputController.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: inputController.text.length);
+                          }
+                        });
 
-                            return DataRow2(
-                                cells: [
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(folderName,
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          style: textStyle),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Stack(
-                                        children: [
-                                          Visibility(
-                                            child: Text(audioItem.name,
-                                                softWrap: false,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: textStyle),
-                                            visible: true,
-                                          ),
-                                          Visibility(
-                                            child: Container(
-                                              child: IntrinsicWidth(
-                                                child: TextField(
-                                                  controller: inputController,
-                                                  focusNode: false
-                                                      ? focusNode
-                                                      : null,
-                                                  decoration: InputDecoration(
-                                                      border: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color(0xffcccbcd),
-                                                              width: 3,
-                                                              style: BorderStyle.solid)),
-                                                      enabledBorder: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color(0xffcccbcd),
-                                                              width: 3,
-                                                              style: BorderStyle.solid),
-                                                          borderRadius: BorderRadius.circular(4)),
-                                                      focusedBorder: OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color(0xffcccbcd),
-                                                              width: 4,
-                                                              style: BorderStyle.solid),
-                                                          borderRadius: BorderRadius.circular(4)),
-                                                      contentPadding:
-                                                      EdgeInsets.fromLTRB(8, 3, 8, 3)),
-                                                  cursorColor: Color(0xff333333),
-                                                  style: TextStyle(
-                                                      fontSize: 14, color: Color(0xff333333)),
-                                                  onChanged: (value) {
-                                                    debugPrint("onChange, $value");
-                                                    // _newFileName = value;
-                                                  },
-                                                ),
-                                              ),
-                                              height: 30,
-                                              color: Colors.white,
-                                            ),
-                                            visible: false,
-                                            maintainState: false,
-                                            maintainSize: false,
-                                          )
-                                        ],
+                        return DataRow2(
+                            cells: [
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Text(folderName,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                      style: textStyle),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
+                                  }
+                                },
+                              )),
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Stack(
+                                    children: [
+                                      Visibility(
+                                        child: Text(audioItem.name,
+                                            softWrap: false,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: textStyle),
+                                        visible: true,
                                       ),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(type,
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          style: textStyle),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(CommonUtil.convertToReadableDuration(context, audioItem.duration),
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          style: textStyle),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(CommonUtil.convertToReadableSize(audioItem.size),
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          style: textStyle),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                  DataCell(Listener(
-                                    child: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                                      child: Text(CommonUtil.formatTime(audioItem.modifyDate * 1000, context.l10n.yMdHmPattern),
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          style: textStyle),
-                                      color: Colors.transparent,
-                                    ),
-                                    onPointerDown: (event) {
-                                      if (event.isRightMouseClick()) {
-                                        _onMusicRightMouseClick(
-                                            context,
-                                            event.position,
-                                            checkedMusics,
-                                            audioItem
-                                        );
-                                      }
-                                    },
-                                  )),
-                                ],
-                                selected: isChecked,
-                                onSelectChanged: (isSelected) {
-                                  debugPrint("onSelectChanged: $isSelected");
-                                },
-                                onTap: () {
-                                  context.read<MusicHomeBloc>().add(MusicHomeCheckedChanged(audioItem));
-                                },
-                                onDoubleTap: () {
-                                  context.read<MusicHomeBloc>().add(MusicHomeCheckedChanged(audioItem));
-
-                                  SystemAppLauncher.openAudio(audioItem);
-                                },
-                                color: MaterialStateColor.resolveWith((states) {
-                                  if (states.contains(MaterialState.hovered)) {
-                                    return Colors.red;
+                                      Visibility(
+                                        child: Container(
+                                          child: IntrinsicWidth(
+                                            child: TextField(
+                                              controller: inputController,
+                                              focusNode:
+                                                  false ? focusNode : null,
+                                              decoration: InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                      borderSide: BorderSide(
+                                                          color:
+                                                              Color(0xffcccbcd),
+                                                          width: 3,
+                                                          style: BorderStyle
+                                                              .solid)),
+                                                  enabledBorder: OutlineInputBorder(
+                                                      borderSide: BorderSide(
+                                                          color:
+                                                              Color(0xffcccbcd),
+                                                          width: 3,
+                                                          style: BorderStyle
+                                                              .solid),
+                                                      borderRadius: BorderRadius.circular(
+                                                          4)),
+                                                  focusedBorder: OutlineInputBorder(
+                                                      borderSide: BorderSide(
+                                                          color:
+                                                              Color(0xffcccbcd),
+                                                          width: 4,
+                                                          style: BorderStyle
+                                                              .solid),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              4)),
+                                                  contentPadding:
+                                                      EdgeInsets.fromLTRB(8, 3, 8, 3)),
+                                              cursorColor: Color(0xff333333),
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Color(0xff333333)),
+                                              onChanged: (value) {
+                                                debugPrint("onChange, $value");
+                                                // _newFileName = value;
+                                              },
+                                            ),
+                                          ),
+                                          height: 30,
+                                          color: Colors.white,
+                                        ),
+                                        visible: false,
+                                        maintainState: false,
+                                        maintainSize: false,
+                                      )
+                                    ],
+                                  ),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
                                   }
-
-                                  if (states.contains(MaterialState.pressed)) {
-                                    return Colors.blue;
+                                },
+                              )),
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Text(type,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                      style: textStyle),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
                                   }
-
-                                  if (states.contains(MaterialState.selected)) {
-                                    return Color(0xff5e86ec);
+                                },
+                              )),
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Text(
+                                      CommonUtil.convertToReadableDuration(
+                                          context, audioItem.duration),
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                      style: textStyle),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
                                   }
+                                },
+                              )),
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Text(
+                                      CommonUtil.convertToReadableSize(
+                                          audioItem.size),
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                      style: textStyle),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
+                                  }
+                                },
+                              )),
+                              DataCell(Listener(
+                                child: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
+                                  child: Text(
+                                      CommonUtil.formatTime(
+                                          audioItem.modifyDate * 1000,
+                                          context.l10n.yMdHmPattern),
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                      style: textStyle),
+                                  color: Colors.transparent,
+                                ),
+                                onPointerDown: (event) {
+                                  if (event.isRightMouseClick()) {
+                                    _onMusicRightMouseClick(
+                                        context,
+                                        event.position,
+                                        checkedMusics,
+                                        audioItem);
+                                  }
+                                },
+                              )),
+                            ],
+                            selected: isChecked,
+                            onSelectChanged: (isSelected) {
+                              debugPrint("onSelectChanged: $isSelected");
+                            },
+                            onTap: () {
+                              context
+                                  .read<MusicHomeBloc>()
+                                  .add(MusicHomeCheckedChanged(audioItem));
+                            },
+                            onDoubleTap: () {
+                              context
+                                  .read<MusicHomeBloc>()
+                                  .add(MusicHomeCheckedChanged(audioItem));
 
-                                  return Colors.white;
-                                }));
-                          }),
-                          headingRowHeight: 40,
-                          headingTextStyle: headerStyle,
-                          onSelectAll: (val) {},
-                          empty: Center(
-                            child: Container(
-                              padding: EdgeInsets.all(20),
-                              color: Colors.green[200],
-                              child: Text("No download files"),
-                            ),
-                          ),
+                              SystemAppLauncher.openAudio(audioItem);
+                            },
+                            color: MaterialStateColor.resolveWith((states) {
+                              if (states.contains(MaterialState.hovered)) {
+                                return Colors.red;
+                              }
+
+                              if (states.contains(MaterialState.pressed)) {
+                                return Colors.blue;
+                              }
+
+                              if (states.contains(MaterialState.selected)) {
+                                return Color(0xff5e86ec);
+                              }
+
+                              return Colors.white;
+                            }));
+                      }),
+                      headingRowHeight: 40,
+                      headingTextStyle: headerStyle,
+                      onSelectAll: (val) {},
+                      empty: Center(
+                        child: Container(
+                          padding: EdgeInsets.all(20),
+                          color: Colors.green[200],
+                          child: Text("No download files"),
                         ),
-                        padding: EdgeInsets.only(bottom: 10),
-                      )),
+                      ),
+                    ),
+                    padding: EdgeInsets.only(bottom: 10),
+                  )),
 
                   /// 底部固定区域
-                  Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+                  Divider(
+                      color: _divider_line_color, height: 1.0, thickness: 1.0),
                   Container(
                       child: Align(
                           alignment: Alignment.center,
@@ -655,18 +691,18 @@ class MusicHomeView extends StatelessWidget {
                                   color: Color(0xff646464), fontSize: 12))),
                       height: 20,
                       color: Color(0xfffafafa)),
-                  Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+                  Divider(
+                      color: _divider_line_color, height: 1.0, thickness: 1.0),
                 ], mainAxisSize: MainAxisSize.max),
                 onTap: () {
                   context.read<MusicHomeBloc>().add(MusicHomeClearChecked());
                 },
               ),
-              onFocusChange: (value) {
-
-              },
+              onFocusChange: (value) {},
               onKey: (node, event) {
-                _isControlPressed =
-                Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+                _isControlPressed = Platform.isMacOS
+                    ? event.isMetaPressed
+                    : event.isControlPressed;
                 _isShiftPressed = event.isShiftPressed;
 
                 MusicHomeBoardKeyStatus status = MusicHomeBoardKeyStatus.none;
@@ -714,7 +750,9 @@ class MusicHomeView extends StatelessWidget {
 
   void _performSort(BuildContext context, MusicHomeSortColumn sortColumn,
       MusicHomeSortDirection sortDirection) {
-    context.read<MusicHomeBloc>().add(MusicHomeSortInfoChanged(sortColumn, sortDirection));
+    context
+        .read<MusicHomeBloc>()
+        .add(MusicHomeSortInfoChanged(sortColumn, sortDirection));
   }
 
   void _onMusicRightMouseClick(BuildContext context, Offset position,
@@ -723,11 +761,9 @@ class MusicHomeView extends StatelessWidget {
       context.read<MusicHomeBloc>().add(MusicHomeCheckedChanged(music));
     }
 
-    context.read<MusicHomeBloc>().add(MusicHomeMenuStatusChanged(MusicHomeOpenMenuStatus(
-      isOpened: true,
-      position: position,
-      target: music
-    )));
+    context.read<MusicHomeBloc>().add(MusicHomeMenuStatusChanged(
+        MusicHomeOpenMenuStatus(
+            isOpened: true, position: position, target: music)));
   }
 
   void _checkAll(BuildContext context) {
@@ -736,130 +772,86 @@ class MusicHomeView extends StatelessWidget {
 
   void _openMenu(
       {required BuildContext pageContext,
-        required Offset position,
-        required List<AudioItem> musics,
-        required List<AudioItem> checkedMusics,
-        required AudioItem current}) {
+      required Offset position,
+      required AudioItem current}) {
     String copyTitle = "";
+
+    final checkedMusics = pageContext.read<MusicHomeBloc>().state.checkedMusics;
 
     if (checkedMusics.length == 1) {
       AudioItem audioItem = checkedMusics.single;
 
       String name = audioItem.name;
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedMusics.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = pageContext.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedMusics.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: pageContext, globalOffset: position, items: [
+      ContextMenuItem(
+        title: pageContext.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          SystemAppLauncher.openAudio(current);
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
+          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+            _startCopy(pageContext, checkedMusics, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: pageContext.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            SystemAppLauncher.openAudio(current);
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
-
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopy(pageContext, checkedMusics, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
-
-                            _tryToDeleteMusics(pageContext, checkedMusics);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _tryToDeleteMusics(pageContext, checkedMusics);
+        },
+      )
+    ]);
   }
 
   void _startCopy(BuildContext context, List<AudioItem> musics, String dir) {
-    context.read<MusicHomeBloc>().add(MusicHomeCopyMusicsSubmitted(musics, dir));
+    context
+        .read<MusicHomeBloc>()
+        .add(MusicHomeCopyMusicsSubmitted(musics, dir));
   }
 
-  void _tryToDeleteMusics(BuildContext pageContext, List<AudioItem> checkedMusics) {
+  void _tryToDeleteMusics(
+      BuildContext pageContext, List<AudioItem> checkedMusics) {
     CommonUtil.showConfirmDialog(
         pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedMusics.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete,
-            (context) {
-          Navigator.of(context, rootNavigator: true).pop();
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
 
-          pageContext.read<MusicHomeBloc>().add(MusicHomeDeleteSubmitted(checkedMusics));
-        }, (context) {
-          Navigator.of(context, rootNavigator: true).pop();
+      pageContext
+          .read<MusicHomeBloc>()
+          .add(MusicHomeDeleteSubmitted(checkedMusics));
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
     });
   }
 
-  void _showDownloadProgressDialog(BuildContext context, List<AudioItem> musics) {
+  void _showDownloadProgressDialog(
+      BuildContext context, List<AudioItem> musics) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {

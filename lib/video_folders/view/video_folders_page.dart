@@ -18,6 +18,7 @@ import '../../network/device_connection_manager.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/video_repository.dart';
 import '../../util/common_util.dart';
+import '../../util/context_menu_helper.dart';
 import '../../util/system_app_launcher.dart';
 import '../../video_home/bloc/video_home_bloc.dart';
 import '../../widget/overlay_menu_item.dart';
@@ -136,8 +137,8 @@ class VideoFoldersView extends StatelessWidget {
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
                     ..showSnackBar(SnackBar(
-                        content: Text(
-                            state.failureReason ?? context.l10n.deleteFilesFailure)));
+                        content: Text(state.failureReason ??
+                            context.l10n.deleteFilesFailure)));
                 }
 
                 if (state.deleteStatus == VideoFoldersDeleteStatus.success) {
@@ -145,9 +146,7 @@ class VideoFoldersView extends StatelessWidget {
                 }
               },
               listenWhen: (previous, current) =>
-                  previous.deleteStatus != current.deleteStatus
-          ),
-
+                  previous.deleteStatus != current.deleteStatus),
           BlocListener<VideoFoldersBloc, VideoFoldersState>(
             listener: (context, state) {
               if (state.copyStatus.status == VideoFoldersCopyStatus.start) {
@@ -162,35 +161,41 @@ class VideoFoldersView extends StatelessWidget {
                   if (current > 0) {
                     String title = context.l10n.exporting;
 
-                    if (state.copyStatus.fileType == VideoFoldersFileType.folder) {
-                      List<VideoFolderItem> checkedVideoFolders = state.checkedVideoFolders;
+                    if (state.copyStatus.fileType ==
+                        VideoFoldersFileType.folder) {
+                      List<VideoFolderItem> checkedVideoFolders =
+                          state.checkedVideoFolders;
 
                       if (checkedVideoFolders.length == 1) {
                         String name = checkedVideoFolders.single.name;
 
-                        title = context.l10n.placeholderExporting.replaceFirst(
-                            "%s", name);
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", name);
                       }
 
                       if (checkedVideoFolders.length > 1) {
-                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                            "${checkedVideoFolders.length}");
-                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                        String itemStr = context.l10n.placeHolderItemCount03
+                            .replaceFirst(
+                                "%d", "${checkedVideoFolders.length}");
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", itemStr);
                       }
                     } else {
-                      List<VideoItem> checkedVideos = state.loadVideosInFolderStatus.checkedVideos;
+                      List<VideoItem> checkedVideos =
+                          state.loadVideosInFolderStatus.checkedVideos;
 
                       if (checkedVideos.length == 1) {
                         String name = checkedVideos.single.name;
 
-                        title = context.l10n.placeholderExporting.replaceFirst(
-                            "%s", name);
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", name);
                       }
 
                       if (checkedVideos.length > 1) {
-                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                            "${checkedVideos.length}");
-                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                        String itemStr = context.l10n.placeHolderItemCount03
+                            .replaceFirst("%d", "${checkedVideos.length}");
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", itemStr);
                       }
                     }
 
@@ -198,8 +203,7 @@ class VideoFoldersView extends StatelessWidget {
                   }
 
                   _progressIndicatorDialog?.subtitle =
-                  "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
-                      .convertToReadableSize(total)}";
+                      "${CommonUtil.convertToReadableSize(current)}/${CommonUtil.convertToReadableSize(total)}";
                   _progressIndicatorDialog?.updateProgress(current / total);
                 }
               }
@@ -209,9 +213,9 @@ class VideoFoldersView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? context.l10n.copyFileFailure
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.copyStatus.error ??
+                          context.l10n.copyFileFailure)));
               }
 
               if (state.copyStatus.status == VideoFoldersCopyStatus.success) {
@@ -219,81 +223,88 @@ class VideoFoldersView extends StatelessWidget {
               }
             },
             listenWhen: (previous, current) =>
-            previous.copyStatus != current.copyStatus
-                && current.copyStatus.status != VideoFoldersCopyStatus.initial,
+                previous.copyStatus != current.copyStatus &&
+                current.copyStatus.status != VideoFoldersCopyStatus.initial,
           ),
-
           BlocListener<VideoFoldersBloc, VideoFoldersState>(
             listener: (context, state) {
-              context.read<VideoHomeBloc>().add(VideoHomeBackVisibilityChanged(state.videoFolderOpenStatus.isOpened));
-              context.read<VideoHomeBloc>().add(VideoHomeOderTypeVisibilityChanged(state.videoFolderOpenStatus.isOpened));
+              context.read<VideoHomeBloc>().add(VideoHomeBackVisibilityChanged(
+                  state.videoFolderOpenStatus.isOpened));
+              context.read<VideoHomeBloc>().add(
+                  VideoHomeOderTypeVisibilityChanged(
+                      state.videoFolderOpenStatus.isOpened));
 
               if (state.videoFolderOpenStatus.isOpened) {
                 List<VideoItem> videos = state.loadVideosInFolderStatus.videos;
-                List<VideoItem> checkedVideos = state.loadVideosInFolderStatus.checkedVideos;
+                List<VideoItem> checkedVideos =
+                    state.loadVideosInFolderStatus.checkedVideos;
 
                 context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
-                    VideoHomeItemCount(
-                        videos.length, checkedVideos.length)
-                ));
-                context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
+                    VideoHomeItemCount(videos.length, checkedVideos.length)));
+                context.read<VideoHomeBloc>().add(
+                    VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
               } else {
                 List<VideoFolderItem> videoFolders = state.videoFolders;
-                List<VideoFolderItem> checkedVideoFolders = state.checkedVideoFolders;
+                List<VideoFolderItem> checkedVideoFolders =
+                    state.checkedVideoFolders;
 
                 context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
                     VideoHomeItemCount(
-                        videoFolders.length, checkedVideoFolders.length)
-                ));
-                context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideoFolders.length > 0));
+                        videoFolders.length, checkedVideoFolders.length)));
+                context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(
+                    checkedVideoFolders.length > 0));
               }
             },
             listenWhen: (previous, current) =>
-            previous.videoFolderOpenStatus.isOpened != current.videoFolderOpenStatus.isOpened,
+                previous.videoFolderOpenStatus.isOpened !=
+                current.videoFolderOpenStatus.isOpened,
           ),
-
           BlocListener<VideoHomeBloc, VideoHomeState>(
             listener: (context, state) {
               context.read<VideoFoldersBloc>().add(
                   VideoFoldersOpenStatusChanged(
                       VideoFolderOpenStatus(isOpened: false)));
-              context.read<VideoHomeBloc>().add(VideoHomeBackTapStatusChanged(VideoHomeBackTapStatus.none));
+              context.read<VideoHomeBloc>().add(
+                  VideoHomeBackTapStatusChanged(VideoHomeBackTapStatus.none));
             },
             listenWhen: (previous, current) =>
-            previous.backTapStatus != current.backTapStatus && current.backTapStatus == VideoHomeBackTapStatus.tap,
+                previous.backTapStatus != current.backTapStatus &&
+                current.backTapStatus == VideoHomeBackTapStatus.tap,
           ),
-
           BlocListener<VideoHomeBloc, VideoHomeState>(
               listener: (context, state) {
-                bool isFolderOpened = context.read<VideoFoldersBloc>().state.videoFolderOpenStatus.isOpened;
-                context.read<VideoHomeBloc>().add(
-                    VideoHomeOderTypeVisibilityChanged(isFolderOpened)
-                );
-                context.read<VideoHomeBloc>().add(
-                    VideoHomeBackVisibilityChanged(isFolderOpened)
-                );
+                bool isFolderOpened = context
+                    .read<VideoFoldersBloc>()
+                    .state
+                    .videoFolderOpenStatus
+                    .isOpened;
+                context
+                    .read<VideoHomeBloc>()
+                    .add(VideoHomeOderTypeVisibilityChanged(isFolderOpened));
+                context
+                    .read<VideoHomeBloc>()
+                    .add(VideoHomeBackVisibilityChanged(isFolderOpened));
 
                 if (isFolderOpened) {
                   List<VideoItem> videos = context
                       .read<VideoFoldersBloc>()
                       .state
-                      .loadVideosInFolderStatus.videos;
+                      .loadVideosInFolderStatus
+                      .videos;
                   List<VideoItem> checkedVideos = context
                       .read<VideoFoldersBloc>()
                       .state
-                      .loadVideosInFolderStatus.checkedVideos;
+                      .loadVideosInFolderStatus
+                      .checkedVideos;
 
                   context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
-                      VideoHomeItemCount(
-                          videos.length, checkedVideos.length)
-                  ));
+                      VideoHomeItemCount(videos.length, checkedVideos.length)));
 
-                  context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
+                  context.read<VideoHomeBloc>().add(
+                      VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
                 } else {
-                  List<VideoFolderItem> videoFolders = context
-                      .read<VideoFoldersBloc>()
-                      .state
-                      .videoFolders;
+                  List<VideoFolderItem> videoFolders =
+                      context.read<VideoFoldersBloc>().state.videoFolders;
                   List<VideoFolderItem> checkedVideoFolders = context
                       .read<VideoFoldersBloc>()
                       .state
@@ -301,84 +312,92 @@ class VideoFoldersView extends StatelessWidget {
 
                   context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
                       VideoHomeItemCount(
-                          videoFolders.length, checkedVideoFolders.length)
-                  ));
+                          videoFolders.length, checkedVideoFolders.length)));
 
-                  context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideoFolders.length > 0));
+                  context.read<VideoHomeBloc>().add(
+                      VideoHomeDeleteStatusChanged(
+                          checkedVideoFolders.length > 0));
                 }
               },
-              listenWhen: (previous, current)
-              => previous.tab != current.tab && current.tab == VideoHomeTab.videoFolders
-          ),
-
+              listenWhen: (previous, current) =>
+                  previous.tab != current.tab &&
+                  current.tab == VideoHomeTab.videoFolders),
           BlocListener<VideoFoldersBloc, VideoFoldersState>(
               listener: (context, state) {
-                VideoHomeTab currentTab = context.read<VideoHomeBloc>().state.tab;
+                VideoHomeTab currentTab =
+                    context.read<VideoHomeBloc>().state.tab;
 
                 if (currentTab == VideoHomeTab.videoFolders) {
                   if (state.videoFolderOpenStatus.isOpened) {
-                    List<VideoItem> videos = state
-                        .loadVideosInFolderStatus.videos;
-                    List<VideoItem> checkedVideos = state
-                        .loadVideosInFolderStatus.checkedVideos;
+                    List<VideoItem> videos =
+                        state.loadVideosInFolderStatus.videos;
+                    List<VideoItem> checkedVideos =
+                        state.loadVideosInFolderStatus.checkedVideos;
 
                     context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
                         VideoHomeItemCount(
-                            videos.length, checkedVideos.length)
-                    ));
+                            videos.length, checkedVideos.length)));
 
-                    context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
+                    context.read<VideoHomeBloc>().add(
+                        VideoHomeDeleteStatusChanged(checkedVideos.length > 0));
                   } else {
-                    List<VideoFolderItem> videoFolders = state
-                        .videoFolders;
-                    List<VideoFolderItem> checkedVideoFolders = state
-                        .checkedVideoFolders;
+                    List<VideoFolderItem> videoFolders = state.videoFolders;
+                    List<VideoFolderItem> checkedVideoFolders =
+                        state.checkedVideoFolders;
 
                     context.read<VideoHomeBloc>().add(VideoHomeItemCountChanged(
                         VideoHomeItemCount(
-                            videoFolders.length, checkedVideoFolders.length)
-                    ));
+                            videoFolders.length, checkedVideoFolders.length)));
 
-                    context.read<VideoHomeBloc>().add(VideoHomeDeleteStatusChanged(checkedVideoFolders.length > 0));
+                    context.read<VideoHomeBloc>().add(
+                        VideoHomeDeleteStatusChanged(
+                            checkedVideoFolders.length > 0));
                   }
                 }
               },
-              listenWhen: (previous, current)
-              => _needListenItemCountChange(previous, current)
-          ),
-
+              listenWhen: (previous, current) =>
+                  _needListenItemCountChange(previous, current)),
           BlocListener<VideoHomeBloc, VideoHomeState>(
               listener: (context, state) {
                 if (state.tab == VideoHomeTab.videoFolders) {
-                  bool isFolderOpened = context.read<VideoFoldersBloc>().state.videoFolderOpenStatus.isOpened;
+                  bool isFolderOpened = context
+                      .read<VideoFoldersBloc>()
+                      .state
+                      .videoFolderOpenStatus
+                      .isOpened;
 
                   if (isFolderOpened) {
-                    _tryToDeleteVideos(context, context.read<VideoFoldersBloc>()
-                        .state.loadVideosInFolderStatus.checkedVideos);
+                    _tryToDeleteVideos(
+                        context,
+                        context
+                            .read<VideoFoldersBloc>()
+                            .state
+                            .loadVideosInFolderStatus
+                            .checkedVideos);
                   } else {
-                    _tryToDeleteVideoFolders(context, context.read<VideoFoldersBloc>()
-                    .state.checkedVideoFolders);
+                    _tryToDeleteVideoFolders(
+                        context,
+                        context
+                            .read<VideoFoldersBloc>()
+                            .state
+                            .checkedVideoFolders);
                   }
                 }
               },
-              listenWhen: (previous, current)
-              => previous.deleteTapStatus != current.deleteTapStatus
-                  && current.deleteTapStatus == VideoHomeDeleteTapStatus.tap
-          ),
-
+              listenWhen: (previous, current) =>
+                  previous.deleteTapStatus != current.deleteTapStatus &&
+                  current.deleteTapStatus == VideoHomeDeleteTapStatus.tap),
           BlocListener<VideoFoldersBloc, VideoFoldersState>(
               listener: (context, state) {
-
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? context.l10n.loadVideoFoldersFailure
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.copyStatus.error ??
+                          context.l10n.loadVideoFoldersFailure)));
               },
-              listenWhen: (previous, current)
-              => previous.status != current.status
-                  && current.status == VideoFoldersStatus.failure
-          ),
+              listenWhen: (previous, current) =>
+                  previous.status != current.status &&
+                  current.status == VideoFoldersStatus.failure),
         ],
         child: Stack(
           children: [
@@ -501,19 +520,25 @@ class VideoFoldersView extends StatelessWidget {
     );
   }
 
-  bool _needListenItemCountChange(VideoFoldersState previous, VideoFoldersState current) {
-    if (previous.videoFolders.length != current.videoFolders.length) return true;
+  bool _needListenItemCountChange(
+      VideoFoldersState previous, VideoFoldersState current) {
+    if (previous.videoFolders.length != current.videoFolders.length)
+      return true;
 
-    if (previous.checkedVideoFolders.length != current.checkedVideoFolders.length) return true;
+    if (previous.checkedVideoFolders.length !=
+        current.checkedVideoFolders.length) return true;
 
-    if (previous.loadVideosInFolderStatus.videos.length != current.loadVideosInFolderStatus.videos.length) return true;
+    if (previous.loadVideosInFolderStatus.videos.length !=
+        current.loadVideosInFolderStatus.videos.length) return true;
 
-    if (previous.loadVideosInFolderStatus.checkedVideos.length != current.loadVideosInFolderStatus.checkedVideos.length) return true;
+    if (previous.loadVideosInFolderStatus.checkedVideos.length !=
+        current.loadVideosInFolderStatus.checkedVideos.length) return true;
 
     return false;
   }
 
-  void _showDownloadProgressDialog(BuildContext context, VideoFoldersFileType fileType) {
+  void _showDownloadProgressDialog(
+      BuildContext context, VideoFoldersFileType fileType) {
     if (null == _progressIndicatorDialog) {
       _progressIndicatorDialog = ProgressIndicatorDialog(context: context);
       _progressIndicatorDialog?.onCancelClick(() {
@@ -727,106 +752,54 @@ class VideoFoldersView extends StatelessWidget {
 
       String name = folder.name;
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedFolders.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = pageContext.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedFolders.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
-
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            pageContext.read<VideoFoldersBloc>().add(
-                                VideoFoldersOpenStatusChanged(
-                                    VideoFolderOpenStatus(
-                                        isOpened: true, current: current)));
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopy(pageContext, checkedFolders, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            _tryToDeleteVideoFolders(
-                                pageContext, checkedFolders);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+    ContextMenuHelper()
+        .showContextMenu(context: pageContext, globalOffset: position, items: [
+      ContextMenuItem(
+        title: pageContext.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          pageContext.read<VideoFoldersBloc>().add(
+              VideoFoldersOpenStatusChanged(
+                  VideoFolderOpenStatus(isOpened: true, current: current)));
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+            _startCopy(pageContext, checkedFolders, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: pageContext.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _tryToDeleteVideoFolders(pageContext, checkedFolders);
+        },
+      )
+    ]);
   }
 
-  void _startCopy(BuildContext context, List<VideoFolderItem> folders, String dir) {
-    context.read<VideoFoldersBloc>().add(VideoFoldersCopySubmitted(folders, dir));
+  void _startCopy(
+      BuildContext context, List<VideoFolderItem> folders, String dir) {
+    context
+        .read<VideoFoldersBloc>()
+        .add(VideoFoldersCopySubmitted(folders, dir));
   }
 
   void _tryToDeleteVideoFolders(
@@ -834,7 +807,9 @@ class VideoFoldersView extends StatelessWidget {
     CommonUtil.showConfirmDialog(
         pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedFolders.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       pageContext
@@ -857,107 +832,55 @@ class VideoFoldersView extends StatelessWidget {
       VideoItem videoItem = checkedVideos.single;
 
       String name = videoItem.name;
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedVideos.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = pageContext.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedVideos.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
-
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            SystemAppLauncher.openVideo(current);
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopyVideos(pageContext, checkedVideos, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(dialogContext).pop();
-
-                            _tryToDeleteVideos(pageContext, checkedVideos);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+    ContextMenuHelper()
+        .showContextMenu(context: pageContext, globalOffset: position, items: [
+      ContextMenuItem(
+        title: pageContext.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          SystemAppLauncher.openVideo(current);
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+            _startCopyVideos(pageContext, checkedVideos, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: pageContext.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _tryToDeleteVideos(pageContext, checkedVideos);
+        },
+      )
+    ]);
   }
-
 
   void _tryToDeleteVideos(
       BuildContext pageContext, List<VideoItem> checkedVideos) {
     CommonUtil.showConfirmDialog(
         pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedVideos.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
       pageContext
@@ -968,8 +891,11 @@ class VideoFoldersView extends StatelessWidget {
     });
   }
 
-  void _startCopyVideos(BuildContext context, List<VideoItem> videos, String dir) {
-    context.read<VideoFoldersBloc>().add(VideoFoldersVideosCopySubmitted(videos, dir));
+  void _startCopyVideos(
+      BuildContext context, List<VideoItem> videos, String dir) {
+    context
+        .read<VideoFoldersBloc>()
+        .add(VideoFoldersVideosCopySubmitted(videos, dir));
   }
 
   Widget _createVideosWidget(BuildContext context, List<VideoItem> videos,

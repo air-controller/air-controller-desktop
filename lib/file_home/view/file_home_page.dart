@@ -16,6 +16,7 @@ import '../../model/display_type.dart';
 import '../../model/file_node.dart';
 import '../../repository/file_repository.dart';
 import '../../util/common_util.dart';
+import '../../util/context_menu_helper.dart';
 import '../../util/system_app_launcher.dart';
 import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
@@ -31,10 +32,9 @@ class FileHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<FileHomeBloc>(
-      create: (context) => FileHomeBloc(
-          context.read<FileRepository>(),
-        this.isOnlyDownloadDir
-      )..add(FileHomeSubscriptionRequested()),
+      create: (context) =>
+          FileHomeBloc(context.read<FileRepository>(), this.isOnlyDownloadDir)
+            ..add(FileHomeSubscriptionRequested()),
       child: FileHomeView(this.isOnlyDownloadDir),
     );
   }
@@ -67,8 +67,8 @@ class FileHomeView extends StatelessWidget {
     List<FileNode> dirStack =
         context.select((FileHomeBloc bloc) => bloc.state.dirStack);
 
-    Widget content = _createContent(
-        context, displayType, files, checkedFiles, dirStack);
+    Widget content =
+        _createContent(context, displayType, files, checkedFiles, dirStack);
 
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
@@ -139,7 +139,8 @@ class FileHomeView extends StatelessWidget {
             ),
             BlocListener<FileHomeBloc, FileHomeState>(
               listener: (context, state) {
-                DisplayType displayType = context.read<FileHomeBloc>().state.displayType;
+                DisplayType displayType =
+                    context.read<FileHomeBloc>().state.displayType;
                 bool isRenamingMode =
                     context.read<FileHomeBloc>().state.isRenamingMode;
 
@@ -191,14 +192,15 @@ class FileHomeView extends StatelessWidget {
                       if (checkedFiles.length == 1) {
                         String name = checkedFiles.single.data.name;
 
-                        title = context.l10n.placeholderExporting.replaceFirst(
-                            "%s", name);
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", name);
                       }
 
                       if (checkedFiles.length > 1) {
-                        String itemStr = context.l10n.placeHolderItemCount03.replaceFirst("%d",
-                            "${checkedFiles.length}");
-                        title = context.l10n.placeholderExporting.replaceFirst("%s", itemStr);
+                        String itemStr = context.l10n.placeHolderItemCount03
+                            .replaceFirst("%d", "${checkedFiles.length}");
+                        title = context.l10n.placeholderExporting
+                            .replaceFirst("%s", itemStr);
                       }
 
                       _progressIndicatorDialog?.title = title;
@@ -216,8 +218,8 @@ class FileHomeView extends StatelessWidget {
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
                     ..showSnackBar(SnackBar(
-                        content:
-                            Text(state.copyStatus.error ?? context.l10n.copyFileFailure)));
+                        content: Text(state.copyStatus.error ??
+                            context.l10n.copyFileFailure)));
                 }
 
                 if (state.copyStatus.status == FileHomeCopyStatus.success) {
@@ -286,29 +288,28 @@ class FileHomeView extends StatelessWidget {
                     .add(FileHomeKeyStatusChanged(status));
 
                 if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
-                  bool isRenamingMode = context.read<FileHomeBloc>().state.isRenamingMode;
+                  bool isRenamingMode =
+                      context.read<FileHomeBloc>().state.isRenamingMode;
 
                   if (isRenamingMode) {
                     FileNode? file =
-                        context
-                            .read<FileHomeBloc>()
-                            .state
-                            .currentRenamingFile;
+                        context.read<FileHomeBloc>().state.currentRenamingFile;
                     String? newFileName =
-                        context
-                            .read<FileHomeBloc>()
-                            .state
-                            .newFileName;
+                        context.read<FileHomeBloc>().state.newFileName;
 
                     if (null != file && newFileName != null) {
-                      context.read<FileHomeBloc>().add(
-                          FileHomeRenameSubmitted(file, newFileName));
+                      context
+                          .read<FileHomeBloc>()
+                          .add(FileHomeRenameSubmitted(file, newFileName));
                     }
                   } else {
-                    List<FileNode> checkedFiles = context.read<FileHomeBloc>().state.checkedFiles;
+                    List<FileNode> checkedFiles =
+                        context.read<FileHomeBloc>().state.checkedFiles;
 
                     if (checkedFiles.length == 1) {
-                      context.read<FileHomeBloc>().add(FileHomeRenameEnter(checkedFiles.single));
+                      context
+                          .read<FileHomeBloc>()
+                          .add(FileHomeRenameEnter(checkedFiles.single));
                     }
                   }
 
@@ -334,16 +335,22 @@ class FileHomeView extends StatelessWidget {
     );
   }
 
-  Widget _createContent(BuildContext context, DisplayType displayType,
-      List<FileNode> files, List<FileNode> checkedFiles, List<FileNode> dirStack) {
+  Widget _createContent(
+      BuildContext context,
+      DisplayType displayType,
+      List<FileNode> files,
+      List<FileNode> checkedFiles,
+      List<FileNode> dirStack) {
     final _divider_line_color = Color(0xffe0e0e0);
 
-    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${files.length}");
+    String itemNumStr = context.l10n.placeHolderItemCount01
+        .replaceFirst("%d", "${files.length}");
     if (checkedFiles.length > 0) {
-      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${checkedFiles.length}")
+      itemNumStr = context.l10n.placeHolderItemCount02
+          .replaceFirst("%d", "${checkedFiles.length}")
           .replaceFirst("%d", "${files.length}");
     }
-    
+
     bool isDeleteEnabled = checkedFiles.length > 0;
 
     return Column(children: [
@@ -403,7 +410,10 @@ class FileHomeView extends StatelessWidget {
                     })),
             Align(
                 alignment: Alignment.center,
-                child: Text(this.isOnlyDownloadDir ? context.l10n.downloads : context.l10n.files,
+                child: Text(
+                    this.isOnlyDownloadDir
+                        ? context.l10n.downloads
+                        : context.l10n.files,
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(color: Color(0xff616161), fontSize: 16.0))),
@@ -415,7 +425,9 @@ class FileHomeView extends StatelessWidget {
                             displayType: displayType,
                             onChange: ((displayType) {
                               log("FileHomePage, displayType: $displayType");
-                              context.read<FileHomeBloc>().add(FileHomeDisplayTypeChanged(displayType));
+                              context
+                                  .read<FileHomeBloc>()
+                                  .add(FileHomeDisplayTypeChanged(displayType));
                             }),
                           ),
                           UnifiedDeleteButton(
@@ -471,121 +483,58 @@ class FileHomeView extends StatelessWidget {
 
       String name = file.data.name;
 
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", name)
           .adaptForOverflow();
     } else {
-      String itemStr = pageContext.l10n.placeHolderItemCount03.replaceFirst("%d", "${checkedFiles.length}");
-      copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", itemStr)
+      String itemStr = pageContext.l10n.placeHolderItemCount03
+          .replaceFirst("%d", "${checkedFiles.length}");
+      copyTitle = pageContext.l10n.placeHolderCopyToComputer
+          .replaceFirst("%s", itemStr)
           .adaptForOverflow();
     }
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: pageContext, globalOffset: position, items: [
+      ContextMenuItem(
+        title: pageContext.l10n.open,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          if (current.data.isDir) {
+            pageContext.read<FileHomeBloc>().add(FileHomeOpenDir(current));
+          } else {
+            SystemAppLauncher.openFile(current.data);
+          }
+        },
+      ),
+      ContextMenuItem(
+        title: pageContext.l10n.rename,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          pageContext.read<FileHomeBloc>().add(FileHomeRenameEnter(current));
+        },
+      ),
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.open,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
+          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+            _startCopyFiles(pageContext, checkedFiles, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: pageContext.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            if (current.data.isDir) {
-                              pageContext
-                                  .read<FileHomeBloc>()
-                                  .add(FileHomeOpenDir(current));
-                            } else {
-                              SystemAppLauncher.openFile(current.data);
-                            }
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.rename,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
-
-                            pageContext
-                                .read<FileHomeBloc>()
-                                .add(FileHomeRenameEnter(current));
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
-
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopyFiles(pageContext, checkedFiles, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            Navigator.of(pageContext).pop();
-
-                            _tryToDeleteFiles(pageContext, checkedFiles);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _tryToDeleteFiles(pageContext, checkedFiles);
+        },
+      )
+    ]);
   }
 
   void _startCopyFiles(BuildContext context, List<FileNode> files, String dir) {
@@ -614,14 +563,19 @@ class FileHomeView extends StatelessWidget {
     }
   }
 
-  void _tryToDeleteFiles(BuildContext pageContext, List<FileNode> checkedFiles) {
+  void _tryToDeleteFiles(
+      BuildContext pageContext, List<FileNode> checkedFiles) {
     CommonUtil.showConfirmDialog(
-      pageContext,
+        pageContext,
         "${pageContext.l10n.tipDeleteTitle.replaceFirst("%s", "${checkedFiles.length}")}",
-        pageContext.l10n.tipDeleteDesc, pageContext.l10n.cancel, pageContext.l10n.delete, (context) {
+        pageContext.l10n.tipDeleteDesc,
+        pageContext.l10n.cancel,
+        pageContext.l10n.delete, (context) {
       Navigator.of(context, rootNavigator: true).pop();
 
-      pageContext.read<FileHomeBloc>().add(FileHomeDeleteSubmitted(checkedFiles));
+      pageContext
+          .read<FileHomeBloc>()
+          .add(FileHomeDeleteSubmitted(checkedFiles));
     }, (context) {
       Navigator.of(context, rootNavigator: true).pop();
     });
