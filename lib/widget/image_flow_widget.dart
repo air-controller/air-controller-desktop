@@ -416,12 +416,13 @@ class _ImageGridItem extends StatelessWidget {
         child: SimpleGestureDetector(
           child: Container(
               child: CachedNetworkImage(
-                imageUrl: "$rootUrl/stream/image/thumbnail/${image.id}/200/200",
+                imageUrl:
+                    "$rootUrl/stream/image/thumbnail/${image.id}/${width.toInt() * 4}/${height.toInt() * 4}",
                 fit: BoxFit.cover,
                 width: width,
                 height: height,
                 memCacheWidth:
-                    (width > height ? width * 4 : height * 4).toInt(),
+                    (width > height ? width * 2 : height * 2).toInt(),
                 fadeOutDuration: Duration.zero,
                 fadeInDuration: Duration.zero,
               ),
