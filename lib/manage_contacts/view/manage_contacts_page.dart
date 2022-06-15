@@ -1,4 +1,5 @@
 import 'package:air_controller/edit_contact/view/edit_contact_view.dart';
+import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/scaffoldx.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/manage_contacts/bloc/manage_contacts_bloc.dart';
@@ -22,7 +23,8 @@ import 'package:syncfusion_flutter_core/theme.dart';
 
 import '../../constant.dart';
 import '../../edit_contact/bloc/bloc/edit_contact_bloc.dart';
-import '../../network/device_connection_manager.dart';
+import '../../util/common_util.dart';
+import '../../util/context_menu_helper.dart';
 import '../../widget/unified_icon_button.dart';
 import '../../widget/unified_icon_button_with_text.dart';
 import '../../widget/unified_text_field.dart';
@@ -53,11 +55,6 @@ class _ManageContactsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final dividerLine = Color(0xffe0e0e0);
 
-    final status =
-        context.select((ManageContactsBloc bloc) => bloc.state.status);
-    final requestType =
-        context.select((ManageContactsBloc bloc) => bloc.state.requestType);
-
     final contacts =
         context.select((ManageContactsBloc bloc) => bloc.state.contacts);
     final selectedContacts = context.select(
@@ -79,7 +76,12 @@ class _ManageContactsView extends StatelessWidget {
       dataSource = ContactsDataSource(
           dataGridWidth: dataGridWidth,
           contacts: filteredContacts,
-          context: context);
+          context: context,
+          onRightMouseClicked: (position, contact) {
+            context.read<ManageContactsBloc>().add(
+                ManageContactsOpenContextMenu(
+                    position: position, contact: contact));
+          });
       DataGridHolder.dataSource = dataSource;
     } else {
       dataSource.updataDataSource(filteredContacts);
@@ -92,17 +94,10 @@ class _ManageContactsView extends StatelessWidget {
 
     _initSelection(selectedContacts);
 
-    bool needLoading = false;
-
-    if (requestType == ManageContactsRequestType.initial &&
-        status == ManageContactsStatus.loading) {
-      needLoading = true;
-    }
-
     final isInitDone =
         context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
 
-    needLoading = !isInitDone;
+    final keywordEditController = TextEditingController();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -110,7 +105,7 @@ class _ManageContactsView extends StatelessWidget {
         listeners: [
           BlocListener<ManageContactsBloc, ManageContactsState>(
             listener: (context, state) {
-              if (state.status == ManageContactsStatus.failure) {
+              if (state.showError) {
                 BotToast.closeAllLoading();
 
                 ScaffoldMessenger.of(context).showSnackBarText(
@@ -118,21 +113,37 @@ class _ManageContactsView extends StatelessWidget {
                 );
               }
 
-              final requestType = state.requestType;
-              if (requestType != ManageContactsRequestType.initial) {
-                if (state.status == ManageContactsStatus.loading) {
-                  BotToast.showLoading();
-                }
+              if (state.showLoading) {
+                BotToast.showLoading();
+              }
 
-                if (state.status == ManageContactsStatus.success) {
-                  BotToast.closeAllLoading();
-                }
+              if (!state.showLoading) {
+                BotToast.closeAllLoading();
+              }
+
+              if (state.openEditDialog) {
+                _showEditContactDialog(
+                    pageContext: context,
+                    isNew: false,
+                    contactDetail: state.contactDetail);
               }
             },
             listenWhen: (previous, current) =>
-                previous.status != current.status &&
-                current.status != ManageContactsStatus.initial,
+                previous != current &&
+                (previous.showLoading != current.showLoading ||
+                    previous.showError != current.showError ||
+                    previous.openEditDialog != current.openEditDialog),
           ),
+          BlocListener<ManageContactsBloc, ManageContactsState>(
+              listener: (context, state) {
+                final contextMenuInfo = state.contextMenuInfo;
+                if (null != contextMenuInfo) {
+                  _openMenu(context, contextMenuInfo.position,
+                      contextMenuInfo.contact);
+                }
+              },
+              listenWhen: (previous, current) =>
+                  previous.contextMenuInfo != current.contextMenuInfo)
         ],
         child: Column(
           children: [
@@ -143,14 +154,13 @@ class _ManageContactsView extends StatelessWidget {
             ),
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
             _ContactActionBar(
+              controller: keywordEditController,
               onCheckChanged: (isChecked) {},
               onNewContact: () {
                 _showEditContactDialog(pageContext: context, isNew: true);
               },
               onDeleteClick: () {
-                context.read<ManageContactsBloc>().add(
-                      DeleteContactsRequested(),
-                    );
+                _tryToDeleteContacts(context);
               },
               onRefresh: () {
                 context.read<ManageContactsBloc>().add(
@@ -162,7 +172,11 @@ class _ManageContactsView extends StatelessWidget {
                       KeywordChanged(value),
                     );
               },
-              onSearchClick: () {},
+              onSearchClick: () {
+                context
+                    .read<ManageContactsBloc>()
+                    .add(KeywordChanged(keywordEditController.text));
+              },
             ),
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
             Expanded(
@@ -176,14 +190,15 @@ class _ManageContactsView extends StatelessWidget {
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
                 _ContactsGridView(
                   dataGridWidth: dataGridWidth,
-                  isLoading: needLoading,
+                  isLoading: !isInitDone,
                   dataSource: dataSource,
                   controller: dataGridController!,
                 ),
                 VerticalDivider(
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
                 _ContactDetailView(onEdit: (value) {
-                  _showEditContactDialog(pageContext: context, isNew: false);
+                  _showEditContactDialog(
+                      pageContext: context, isNew: false, contactDetail: value);
                 })
               ],
             )),
@@ -194,6 +209,57 @@ class _ManageContactsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openMenu(
+      BuildContext context, Offset position, ContactBasicInfo contact) {
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: context.l10n.newContact,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _showEditContactDialog(pageContext: context, isNew: true);
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.editContact,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          context.read<ManageContactsBloc>().add(
+              GetContactDetailRequested(id: contact.id, isForEditting: true));
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
+          _tryToDeleteContacts(context);
+        },
+      )
+    ]);
+  }
+
+  void _tryToDeleteContacts(BuildContext context) {
+    final selectedContacts =
+        context.read<ManageContactsBloc>().state.selectedContacts;
+
+    final pageContext = context;
+
+    CommonUtil.showConfirmDialog(
+        context,
+        "${context.l10n.tipDeleteTitle.replaceFirst("%s", "${selectedContacts.length}")}",
+        context.l10n.tipDeleteDesc,
+        context.l10n.cancel,
+        context.l10n.delete, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+
+      pageContext.read<ManageContactsBloc>().add(
+            DeleteContactsRequested(),
+          );
+    }, (context) {
+      Navigator.of(context, rootNavigator: true).pop();
+    });
   }
 
   bool _filterContact(ContactBasicInfo contact, String keyword) {
@@ -213,7 +279,9 @@ class _ManageContactsView extends StatelessWidget {
   }
 
   void _showEditContactDialog(
-      {required BuildContext pageContext, required bool isNew}) {
+      {required BuildContext pageContext,
+      required bool isNew,
+      ContactDetail? contactDetail}) {
     final accounts = pageContext.read<ManageContactsBloc>().state.accounts;
 
     showDialog(
@@ -226,9 +294,6 @@ class _ManageContactsView extends StatelessWidget {
                 accountInfoList: accounts)
               ..add(SubscriptionRequested());
           } else {
-            final contactDetail =
-                pageContext.read<ManageContactsBloc>().state.contactDetail;
-
             return EditContactBloc.newForEditContact(
                 contactRepository: pageContext.read<ContactRepository>(),
                 contactDetail: contactDetail,
@@ -263,9 +328,6 @@ class _ContactDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _rootURL =
-        "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
-
     final selectedContacts = context.select(
       (ManageContactsBloc bloc) => bloc.state.selectedContacts,
     );
@@ -564,11 +626,13 @@ class ContactsDataSource extends DataGridSource {
   final BuildContext context;
   List<DataGridRow> dataGridRows = [];
   final double dataGridWidth;
+  final Function(Offset, ContactBasicInfo) onRightMouseClicked;
 
   ContactsDataSource(
       {required this.context,
       required this.dataGridWidth,
-      required this.contacts}) {
+      required this.contacts,
+      required this.onRightMouseClicked}) {
     dataGridRows = contacts
         .map<DataGridRow>((contact) => DataGridRow(cells: [
               DataGridCell(
@@ -597,45 +661,57 @@ class ContactsDataSource extends DataGridSource {
         cells: row.getCells().map<Widget>((cell) {
       final contactInfo = cell.value as ContactBasicInfo;
 
-      return Row(
-        children: [
-          Padding(
-              padding: EdgeInsets.only(left: 10, right: 5),
-              child: ContactAvatarView(
-                  rawContactId: contactInfo.id,
-                  width: 45,
-                  height: 45,
-                  iconSize: 25)),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(contactInfo.displayNamePrimary ?? "",
-                  style: TextStyle(
-                      color: Color(0xff474747),
-                      fontSize: 14,
-                      overflow: TextOverflow.ellipsis),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-              SizedBox(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 3, right: 10),
-                  child: Text(
-                    contactInfo.phoneNumber,
-                    style: TextStyle(
-                        color: Color(0xff999999),
-                        fontSize: 14,
+      return Builder(builder: ((context) {
+        return Listener(
+          child: Container(
+            child: Row(
+              children: [
+                Padding(
+                    padding: EdgeInsets.only(left: 10, right: 5),
+                    child: ContactAvatarView(
+                        rawContactId: contactInfo.id,
+                        width: 45,
+                        height: 45,
+                        iconSize: 25)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(contactInfo.displayNamePrimary ?? "",
+                        style: TextStyle(
+                            color: Color(0xff474747),
+                            fontSize: 14,
+                            overflow: TextOverflow.ellipsis),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis),
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
+                    SizedBox(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 3, right: 10),
+                        child: Text(
+                          contactInfo.phoneNumber,
+                          style: TextStyle(
+                              color: Color(0xff999999),
+                              fontSize: 14,
+                              overflow: TextOverflow.ellipsis),
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
+                      ),
+                      width: dataGridWidth - 70,
+                    ),
+                  ],
                 ),
-                width: dataGridWidth - 70,
-              ),
-            ],
+              ],
+            ),
+            color: Colors.transparent,
           ),
-        ],
-      );
+          onPointerDown: (event) {
+            if (event.isRightMouseClick()) {
+              onRightMouseClicked(event.position, contactInfo);
+            }
+          },
+        );
+      }));
     }).toList());
   }
 }
@@ -681,6 +757,7 @@ class _TitleBar extends StatelessWidget {
 }
 
 class _ContactActionBar extends StatelessWidget {
+  final TextEditingController? controller;
   final Function(bool isChecked) onCheckChanged;
   final Function() onNewContact;
   final Function() onDeleteClick;
@@ -689,7 +766,8 @@ class _ContactActionBar extends StatelessWidget {
   final Function() onSearchClick;
 
   const _ContactActionBar(
-      {required this.onCheckChanged,
+      {this.controller,
+      required this.onCheckChanged,
       required this.onNewContact,
       required this.onDeleteClick,
       required this.onRefresh,
@@ -751,6 +829,7 @@ class _ContactActionBar extends StatelessWidget {
                 Container(
                   child: UnifiedTextField(
                     style: TextStyle(fontSize: 14, color: Color(0xff333333)),
+                    controller: controller,
                     hintText: context.l10n.search,
                     borderRadius: 3,
                     cursorColor: Color(0xff999999),
@@ -822,6 +901,34 @@ class _ContactsGridView extends StatelessWidget {
                   context
                       .read<ManageContactsBloc>()
                       .add(SelectedContactsChanged(selectedContacts));
+
+                  if (addedRows.length == 1) {
+                    final singleContact = addedRows.single
+                        .getCells()
+                        .first
+                        .value as ContactBasicInfo;
+                    context.read<ManageContactsBloc>().add(
+                        GetContactDetailRequested(
+                            id: singleContact.id, needLoading: false));
+                  } else {
+                    if (selectedContacts.length == 1) {
+                      context.read<ManageContactsBloc>().add(
+                          GetContactDetailRequested(
+                              id: selectedContacts.single.id,
+                              needLoading: false));
+                    }
+                  }
+                },
+                onCellTap: (details) {
+                  final rowColumnIndex = details.rowColumnIndex;
+                  final row =
+                      dataSource.dataGridRows[rowColumnIndex.rowIndex - 1];
+                  final contact =
+                      row.getCells().first.value as ContactBasicInfo;
+
+                  context.read<ManageContactsBloc>().add(
+                      GetContactDetailRequested(
+                          id: contact.id, needLoading: false));
                 },
                 columns: [
                   GridColumn(

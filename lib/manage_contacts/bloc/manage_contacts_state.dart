@@ -1,14 +1,22 @@
 part of 'manage_contacts_bloc.dart';
 
-enum ManageContactsStatus { initial, loading, success, failure }
+class ManageContactsContextMenuInfo extends Equatable {
+  final Offset position;
+  final ContactBasicInfo contact;
 
-enum ManageContactsRequestType { initial, deleteContacts, refreshContacts }
+  ManageContactsContextMenuInfo({
+    required this.position,
+    required this.contact,
+  });
+
+  @override
+  List<Object?> get props => [position, contact];
+}
 
 class ManageContactsState extends Equatable {
   final int total;
   final List<ContactAccountInfo> accounts;
   final String? failureReason;
-  final ManageContactsStatus status;
   final List<ContactAccountInfo> expandedAccounts;
   final dynamic checkedItem;
   final bool isAllContactsExpanded;
@@ -18,13 +26,15 @@ class ManageContactsState extends Equatable {
   final ContactDetail? contactDetail;
   final bool isInitDone;
   final String keyword;
-  final ManageContactsRequestType requestType;
+  final ManageContactsContextMenuInfo? contextMenuInfo;
+  final bool showLoading;
+  final bool showError;
+  final bool openEditDialog;
 
   const ManageContactsState(
       {this.total = 0,
       this.accounts = const [],
       this.failureReason,
-      this.status = ManageContactsStatus.initial,
       this.expandedAccounts = const [],
       this.checkedItem,
       this.isAllContactsExpanded = false,
@@ -34,14 +44,16 @@ class ManageContactsState extends Equatable {
       this.contactDetail,
       this.isInitDone = false,
       this.keyword = '',
-      this.requestType = ManageContactsRequestType.initial});
+      this.contextMenuInfo,
+      this.showLoading = false,
+      this.showError = false,
+      this.openEditDialog = false});
 
   @override
   List<Object?> get props => [
         total,
         accounts,
         failureReason,
-        status,
         expandedAccounts,
         checkedItem,
         isAllContactsExpanded,
@@ -51,14 +63,16 @@ class ManageContactsState extends Equatable {
         contactDetail,
         isInitDone,
         keyword,
-        requestType
+        contextMenuInfo,
+        showLoading,
+        showError,
+        openEditDialog
       ];
 
   ManageContactsState copyWith({
     int? total,
     List<ContactAccountInfo>? accounts,
     String? failureReason,
-    ManageContactsStatus? status,
     List<ContactAccountInfo>? expandedAccounts,
     dynamic checkedItem,
     bool? isAllContactsExpanded,
@@ -68,13 +82,15 @@ class ManageContactsState extends Equatable {
     ContactDetail? contactDetail,
     bool? isInitDone,
     String? keyword,
-    ManageContactsRequestType? requestType,
+    ManageContactsContextMenuInfo? contextMenuInfo,
+    bool? showLoading,
+    bool? showError,
+    bool? openEditDialog,
   }) {
     return ManageContactsState(
         total: total ?? this.total,
         accounts: accounts ?? this.accounts,
         failureReason: failureReason ?? this.failureReason,
-        status: status ?? this.status,
         expandedAccounts: expandedAccounts ?? this.expandedAccounts,
         checkedItem: checkedItem ?? this.checkedItem,
         isAllContactsExpanded:
@@ -85,6 +101,9 @@ class ManageContactsState extends Equatable {
         contactDetail: contactDetail ?? this.contactDetail,
         isInitDone: isInitDone ?? this.isInitDone,
         keyword: keyword ?? this.keyword,
-        requestType: requestType ?? this.requestType);
+        contextMenuInfo: contextMenuInfo ?? this.contextMenuInfo,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        openEditDialog: openEditDialog ?? this.openEditDialog);
   }
 }

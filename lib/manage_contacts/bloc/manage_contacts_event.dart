@@ -56,10 +56,6 @@ class AllContactsCheckedStatusChanged extends ManageContactsEvent {
   List<Object?> get props => [isAllContactsChecked];
 }
 
-class GetAllContactsRequested extends ManageContactsEvent {
-  const GetAllContactsRequested();
-}
-
 class SelectedContactsChanged extends ManageContactsEvent {
   final List<ContactBasicInfo> selectedContacts;
 
@@ -71,11 +67,16 @@ class SelectedContactsChanged extends ManageContactsEvent {
 
 class GetContactDetailRequested extends ManageContactsEvent {
   final int id;
+  final bool isForEditting;
+  final bool needLoading;
 
-  GetContactDetailRequested(this.id);
+  GetContactDetailRequested(
+      {required this.id,
+      this.isForEditting = false,
+      this.needLoading = true});
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, isForEditting];
 }
 
 class RefreshRequested extends ManageContactsEvent {
@@ -93,4 +94,17 @@ class KeywordChanged extends ManageContactsEvent {
 
 class DeleteContactsRequested extends ManageContactsEvent {
   const DeleteContactsRequested();
+}
+
+class ManageContactsOpenContextMenu extends ManageContactsEvent {
+  final Offset position;
+  final ContactBasicInfo contact;
+
+  ManageContactsOpenContextMenu({
+    required this.position,
+    required this.contact,
+  });
+
+  @override
+  List<Object?> get props => [position, contact];
 }
