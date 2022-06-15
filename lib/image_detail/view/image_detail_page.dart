@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
@@ -17,7 +15,7 @@ import '../../model/image_item.dart';
 import '../../network/device_connection_manager.dart';
 import '../../repository/image_repository.dart';
 import '../../util/common_util.dart';
-import '../../widget/overlay_menu_item.dart';
+import '../../util/context_menu_helper.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/upward_triangle.dart';
 import '../bloc/image_detail_bloc.dart';
@@ -35,9 +33,8 @@ class ImageDetailPage extends StatelessWidget {
       {required GlobalKey<NavigatorState> navigatorKey,
       required List<ImageItem> images,
       required int index,
-        this.source,
-        this.extra
-      })
+      this.source,
+      this.extra})
       : _navigatorKey = navigatorKey,
         _images = images,
         _index = index;
@@ -48,7 +45,7 @@ class ImageDetailPage extends StatelessWidget {
       create: (context) => ImageDetailBloc(_images, _index,
           imageRepository: context.read<ImageRepository>()),
       child: ImageDetailView(
-          navigatorKey: _navigatorKey,
+        navigatorKey: _navigatorKey,
         source: source,
         extra: extra,
       ),
@@ -71,12 +68,9 @@ class ImageDetailView extends StatelessWidget {
   final Source? source;
   final dynamic extra;
 
-  ImageDetailView({
-    Key? key,
-    required this.navigatorKey,
-    this.source,
-    this.extra
-  }) : super(key: key);
+  ImageDetailView(
+      {Key? key, required this.navigatorKey, this.source, this.extra})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -93,11 +87,13 @@ class ImageDetailView extends StatelessWidget {
     final _divider_line_color = Color(0xffe0e0e0);
 
     _extendedPageController = ExtendedPageController(initialPage: currentIndex);
-    
+
     _imageDetailFocusNode = FocusNode();
     _imageDetailFocusNode?.canRequestFocus = true;
     _imageDetailFocusNode?.requestFocus();
-    
+
+    final pageContext = context;
+
     return Scaffold(
       body: MultiBlocListener(
         listeners: [
@@ -111,10 +107,10 @@ class ImageDetailView extends StatelessWidget {
                 SmartDialog.dismiss();
 
                 ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(
-                    state.deleteStatus.failureReason ?? "Delete image fail"
-                )));
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.deleteStatus.failureReason ??
+                          "Delete image fail")));
 
                 Future.delayed(Duration(milliseconds: 500), () {
                   _imageDetailFocusNode?.requestFocus();
@@ -131,7 +127,8 @@ class ImageDetailView extends StatelessWidget {
 
                 if (source == Source.albums) {
                   AllAlbumsBloc bloc = extra;
-                  bloc.add(AllAlbumsClearDeletedImage(state.deleteStatus.images.single));
+                  bloc.add(AllAlbumsClearDeletedImage(
+                      state.deleteStatus.images.single));
                 }
 
                 Future.delayed(Duration(milliseconds: 500), () {
@@ -140,14 +137,14 @@ class ImageDetailView extends StatelessWidget {
               }
             },
             listenWhen: (previous, current) =>
-            previous.deleteStatus.status != DeleteImagesStatus.initial
-                && previous.deleteStatus.status != current.deleteStatus.status,
+                previous.deleteStatus.status != DeleteImagesStatus.initial &&
+                previous.deleteStatus.status != current.deleteStatus.status,
           ),
-
           BlocListener<ImageDetailBloc, ImageDetailState>(
             listener: (context, state) {
               if (state.copyStatus.status == ImageDetailCopyStatus.start) {
-                _showDownloadProgressDialog(context, state.images[state.currentIndex]);
+                _showDownloadProgressDialog(
+                    context, state.images[state.currentIndex]);
               }
 
               if (state.copyStatus.status == ImageDetailCopyStatus.copying) {
@@ -167,14 +164,14 @@ class ImageDetailView extends StatelessWidget {
                       name = image.path.substring(index + 1);
                     }
 
-                    title = context.l10n.placeholderExporting.replaceFirst("%s", name);
+                    title = context.l10n.placeholderExporting
+                        .replaceFirst("%s", name);
 
                     _progressIndicatorDialog?.title = title;
                   }
 
                   _progressIndicatorDialog?.subtitle =
-                  "${CommonUtil.convertToReadableSize(current)}/${CommonUtil
-                      .convertToReadableSize(total)}";
+                      "${CommonUtil.convertToReadableSize(current)}/${CommonUtil.convertToReadableSize(total)}";
                   _progressIndicatorDialog?.updateProgress(current / total);
                 }
               }
@@ -184,9 +181,9 @@ class ImageDetailView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(
-                      state.copyStatus.error ?? "Copy image failure."
-                  )));
+                  ..showSnackBar(SnackBar(
+                      content: Text(
+                          state.copyStatus.error ?? "Copy image failure.")));
               }
 
               if (state.copyStatus.status == ImageDetailCopyStatus.success) {
@@ -194,10 +191,9 @@ class ImageDetailView extends StatelessWidget {
               }
             },
             listenWhen: (previous, current) =>
-            previous.copyStatus != current.copyStatus
-                && current.copyStatus.status != ImageDetailCopyStatus.initial,
+                previous.copyStatus != current.copyStatus &&
+                current.copyStatus.status != ImageDetailCopyStatus.initial,
           ),
-
         ],
         child: Focus(
             autofocus: true,
@@ -205,7 +201,7 @@ class ImageDetailView extends StatelessWidget {
             canRequestFocus: true,
             onKey: (node, event) {
               if (event.isKeyPressed(LogicalKeyboardKey.backspace)) {
-                _deleteImage(context, context.read<ImageDetailBloc>(), images[currentIndex]);
+                _deleteImage(pageContext, images[currentIndex]);
                 return KeyEventResult.handled;
               }
 
@@ -242,55 +238,59 @@ class ImageDetailView extends StatelessWidget {
                             children: [
                               // 返回按钮
                               StatefulBuilder(
-                                  builder: (context, setState) => GestureDetector(
-                                    child: Container(
-                                      child: Row(
-                                        children: [
-                                          Image.asset(
-                                              "assets/icons/icon_right_arrow.png",
-                                              width: 12,
-                                              height: 12),
-                                          Container(
-                                            child: Text(context.l10n.back,
-                                                style: TextStyle(
-                                                    color: Color(0xff5c5c62),
-                                                    fontSize: 13)),
-                                            margin: EdgeInsets.only(left: 3),
+                                  builder: (context, setState) =>
+                                      GestureDetector(
+                                        child: Container(
+                                          child: Row(
+                                            children: [
+                                              Image.asset(
+                                                  "assets/icons/icon_right_arrow.png",
+                                                  width: 12,
+                                                  height: 12),
+                                              Container(
+                                                child: Text(context.l10n.back,
+                                                    style: TextStyle(
+                                                        color:
+                                                            Color(0xff5c5c62),
+                                                        fontSize: 13)),
+                                                margin:
+                                                    EdgeInsets.only(left: 3),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                      decoration: BoxDecoration(
-                                          color: _isBackBtnDown
-                                              ? Color(0xffe8e8e8)
-                                              : Color(0xfff3f3f4),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(3.0)),
-                                          border: Border.all(
-                                              color: Color(0xffdedede),
-                                              width: 1.0)),
-                                      height: 25,
-                                      padding: EdgeInsets.only(right: 6, left: 2),
-                                      margin: EdgeInsets.only(left: 15),
-                                    ),
-                                    onTap: () {
-                                      navigatorKey.currentState?.pop();
-                                    },
-                                    onTapDown: (detail) {
-                                      setState(() {
-                                        _isBackBtnDown = true;
-                                      });
-                                    },
-                                    onTapCancel: () {
-                                      setState(() {
-                                        _isBackBtnDown = false;
-                                      });
-                                    },
-                                    onTapUp: (detail) {
-                                      setState(() {
-                                        _isBackBtnDown = false;
-                                      });
-                                    },
-                                  )),
+                                          decoration: BoxDecoration(
+                                              color: _isBackBtnDown
+                                                  ? Color(0xffe8e8e8)
+                                                  : Color(0xfff3f3f4),
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(3.0)),
+                                              border: Border.all(
+                                                  color: Color(0xffdedede),
+                                                  width: 1.0)),
+                                          height: 25,
+                                          padding: EdgeInsets.only(
+                                              right: 6, left: 2),
+                                          margin: EdgeInsets.only(left: 15),
+                                        ),
+                                        onTap: () {
+                                          navigatorKey.currentState?.pop();
+                                        },
+                                        onTapDown: (detail) {
+                                          setState(() {
+                                            _isBackBtnDown = true;
+                                          });
+                                        },
+                                        onTapCancel: () {
+                                          setState(() {
+                                            _isBackBtnDown = false;
+                                          });
+                                        },
+                                        onTapUp: (detail) {
+                                          setState(() {
+                                            _isBackBtnDown = false;
+                                          });
+                                        },
+                                      )),
 
                               GestureDetector(
                                 child: Container(
@@ -313,8 +313,8 @@ class ImageDetailView extends StatelessWidget {
                                     data: SliderThemeData(
                                         thumbShape: RoundSliderThumbShape(
                                             enabledThumbRadius: 7),
-                                        overlayShape:
-                                        RoundSliderOverlayShape(overlayRadius: 7),
+                                        overlayShape: RoundSliderOverlayShape(
+                                            overlayRadius: 7),
                                         activeTrackColor: Color(0xffe3e3e3),
                                         inactiveTrackColor: Color(0xffe3e3e3),
                                         trackHeight: 3,
@@ -328,7 +328,8 @@ class ImageDetailView extends StatelessWidget {
                                                   value / 100 + 1.0));
                                         },
                                         min: 0,
-                                        max: 100.0 * Constant.IMAGE_MAX_SCALE - 100.0,
+                                        max: 100.0 * Constant.IMAGE_MAX_SCALE -
+                                            100.0,
                                       ),
                                     )),
                                 width: 80,
@@ -392,105 +393,106 @@ class ImageDetailView extends StatelessWidget {
                           alignment: Alignment.centerRight,
                           child: StatefulBuilder(
                               builder: (context, setState) => GestureDetector(
-                                child: Container(
-                                  key: _aboutIconKey,
-                                  child: Image.asset(
-                                      "assets/icons/icon_about_image.png",
-                                      width: 14,
-                                      height: 14),
-                                  decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Color(0xffd5d5d5), width: 1.0),
-                                      borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0)),
-                                      color: _isAboutIconTapDown
-                                          ? Color(0xffe7e7e7)
-                                          : Color(0xfff4f4f4)),
-                                  padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
-                                  margin: EdgeInsets.only(right: 15),
-                                ),
-                                onTap: () {
-                                  _showImageInfoDialog(
-                                      context, images[currentIndex]);
-                                },
-                                onTapDown: (event) {
-                                  setState(() {
-                                    _isAboutIconTapDown = true;
-                                  });
-                                },
-                                onTapUp: (event) {
-                                  setState(() {
-                                    _isAboutIconTapDown = false;
-                                  });
-                                },
-                                onTapCancel: () {
-                                  setState(() {
-                                    _isAboutIconTapDown = false;
-                                  });
-                                },
-                              ))),
+                                    child: Container(
+                                      key: _aboutIconKey,
+                                      child: Image.asset(
+                                          "assets/icons/icon_about_image.png",
+                                          width: 14,
+                                          height: 14),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color: Color(0xffd5d5d5),
+                                              width: 1.0),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(4.0)),
+                                          color: _isAboutIconTapDown
+                                              ? Color(0xffe7e7e7)
+                                              : Color(0xfff4f4f4)),
+                                      padding:
+                                          EdgeInsets.fromLTRB(12, 4, 12, 4),
+                                      margin: EdgeInsets.only(right: 15),
+                                    ),
+                                    onTap: () {
+                                      _showImageInfoDialog(
+                                          context, images[currentIndex]);
+                                    },
+                                    onTapDown: (event) {
+                                      setState(() {
+                                        _isAboutIconTapDown = true;
+                                      });
+                                    },
+                                    onTapUp: (event) {
+                                      setState(() {
+                                        _isAboutIconTapDown = false;
+                                      });
+                                    },
+                                    onTapCancel: () {
+                                      setState(() {
+                                        _isAboutIconTapDown = false;
+                                      });
+                                    },
+                                  ))),
                     ],
                   ),
                   height: Constant.HOME_NAVI_BAR_HEIGHT,
                   color: Color(0xfff6f6f6),
                 ),
-                Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
+                Divider(
+                    color: _divider_line_color, height: 1.0, thickness: 1.0),
                 Expanded(
                     child: Container(
-                      child: ExtendedImageGesturePageView.builder(
-                        controller: _extendedPageController,
-                        itemBuilder: (context, index) {
-                          return Listener(
-                            child: ExtendedImage.network(
-                              "${_URL_SERVER}/stream/file?path=${images[index].path}",
-                              mode: ExtendedImageMode.gesture,
-                              fit: BoxFit.contain,
-                              initGestureConfigHandler: (state) {
-                                return GestureConfig(
-                                    minScale: 1.0,
-                                    animationMinScale: 1.0,
-                                    maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
-                                    animationMaxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
-                                    speed: 1.0,
-                                    inertialSpeed: 100.0,
-                                    initialScale: imageScale,
-                                    inPageView: false,
-                                    initialAlignment: InitialAlignment.center,
-                                    gestureDetailsIsChanged: (detail) {
-                                      context.read<ImageDetailBloc>().add(
-                                          ImageDetailScaleChanged(
-                                              detail?.totalScale ?? 1.0));
-                                    });
-                              },
-                              onDoubleTap: (event) {
-                                _setImageScale(context, imageScale, true);
-                              },
-                            ),
-                            onPointerDown: (event) {
-                              if (event.isRightMouseClick()) {
-                                _openMenu(
-                                    pageContext: context,
-                                    bloc: context.read<ImageDetailBloc>(),
-                                    position: event.position,
-                                    image: images[currentIndex]
-                                );
-                              }
-                            },
-                          );
+                  child: ExtendedImageGesturePageView.builder(
+                    controller: _extendedPageController,
+                    itemBuilder: (context, index) {
+                      return Listener(
+                        child: ExtendedImage.network(
+                          "${_URL_SERVER}/stream/file?path=${images[index].path}",
+                          mode: ExtendedImageMode.gesture,
+                          fit: BoxFit.contain,
+                          initGestureConfigHandler: (state) {
+                            return GestureConfig(
+                                minScale: 1.0,
+                                animationMinScale: 1.0,
+                                maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
+                                animationMaxScale:
+                                    Constant.IMAGE_MAX_SCALE.toDouble(),
+                                speed: 1.0,
+                                inertialSpeed: 100.0,
+                                initialScale: imageScale,
+                                inPageView: false,
+                                initialAlignment: InitialAlignment.center,
+                                gestureDetailsIsChanged: (detail) {
+                                  context.read<ImageDetailBloc>().add(
+                                      ImageDetailScaleChanged(
+                                          detail?.totalScale ?? 1.0));
+                                });
+                          },
+                          onDoubleTap: (event) {
+                            _setImageScale(context, imageScale, true);
+                          },
+                        ),
+                        onPointerDown: (event) {
+                          if (event.isRightMouseClick()) {
+                            _openMenu(
+                                context: pageContext,
+                                position: event.position,
+                                image: images[currentIndex]);
+                          }
                         },
-                        onPageChanged: (index) {
-                          context
-                              .read<ImageDetailBloc>()
-                              .add(ImageDetailIndexChanged(index));
-                          _imageDetailFocusNode?.requestFocus();
-                        },
-                        itemCount: images.length,
-                      ),
-                      color: Colors.white,
-                    ))
+                      );
+                    },
+                    onPageChanged: (index) {
+                      context
+                          .read<ImageDetailBloc>()
+                          .add(ImageDetailIndexChanged(index));
+                      _imageDetailFocusNode?.requestFocus();
+                    },
+                    itemCount: images.length,
+                  ),
+                  color: Colors.white,
+                ))
               ],
-            )
-        ),
+            )),
       ),
     );
   }
@@ -514,10 +516,9 @@ class ImageDetailView extends StatelessWidget {
   }
 
   void _openMenu(
-      {required BuildContext pageContext,
-        required ImageDetailBloc bloc,
-        required Offset position,
-        required ImageItem image}) {
+      {required BuildContext context,
+      required Offset position,
+      required ImageItem image}) {
     String copyTitle = "";
 
     String name = "";
@@ -527,97 +528,53 @@ class ImageDetailView extends StatelessWidget {
       name = image.path.substring(index + 1);
     }
 
-    copyTitle = pageContext.l10n.placeHolderCopyToComputer.replaceFirst("%s", name)
-        .adaptForOverflow();;
+    copyTitle = context.l10n.placeHolderCopyToComputer
+        .replaceFirst("%s", name)
+        .adaptForOverflow();
 
-    double width = 320;
-    double itemHeight = 25;
-    EdgeInsets itemPadding = EdgeInsets.only(left: 8, right: 8);
-    EdgeInsets itemMargin = EdgeInsets.only(top: 6, bottom: 6);
-    BorderRadius itemBorderRadius = BorderRadius.all(Radius.circular(3));
-    Color defaultItemBgColor = Color(0xffd8d5d3);
-    Divider divider = Divider(
-        height: 1,
-        thickness: 1,
-        indent: 6,
-        endIndent: 6,
-        color: Color(0xffbabebf));
+    ContextMenuHelper()
+        .showContextMenu(context: context, globalOffset: position, items: [
+      ContextMenuItem(
+        title: copyTitle,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-    showDialog(
-        context: pageContext,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) {
-          return Stack(
-            children: [
-              Positioned(
-                  child: Container(
-                    child: Column(
-                      children: [
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: copyTitle,
-                          onTap: () {
-                            _closeMenu(dialogContext);
+          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+            _startCopy(context, image, dir);
+          }, (error) {
+            debugPrint("_openFilePicker, error: $error");
+          });
+        },
+      ),
+      ContextMenuItem(
+        title: context.l10n.delete,
+        onTap: () {
+          ContextMenuHelper().hideContextMenu();
 
-                            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-                              _startCopy(pageContext, image, dir);
-                            }, (error) {
-                              debugPrint("_openFilePicker, error: $error");
-                            });
-                          },
-                        ),
-                        divider,
-                        OverlayMenuItem(
-                          width: width,
-                          height: itemHeight,
-                          padding: itemPadding,
-                          margin: itemMargin,
-                          borderRadius: itemBorderRadius,
-                          defaultBackgroundColor: defaultItemBgColor,
-                          title: pageContext.l10n.delete,
-                          onTap: () {
-                            _closeMenu(dialogContext);
-                            _deleteImage(pageContext, bloc, image);
-                          },
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color(0xffd8d5d3),
-                        borderRadius: BorderRadius.all(Radius.circular(6))),
-                    padding: EdgeInsets.all(5),
-                  ),
-                  left: position.dx,
-                  top: position.dy,
-                  width: width)
-            ],
-          );
-        });
+          _deleteImage(context, image);
+        },
+      )
+    ]);
   }
 
   void _startCopy(BuildContext context, ImageItem image, String dir) {
-    context.read<ImageDetailBloc>().add(
-      ImageDetailCopySubmitted(image, dir)
-    );
+    context.read<ImageDetailBloc>().add(ImageDetailCopySubmitted(image, dir));
   }
 
-  void _closeMenu(BuildContext context) {
-    Navigator.of(context).pop();
-  }
+  void _deleteImage(BuildContext context, ImageItem image) {
+    final pageContext = context;
 
-  void _deleteImage(BuildContext context, ImageDetailBloc bloc, ImageItem image) {
-    CommonUtil.showConfirmDialog(context, "${context.l10n.tipDeleteTitle.replaceFirst("%s", "1")}",
-        context.l10n.tipDeleteDesc, context.l10n.cancel, context.l10n.delete, (context) {
-      Navigator.of(context, rootNavigator: true).pop();
+    CommonUtil.showConfirmDialog(
+        context,
+        "${context.l10n.tipDeleteTitle.replaceFirst("%s", "1")}",
+        context.l10n.tipDeleteDesc,
+        context.l10n.cancel,
+        context.l10n.delete, (context) {
+      Navigator.of(pageContext, rootNavigator: true).pop();
 
-      bloc.add(ImageDetailDeleteSubmitted(image));
+      pageContext.read<ImageDetailBloc>().add(ImageDetailDeleteSubmitted(image));
     }, (context) {
-      Navigator.of(context, rootNavigator: true).pop();
+      Navigator.of(pageContext, rootNavigator: true).pop();
     });
   }
 
@@ -649,16 +606,15 @@ class ImageDetailView extends StatelessWidget {
       context.read<ImageDetailBloc>().add(ImageDetailScaleChanged(targetScale));
     }
   }
-  
+
   void _openPreImage(int currentIndex, List<ImageItem> images) {
     if (currentIndex > 0 && currentIndex < images.length) {
       _extendedPageController?.jumpToPage(currentIndex - 1);
     }
   }
-  
+
   void _openNextImage(int currentIndex, List<ImageItem> images) {
-    if (currentIndex < images.length - 1 &&
-        currentIndex + 1 >= 0) {
+    if (currentIndex < images.length - 1 && currentIndex + 1 >= 0) {
       _extendedPageController?.jumpToPage(currentIndex + 1);
     }
   }
