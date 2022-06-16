@@ -12,9 +12,5 @@ final logger = Logger(
 );
 
 void bootstrap() {
-  FlutterError.onError = (details) {
-    log(details.exceptionAsString(), stackTrace: details.stack);
-  };
-
   BlocOverrides.runZoned(() => runApp(App()), blocObserver: AppBlocObserver());
 }
