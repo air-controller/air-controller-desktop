@@ -43,7 +43,7 @@ class ContactRepository {
 
   Future<ContactDetail> updatePhotoForContact(
           {required File photo, required int contactId}) =>
-      this.client.updatePhotoForContact(photo: photo, contactId: contactId);
+      this.client.updatePhotoForContact(photo: photo, id: contactId);
 
   Future<void> updateNewContact(UpdateContactRequestEntity requestEntity) =>
       this.client.updateNewContact(requestEntity);

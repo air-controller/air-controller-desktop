@@ -24,12 +24,13 @@ class ManageContactsState extends Equatable {
   final List<ContactBasicInfo> contacts;
   final List<ContactBasicInfo> selectedContacts;
   final ContactDetail? contactDetail;
-  final bool isInitDone;
   final String keyword;
   final ManageContactsContextMenuInfo? contextMenuInfo;
   final bool showLoading;
   final bool showError;
   final bool openEditDialog;
+  final bool showSpinkit;
+  final bool isInitDone;
 
   const ManageContactsState(
       {this.total = 0,
@@ -42,12 +43,13 @@ class ManageContactsState extends Equatable {
       this.contacts = const [],
       this.selectedContacts = const [],
       this.contactDetail,
-      this.isInitDone = false,
       this.keyword = '',
       this.contextMenuInfo,
       this.showLoading = false,
       this.showError = false,
-      this.openEditDialog = false});
+      this.openEditDialog = false,
+      this.showSpinkit = false,
+      this.isInitDone = false});
 
   @override
   List<Object?> get props => [
@@ -61,12 +63,13 @@ class ManageContactsState extends Equatable {
         contacts,
         selectedContacts,
         contactDetail,
-        isInitDone,
         keyword,
         contextMenuInfo,
         showLoading,
         showError,
-        openEditDialog
+        openEditDialog,
+        showSpinkit,
+        isInitDone,
       ];
 
   ManageContactsState copyWith({
@@ -86,6 +89,7 @@ class ManageContactsState extends Equatable {
     bool? showLoading,
     bool? showError,
     bool? openEditDialog,
+    bool? showSpinkit,
   }) {
     return ManageContactsState(
         total: total ?? this.total,
@@ -104,6 +108,7 @@ class ManageContactsState extends Equatable {
         contextMenuInfo: contextMenuInfo ?? this.contextMenuInfo,
         showLoading: showLoading ?? this.showLoading,
         showError: showError ?? this.showError,
-        openEditDialog: openEditDialog ?? this.openEditDialog);
+        openEditDialog: openEditDialog ?? this.openEditDialog,
+        showSpinkit: showSpinkit ?? this.showSpinkit);
   }
 }

@@ -81,7 +81,7 @@ class _ManageContactsView extends StatelessWidget {
             context.read<ManageContactsBloc>().add(
                 ManageContactsOpenContextMenu(
                     position: position, contact: contact));
-          });    
+          });
       DataGridHolder.dataSource = dataSource;
     } else {
       dataSource.updataDataSource(filteredContacts);
@@ -96,6 +96,8 @@ class _ManageContactsView extends StatelessWidget {
 
     final isInitDone =
         context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
+    final showSpinkit =
+        context.select((ManageContactsBloc bloc) => bloc.state.showSpinkit);
 
     final keywordEditController = TextEditingController();
 
@@ -190,9 +192,9 @@ class _ManageContactsView extends StatelessWidget {
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
                 _ContactsGridView(
                   dataGridWidth: dataGridWidth,
-                  isLoading: !isInitDone,
+                  isLoading: !isInitDone || showSpinkit,
                   dataSource: dataSource,
-                  controller: dataGridController!,
+                  controller: dataGridController,
                 ),
                 VerticalDivider(
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
@@ -301,7 +303,16 @@ class _ManageContactsView extends StatelessWidget {
               ..add(SubscriptionRequested());
           }
         },
-        child: EditContactView(),
+        child: EditContactView(
+          onDone: (contact) {
+            pageContext.read<ManageContactsBloc>().add(
+                  ManageContactsEditDone(contact),
+                );
+          },
+          onUploadPhotoDone: (isNew, rawContactId) {
+            pageContext.read<ManageContactsBloc>().add(RefreshRequested());
+          },
+        ),
       ),
     );
   }
@@ -386,6 +397,7 @@ class _ContactDetailView extends StatelessWidget {
           children: [
             ContactAvatarView(
                 rawContactId: rawContactId,
+                addTimestamp: true,
                 width: 100,
                 height: 100,
                 iconSize: 50),
@@ -778,6 +790,7 @@ class _ContactActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedContacts = context
         .select((ManageContactsBloc bloc) => bloc.state.selectedContacts);
+
     final isInitDone =
         context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
 

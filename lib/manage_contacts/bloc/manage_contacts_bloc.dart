@@ -35,6 +35,7 @@ class ManageContactsBloc
     on<KeywordChanged>(_onKeywordChanged);
     on<DeleteContactsRequested>(_onDeleteContactsRequested);
     on<ManageContactsOpenContextMenu>(_onOpenContextMenu);
+    on<ManageContactsEditDone>(_onEditDone);
   }
 
   void _onSubscriptionRequested(ManageContactsSubscriptionRequested event,
@@ -52,8 +53,7 @@ class ManageContactsBloc
     } catch (e) {
       emit(ManageContactsState(
           failureReason: (e as BusinessError).message,
-          showError: true,
-          showLoading: false));
+          showError: true));
     }
   }
 
@@ -77,17 +77,16 @@ class ManageContactsBloc
         checkedItem: event.checkedItem, isAllContactsChecked: false));
 
     if (checkedItem is ContactAccountInfo) {
-      emit(state.copyWith(showLoading: true));
+      emit(state.copyWith(showSpinkit: true));
 
       try {
         final contacts = await _contactRepository.getContactsByAccount(
             checkedItem.account.name, checkedItem.account.type);
 
-        emit(state.copyWith(contacts: contacts, showLoading: false));
+        emit(state.copyWith(contacts: contacts, showSpinkit: false));
       } catch (e) {
         emit(state.copyWith(
             failureReason: (e as BusinessError).message,
-            showLoading: false,
             showError: true));
       }
 
@@ -95,17 +94,16 @@ class ManageContactsBloc
     }
 
     if (checkedItem is ContactGroup) {
-      emit(state.copyWith(showLoading: true));
+      emit(state.copyWith(showSpinkit: true));
 
       try {
         final contacts =
             await _contactRepository.getContactsByGroupId(checkedItem.id);
 
-        emit(state.copyWith(contacts: contacts, showLoading: false));
+        emit(state.copyWith(contacts: contacts, showSpinkit: false));
       } catch (e) {
         emit(state.copyWith(
             failureReason: (e as BusinessError).message,
-            showLoading: false,
             showError: true));
       }
 
@@ -131,15 +129,15 @@ class ManageContactsBloc
     emit(newState);
 
     if (event.isAllContactsChecked) {
-      emit(state.copyWith(showLoading: true));
+      emit(state.copyWith(showSpinkit: true));
 
       try {
         final contacts = await _contactRepository.getAllContacts();
-        emit(state.copyWith(contacts: contacts, showLoading: false));
+        emit(state.copyWith(contacts: contacts, showSpinkit: false));
       } catch (e) {
         emit(state.copyWith(
             failureReason: (e as BusinessError).message,
-            showLoading: false,
+            showSpinkit: false,
             showError: true));
       }
     }
@@ -168,7 +166,7 @@ class ManageContactsBloc
 
   void _onRefreshRequested(
       RefreshRequested event, Emitter<ManageContactsState> emit) async {
-    emit(state.copyWith(showLoading: true));
+    emit(state.copyWith(showSpinkit: true));
     try {
       final isAllContactsChecked = state.isAllContactsChecked;
       List<ContactBasicInfo> contacts = [];
@@ -189,11 +187,11 @@ class ManageContactsBloc
         }
       }
 
-      emit(state.copyWith(contacts: contacts, showLoading: false));
+      emit(state.copyWith(contacts: contacts, showSpinkit: false));
     } catch (e) {
       emit(state.copyWith(
           failureReason: (e as BusinessError).message,
-          showLoading: false,
+          showSpinkit: false,
           showError: true));
     }
   }
@@ -254,5 +252,34 @@ class ManageContactsBloc
           ),
           contactDetail: contactDetail));
     }
+  }
+
+  void _onEditDone(
+      ManageContactsEditDone event, Emitter<ManageContactsState> emit) async {
+    final contacts = [...state.contacts];
+
+    final contact = event.contact;
+    if (contacts.contains(contact)) {
+      int index = contacts.indexOf(contact);
+
+      if (index != -1) {
+        contacts[index] = event.contact;
+      }
+    } else {
+      contacts.add(event.contact);
+    }
+
+    ContactDetail? contactDetail = state.contactDetail;
+
+    if (null != contactDetail && contactDetail.id == contact.id) {
+      try {
+        contactDetail = await _contactRepository.getContactDetail(contact.id);
+      } on BusinessError catch (e) {
+        emit(state.copyWith(
+            showLoading: false, showError: true, failureReason: e.message));
+      }
+    }
+
+    emit(state.copyWith(contacts: contacts, contactDetail: contactDetail));
   }
 }

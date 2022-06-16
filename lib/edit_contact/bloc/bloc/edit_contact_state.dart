@@ -11,20 +11,24 @@ enum EditMode { none, createNewContact, updateContact, photoUploadedWhenCreate }
 class ContactFieldRow extends Equatable {
   final List<ContactDataType> types;
   final ContactDataType? selectedType;
+  final int id;
   final String? value;
 
-  ContactFieldRow({required this.types, this.selectedType, this.value});
+  ContactFieldRow(
+      {required this.types, required this.id, this.selectedType, this.value});
 
   @override
   List<Object?> get props => [types, selectedType, value];
 
   ContactFieldRow copyWith({
     List<ContactDataType>? types,
+    int? id,
     ContactDataType? selectedType,
     String? value,
   }) {
     return ContactFieldRow(
       types: types ?? this.types,
+      id: id ?? this.id,
       selectedType: selectedType ?? this.selectedType,
       value: value ?? this.value,
     );
@@ -49,6 +53,9 @@ class EditContactState extends Equatable {
   final EditMode editMode;
   final int? rawContactId;
   final bool isInitDone;
+  final bool isDone;
+  final ContactBasicInfo? currentContact;
+  final bool isImageUploadDone;
 
   const EditContactState(
       {this.failureReason,
@@ -67,7 +74,10 @@ class EditContactState extends Equatable {
       this.note,
       this.editMode = EditMode.none,
       this.rawContactId,
-      this.isInitDone = false});
+      this.isInitDone = false,
+      this.isDone = false,
+      this.currentContact,
+      this.isImageUploadDone = false});
 
   @override
   List<Object?> get props => [
@@ -87,7 +97,10 @@ class EditContactState extends Equatable {
         note,
         editMode,
         rawContactId,
-        isInitDone
+        isInitDone,
+        isDone,
+        currentContact,
+        isImageUploadDone,
       ];
 
   EditContactState copyWith(
@@ -107,7 +120,10 @@ class EditContactState extends Equatable {
       String? note,
       EditMode? editMode,
       int? rawContactId,
-      bool? isInitDone}) {
+      bool? isInitDone,
+      bool? isDone,
+      ContactBasicInfo? currentContact,
+      bool? isImageUploadDone}) {
     return EditContactState(
       failureReason: failureReason ?? this.failureReason,
       status: status ?? this.status,
@@ -126,6 +142,9 @@ class EditContactState extends Equatable {
       editMode: editMode ?? this.editMode,
       rawContactId: rawContactId ?? this.rawContactId,
       isInitDone: isInitDone ?? this.isInitDone,
+      isDone: isDone ?? this.isDone,
+      currentContact: currentContact ?? this.currentContact,
+      isImageUploadDone: isImageUploadDone ?? this.isImageUploadDone,
     );
   }
 }

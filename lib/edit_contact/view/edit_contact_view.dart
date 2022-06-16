@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:air_controller/ext/scaffoldx.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/manage_contacts/view/view.dart';
+import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/model/contact_group.dart';
 import 'package:air_controller/widget/single_input_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,14 +17,19 @@ import '../../bootstrap.dart';
 import '../../edit_contact/bloc/bloc/edit_contact_bloc.dart';
 import '../../model/account.dart';
 import '../../model/contact_data_type.dart';
+import '../../network/device_connection_manager.dart';
 import '../../widget/unified_text_field.dart';
 
 class EditContactView extends StatelessWidget {
   final double inputBoxHeight = 30;
   final double fieldLabelWidth = 65;
   final double fieldLabelPaddingRight = 5;
+  final Function(ContactBasicInfo) onDone;
+  final Function(bool isNew, int rawContactId) onUploadPhotoDone;
 
-  EditContactView({Key? key}) : super(key: key);
+  EditContactView(
+      {Key? key, required this.onDone, required this.onUploadPhotoDone})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +73,31 @@ class EditContactView extends StatelessWidget {
                     current.status != EditContactStatus.initial;
               },
             ),
+            BlocListener<EditContactBloc, EditContactState>(
+                listener: (context, state) {
+                  final contact = state.currentContact;
+
+                  Navigator.pop(context);
+
+                  if (contact != null) {
+                    onDone(contact);
+                  }
+                },
+                listenWhen: (previous, current) =>
+                    previous != current && current.isDone),
+            BlocListener<EditContactBloc, EditContactState>(
+                listener: (context, state) {
+                  // Remove current contact avatar from cache
+                  final rawContactId = state.rawContactId;
+                  if (null != rawContactId) {
+                    CachedNetworkImage.evictFromCache(
+                        "${DeviceConnectionManager.instance.rootURL}/stream/rawContactPhoto?id=$rawContactId");
+                    onUploadPhotoDone(
+                        context.read<EditContactBloc>().isNew, rawContactId);
+                  }
+                },
+                listenWhen: (previous, current) =>
+                    previous != current && current.isImageUploadDone)
           ],
           child: Center(
             child: Container(
@@ -449,6 +481,7 @@ class EditContactView extends StatelessWidget {
 
     return ContactAvatarView(
         rawContactId: contactId,
+        addTimestamp: true,
         width: imageSize,
         height: imageSize,
         iconSize: 50,

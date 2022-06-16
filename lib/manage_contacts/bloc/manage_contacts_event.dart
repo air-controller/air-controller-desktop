@@ -108,3 +108,12 @@ class ManageContactsOpenContextMenu extends ManageContactsEvent {
   @override
   List<Object?> get props => [position, contact];
 }
+
+class ManageContactsEditDone extends ManageContactsEvent {
+  final ContactBasicInfo contact;
+
+  const ManageContactsEditDone(this.contact);
+
+  @override
+  List<Object?> get props => [contact];
+}

@@ -1008,15 +1008,15 @@ class AirControllerClient {
   }
 
   Future<ContactDetail> updatePhotoForContact(
-      {required File photo, required int contactId}) async {
+      {required File photo, required int id}) async {
     try {
       final formData = DioCore.FormData.fromMap({
         "avatar": await DioCore.MultipartFile.fromFile(photo.path),
-        "contactId": contactId
+        "id": id
       });
       final headers = _commonHeaders();
       headers.remove("Content-Type");
-      final response = await dio.post("/contact/uploadPhotoAndNewContract",
+      final response = await dio.post("/contact/updatePhotoForContact",
           data: formData, options: DioCore.Options(headers: headers));
       if (response.statusCode == 200) {
         final map = response.data;

@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:air_controller/model/account.dart';
+import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/model/contact_data_type.dart';
 import 'package:air_controller/model/update_contact_request_entity.dart';
 import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:air_controller/repository/contact_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../../bootstrap.dart';
@@ -15,6 +17,7 @@ import '../../../model/contact_detail.dart';
 import '../../../model/contact_field_value.dart';
 import '../../../model/contact_group.dart';
 import '../../../model/new_contact_request_entity.dart';
+import '../../../network/device_connection_manager.dart';
 
 part 'edit_contact_event.dart';
 part 'edit_contact_state.dart';
@@ -109,6 +112,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       } else {
         contactDetail?.phones?.forEach((element) {
           currentPhoneItems.add(ContactFieldRow(
+              id: element.id,
               types: phoneTypes,
               value: element.value,
               selectedType: element.type));
@@ -126,6 +130,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       } else {
         contactDetail?.emails?.forEach((element) {
           currentEmailItems.add(ContactFieldRow(
+              id: element.id,
               types: emailTypes,
               value: element.value,
               selectedType: element.type));
@@ -144,6 +149,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       } else {
         contactDetail?.ims?.forEach((element) {
           currentImItems.add(ContactFieldRow(
+              id: element.id,
               types: imTypes,
               value: element.value,
               selectedType: element.type));
@@ -162,6 +168,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       } else {
         contactDetail?.addresses?.forEach((element) {
           currentAddressItems.add(ContactFieldRow(
+              id: element.id,
               types: addressTypes,
               value: element.value,
               selectedType: element.type));
@@ -180,6 +187,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       } else {
         contactDetail?.relations?.forEach((element) {
           currentRelationItems.add(ContactFieldRow(
+              id: element.id,
               types: relationTypes,
               value: element.value,
               selectedType: element.type));
@@ -224,7 +232,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
     List<ContactFieldRow> fieldItems = [];
 
     if (types.isNotEmpty) {
-      fieldItems.add(ContactFieldRow(types: types, selectedType: types.first));
+      fieldItems.add(
+          ContactFieldRow(id: -1, types: types, selectedType: types.first));
     }
 
     return fieldItems;
@@ -664,10 +673,20 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             account: account,
             group: group,
             note: note);
-        await _contactRepository.createNewContact(request);
+        final contactDetail =
+            await _contactRepository.createNewContact(request);
         emit(state.copyWith(
             status: EditContactStatus.success,
-            requestType: RequestType.createNewContact));
+            requestType: RequestType.createNewContact,
+            currentContact: ContactBasicInfo(
+                id: contactDetail.id,
+                contactId: contactDetail.contactId,
+                displayNamePrimary: name,
+                phoneNumber: contactDetail.phones
+                        ?.map((phone) => phone.value)
+                        .join(", ") ??
+                    ""),
+            isDone: true));
       } else if (editMode == EditMode.photoUploadedWhenCreate) {
         final rawContactId = state.rawContactId;
         final request = UpdateContactRequestEntity(
@@ -684,7 +703,13 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
         await _contactRepository.updateNewContact(request);
         emit(state.copyWith(
             status: EditContactStatus.success,
-            requestType: RequestType.updateContact));
+            requestType: RequestType.updateContact,
+            currentContact: ContactBasicInfo(
+                id: rawContactId,
+                displayNamePrimary: name,
+                contactId: -1,
+                phoneNumber: phones.map((phone) => phone.value).join(", ")),
+            isDone: true));
       }
     } on BusinessError catch (e) {
       if (editMode == EditMode.createNewContact) {
@@ -803,7 +828,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
           emit(state.copyWith(
               rawContactId: newContactDetail.id,
               status: EditContactStatus.success,
-              requestType: RequestType.uploadPhoto));
+              requestType: RequestType.uploadPhoto,
+              isImageUploadDone: true));
         } else {
           emit(state.copyWith(
             status: EditContactStatus.loading,
@@ -818,7 +844,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
               requestType: RequestType.uploadPhoto,
               name: contactDetail.displayNamePrimary,
               rawContactId: contactDetail.id,
-              editMode: EditMode.photoUploadedWhenCreate));
+              editMode: EditMode.photoUploadedWhenCreate,
+              isImageUploadDone: true));
         }
       } else {
         final contactId = state.rawContactId;
@@ -827,6 +854,9 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
           logger.e("Wrong state, contactId is null when update photo");
           return;
         }
+
+        CachedNetworkImage.evictFromCache(
+            "${DeviceConnectionManager.instance.rootURL}/stream/rawContactPhoto?id=$contactId");
 
         emit(state.copyWith(
           status: EditContactStatus.loading,
@@ -840,7 +870,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
         emit(state.copyWith(
             status: EditContactStatus.success,
             requestType: RequestType.uploadPhoto,
-            rawContactId: newContactDetail.id));
+            rawContactId: newContactDetail.id,
+            isImageUploadDone: true));
       }
     } on BusinessError catch (e) {
       emit(state.copyWith(
@@ -866,60 +897,43 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
         return;
       }
 
-      List<ContactFieldValue> phones = [];
-      state.currentPhoneItems.forEach((phoneItem) {
-        final value = phoneItem.value;
+      List<ContactFieldValue> phones = state.currentPhoneItems
+          .where((item) => item.value != null && item.value!.isNotEmpty)
+          .map((phoneItem) => ContactFieldValue(
+              id: phoneItem.id,
+              type: phoneItem.selectedType,
+              value: phoneItem.value!))
+          .toList();
 
-        if (null != value) {
-          final contactFieldValue =
-              ContactFieldValue(type: phoneItem.selectedType, value: value);
-          phones.add(contactFieldValue);
-        }
-      });
+      List<ContactFieldValue> emails = state.currentEmailItems
+          .where((item) => item.value != null && item.value!.isNotEmpty)
+          .map((emailItem) => ContactFieldValue(
+              id: emailItem.id,
+              type: emailItem.selectedType,
+              value: emailItem.value!))
+          .toList();
 
-      List<ContactFieldValue> emails = [];
-      state.currentEmailItems.forEach((emailItem) {
-        final value = emailItem.value;
+      List<ContactFieldValue> ims = state.currentImItems
+          .where((item) => item.value != null && item.value!.isNotEmpty)
+          .map((imItem) => ContactFieldValue(
+              id: imItem.id, type: imItem.selectedType, value: imItem.value!))
+          .toList();
 
-        if (null != value) {
-          final contactFieldValue =
-              ContactFieldValue(type: emailItem.selectedType, value: value);
-          emails.add(contactFieldValue);
-        }
-      });
+      List<ContactFieldValue> addresses = state.currentAddressItems
+          .where((item) => item.value != null && item.value!.isNotEmpty)
+          .map((addressItem) => ContactFieldValue(
+              id: addressItem.id,
+              type: addressItem.selectedType,
+              value: addressItem.value!))
+          .toList();
 
-      List<ContactFieldValue> ims = [];
-      state.currentImItems.forEach((imItem) {
-        final value = imItem.value;
-
-        if (null != value) {
-          final contactFieldValue =
-              ContactFieldValue(type: imItem.selectedType, value: value);
-          ims.add(contactFieldValue);
-        }
-      });
-
-      List<ContactFieldValue> addresses = [];
-      state.currentAddressItems.forEach((addressItem) {
-        final value = addressItem.value;
-
-        if (null != value) {
-          final contactFieldValue =
-              ContactFieldValue(type: addressItem.selectedType, value: value);
-          addresses.add(contactFieldValue);
-        }
-      });
-
-      List<ContactFieldValue> relations = [];
-      state.currentRelationItems.forEach((relationItem) {
-        final value = relationItem.value;
-
-        if (null != value) {
-          final contactFieldValue =
-              ContactFieldValue(type: relationItem.selectedType, value: value);
-          relations.add(contactFieldValue);
-        }
-      });
+      List<ContactFieldValue> relations = state.currentRelationItems
+          .where((item) => item.value != null && item.value!.isNotEmpty)
+          .map((relationItem) => ContactFieldValue(
+              id: relationItem.id,
+              type: relationItem.selectedType,
+              value: relationItem.value!))
+          .toList();
 
       final note = state.note;
 
@@ -944,7 +958,13 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       await _contactRepository.updateNewContact(request);
       emit(state.copyWith(
           status: EditContactStatus.success,
-          requestType: RequestType.updateContact));
+          requestType: RequestType.updateContact,
+          currentContact: ContactBasicInfo(
+              id: contactId,
+              contactId: -1,
+              displayNamePrimary: name,
+              phoneNumber: phones.map((phone) => phone.value).join(", ")),
+          isDone: true));
     } on BusinessError catch (e) {
       emit(state.copyWith(
           status: EditContactStatus.failure,

@@ -7,7 +7,7 @@ import 'account.dart';
 
 part 'contact_detail.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class ContactDetail {
   final int id;
   final int contactId;
