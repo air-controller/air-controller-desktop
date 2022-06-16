@@ -81,14 +81,14 @@ class _ManageContactsView extends StatelessWidget {
             context.read<ManageContactsBloc>().add(
                 ManageContactsOpenContextMenu(
                     position: position, contact: contact));
-          });
+          });    
       DataGridHolder.dataSource = dataSource;
     } else {
       dataSource.updataDataSource(filteredContacts);
     }
 
     if (null == dataGridController) {
-      final dataGridController = DataGridController();
+      dataGridController = DataGridController();
       DataGridHolder.controller = dataGridController;
     }
 
