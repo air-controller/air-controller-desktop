@@ -451,7 +451,8 @@ class EditContactView extends StatelessWidget {
         rawContactId: contactId,
         width: imageSize,
         height: imageSize,
-        iconSize: 50);
+        iconSize: 50,
+        onTap: onTap);
   }
 
   Widget _buildInputBox(
@@ -659,9 +660,11 @@ class EditContactView extends StatelessWidget {
           Padding(
               padding: EdgeInsets.only(left: 20),
               child: ElevatedButton(
-                onPressed: name == null || name.isEmpty ? null : () {
-                  context.read<EditContactBloc>().add(SubmitRequested());
-                },
+                onPressed: name == null || name.isEmpty
+                    ? null
+                    : () {
+                        context.read<EditContactBloc>().add(SubmitRequested());
+                      },
                 child: Text(context.l10n.sure,
                     style: TextStyle(color: Colors.white, fontSize: 14)),
                 style: ButtonStyle(
