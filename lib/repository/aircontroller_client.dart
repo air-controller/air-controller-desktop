@@ -743,38 +743,40 @@ class AirControllerClient {
   }
 
   Future<ContactSummaryInfo> getContactAccounts() async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/accountsAndGroups",
           options:
               DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
       if (response.statusCode == 200) {
-        final map = response.data;
-        final httpResponseEntity = ResponseEntity.fromJson(map);
+        final body = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(body);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
+          final data = httpResponseEntity.data as Map<String, dynamic>;
 
-          if (httpResponseEntity.isSuccessful()) {
-            final map = httpResponseEntity.data;
-            return ContactSummaryInfo.fromJson(map);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          return ContactSummaryInfo.fromJson(data);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get contact accounts failure.");
+        errorMsg = "Get contact accounts failure.";
       }
     } catch (e) {
-      throw BusinessError("Get contact accounts failure.");
+      logger.e("${e.toString()}");
+
+      errorMsg = "Get contact accounts failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<List<ContactBasicInfo>> getAllContacts() async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/allContacts",
           options:
@@ -784,30 +786,27 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final list = httpResponseEntity.data as List;
-            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final list = httpResponseEntity.data as List;
+          return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get all contacts failure.");
+        errorMsg = "Get all contacts failure.";
       }
     } catch (e) {
-      throw BusinessError("Get all contacts failure.");
+      errorMsg = "Get all contacts failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<List<ContactBasicInfo>> getContactsByAccount(
       String name, String type) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/contactsByAccount",
           data: {"name": name, "type": type},
@@ -818,29 +817,26 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final list = httpResponseEntity.data as List;
-            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final list = httpResponseEntity.data as List;
+          return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get contacts failure.");
+        errorMsg = "Get contacts failure.";
       }
     } catch (e) {
-      throw BusinessError("Get contacts failure.");
+      errorMsg = "Get contacts failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<List<ContactBasicInfo>> getContactsByGroupId(int groupId) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/contactsByGroupId",
           data: {"id": groupId},
@@ -851,29 +847,26 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final list = httpResponseEntity.data as List;
-            return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final list = httpResponseEntity.data as List;
+          return list.map((e) => ContactBasicInfo.fromJson(e)).toList();
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get contacts failure.");
+        errorMsg = "Get contacts failure.";
       }
     } catch (e) {
-      throw BusinessError("Get contacts failure.");
+      errorMsg = "Get contacts failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<ContactDetail> getContactDetail(int id) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/contactDetail",
           data: {"id": id},
@@ -887,26 +880,26 @@ class AirControllerClient {
           final map = response.data;
           final httpResponseEntity = ResponseEntity.fromJson(map);
 
-          if (httpResponseEntity.isSuccessful()) {
-            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
-            return ContactDetail.fromJson(dataMap);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+          return ContactDetail.fromJson(dataMap);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get contact detail failure.");
+        errorMsg = "Get contact detail failure.";
       }
     } catch (e) {
-      throw BusinessError("Get contact detail failure.");
+      errorMsg = "Get contact detail failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<ContactDataTypeMap> getContactDataTypes() async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/contactDataTypes",
           options:
@@ -916,30 +909,27 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
-            return ContactDataTypeMap.fromJson(dataMap);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+          return ContactDataTypeMap.fromJson(dataMap);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Get contact data types failure.");
+        errorMsg = "Get contact data types failure.";
       }
     } catch (e) {
-      throw BusinessError("Get contact data types failure.");
+      errorMsg = "Get contact data types failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<ContactDetail> createNewContact(
       NewContactRequestEntity requestEntity) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/createNewContact",
           data: requestEntity.toJson(),
@@ -953,26 +943,25 @@ class AirControllerClient {
           final map = response.data;
           final httpResponseEntity = ResponseEntity.fromJson(map);
 
-          if (httpResponseEntity.isSuccessful()) {
-            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
-            return ContactDetail.fromJson(dataMap);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+          return ContactDetail.fromJson(dataMap);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Create new contact failure.");
+        errorMsg = "Create new contact failure.";
       }
     } catch (e) {
-      throw BusinessError("Create new contact failure.");
+      errorMsg = "Create new contact failure.";
     }
+    throw BusinessError(errorMsg);
   }
 
   Future<ContactDetail> uploadPhotoAndNewContact(File photo) async {
+    String errorMsg = "";
+
     try {
       final formData = DioCore.FormData.fromMap(
           {"avatar": await DioCore.MultipartFile.fromFile(photo.path)});
@@ -985,30 +974,26 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
-            return ContactDetail.fromJson(dataMap);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+          return ContactDetail.fromJson(dataMap);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Upload photo failure.");
+        errorMsg = "Upload photo failure.";
       }
     } catch (e) {
-      throw BusinessError("Upload photo failure.");
+      errorMsg = "Upload photo failure.";
     }
+    throw BusinessError(errorMsg);
   }
 
   Future<ContactDetail> updatePhotoForContact(
       {required File photo, required int id}) async {
+    String errorMsg = "";
+
     try {
       final formData = DioCore.FormData.fromMap({
         "avatar": await DioCore.MultipartFile.fromFile(photo.path),
@@ -1023,30 +1008,27 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            final dataMap = httpResponseEntity.data as Map<String, dynamic>;
-            return ContactDetail.fromJson(dataMap);
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          final dataMap = httpResponseEntity.data as Map<String, dynamic>;
+          return ContactDetail.fromJson(dataMap);
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Upload photo failure.");
+        errorMsg = "Upload photo failure.";
       }
     } catch (e) {
-      throw BusinessError("Upload photo failure.");
+      errorMsg = "Upload photo failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Future<void> updateNewContact(
       UpdateContactRequestEntity requestEntity) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/updateContact",
           data: requestEntity.toJson(),
@@ -1057,28 +1039,26 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            return;
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          return;
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Update contact failure.");
+        errorMsg = "Update contact failure.";
       }
     } catch (e) {
-      throw BusinessError("Update contact failure.");
+      errorMsg = "Update contact failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
-  Future<void> deleteRawContacts(DeleteContactsRequestEntity requestEntity) async {
+  Future<void> deleteRawContacts(
+      DeleteContactsRequestEntity requestEntity) async {
+    String errorMsg = "";
+
     try {
       final response = await dio.post("/contact/deleteRawContact",
           data: requestEntity.toJson(),
@@ -1089,25 +1069,20 @@ class AirControllerClient {
         final httpResponseEntity = ResponseEntity.fromJson(map);
 
         if (httpResponseEntity.isSuccessful()) {
-          final map = response.data;
-          final httpResponseEntity = ResponseEntity.fromJson(map);
-
-          if (httpResponseEntity.isSuccessful()) {
-            return;
-          } else {
-            throw BusinessError(httpResponseEntity.msg);
-          }
+          return;
         } else {
-          throw BusinessError(httpResponseEntity.msg == null
+          errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"
-              : httpResponseEntity.msg!);
+              : httpResponseEntity.msg!;
         }
       } else {
-        throw BusinessError("Delete contacts failure.");
+        errorMsg = "Delete contacts failure.";
       }
     } catch (e) {
-      throw BusinessError("Delete contact failure.");
+      errorMsg = "Delete contact failure.";
     }
+
+    throw BusinessError(errorMsg);
   }
 
   Map<String, String> _commonHeaders() {
