@@ -5,7 +5,6 @@ import 'package:air_controller/ext/scaffoldx.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/manage_apps/view/data_grid_holder.dart';
 import 'package:air_controller/manage_apps/widget/app_sort_item.dart';
-import 'package:air_controller/manage_contacts/bloc/manage_contacts_bloc.dart';
 import 'package:air_controller/repository/common_repository.dart';
 import 'package:air_controller/util/sound_effect.dart';
 import 'package:air_controller/widget/unified_icon_button.dart';
