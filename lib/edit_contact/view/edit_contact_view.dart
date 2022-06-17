@@ -241,8 +241,8 @@ class EditContactView extends StatelessWidget {
                     label: context.l10n.addressLabel,
                     fieldItems: addressFieldItems,
                     onInputChange: (index, value) {
-                      _contactFieldValueChanged(
-                          context, value, index, ContactFieldItemColumn.address);
+                      _contactFieldValueChanged(context, value, index,
+                          ContactFieldItemColumn.address);
                     },
                     onAdd: (index, isAdd) {
                       context.read<EditContactBloc>().add(
@@ -261,8 +261,8 @@ class EditContactView extends StatelessWidget {
                     label: context.l10n.relationLabel,
                     fieldItems: relationFieldItems,
                     onInputChange: (index, value) {
-                      _contactFieldValueChanged(
-                          context, value, index, ContactFieldItemColumn.relation);
+                      _contactFieldValueChanged(context, value, index,
+                          ContactFieldItemColumn.relation);
                     },
                     onAdd: (index, isAdd) {
                       context.read<EditContactBloc>().add(
@@ -488,9 +488,12 @@ class EditContactView extends StatelessWidget {
     final contactId =
         context.select((EditContactBloc bloc) => bloc.state.rawContactId) ?? -1;
 
+    final timestamp = context.select((EditContactBloc bloc) => bloc.state.timestamp);    
+
     return ContactAvatarView(
         rawContactId: contactId,
         addTimestamp: true,
+        timestap: timestamp,
         width: imageSize,
         height: imageSize,
         iconSize: 50,

@@ -56,6 +56,7 @@ class EditContactState extends Equatable {
   final bool isDone;
   final ContactBasicInfo? currentContact;
   final bool isImageUploadDone;
+  final int timestamp;
 
   const EditContactState(
       {this.failureReason,
@@ -77,7 +78,8 @@ class EditContactState extends Equatable {
       this.isInitDone = false,
       this.isDone = false,
       this.currentContact,
-      this.isImageUploadDone = false});
+      this.isImageUploadDone = false,
+      this.timestamp = 0});
 
   @override
   List<Object?> get props => [
@@ -101,6 +103,7 @@ class EditContactState extends Equatable {
         isDone,
         currentContact,
         isImageUploadDone,
+        timestamp
       ];
 
   EditContactState copyWith(
@@ -123,7 +126,8 @@ class EditContactState extends Equatable {
       bool? isInitDone,
       bool? isDone,
       ContactBasicInfo? currentContact,
-      bool? isImageUploadDone}) {
+      bool? isImageUploadDone,
+      int? timestamp}) {
     return EditContactState(
       failureReason: failureReason ?? this.failureReason,
       status: status ?? this.status,
@@ -145,6 +149,7 @@ class EditContactState extends Equatable {
       isDone: isDone ?? this.isDone,
       currentContact: currentContact ?? this.currentContact,
       isImageUploadDone: isImageUploadDone ?? this.isImageUploadDone,
+      timestamp: timestamp ?? this.timestamp,
     );
   }
 }

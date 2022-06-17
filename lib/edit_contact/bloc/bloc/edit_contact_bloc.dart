@@ -218,7 +218,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
           currentRelationItems: currentRelationItems,
           note: note,
           editMode: isNew ? EditMode.createNewContact : EditMode.updateContact,
-          isInitDone: true));
+          isInitDone: true,
+          timestamp: DateTime.now().millisecondsSinceEpoch));
     } on BusinessError catch (e) {
       emit(state.copyWith(
           status: EditContactStatus.failure, failureReason: e.message));
@@ -854,7 +855,9 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
               rawContactId: newContactDetail.id,
               status: EditContactStatus.success,
               requestType: RequestType.uploadPhoto,
-              isImageUploadDone: true));
+              isImageUploadDone: true,
+              timestamp: DateTime.now().millisecondsSinceEpoch));
+          emit(state.copyWith(isImageUploadDone: false));
         } else {
           emit(state.copyWith(
             status: EditContactStatus.loading,
@@ -870,7 +873,9 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
               name: contactDetail.displayNamePrimary,
               rawContactId: contactDetail.id,
               editMode: EditMode.photoUploadedWhenCreate,
-              isImageUploadDone: true));
+              isImageUploadDone: true,
+              timestamp: DateTime.now().millisecondsSinceEpoch));
+          emit(state.copyWith(isImageUploadDone: false));
         }
       } else {
         final contactId = state.rawContactId;
@@ -896,7 +901,9 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             status: EditContactStatus.success,
             requestType: RequestType.uploadPhoto,
             rawContactId: newContactDetail.id,
-            isImageUploadDone: true));
+            isImageUploadDone: true,
+            timestamp: DateTime.now().millisecondsSinceEpoch));
+        emit(state.copyWith(isImageUploadDone: false));
       }
     } on BusinessError catch (e) {
       emit(state.copyWith(

@@ -8,6 +8,7 @@ class ContactAvatarView extends StatelessWidget {
   final double height;
   final double iconSize;
   final bool addTimestamp;
+  final int? timestap;
   final VoidCallback? onTap;
 
   const ContactAvatarView({
@@ -16,6 +17,7 @@ class ContactAvatarView extends StatelessWidget {
     required this.width,
     required this.height,
     this.addTimestamp = false,
+    this.timestap,
     this.iconSize = 24,
     this.onTap,
   }) : super(key: key);
@@ -26,8 +28,11 @@ class ContactAvatarView extends StatelessWidget {
         "${DeviceConnectionManager.instance.rootURL}/stream/rawContactPhoto?id=$rawContactId";
 
     if (addTimestamp) {
-      final timeInMills = DateTime.now().millisecondsSinceEpoch;
-      imageUrl += "&timestamp=$timeInMills";
+      if (null == timestap) {
+        imageUrl += "&timestamp=${DateTime.now().millisecondsSinceEpoch}";
+      } else {
+        imageUrl += "&timestamp=$timestap";
+      }
     }
 
     return GestureDetector(
