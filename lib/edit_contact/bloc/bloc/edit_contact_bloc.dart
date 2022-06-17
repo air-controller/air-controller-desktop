@@ -200,7 +200,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
       }
 
       String? note = contactDetail?.note?.note;
-      
+
       String? name = contactDetail?.displayNamePrimary;
 
       emit(state.copyWith(
@@ -293,7 +293,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             selctedType = types.first;
           }
           phoneFieldItems.add(firstPhoneFieldItem.copyWith(
-              types: types, selectedType: selctedType));
+              id: -1, value: "", types: types, selectedType: selctedType));
 
           emit(state.copyWith(currentPhoneItems: phoneFieldItems));
         } else {
@@ -322,7 +322,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             selctedType = types.first;
           }
           emailFieldItems.add(firstEmailFieldItem.copyWith(
-              types: types, selectedType: selctedType));
+              id: -1, value: "", types: types, selectedType: selctedType));
           emit(state.copyWith(currentEmailItems: emailFieldItems));
         } else {
           if (emailFieldItems.length > index) {
@@ -350,12 +350,40 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             selctedType = types.first;
           }
           imFieldItems.add(firstImFieldItem.copyWith(
-              types: types, selectedType: selctedType));
+              id: -1, value: "", types: types, selectedType: selctedType));
           emit(state.copyWith(currentImItems: imFieldItems));
         } else {
           if (imFieldItems.length > index) {
             imFieldItems.removeAt(index);
             emit(state.copyWith(currentImItems: imFieldItems));
+          }
+        }
+      }
+    } else if (fieldItemColumn == ContactFieldItemColumn.address) {
+      final addressFieldItems = [...state.currentAddressItems];
+
+      if (addressFieldItems.isNotEmpty == true) {
+        if (isAdd) {
+          final firstAddressFieldItem = addressFieldItems.first;
+
+          final types = [...firstAddressFieldItem.types];
+          ContactDataType? selctedType = firstAddressFieldItem.selectedType;
+
+          if (types.isNotEmpty) {
+            final firstType = types.first;
+            if (firstType.isUserCustomType) {
+              types.removeAt(0);
+            }
+
+            selctedType = types.first;
+          }
+          addressFieldItems.add(firstAddressFieldItem.copyWith(
+              id: -1, value: "", types: types, selectedType: selctedType));
+          emit(state.copyWith(currentAddressItems: addressFieldItems));
+        } else {
+          if (addressFieldItems.length > index) {
+            addressFieldItems.removeAt(index);
+            emit(state.copyWith(currentAddressItems: addressFieldItems));
           }
         }
       }
@@ -378,7 +406,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
             selctedType = types.first;
           }
           relationFieldItems.add(firstRelationFieldItem.copyWith(
-              types: types, selectedType: selctedType));
+              id: -1, value: "", types: types, selectedType: selctedType));
           emit(state.copyWith(currentRelationItems: relationFieldItems));
         } else {
           if (relationFieldItems.length > index) {
@@ -979,7 +1007,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
     }
   }
 
-  void _onNoteValueChanged(NoteValueChanged event, Emitter<EditContactState> emit) {
+  void _onNoteValueChanged(
+      NoteValueChanged event, Emitter<EditContactState> emit) {
     emit(state.copyWith(note: event.value));
   }
 }

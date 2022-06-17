@@ -242,7 +242,7 @@ class EditContactView extends StatelessWidget {
                     fieldItems: addressFieldItems,
                     onInputChange: (index, value) {
                       _contactFieldValueChanged(
-                          context, value, index, ContactFieldItemColumn.email);
+                          context, value, index, ContactFieldItemColumn.address);
                     },
                     onAdd: (index, isAdd) {
                       context.read<EditContactBloc>().add(
@@ -262,7 +262,7 @@ class EditContactView extends StatelessWidget {
                     fieldItems: relationFieldItems,
                     onInputChange: (index, value) {
                       _contactFieldValueChanged(
-                          context, value, index, ContactFieldItemColumn.email);
+                          context, value, index, ContactFieldItemColumn.relation);
                     },
                     onAdd: (index, isAdd) {
                       context.read<EditContactBloc>().add(
