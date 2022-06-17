@@ -1,21 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'contact_summary_info.dart';
+part of 'accounts_and_groups.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ContactSummaryInfo _$ContactSummaryInfoFromJson(Map<String, dynamic> json) =>
-    ContactSummaryInfo(
-      total: json['total'] as int,
+AccountsAndGroups _$AccountsAndGroupsFromJson(Map<String, dynamic> json) =>
+    AccountsAndGroups(
       accounts: (json['accounts'] as List<dynamic>)
           .map((e) => ContactAccountInfo.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$ContactSummaryInfoToJson(ContactSummaryInfo instance) =>
+Map<String, dynamic> _$AccountsAndGroupsToJson(AccountsAndGroups instance) =>
     <String, dynamic>{
-      'total': instance.total,
-      'accounts': instance.accounts,
+      'accounts': instance.accounts.map((e) => e.toJson()).toList(),
     };

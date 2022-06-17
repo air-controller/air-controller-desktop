@@ -3,7 +3,7 @@ import 'dart:io';
 import '../model/contact_basic_info.dart';
 import '../model/contact_data_type_map.dart';
 import '../model/contact_detail.dart';
-import '../model/contact_summary_info.dart';
+import '../model/accounts_and_groups.dart';
 import '../model/delete_contacts_request_entity.dart';
 import '../model/new_contact_request_entity.dart';
 import '../model/update_contact_request_entity.dart';
@@ -15,7 +15,7 @@ class ContactRepository {
   ContactRepository({required AirControllerClient client})
       : this.client = client;
 
-  Future<ContactSummaryInfo> getContactAccounts() =>
+  Future<AccountsAndGroups> getContactAccounts() =>
       this.client.getContactAccounts();
 
   Future<List<ContactBasicInfo>> getAllContacts() =>

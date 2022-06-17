@@ -8,7 +8,6 @@ import 'package:air_controller/manage_contacts/widget/account_groups_item.dart';
 import 'package:air_controller/model/account.dart';
 import 'package:air_controller/model/contact_account_info.dart';
 import 'package:air_controller/model/contact_detail.dart';
-import 'package:air_controller/model/contact_field_value.dart';
 import 'package:air_controller/model/contact_group.dart';
 import 'package:air_controller/model/contact_basic_info.dart';
 import 'package:air_controller/repository/contact_repository.dart';
@@ -99,8 +98,6 @@ class _ManageContactsView extends StatelessWidget {
     final showSpinkit =
         context.select((ManageContactsBloc bloc) => bloc.state.showSpinkit);
 
-    final keywordEditController = TextEditingController();
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: MultiBlocListener(
@@ -156,7 +153,7 @@ class _ManageContactsView extends StatelessWidget {
             ),
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
             _ContactActionBar(
-              controller: keywordEditController,
+              initialKeyword: keyword,
               onCheckChanged: (isChecked) {},
               onNewContact: () {
                 _showEditContactDialog(pageContext: context, isNew: true);
@@ -175,9 +172,9 @@ class _ManageContactsView extends StatelessWidget {
                     );
               },
               onSearchClick: () {
-                context
-                    .read<ManageContactsBloc>()
-                    .add(KeywordChanged(keywordEditController.text));
+                final keyword = context
+                    .select((ManageContactsBloc bloc) => bloc.state.keyword);
+                context.read<ManageContactsBloc>().add(KeywordChanged(keyword));
               },
             ),
             Divider(color: dividerLine, height: 1.0, thickness: 1.0),
@@ -368,7 +365,7 @@ class _ContactDetailView extends StatelessWidget {
               onEdit: () {
                 onEdit(contactDetail);
               }),
-          _buildOtherInfo(context, contactDetail.phones)
+          _buildOtherInfo(context, contactDetail)
         ],
       ),
     ));
@@ -462,40 +459,64 @@ class _ContactDetailView extends StatelessWidget {
         ));
   }
 
-  Widget _buildOtherInfo(
-      BuildContext context, List<ContactFieldValue>? phones) {
+  Widget _buildOtherInfo(BuildContext context, ContactDetail contactDetail) {
     final labelColor = Color(0xff999999);
     final phoneColor = Color(0xff474747);
     final fontSize = 14.0;
+
+    final phones = contactDetail.phones;
 
     return FractionallySizedBox(
       widthFactor: 0.8,
       child: Padding(
           padding: EdgeInsets.only(top: 10),
-          child: Wrap(
-            direction: Axis.horizontal,
-            children:
-                List.generate(phones == null ? 0 : phones.length, (index) {
-              final phone = phones![index];
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Wrap(
+                direction: Axis.horizontal,
+                children:
+                    List.generate(phones == null ? 0 : phones.length, (index) {
+                  final phone = phones![index];
 
-              return Padding(
-                  padding: EdgeInsets.only(left: 10),
+                  return Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(phone.type?.typeLabel ?? "",
+                              style: TextStyle(
+                                color: labelColor,
+                                fontSize: fontSize,
+                              )),
+                          Text(phone.value,
+                              style: TextStyle(
+                                color: phoneColor,
+                                fontSize: fontSize,
+                              )),
+                        ],
+                      ));
+                }),
+              ),
+              Padding(
+                  padding: EdgeInsets.only(left: 10, top: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(phone.type?.typeLabel ?? "",
+                      Text(context.l10n.noteLabel,
                           style: TextStyle(
                             color: labelColor,
                             fontSize: fontSize,
                           )),
-                      Text(phone.value,
+                      Text(contactDetail.note?.note ?? "",
                           style: TextStyle(
                             color: phoneColor,
                             fontSize: fontSize,
                           )),
                     ],
-                  ));
-            }),
+                  ))
+            ],
           )),
     );
   }
@@ -769,22 +790,22 @@ class _TitleBar extends StatelessWidget {
 }
 
 class _ContactActionBar extends StatelessWidget {
-  final TextEditingController? controller;
   final Function(bool isChecked) onCheckChanged;
   final Function() onNewContact;
   final Function() onDeleteClick;
   final Function() onRefresh;
   final Function(String keyword) onKeywordChanged;
   final Function() onSearchClick;
+  final String? initialKeyword;
 
   const _ContactActionBar(
-      {this.controller,
-      required this.onCheckChanged,
+      {required this.onCheckChanged,
       required this.onNewContact,
       required this.onDeleteClick,
       required this.onRefresh,
       required this.onKeywordChanged,
-      required this.onSearchClick});
+      required this.onSearchClick,
+      this.initialKeyword});
 
   @override
   Widget build(BuildContext context) {
@@ -842,7 +863,7 @@ class _ContactActionBar extends StatelessWidget {
                 Container(
                   child: UnifiedTextField(
                     style: TextStyle(fontSize: 14, color: Color(0xff333333)),
-                    controller: controller,
+                    initialKeyword: initialKeyword,
                     hintText: context.l10n.search,
                     borderRadius: 3,
                     cursorColor: Color(0xff999999),

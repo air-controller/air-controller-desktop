@@ -45,7 +45,6 @@ class ManageContactsBloc
       final allContacts = await _contactRepository.getAllContacts();
 
       emit(ManageContactsState(
-          total: accounts.total,
           accounts: accounts.accounts,
           isAllContactsChecked: true,
           contacts: allContacts,

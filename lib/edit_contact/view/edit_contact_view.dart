@@ -140,6 +140,8 @@ class EditContactView extends StatelessWidget {
     final isNew = context.select((EditContactBloc bloc) => bloc.isNew);
     final title = !isNew ? context.l10n.editContact : context.l10n.addContact;
 
+    final note = context.select((EditContactBloc bloc) => bloc.state.note);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -274,7 +276,14 @@ class EditContactView extends StatelessWidget {
                           index: index,
                           type: type!);
                     }),
-                _buildNoteView(context),
+                _buildNoteView(
+                    context: context,
+                    initialValue: note,
+                    onChange: (value) {
+                      context
+                          .read<EditContactBloc>()
+                          .add(NoteValueChanged(value));
+                    }),
                 _buildConfirmButtons(context)
               ],
             ),
@@ -496,7 +505,7 @@ class EditContactView extends StatelessWidget {
     return SizedBox(
       child: UnifiedTextField(
         style: TextStyle(fontSize: 14, color: Color(0xff333333)),
-        initialValue: initialValue,
+        initialKeyword: initialValue,
         hintText: "",
         borderRadius: 3,
         cursorColor: Color(0xff999999),
@@ -640,7 +649,7 @@ class EditContactView extends StatelessWidget {
                 }),
             Container(
               child: UnifiedTextField(
-                initialValue: initialValue,
+                initialKeyword: initialValue,
                 style: TextStyle(fontSize: 14, color: Color(0xff333333)),
                 hintText: "",
                 borderRadius: 3,
@@ -720,7 +729,10 @@ class EditContactView extends StatelessWidget {
     );
   }
 
-  Widget _buildNoteView(BuildContext context) {
+  Widget _buildNoteView(
+      {required BuildContext context,
+      String? initialValue = null,
+      required Function(String) onChange}) {
     return Padding(
         padding: EdgeInsets.only(top: 15),
         child: Row(
@@ -741,9 +753,11 @@ class EditContactView extends StatelessWidget {
                   color: Colors.black,
                   fontSize: 14,
                 ),
+                initialKeyword: initialValue,
                 maxLines: 10,
                 contentPadding: EdgeInsets.fromLTRB(15, 10, 15, 10),
                 borderRadius: 3,
+                onChange: onChange,
               ),
               width: 390,
               height: 100,

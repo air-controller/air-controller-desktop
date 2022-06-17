@@ -15,7 +15,7 @@ class UnifiedTextField extends StatelessWidget {
   final Color? cursorColor;
   final double? cursorHeight;
   final ValueChanged<String>? onChange;
-  final String? initialValue;
+  final String? initialKeyword;
   final int maxLines;
 
   bool _needShowClearIcon = false;
@@ -33,7 +33,7 @@ class UnifiedTextField extends StatelessWidget {
       this.cursorColor,
       this.cursorHeight,
       this.onChange,
-      this.initialValue,
+      this.initialKeyword,
       this.maxLines = 1});
 
   @override
@@ -81,7 +81,7 @@ class UnifiedTextField extends StatelessWidget {
           style: style,
           textAlignVertical: TextAlignVertical.center,
           controller: controller,
-          initialValue: initialValue,
+          initialValue: initialKeyword,
           decoration: InputDecoration(
             suffixIcon: realClearIcon,
             hintText: hintText,

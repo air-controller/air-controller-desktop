@@ -20,7 +20,7 @@ import '../constant.dart';
 import '../enter/view/enter_page.dart';
 import '../model/album_item.dart';
 import '../model/audio_item.dart';
-import '../model/contact_summary_info.dart';
+import '../model/accounts_and_groups.dart';
 import '../model/file_item.dart';
 import '../model/image_item.dart';
 import '../model/mobile_info.dart';
@@ -742,7 +742,7 @@ class AirControllerClient {
     return cancelToken;
   }
 
-  Future<ContactSummaryInfo> getContactAccounts() async {
+  Future<AccountsAndGroups> getContactAccounts() async {
     String errorMsg = "";
 
     try {
@@ -756,7 +756,7 @@ class AirControllerClient {
         if (httpResponseEntity.isSuccessful()) {
           final data = httpResponseEntity.data as Map<String, dynamic>;
 
-          return ContactSummaryInfo.fromJson(data);
+          return AccountsAndGroups.fromJson(data);
         } else {
           errorMsg = httpResponseEntity.msg == null
               ? "Unknown error"

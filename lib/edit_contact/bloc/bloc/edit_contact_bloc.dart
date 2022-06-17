@@ -45,6 +45,7 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
     on<ContactFieldValueChanged>(_onContactFieldValueChanged);
     on<UploadPhotoRequested>(_onUploadPhotoRequested);
     on<SubmitRequested>(_onSubmitRequested);
+    on<NoteValueChanged>(_onNoteValueChanged);
   }
 
   static EditContactBloc newForNewContact(
@@ -198,12 +199,8 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
         }
       }
 
-      String? note = null;
-
-      if (!isNew) {
-        note = contactDetail?.note?.note;
-      }
-
+      String? note = contactDetail?.note?.note;
+      
       String? name = contactDetail?.displayNamePrimary;
 
       emit(state.copyWith(
@@ -980,5 +977,9 @@ class EditContactBloc extends Bloc<EditContactEvent, EditContactState> {
     } else {
       await _onUpdateContactRequested(emit);
     }
+  }
+
+  void _onNoteValueChanged(NoteValueChanged event, Emitter<EditContactState> emit) {
+    emit(state.copyWith(note: event.value));
   }
 }

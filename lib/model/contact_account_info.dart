@@ -5,13 +5,12 @@ import 'contact_group.dart';
 
 part 'contact_account_info.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class ContactAccountInfo {
   final Account account;
-  final int count;
   final List<ContactGroup> groups;
 
-  ContactAccountInfo({required this.account, required this.count, required this.groups});
+  ContactAccountInfo({required this.account, required this.groups});
 
   factory ContactAccountInfo.fromJson(Map<String, dynamic> json) => _$ContactAccountInfoFromJson(json);
 
