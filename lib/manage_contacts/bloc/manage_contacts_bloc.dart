@@ -51,8 +51,8 @@ class ManageContactsBloc
           isInitDone: true));
     } catch (e) {
       emit(ManageContactsState(
-          failureReason: (e as BusinessError).message,
-          showError: true));
+          failureReason: (e as BusinessError).message, showError: true));
+      emit(state.copyWith(showError: false));
     }
   }
 
@@ -85,8 +85,8 @@ class ManageContactsBloc
         emit(state.copyWith(contacts: contacts, showSpinkit: false));
       } catch (e) {
         emit(state.copyWith(
-            failureReason: (e as BusinessError).message,
-            showError: true));
+            failureReason: (e as BusinessError).message, showError: true));
+        emit(state.copyWith(showError: false));
       }
 
       return;
@@ -102,8 +102,8 @@ class ManageContactsBloc
         emit(state.copyWith(contacts: contacts, showSpinkit: false));
       } catch (e) {
         emit(state.copyWith(
-            failureReason: (e as BusinessError).message,
-            showError: true));
+            failureReason: (e as BusinessError).message, showError: true));
+        emit(state.copyWith(showError: false));
       }
 
       return;
@@ -138,6 +138,7 @@ class ManageContactsBloc
             failureReason: (e as BusinessError).message,
             showSpinkit: false,
             showError: true));
+        emit(state.copyWith(showError: false));
       }
     }
   }
@@ -160,6 +161,7 @@ class ManageContactsBloc
     } on BusinessError catch (e) {
       emit(state.copyWith(
           showLoading: false, showError: true, failureReason: e.message));
+      emit(state.copyWith(showError: false));
     }
   }
 
@@ -192,6 +194,7 @@ class ManageContactsBloc
           failureReason: (e as BusinessError).message,
           showSpinkit: false,
           showError: true));
+      emit(state.copyWith(showError: false));
     }
   }
 
@@ -218,6 +221,7 @@ class ManageContactsBloc
     } on BusinessError catch (e) {
       emit(state.copyWith(
           showLoading: false, showError: true, failureReason: e.message));
+      emit(state.copyWith(showError: false));
     }
   }
 
@@ -276,6 +280,7 @@ class ManageContactsBloc
       } on BusinessError catch (e) {
         emit(state.copyWith(
             showLoading: false, showError: true, failureReason: e.message));
+        emit(state.copyWith(showError: false));
       }
     }
 
