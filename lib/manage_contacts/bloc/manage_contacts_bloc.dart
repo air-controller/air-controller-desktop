@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:air_controller/model/contact_account_info.dart';
 import 'package:air_controller/model/contact_detail.dart';
 import 'package:air_controller/model/contact_group.dart';
@@ -11,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/contact_basic_info.dart';
-import '../view/data_grid_holder.dart';
 
 part 'manage_contacts_event.dart';
 part 'manage_contacts_state.dart';
@@ -223,12 +220,6 @@ class ManageContactsBloc
           showLoading: false, showError: true, failureReason: e.message));
       emit(state.copyWith(showError: false));
     }
-  }
-
-  @override
-  Future<void> close() {
-    DataGridHolder.dispose();
-    return super.close();
   }
 
   void _onOpenContextMenu(ManageContactsOpenContextMenu event,
