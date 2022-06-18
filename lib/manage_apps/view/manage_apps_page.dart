@@ -1113,11 +1113,7 @@ class AppInfoDataSource extends DataGridSource {
                       width: 60,
                       height: 60,
                     ),
-                    SizedBox(
-                      child: Flexible(
-                        child: Text(app.name, style: textStyle),
-                      ),
-                    )
+                    Text(app.name, style: textStyle)
                   ],
                 ),
                 color: Colors.transparent,
