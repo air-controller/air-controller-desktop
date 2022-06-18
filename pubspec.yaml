@@ -71,7 +71,7 @@ dependencies:
   bot_toast: ^4.0.1
   dio: ^4.0.6
   logger: ^1.1.0
-  syncfusion_flutter_datagrid: ^20.1.55
+  syncfusion_flutter_datagrid: ^20.1.60
   audioplayers: ^0.20.1
   grouped_list: ^5.1.1
 
