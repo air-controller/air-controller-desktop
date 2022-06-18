@@ -330,14 +330,15 @@
             </items>
             <point key="canvasLocation" x="142" y="-258"/>
         </menu>
-        <window title="APP_NAME" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="MainFlutterWindow" customModule="AirController" customModuleProvider="target">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <rect key="contentRect" x="335" y="390" width="800" height="600"/>
+        <window title="APP_NAME" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" titlebarAppearsTransparent="YES" titleVisibility="hidden" id="QvC-M9-y7g" customClass="MainFlutterWindow" customModule="AirController" customModuleProvider="target">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
+            <rect key="contentRect" x="335" y="390" width="1243.2" height="792"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1025"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+                <rect key="frame" x="0.0" y="0.0" width="1244" height="792"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
+            <point key="canvasLocation" x="159.5" y="441"/>
         </window>
     </objects>
 </document>
