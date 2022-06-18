@@ -27,7 +27,6 @@ import '../../util/context_menu_helper.dart';
 import '../../widget/unified_icon_button.dart';
 import '../../widget/unified_icon_button_with_text.dart';
 import '../../widget/unified_text_field.dart';
-import 'data_grid_holder.dart';
 
 class ManageContactsPage extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
@@ -47,6 +46,9 @@ class ManageContactsPage extends StatelessWidget {
 
 class _ManageContactsView extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
+  static final _dataGridWidth = 250.0;
+  final _contactsDataSource =
+      ContactsDataSource(dataGridWidth: _dataGridWidth, contacts: []);
 
   _ManageContactsView(this.navigatorKey);
 
@@ -63,35 +65,22 @@ class _ManageContactsView extends StatelessWidget {
       (ManageContactsBloc bloc) => bloc.state.keyword,
     );
 
-    final dataGridWidth = 250.0;
-    ContactsDataSource? dataSource = DataGridHolder.dataSource;
-    DataGridController? dataGridController = DataGridHolder.controller;
-
     List<ContactBasicInfo> filteredContacts =
         contacts.where((contact) => _filterContact(contact, keyword)).toList();
-    ;
 
-    if (null == dataSource) {
-      dataSource = ContactsDataSource(
-          dataGridWidth: dataGridWidth,
-          contacts: filteredContacts,
-          context: context,
-          onRightMouseClicked: (position, contact) {
-            context.read<ManageContactsBloc>().add(
-                ManageContactsOpenContextMenu(
-                    position: position, contact: contact));
-          });
-      DataGridHolder.dataSource = dataSource;
-    } else {
-      dataSource.updataDataSource(filteredContacts);
-    }
+    _contactsDataSource.updataDataSource(filteredContacts);
+    _contactsDataSource.onRightMouseClicked = (position, contact) {
+      context.read<ManageContactsBloc>().add(
+          ManageContactsOpenContextMenu(position: position, contact: contact));
+    };
 
-    if (null == dataGridController) {
-      dataGridController = DataGridController();
-      DataGridHolder.controller = dataGridController;
-    }
+    DataGridController dataGridController = DataGridController();
 
-    _initSelection(selectedContacts);
+    dataGridController.selectedRows =
+        _contactsDataSource.dataGridRows.where((row) {
+      final contactInfo = row.getCells().first.value as ContactBasicInfo;
+      return selectedContacts.contains(contactInfo);
+    }).toList();
 
     final isInitDone =
         context.select((ManageContactsBloc bloc) => bloc.state.isInitDone);
@@ -188,9 +177,9 @@ class _ManageContactsView extends StatelessWidget {
                 VerticalDivider(
                     width: 1.0, thickness: 1.0, color: Color(0xffececec)),
                 _ContactsGridView(
-                  dataGridWidth: dataGridWidth,
+                  dataGridWidth: _dataGridWidth,
                   isLoading: !isInitDone || showSpinkit,
-                  dataSource: dataSource,
+                  dataSource: _contactsDataSource,
                   controller: dataGridController,
                 ),
                 VerticalDivider(
@@ -312,20 +301,6 @@ class _ManageContactsView extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _initSelection(List<ContactBasicInfo> selectedContacts) {
-    final dataGridController = DataGridHolder.controller;
-    final dataSource = DataGridHolder.dataSource;
-
-    if (null == dataGridController || null == dataSource) {
-      return;
-    }
-
-    dataGridController.selectedRows = dataSource.dataGridRows.where((row) {
-      final contactInfo = row.getCells().first.value as ContactBasicInfo;
-      return selectedContacts.contains(contactInfo);
-    }).toList();
   }
 }
 
@@ -655,17 +630,14 @@ class _ContactGroupList extends StatelessWidget {
 }
 
 class ContactsDataSource extends DataGridSource {
-  List<ContactBasicInfo> contacts;
-  final BuildContext context;
   List<DataGridRow> dataGridRows = [];
   final double dataGridWidth;
-  final Function(Offset, ContactBasicInfo) onRightMouseClicked;
+  Function(Offset, ContactBasicInfo)? onRightMouseClicked;
 
   ContactsDataSource(
-      {required this.context,
-      required this.dataGridWidth,
-      required this.contacts,
-      required this.onRightMouseClicked}) {
+      {required this.dataGridWidth,
+      required List<ContactBasicInfo> contacts,
+      this.onRightMouseClicked}) {
     dataGridRows = contacts
         .map<DataGridRow>((contact) => DataGridRow(cells: [
               DataGridCell(
@@ -678,7 +650,6 @@ class ContactsDataSource extends DataGridSource {
   List<DataGridRow> get rows => dataGridRows;
 
   void updataDataSource(List<ContactBasicInfo> contacts) {
-    this.contacts = contacts;
     dataGridRows = contacts
         .map<DataGridRow>((contact) => DataGridRow(cells: [
               DataGridCell(
@@ -740,7 +711,7 @@ class ContactsDataSource extends DataGridSource {
           ),
           onPointerDown: (event) {
             if (event.isRightMouseClick()) {
-              onRightMouseClicked(event.position, contactInfo);
+              onRightMouseClicked?.call(event.position, contactInfo);
             }
           },
         );
