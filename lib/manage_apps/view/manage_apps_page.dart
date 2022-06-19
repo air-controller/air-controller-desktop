@@ -168,20 +168,30 @@ class ManageAppsPage extends StatelessWidget {
   }
 
   void _exportApks(BuildContext context) {
-    List<AppInfo> checkedUserApps =
-        context.read<ManageAppsHomeBloc>().state.checkedUserApps;
-    if (checkedUserApps.isEmpty) return;
+    List<AppInfo> checkedApps = [];
+
+    if (isUserApps) {
+      final checkedUserApps =
+          context.read<ManageAppsHomeBloc>().state.checkedUserApps;
+      checkedApps.addAll(checkedUserApps);
+    } else {
+      final checkedSystemApps =
+          context.read<ManageAppsHomeBloc>().state.checkedSystemApps;
+      checkedApps.addAll(checkedSystemApps);
+    }
+
+    if (checkedApps.isEmpty) return;
 
     CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) async {
       final repo = context.read<CommonRepository>();
 
       List<String> packages =
-          checkedUserApps.map((app) => app.packageName).toList();
+          checkedApps.map((app) => app.packageName).toList();
 
       String fileName = "";
 
-      if (checkedUserApps.length == 1) {
-        fileName = "${checkedUserApps.single.name}.apk";
+      if (checkedApps.length == 1) {
+        fileName = "${checkedApps.single.name}.apk";
       } else {
         int currentTimeInMills = DateTime.now().millisecondsSinceEpoch;
         String currentTime =
