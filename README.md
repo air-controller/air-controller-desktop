@@ -106,8 +106,11 @@ If you are a UI designer, and you can provide me with a better design resource, 
 
 # Thanks
 [AndServer](https://github.com/yanzhenjie/AndServer)
+
 [BLOC](https://github.com/felangel/bloc.git)
+
 [window_manager](https://github.com/leanflutter/window_manager)
+
 [contacts-android](https://github.com/vestrel00/contacts-android)
 
 # Stay In Touch
