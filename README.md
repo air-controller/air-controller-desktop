@@ -1,4 +1,4 @@
-# AirController
+# ![](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/logo.png)
 
 [中文文档](https://github.com/air-controller/air-controller-desktop/blob/master/README_zh_CN.md)
 
