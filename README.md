@@ -1,5 +1,12 @@
 # ![](https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/images/logo.png)
 
+![GitHub (pre-)release](https://img.shields.io/github/release/air-controller/air-controller-desktop/all.svg?style=flat-square)
+![Release date](https://img.shields.io/github/release-date/air-controller/air-controller-desktop)
+![Total lines](https://img.shields.io/tokei/lines/github.com/air-controller/air-controller-desktop)
+![Total downloads](https://img.shields.io/github/downloads/air-controller/air-controller-desktop/total.svg)
+[![](https://img.shields.io/github/issues/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/issues)
+[![](https://img.shields.io/github/license/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/blob/master/LICENSE)
+
 [中文文档](https://github.com/air-controller/air-controller-desktop/blob/master/README_zh_CN.md)
 
 AirController is a powerful, handy, and cross-platform desktop application, it can manage your android phone easily without connecting to a computer.
