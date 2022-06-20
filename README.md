@@ -2,7 +2,6 @@
 
 ![GitHub (pre-)release](https://img.shields.io/github/release/air-controller/air-controller-desktop/all.svg?style=flat-square)
 ![Release date](https://img.shields.io/github/release-date/air-controller/air-controller-desktop)
-![Total lines](https://img.shields.io/tokei/lines/github.com/air-controller/air-controller-desktop)
 ![Total downloads](https://img.shields.io/github/downloads/air-controller/air-controller-desktop/total.svg)
 [![](https://img.shields.io/github/issues/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/issues)
 [![](https://img.shields.io/github/license/air-controller/air-controller-desktop)](https://github.com/air-controller/air-controller-desktop/blob/master/LICENSE)
