@@ -18,13 +18,13 @@ Inspired by HandShaker, I hope it becomes your favorite android assistant app on
 
 # How to use
 
-1. Install the latest AirController mobile app on your Android phone.
+### Install the latest AirController mobile app on your Android phone.
 
 Open the link below and choose the latest version apk file to install.
 
 [https://github.com/air-controller/air-controller-mobile/releases](https://github.com/air-controller/air-controller-mobile/releases)
 
-2. Install the latest AirController desktop app on your computer.
+### Install the latest AirController desktop app on your computer.
 
 Open the link below and choose the latest file to install.
 
@@ -36,15 +36,15 @@ Open the link below and choose the latest file to install.
 
 * macOS users choose the dmg suffix file, please.
 
-3. Open the desktop application
+### Open the desktop application
 
-4. Make sure your phone and computer have been connected to the same network, and open the application on your phone.
+Make sure your phone and computer have been connected to the same network, and open the application on your phone.
 
 **That's all, enjoy it!**
 
 # Build and run.
 
-1. Install the latest Flutter SDK on your computer.
+### Install the latest Flutter SDK on your computer.
 
 This project is developed with the Flutter framework, You should install Flutter first on your computer.
 
@@ -58,7 +58,7 @@ Make sure:
 
 
 
-2. Install dependencies and add desktop support.
+### Install dependencies and add desktop support.
 
 Use the command `flutter pub get` to install dependencies.
 
@@ -71,7 +71,7 @@ Use a specific platform name to replace the string "-<platform>-" in the middle.
 Eg: `flutter config -enable-linux-desktop` to add support for the Linux platform.
 
 
-3. Build
+### Build
 
 The build command is `flutter build <platform>`.
 
@@ -79,17 +79,17 @@ Same as above, use a specific platform name to replace the string "<platform>", 
 
 Attention: you need to build it on the computer running the same platform. Eg: Building a Windows platform binary file needs to use a Windows PC.
 
-# Feedback
+# Submit issue
 
 If you have any questions when using this app, please click the link below and submit the issue detail, I will fix it quickly.
 
-[https://github.com/air-controller/air-controller-desktop/issues](https://github.com/air-controller/air-controller-desktop/issues)
+[Submit a new bug](https://github.com/air-controller/air-controller-desktop/issues/new?assignees=&labels=&template=bug_report.md&title=)
 
-# Feature Suggestion
+# Submit a feature request
 
 If you want more features, just tell me by issue, please.
 
-[https://github.com/air-controller/air-controller-desktop/issues](https://github.com/air-controller/air-controller-desktop/issues)
+[Submit a new feature request](https://github.com/air-controller/air-controller-desktop/issues/new?assignees=&labels=&template=feature_request.md&title=)
 
 
 # Support
@@ -98,9 +98,10 @@ I will really appreciate it if you want to support me. For now, just star me ple
 
 If you are a UI designer, and you can provide me with a better design resource, that will be perfect.
 
+[![](https://img.shields.io/badge/-%E6%9D%A5%E7%88%B1%E5%8F%91%E7%94%B5%E6%94%AF%E6%8C%81%E6%88%91-%23977ce4?style=for-the-badge&logo=buymeacoffee&logoColor=%23ffffff)](https://afdian.net/@ouyangfeng2016)
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ouyangfeng2016)
 
-[![](https://img.shields.io/badge/%E6%9D%A5%E4%B8%BA%E7%88%B1%E5%8F%91%E7%94%B5-%E6%94%AF%E6%8C%81%E6%88%91-%23977ce4?style=for-the-badge)](https://afdian.net/@ouyangfeng2016)
 
 ![](https://raw.githubusercontent.com/yuanhoujun/material/main/Pay/wechat_alipay.png)
 
