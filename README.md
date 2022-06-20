@@ -100,7 +100,7 @@ If you are a UI designer, and you can provide me with a better design resource, 
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ouyangfeng2016)
 
-[![Support Me](https://raw.githubusercontent.com/yuanhoujun/material/main/Sponsor/aifadian.png)](https://afdian.net/@ouyangfeng2016)
+[![](https://img.shields.io/badge/%E6%9D%A5%E4%B8%BA%E7%88%B1%E5%8F%91%E7%94%B5-%E6%94%AF%E6%8C%81%E6%88%91-%23977ce4?style=for-the-badge)](https://afdian.net/@ouyangfeng2016)
 
 ![](https://raw.githubusercontent.com/yuanhoujun/material/main/Pay/wechat_alipay.png)
 
