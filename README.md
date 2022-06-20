@@ -74,7 +74,7 @@ Attention: you need to build it on the computer running the same platform. Eg: B
 
 # Feedback
 
-If you got any questions when using this app, please click the link below and submit the issue detail, I will fix it quickly.
+If you have any questions when using this app, please click the link below and submit the issue detail, I will fix it quickly.
 
 [https://github.com/air-controller/air-controller-desktop/issues](https://github.com/air-controller/air-controller-desktop/issues)
 
@@ -91,7 +91,11 @@ I will really appreciate it if you want to support me. For now, just star me ple
 
 If you are a UI designer, and you can provide me with a better design resource, that will be perfect.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I04VU09)
+
 [![Support Me](https://raw.githubusercontent.com/yuanhoujun/material/main/Sponsor/aifadian.png)](https://afdian.net/@ouyangfeng2016)
+
+![](https://raw.githubusercontent.com/yuanhoujun/material/main/Pay/wechat_alipay.png)
 
 # Stay In Touch
 QQ Group: [329673958](https://im.qq.com/index)
@@ -99,4 +103,25 @@ QQ Group: [329673958](https://im.qq.com/index)
 Telegram Channel: [AirController](https://t.me/aircontroller2022)
 
 Email: [ouyangfeng2016@gmail.com](mailto:ouyangfeng2016@gmail.com)
+
+# License
+Copyright (c) 2022 Feng Ouyang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
