@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../constant.dart';
@@ -18,7 +18,6 @@ import '../../repository/file_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/context_menu_helper.dart';
 import '../../util/system_app_launcher.dart';
-import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/unified_delete_button.dart';
 import '../bloc/file_home_bloc.dart';
@@ -83,15 +82,15 @@ class FileHomeView extends StatelessWidget {
             BlocListener<FileHomeBloc, FileHomeState>(
               listener: (context, state) {
                 if (state.openDirStatus == FileHomeOpenDirStatus.loading) {
-                  SmartDialog.showLoading();
+                  BotToast.showLoading(clickClose: true);
                 }
 
                 if (state.openDirStatus == FileHomeOpenDirStatus.success) {
-                  SmartDialog.dismiss();
+                  BotToast.closeAllLoading();
                 }
 
                 if (state.openDirStatus == FileHomeOpenDirStatus.failure) {
-                  SmartDialog.dismiss();
+                  BotToast.closeAllLoading();
 
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
@@ -233,11 +232,11 @@ class FileHomeView extends StatelessWidget {
             BlocListener<FileHomeBloc, FileHomeState>(
               listener: (context, state) {
                 if (state.deleteStatus == FileHomeDeleteStatus.loading) {
-                  SmartDialog.showLoading();
+                  BotToast.showLoading(clickClose: true);
                 }
 
                 if (state.deleteStatus == FileHomeDeleteStatus.failure) {
-                  SmartDialog.dismiss();
+                  BotToast.closeAllLoading();
 
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
@@ -247,7 +246,7 @@ class FileHomeView extends StatelessWidget {
                 }
 
                 if (state.deleteStatus == FileHomeDeleteStatus.success) {
-                  SmartDialog.dismiss();
+                  BotToast.closeAllLoading();
                 }
               },
               listenWhen: (previous, current) =>
