@@ -74,6 +74,7 @@ dependencies:
   syncfusion_flutter_datagrid: ^20.1.60
   audioplayers: ^0.20.1
   grouped_list: ^5.1.1
+  desktop_drop: ^0.3.3
 
 dev_dependencies:
   flutter_test:

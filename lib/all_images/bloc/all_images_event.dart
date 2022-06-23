@@ -95,3 +95,24 @@ class AllImagesCopyStatusChanged extends AllImagesEvent {
 
   const AllImagesCopyStatusChanged(this.status);
 }
+
+class AllImagesUploadPhotos extends AllImagesEvent {
+  final int pos;
+  final List<File> photos;
+  final String? path;
+
+  const AllImagesUploadPhotos(
+      {required this.pos, required this.photos, this.path});
+
+  @override
+  List<Object?> get props => [pos, photos, path];
+}
+
+class AllImagesUploadStatusChanged extends AllImagesEvent {
+  final AllImageUploadStatusUnit status;
+
+  const AllImagesUploadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}

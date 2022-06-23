@@ -12,6 +12,7 @@ class AllImagesState extends Equatable {
   final AllImagesBoardKeyStatus keyStatus;
   final AllImageMenuArguments? contextMenuArguments;
   final AllImageCopyStatusUnit? copyStatus;
+  final AllImageUploadStatusUnit uploadStatus;
 
   AllImagesState(
       {this.images = const [],
@@ -20,7 +21,8 @@ class AllImagesState extends Equatable {
       this.deleteStatus = const AllImageDeleteImagesStatusUnit(),
       this.keyStatus = AllImagesBoardKeyStatus.none,
       this.contextMenuArguments = null,
-      this.copyStatus});
+      this.copyStatus,
+      this.uploadStatus = const AllImageUploadStatusUnit()});
 
   @override
   List<Object?> get props => [
@@ -30,7 +32,8 @@ class AllImagesState extends Equatable {
         deleteStatus,
         keyStatus,
         contextMenuArguments,
-        copyStatus
+        copyStatus,
+        uploadStatus
       ];
 
   AllImagesState copyWith(
@@ -40,7 +43,8 @@ class AllImagesState extends Equatable {
       AllImageDeleteImagesStatusUnit? deleteStatus,
       AllImagesBoardKeyStatus? keyStatus,
       AllImageMenuArguments? contextMenuArguments,
-      AllImageCopyStatusUnit? copyStatus}) {
+      AllImageCopyStatusUnit? copyStatus,
+      AllImageUploadStatusUnit? uploadStatus}) {
     return AllImagesState(
         images: images ?? this.images,
         checkedImages: checkedImages ?? this.checkedImages,
@@ -48,6 +52,7 @@ class AllImagesState extends Equatable {
         deleteStatus: deleteStatus ?? this.deleteStatus,
         keyStatus: keyStatus ?? this.keyStatus,
         contextMenuArguments: contextMenuArguments ?? this.contextMenuArguments,
-        copyStatus: copyStatus ?? this.copyStatus);
+        copyStatus: copyStatus ?? this.copyStatus,
+        uploadStatus: uploadStatus ?? this.uploadStatus);
   }
 }

@@ -1085,6 +1085,61 @@ class AirControllerClient {
     throw BusinessError(errorMsg);
   }
 
+  DioCore.CancelToken uploadPhotos(
+      {required int pos,
+      required List<File> photos,
+      String? path,
+      Function(List<ImageItem>)? onSuccess,
+      Function(int, int)? onUploading,
+      Function(String? error)? onError,
+      VoidCallback? onCancel}) {
+    final cancelToken = DioCore.CancelToken();
+    final formData = DioCore.FormData();
+    formData.fields.add(MapEntry("pos", pos.toString()));
+    formData.fields.add(MapEntry("path", path ?? "Empty"));
+
+    photos.forEach((photo) {
+      formData.files.add(
+          MapEntry("photos", DioCore.MultipartFile.fromFileSync(photo.path)));
+    });
+
+    final headers = _commonHeaders();
+    headers.remove("Content-Type");
+
+    dio.post("/image/uploadPhotos",
+        data: formData,
+        options: DioCore.Options(headers: headers, receiveTimeout: 0),
+        onSendProgress: (int sent, int total) {
+      onUploading?.call(sent, total);
+    }, cancelToken: cancelToken).then((response) {
+      if (response.statusCode != 200) {
+        onError?.call("${response.statusMessage}");
+      } else {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          final data = httpResponseEntity.data as List;
+          final images = data.map((e) => ImageItem.fromJson(e)).toList();
+          onSuccess?.call(images);
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).onError((error, stackTrace) {
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call(error?.toString());
+      }
+    });
+
+    return cancelToken;
+  }
+
   Map<String, String> _commonHeaders() {
     BuildContext? context = EnterPage.enterKey.currentContext;
 

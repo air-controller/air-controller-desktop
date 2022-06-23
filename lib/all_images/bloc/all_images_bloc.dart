@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:dio/dio.dart' as DioCore;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/image_item.dart';
@@ -9,6 +11,7 @@ import '../../repository/image_repository.dart';
 import '../model/all_image_copy_status.dart';
 import '../model/all_image_menu_arguments.dart';
 import '../model/all_image_delete_status.dart';
+import '../model/all_image_upload_status.dart';
 
 part 'all_images_event.dart';
 part 'all_images_state.dart';
@@ -33,6 +36,8 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
     on<AllImagesCopyImagesSubmitted>(_onCopySubmitted);
     on<AllImagesCancelCopySubmitted>(_onCancelCopySubmitted);
     on<AllImagesCopyStatusChanged>(_onCopyStatusChanged);
+    on<AllImagesUploadPhotos>(_onUploadPhotos);
+    on<AllImagesUploadStatusChanged>(_onUploadStatusChanged);
   }
 
   void _onSubscriptionRequested(
@@ -143,14 +148,12 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
   }
 
   void _onOpenContextMenu(
-      AllImagesOpenMenu event,
-      Emitter<AllImagesState> emit) {
-   emit(state.copyWith(contextMenuArguments: event.arguments));
+      AllImagesOpenMenu event, Emitter<AllImagesState> emit) {
+    emit(state.copyWith(contextMenuArguments: event.arguments));
   }
 
   void _onClearDeletedImages(
-      AllImagesClearDeleted event,
-      Emitter<AllImagesState> emit) {
+      AllImagesClearDeleted event, Emitter<AllImagesState> emit) {
     List<ImageItem> images = [...state.images];
     List<ImageItem> checkedImages = [...state.checkedImages];
 
@@ -159,11 +162,12 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
 
     emit(state.copyWith(images: images, checkedImages: checkedImages));
   }
-  
+
   void _onDeleteSubmitted(
-      AllImagesDeleteSubmitted event,
-      Emitter<AllImagesState> emit) async {
-    emit(state.copyWith(deleteStatus: AllImageDeleteImagesStatusUnit(status: AllImageDeleteImagesStatus.loading)));
+      AllImagesDeleteSubmitted event, Emitter<AllImagesState> emit) async {
+    emit(state.copyWith(
+        deleteStatus: AllImageDeleteImagesStatusUnit(
+            status: AllImageDeleteImagesStatus.loading)));
 
     try {
       await _imageRepository.deleteImages(event.images);
@@ -175,59 +179,91 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
       checkedImages.removeWhere((image) => event.images.contains(image));
 
       emit(state.copyWith(
-          deleteStatus: AllImageDeleteImagesStatusUnit(status: AllImageDeleteImagesStatus.success, images: images),
+          deleteStatus: AllImageDeleteImagesStatusUnit(
+              status: AllImageDeleteImagesStatus.success, images: images),
           images: images,
-          checkedImages: checkedImages
-      ));
+          checkedImages: checkedImages));
     } catch (e) {
-      emit(state.copyWith(deleteStatus: AllImageDeleteImagesStatusUnit(
-          status: AllImageDeleteImagesStatus.failure,
-          failureReason: (e as BusinessError).message
-      )));
+      emit(state.copyWith(
+          deleteStatus: AllImageDeleteImagesStatusUnit(
+              status: AllImageDeleteImagesStatus.failure,
+              failureReason: (e as BusinessError).message)));
     }
   }
 
   void _onCopySubmitted(
-      AllImagesCopyImagesSubmitted event,
-      Emitter<AllImagesState> emit) {
-    emit(state.copyWith(copyStatus: AllImageCopyStatusUnit(status: AllImageCopyStatus.start)));
+      AllImagesCopyImagesSubmitted event, Emitter<AllImagesState> emit) {
+    emit(state.copyWith(
+        copyStatus: AllImageCopyStatusUnit(status: AllImageCopyStatus.start)));
 
     _imageRepository.copyImagesTo(
         images: event.images,
         dir: event.path,
-      onProgress: (fileName, current, total) {
+        onProgress: (fileName, current, total) {
           add(AllImagesCopyStatusChanged(AllImageCopyStatusUnit(
               status: AllImageCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
-      },
-      onDone: (fileName) {
-        add(AllImagesCopyStatusChanged(AllImageCopyStatusUnit(
-            status: AllImageCopyStatus.success,
-            fileName: fileName
-        )));
-
-      },
-      onError: (String error) {
-        add(AllImagesCopyStatusChanged(AllImageCopyStatusUnit(
-            status: AllImageCopyStatus.failure,
-            error: error
-        )));
-      }
-    );
+              total: total)));
+        },
+        onDone: (fileName) {
+          add(AllImagesCopyStatusChanged(AllImageCopyStatusUnit(
+              status: AllImageCopyStatus.success, fileName: fileName)));
+        },
+        onError: (String error) {
+          add(AllImagesCopyStatusChanged(AllImageCopyStatusUnit(
+              status: AllImageCopyStatus.failure, error: error)));
+        });
   }
 
   void _onCancelCopySubmitted(
-      AllImagesCancelCopySubmitted event,
-      Emitter<AllImagesState> emit) {
+      AllImagesCancelCopySubmitted event, Emitter<AllImagesState> emit) {
     _imageRepository.cancelCopy();
   }
 
   void _onCopyStatusChanged(
-      AllImagesCopyStatusChanged event,
-      Emitter<AllImagesState> emit) {
+      AllImagesCopyStatusChanged event, Emitter<AllImagesState> emit) {
     emit(state.copyWith(copyStatus: event.status));
+  }
+
+  void _onUploadPhotos(
+      AllImagesUploadPhotos event, Emitter<AllImagesState> emit) {
+    emit(state.copyWith(
+        uploadStatus: state.uploadStatus.copyWith(
+            status: AllImageUploadStatus.start, photos: event.photos)));
+
+    _imageRepository.uploadPhotos(
+        pos: event.pos,
+        photos: event.photos,
+        onError: (error) {
+          add(AllImagesUploadStatusChanged(state.uploadStatus.copyWith(
+              status: AllImageUploadStatus.failure, failureReason: error)));
+        },
+        onUploading: (sent, total) {
+          add(AllImagesUploadStatusChanged(state.uploadStatus.copyWith(
+              status: AllImageUploadStatus.uploading,
+              current: sent,
+              total: total)));
+        },
+        onSuccess: (images) {
+          add(AllImagesUploadStatusChanged(state.uploadStatus
+              .copyWith(status: AllImageUploadStatus.success, images: images)));
+        });
+  }
+
+  void _onUploadStatusChanged(
+      AllImagesUploadStatusChanged event, Emitter<AllImagesState> emit) {
+    final images = [...state.images];
+    if (event.status.status == AllImageUploadStatus.success) {
+      final uploadedImages = event.status.images;
+      if (uploadedImages != null && uploadedImages.isNotEmpty) {
+        uploadedImages.forEach((element) {
+          if (!images.contains(element)) {
+            images.insert(0, element);
+          }
+        });
+      }
+    }
+    emit(state.copyWith(uploadStatus: event.status, images: images));
   }
 }

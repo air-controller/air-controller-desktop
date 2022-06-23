@@ -49,14 +49,13 @@ class ImageFlowWidget extends StatefulWidget {
 class _ImageFlowState extends State<ImageFlowWidget> {
   final _outPadding = 20.0;
   final _imageSpace = 10.0;
-  List<ImageItem> _images = [];
 
   Widget _createDailyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
     final timeFormat = context.l10n.yMdPattern;
 
-    for (ImageItem imageItem in _images) {
+    for (ImageItem imageItem in widget.images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
@@ -146,7 +145,7 @@ class _ImageFlowState extends State<ImageFlowWidget> {
 
     final timeFormat = context.l10n.yMPattern;
 
-    for (ImageItem imageItem in _images) {
+    for (ImageItem imageItem in widget.images) {
       int createTime = imageItem.createTime;
 
       final df = DateFormat(timeFormat);
@@ -240,7 +239,7 @@ class _ImageFlowState extends State<ImageFlowWidget> {
             childAspectRatio: 1.0,
             mainAxisSpacing: _imageSpace),
         itemBuilder: (BuildContext context, int index) {
-          ImageItem image = _images[index];
+          ImageItem image = widget.images[index];
 
           return _ImageGridItem(
               rootUrl: widget.rootUrl,
@@ -258,7 +257,7 @@ class _ImageFlowState extends State<ImageFlowWidget> {
                 widget.onImageDoubleTap.call(image);
               });
         },
-        itemCount: _images.length,
+        itemCount: widget.images.length,
         shrinkWrap: true,
         primary: false,
       ),
@@ -344,16 +343,6 @@ class _ImageFlowState extends State<ImageFlowWidget> {
   }
 
   Widget _createContent(BuildContext context, ArrangementMode arrangeMode) {
-    final images = widget.images;
-
-    List<ImageItem> sortedImages = [...images];
-
-    sortedImages.sort((imageA, imageB) {
-      return imageB.createTime - imageA.createTime;
-    });
-
-    _images = sortedImages;
-
     if (arrangeMode == ArrangementMode.groupByDay) {
       return _createDailyContent(context);
     }

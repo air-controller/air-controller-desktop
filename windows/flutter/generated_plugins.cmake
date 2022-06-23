@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus_windows
+  desktop_drop
   network_info_plus_windows
   screen_retriever
   url_launcher_windows

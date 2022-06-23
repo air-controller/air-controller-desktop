@@ -1,9 +1,13 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:air_controller/all_images/model/all_image_upload_status.dart';
+import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/context_menu_helper.dart';
+import 'package:air_controller/util/sound_effect.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +16,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../constant.dart';
 import '../../enter/view/enter_page.dart';
+import '../../home/bloc/home_bloc.dart';
 import '../../home_image/bloc/home_image_bloc.dart';
 import '../../model/arrangement_mode.dart';
 import '../../model/image_item.dart';
@@ -62,35 +67,7 @@ class AllImagesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xff85a8d0);
-    const spinKit = SpinKitCircle(color: color, size: 60.0);
-
-    ArrangementMode arrangement =
-        context.select((HomeImageBloc bloc) => bloc.state.arrangement);
-    List<ImageItem> images =
-        context.select((AllImagesBloc bloc) => bloc.state.images);
-    List<ImageItem> checkedImages =
-        context.select((AllImagesBloc bloc) => bloc.state.checkedImages);
-    bool isLoadingComplete = context.select(
-        (AllImagesBloc bloc) => bloc.state.status == AllImagesStatus.success);
-    HomeImageTab currentTab =
-        context.select((HomeImageBloc bloc) => bloc.state.tab);
-
-    _rootFocusNode = FocusNode();
-
-    _rootFocusNode?.canRequestFocus = true;
-
-    if ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
-        currentTab == HomeImageTab.cameraImages && isFromCamera) {
-      _rootFocusNode?.requestFocus();
-    }
-
-    final enterContext = EnterPage.enterKey.currentContext;
-    String languageCode = "en";
-
-    if (null != enterContext) {
-      languageCode = Localizations.localeOf(enterContext).languageCode;
-    }
+    final contentView = _buildContentView(context);
 
     return Scaffold(
       body: MultiBlocListener(
@@ -286,87 +263,190 @@ class AllImagesView extends StatelessWidget {
                 }
               },
               listenWhen: (previous, current) => previous.tab != current.tab),
+          BlocListener<AllImagesBloc, AllImagesState>(
+            listener: (context, state) {
+              if (state.uploadStatus.status == AllImageUploadStatus.start) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: true)));
+              }
+
+              if (state.uploadStatus.status == AllImageUploadStatus.uploading) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                        HomeLinearProgressIndicatorStatus(
+                      visible: true,
+                      current: state.uploadStatus.current,
+                      total: state.uploadStatus.total,
+                    )));
+              }
+
+              if (state.uploadStatus.status == AllImageUploadStatus.failure) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.uploadStatus.failureReason ??
+                          context.l10n.unknownError)));
+              }
+
+              if (state.uploadStatus.status == AllImageUploadStatus.success) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+                SoundEffect.play(SoundType.done);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.uploadStatus != current.uploadStatus &&
+                current.uploadStatus.status != AllImageUploadStatus.initial,
+          )
         ],
-        child: Stack(
-          children: [
-            Focus(
-                autofocus: true,
-                focusNode: _rootFocusNode,
-                child: ImageFlowWidget(
-                  languageCode: languageCode,
-                  rootUrl: DeviceConnectionManager.instance.rootURL,
-                  arrangeMode: arrangement,
-                  images: images,
-                  checkedImages: checkedImages,
-                  onRightMouseClick: (position, image) {
-                    if (!checkedImages.contains(image)) {
-                      context
-                          .read<AllImagesBloc>()
-                          .add(AllImagesCheckedImagesChanged(image));
-                    }
+        child: DropTarget(
+          onDragDone: (details) {
+            if (_isHide(context)) return;
 
-                    context.read<AllImagesBloc>().add(AllImagesOpenMenu(
-                        AllImageMenuArguments(
-                            position: position, targetImage: image)));
-                  },
-                  onImageDoubleTap: (image) {
-                    _openImageDetailPage(images.indexOf(image), images,
-                        context.read<AllImagesBloc>());
-                  },
-                  onImageSelected: (image) {
-                    AllImagesCheckedImagesChanged event =
-                        AllImagesCheckedImagesChanged(image);
-                    context.read<AllImagesBloc>().add(event);
-                    // _closeMenu(context);
-                  },
-                  onOutsideTap: () {
-                    context.read<AllImagesBloc>().add(AllImagesClearChecked());
-                  },
-                ),
-                onKey: (node, event) {
-                  _isControlPressed = Platform.isMacOS
-                      ? event.isMetaPressed
-                      : event.isControlPressed;
-                  _isShiftPressed = event.isShiftPressed;
+            final photos = details.files
+                .map((xFile) => File(xFile.path))
+                .where((file) => file.isImage)
+                .toList();
 
-                  AllImagesBoardKeyStatus status = AllImagesBoardKeyStatus.none;
+            if (photos.isEmpty) return;
 
-                  if (_isControlPressed) {
-                    status = AllImagesBoardKeyStatus.ctrlDown;
-                  } else if (_isShiftPressed) {
-                    status = AllImagesBoardKeyStatus.shiftDown;
-                  }
-
-                  context
-                      .read<AllImagesBloc>()
-                      .add(AllImageKeyStatusChanged(status));
-
-                  if (Platform.isMacOS) {
-                    if (event.isMetaPressed &&
-                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                      context.read<AllImagesBloc>().add(
-                          AllImagesShortcutKeyTriggered(ShortcutKey.ctrlAndA));
-                      return KeyEventResult.handled;
-                    }
-                  } else {
-                    if (event.isControlPressed &&
-                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                      context.read<AllImagesBloc>().add(
-                          AllImagesShortcutKeyTriggered(ShortcutKey.ctrlAndA));
-                      return KeyEventResult.handled;
-                    }
-                  }
-
-                  return KeyEventResult.ignored;
-                }),
-            Visibility(
-              child: Container(child: spinKit, color: Colors.white),
-              maintainSize: false,
-              visible: !isLoadingComplete,
-            )
-          ],
+            int pos = isFromCamera
+                ? Constant.posCameraPictures
+                : Constant.posAllPictures;
+            context
+                .read<AllImagesBloc>()
+                .add(AllImagesUploadPhotos(pos: pos, photos: photos));
+          },
+          onDragEntered: (details) {
+            SoundEffect.play(SoundType.bubble);
+          },
+          onDragExited: (details) {},
+          onDragUpdated: (details) {},
+          child: contentView,
         ),
       ),
+    );
+  }
+
+  bool _isHide(BuildContext context) {
+    final tab = context.read<HomeImageBloc>().state.tab;
+    if (isFromCamera && tab == HomeImageTab.allImages) return true;
+    if (!isFromCamera && tab == HomeImageTab.allAlbums) return true;
+    return false;
+  }
+
+  Widget _buildContentView(BuildContext context) {
+    const color = Color(0xff85a8d0);
+    const spinKit = SpinKitCircle(color: color, size: 60.0);
+
+    ArrangementMode arrangement =
+        context.select((HomeImageBloc bloc) => bloc.state.arrangement);
+    List<ImageItem> images =
+        context.select((AllImagesBloc bloc) => bloc.state.images);
+    List<ImageItem> checkedImages =
+        context.select((AllImagesBloc bloc) => bloc.state.checkedImages);
+    bool isLoadingComplete = context.select(
+        (AllImagesBloc bloc) => bloc.state.status == AllImagesStatus.success);
+    HomeImageTab currentTab =
+        context.select((HomeImageBloc bloc) => bloc.state.tab);
+
+    _rootFocusNode = FocusNode();
+
+    _rootFocusNode?.canRequestFocus = true;
+
+    if ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
+        currentTab == HomeImageTab.cameraImages && isFromCamera) {
+      _rootFocusNode?.requestFocus();
+    }
+
+    final enterContext = EnterPage.enterKey.currentContext;
+    String languageCode = "en";
+
+    if (null != enterContext) {
+      languageCode = Localizations.localeOf(enterContext).languageCode;
+    }
+    return Stack(
+      children: [
+        Focus(
+            autofocus: true,
+            focusNode: _rootFocusNode,
+            child: ImageFlowWidget(
+              languageCode: languageCode,
+              rootUrl: DeviceConnectionManager.instance.rootURL,
+              arrangeMode: arrangement,
+              images: images,
+              checkedImages: checkedImages,
+              onRightMouseClick: (position, image) {
+                if (!checkedImages.contains(image)) {
+                  context
+                      .read<AllImagesBloc>()
+                      .add(AllImagesCheckedImagesChanged(image));
+                }
+
+                context.read<AllImagesBloc>().add(AllImagesOpenMenu(
+                    AllImageMenuArguments(
+                        position: position, targetImage: image)));
+              },
+              onImageDoubleTap: (image) {
+                _openImageDetailPage(images.indexOf(image), images,
+                    context.read<AllImagesBloc>());
+              },
+              onImageSelected: (image) {
+                AllImagesCheckedImagesChanged event =
+                    AllImagesCheckedImagesChanged(image);
+                context.read<AllImagesBloc>().add(event);
+                // _closeMenu(context);
+              },
+              onOutsideTap: () {
+                context.read<AllImagesBloc>().add(AllImagesClearChecked());
+              },
+            ),
+            onKey: (node, event) {
+              _isControlPressed = Platform.isMacOS
+                  ? event.isMetaPressed
+                  : event.isControlPressed;
+              _isShiftPressed = event.isShiftPressed;
+
+              AllImagesBoardKeyStatus status = AllImagesBoardKeyStatus.none;
+
+              if (_isControlPressed) {
+                status = AllImagesBoardKeyStatus.ctrlDown;
+              } else if (_isShiftPressed) {
+                status = AllImagesBoardKeyStatus.shiftDown;
+              }
+
+              context
+                  .read<AllImagesBloc>()
+                  .add(AllImageKeyStatusChanged(status));
+
+              if (Platform.isMacOS) {
+                if (event.isMetaPressed &&
+                    event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                  context
+                      .read<AllImagesBloc>()
+                      .add(AllImagesShortcutKeyTriggered(ShortcutKey.ctrlAndA));
+                  return KeyEventResult.handled;
+                }
+              } else {
+                if (event.isControlPressed &&
+                    event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                  context
+                      .read<AllImagesBloc>()
+                      .add(AllImagesShortcutKeyTriggered(ShortcutKey.ctrlAndA));
+                  return KeyEventResult.handled;
+                }
+              }
+
+              return KeyEventResult.ignored;
+            }),
+        Visibility(
+          child: Container(child: spinKit, color: Colors.white),
+          maintainSize: false,
+          visible: !isLoadingComplete,
+        )
+      ],
     );
   }
 
