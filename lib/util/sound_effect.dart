@@ -1,24 +1,22 @@
-import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 
 enum SoundType { done, bubble }
 
 class SoundEffect {
-  static void play(SoundType type) async {
-    final player = AudioCache();
+  SoundEffect._();
 
-    if (!Platform.isMacOS) return;
+  static void play(SoundType type) async {
+    final player = AudioPlayer();
 
     switch (type) {
       case SoundType.done:
         {
-          await player.play("audios/done.mp3");
+          await player.play(AssetSource('assets/done.mp3'));
           break;
         }
       case SoundType.bubble:
         {
-          await player.play("audios/bubble.mp3");
+          await player.play(AssetSource("audios/bubble.mp3"));
           break;
         }
       default:

@@ -1,9 +1,12 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/util/sound_effect.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +16,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../all_images/model/image_detail_arguments.dart';
 import '../../constant.dart';
 import '../../enter/view/enter_page.dart';
+import '../../home/bloc/home_bloc.dart';
 import '../../home_image/bloc/home_image_bloc.dart';
 import '../../model/album_item.dart';
 import '../../model/arrangement_mode.dart';
@@ -48,21 +52,6 @@ class AllAlbumsView extends StatelessWidget {
   FocusNode? _rootFocusNode = null;
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
-
-  final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
-
-  final _BACKGROUND_ALBUM_SELECTED = Color(0xffe6e6e6);
-  final _BACKGROUND_ALBUM_NORMAL = Colors.white;
-
-  final _ALBUM_NAME_TEXT_COLOR_NORMAL = Color(0xff515151);
-  final _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL = Color(0xff929292);
-
-  final _ALBUM_NAME_TEXT_COLOR_SELECTED = Colors.white;
-  final _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED = Colors.white;
-
-  final _BACKGROUND_ALBUM_NAME_NORMAL = Colors.white;
-  final _BACKGROUND_ALBUM_NAME_SELECTED = Color(0xff5d87ed);
 
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
@@ -329,6 +318,44 @@ class AllAlbumsView extends StatelessWidget {
                 current.deleteTapStatus.tab == HomeImageTab.allAlbums &&
                 current.deleteTapStatus.status == HomeImageDeleteTapStatus.tap,
           ),
+          BlocListener<AllAlbumsBloc, AllAlbumsState>(
+            listener: (context, state) {
+              if (state.uploadStatus.status == AllAlbumsUploadStatus.start) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: true)));
+              }
+
+              if (state.uploadStatus.status ==
+                  AllAlbumsUploadStatus.uploading) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                        HomeLinearProgressIndicatorStatus(
+                      visible: true,
+                      current: state.uploadStatus.current,
+                      total: state.uploadStatus.total,
+                    )));
+              }
+
+              if (state.uploadStatus.status == AllAlbumsUploadStatus.failure) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.uploadStatus.failureReason ??
+                          context.l10n.unknownError)));
+              }
+
+              if (state.uploadStatus.status == AllAlbumsUploadStatus.success) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+                SoundEffect.play(SoundType.done);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.uploadStatus != current.uploadStatus &&
+                current.uploadStatus.status != AllAlbumsUploadStatus.initial,
+          )
         ],
         child: Focus(
           autofocus: true,
@@ -654,10 +681,6 @@ class AllAlbumsView extends StatelessWidget {
   }
 
   Widget _createGridContent(BuildContext context) {
-    final imageWidth = 140.0;
-    final imageHeight = 140.0;
-    final imagePadding = 3.0;
-
     List<AlbumItem> albums =
         context.select((AllAlbumsBloc bloc) => bloc.state.albums);
     List<AlbumItem> checkedAlbums =
@@ -677,136 +700,39 @@ class AllAlbumsView extends StatelessWidget {
         itemBuilder: (BuildContext context, int index) {
           AlbumItem album = albums[index];
 
-          return Listener(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SimpleGestureDetector(
-                    child: Container(
-                      child: Stack(
-                        children: [
-                          Visibility(
-                            child: RotationTransition(
-                                turns: AlwaysStoppedAnimation(5 / 360),
-                                child: Container(
-                                  width: imageWidth,
-                                  height: imageHeight,
-                                  padding: EdgeInsets.all(imagePadding),
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          color: Color(0xffdddddd), width: 1.0),
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(3.0))),
-                                )),
-                            visible: album.photoNum > 1 ? true : false,
-                          ),
-                          Visibility(
-                            child: RotationTransition(
-                                turns: AlwaysStoppedAnimation(-5 / 360),
-                                child: Container(
-                                  width: imageWidth,
-                                  height: imageHeight,
-                                  padding: EdgeInsets.all(imagePadding),
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          color: Color(0xffdddddd), width: 1.0),
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(3.0))),
-                                )),
-                            visible: album.photoNum > 2 ? true : false,
-                          ),
-                          Container(
-                            child: CachedNetworkImage(
-                                imageUrl:
-                                    "${_URL_SERVER}/stream/image/thumbnail/${album.coverImageId}/400/400"
-                                        .replaceAll("storage/emulated/0/", ""),
-                                fit: BoxFit.cover,
-                                width: imageWidth,
-                                height: imageWidth,
-                                memCacheWidth: 400,
-                                fadeOutDuration: Duration.zero,
-                                fadeInDuration: Duration.zero),
-                            padding: EdgeInsets.all(imagePadding),
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                    color: Color(0xffdddddd), width: 1.0),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(3.0))),
-                          )
-                        ],
-                      ),
-                      decoration: BoxDecoration(
-                          color: isChecked(album)
-                              ? _BACKGROUND_ALBUM_SELECTED
-                              : _BACKGROUND_ALBUM_NORMAL,
-                          borderRadius: BorderRadius.all(Radius.circular(4.0))),
-                      padding: EdgeInsets.all(8),
-                    ),
-                    onTap: () {
-                      context
-                          .read<AllAlbumsBloc>()
-                          .add(AllAlbumsCheckedChanged(album));
-                    },
-                    onDoubleTap: () {
-                      context.read<AllAlbumsBloc>().add(
-                          AllAlbumsOpenStatusChanged(
-                              isOpened: true, current: album));
-                    },
-                  ),
-                  GestureDetector(
-                    child: Container(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            album.name,
-                            style: TextStyle(
-                                color: isChecked(album)
-                                    ? _ALBUM_NAME_TEXT_COLOR_SELECTED
-                                    : _ALBUM_NAME_TEXT_COLOR_NORMAL),
-                          ),
-                          Container(
-                            child: Text(
-                              "(${album.photoNum})",
-                              style: TextStyle(
-                                  color: isChecked(album)
-                                      ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED
-                                      : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL),
-                            ),
-                            margin: EdgeInsets.only(left: 3),
-                          )
-                        ],
-                      ),
-                      margin: EdgeInsets.only(top: 10),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(3)),
-                          color: isChecked(album)
-                              ? _BACKGROUND_ALBUM_NAME_SELECTED
-                              : _BACKGROUND_ALBUM_NAME_NORMAL),
-                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                    ),
-                    onTap: () {},
-                  )
-                ],
-              ),
-              onPointerDown: (event) {
-                if (event.isRightMouseClick()) {
-                  if (!checkedAlbums.contains(album)) {
-                    context
-                        .read<AllAlbumsBloc>()
-                        .add(AllAlbumsCheckedChanged(album));
-                  }
+          return _AlbumsListItem(
+            album: album,
+            isChecked: isChecked(album),
+            onTap: () {
+              context.read<AllAlbumsBloc>().add(AllAlbumsCheckedChanged(album));
+            },
+            onDoubleTap: () {
+              context.read<AllAlbumsBloc>().add(
+                  AllAlbumsOpenStatusChanged(isOpened: true, current: album));
+            },
+            onRightMouseClick: (position, album) {
+              if (!checkedAlbums.contains(album)) {
+                context
+                    .read<AllAlbumsBloc>()
+                    .add(AllAlbumsCheckedChanged(album));
+              }
 
-                  context.read<AllAlbumsBloc>().add(AllAlbumsMenuStatusChanged(
-                      AllAlbumsOpenMenuStatus(
-                          isOpened: true,
-                          position: event.position,
-                          target: album)));
-                }
-              });
+              context.read<AllAlbumsBloc>().add(AllAlbumsMenuStatusChanged(
+                  AllAlbumsOpenMenuStatus(
+                      isOpened: true, position: position, target: album)));
+            },
+            onDragDone: (details) {
+              final photos = details.files
+                  .map((e) => File(e.path))
+                  .where((element) => element.isImage)
+                  .toList();
+              if (photos.isEmpty) return;
+
+              context
+                  .read<AllAlbumsBloc>()
+                  .add(AllAlbumsUploadPhotos(album: album, photos: photos));
+            },
+          );
         },
         itemCount: albums.length,
         shrinkWrap: true,
@@ -834,35 +760,58 @@ class AllAlbumsView extends StatelessWidget {
       languageCode = Localizations.localeOf(enterContext).languageCode;
     }
 
-    return ImageFlowWidget(
-      languageCode: languageCode,
-      rootUrl: DeviceConnectionManager.instance.rootURL,
-      arrangeMode: arrangementMode,
-      images: images,
-      checkedImages: checkedImages,
-      onImageDoubleTap: (image) {
-        _openImageDetailPage(context, images, images.indexOf(image));
+    return DropTarget(
+      child: ImageFlowWidget(
+        languageCode: languageCode,
+        rootUrl: DeviceConnectionManager.instance.rootURL,
+        arrangeMode: arrangementMode,
+        images: images,
+        checkedImages: checkedImages,
+        onImageDoubleTap: (image) {
+          _openImageDetailPage(context, images, images.indexOf(image));
 
-        context.read<AllAlbumsBloc>().add(AllAlbumsImageCheckedChanged(image));
-      },
-      onImageSelected: (image) {
-        context.read<AllAlbumsBloc>().add(AllAlbumsImageCheckedChanged(image));
-      },
-      onOutsideTap: () {
-        context.read<AllAlbumsBloc>().add(AllAlbumsImageClearChecked());
-      },
-      onRightMouseClick: (position, image) {
-        if (!checkedImages.contains(image)) {
-            context.read<AllAlbumsBloc>().add(AllAlbumsImageCheckedChanged(image));
+          context
+              .read<AllAlbumsBloc>()
+              .add(AllAlbumsImageCheckedChanged(image));
+        },
+        onImageSelected: (image) {
+          context
+              .read<AllAlbumsBloc>()
+              .add(AllAlbumsImageCheckedChanged(image));
+        },
+        onOutsideTap: () {
+          context.read<AllAlbumsBloc>().add(AllAlbumsImageClearChecked());
+        },
+        onRightMouseClick: (position, image) {
+          if (!checkedImages.contains(image)) {
+            context
+                .read<AllAlbumsBloc>()
+                .add(AllAlbumsImageCheckedChanged(image));
           }
 
           context.read<AllAlbumsBloc>().add(AllAlbumsMenuStatusChanged(
               AllAlbumsOpenMenuStatus(
-                  isOpened: true,
-                  position: position,
-                  target: image
-              )
-          ));
+                  isOpened: true, position: position, target: image)));
+        },
+      ),
+      onDragDone: (details) {
+        final photos = details.files
+            .map((e) => File(e.path))
+            .where((element) => element.isImage)
+            .toList();
+        if (photos.isEmpty) return;
+
+        final album =
+            context.read<AllAlbumsBloc>().state.albumOpenStatus.current;
+
+        if (album != null) {
+          context
+              .read<AllAlbumsBloc>()
+              .add(AllAlbumsUploadPhotos(album: album, photos: photos));
+        }
+      },
+      onDragEntered: (details) {
+        SoundEffect.play(SoundType.bubble);
       },
     );
   }
@@ -876,5 +825,185 @@ class AllAlbumsView extends StatelessWidget {
         extra: context.read<AllAlbumsBloc>());
     navigatorKey.currentState
         ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
+  }
+}
+
+class _AlbumsListItem extends StatefulWidget {
+  final AlbumItem album;
+  final bool isChecked;
+  final Function? onTap;
+  final Function? onDoubleTap;
+  final Function(Offset, AlbumItem)? onRightMouseClick;
+  final Function(DropDoneDetails)? onDragDone;
+
+  const _AlbumsListItem(
+      {Key? key,
+      required this.album,
+      required this.isChecked,
+      this.onTap,
+      this.onDoubleTap,
+      this.onRightMouseClick,
+      this.onDragDone});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _AlbumsListItemState();
+  }
+}
+
+class _AlbumsListItemState extends State<_AlbumsListItem> {
+  bool _isDragEntered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageWidth = 140.0;
+    final imageHeight = 140.0;
+    final imagePadding = 3.0;
+    final albumSelectedColor = Color(0xffe6e6e6);
+    final albumNormalColor = Colors.white;
+
+    final albumNormalTextColor = Color(0xff515151);
+    final albumImageNumTextColor = Color(0xff929292);
+
+    final albumTextSelectedColor = Colors.white;
+    final albumImageNumSelectedColor = Colors.white;
+
+    final albumNameColor = Colors.white;
+    final albumNameSelectedColor = Color(0xff5d87ed);
+
+    final coverURL =
+        "${DeviceConnectionManager.instance.rootURL}/stream/image/thumbnail/${widget.album.coverImageId}/400/400";
+
+    return DropTarget(
+        child: Listener(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SimpleGestureDetector(
+                  child: Container(
+                    child: Stack(
+                      children: [
+                        Visibility(
+                          child: RotationTransition(
+                              turns: AlwaysStoppedAnimation(5 / 360),
+                              child: Container(
+                                width: imageWidth,
+                                height: imageHeight,
+                                padding: EdgeInsets.all(imagePadding),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                        color: Color(0xffdddddd), width: 1.0),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(3.0))),
+                              )),
+                          visible: widget.album.photoNum > 1 ? true : false,
+                        ),
+                        Visibility(
+                          child: RotationTransition(
+                              turns: AlwaysStoppedAnimation(-5 / 360),
+                              child: Container(
+                                width: imageWidth,
+                                height: imageHeight,
+                                padding: EdgeInsets.all(imagePadding),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                        color: Color(0xffdddddd), width: 1.0),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(3.0))),
+                              )),
+                          visible: widget.album.photoNum > 2 ? true : false,
+                        ),
+                        Container(
+                          child: CachedNetworkImage(
+                              imageUrl: coverURL,
+                              fit: BoxFit.cover,
+                              width: imageWidth,
+                              height: imageWidth,
+                              memCacheWidth: 400,
+                              fadeOutDuration: Duration.zero,
+                              fadeInDuration: Duration.zero),
+                          padding: EdgeInsets.all(imagePadding),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: Color(0xffdddddd), width: 1.0),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(3.0))),
+                        )
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                        color: widget.isChecked || _isDragEntered
+                            ? albumSelectedColor
+                            : albumNormalColor,
+                        borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                    padding: EdgeInsets.all(8),
+                  ),
+                  onTap: () {
+                    widget.onTap?.call();
+                  },
+                  onDoubleTap: () {
+                    widget.onDoubleTap?.call();
+                  },
+                ),
+                GestureDetector(
+                  child: Container(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.album.name,
+                          style: TextStyle(
+                              color: widget.isChecked || _isDragEntered
+                                  ? albumTextSelectedColor
+                                  : albumNormalTextColor),
+                        ),
+                        Container(
+                          child: Text(
+                            "(${widget.album.photoNum})",
+                            style: TextStyle(
+                                color: widget.isChecked || _isDragEntered
+                                    ? albumImageNumSelectedColor
+                                    : albumImageNumTextColor),
+                          ),
+                          margin: EdgeInsets.only(left: 3),
+                        )
+                      ],
+                    ),
+                    margin: EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(3)),
+                        color: widget.isChecked || _isDragEntered
+                            ? albumNameSelectedColor
+                            : albumNameColor),
+                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                  ),
+                  onTap: () {
+                    widget.onTap?.call();
+                  },
+                )
+              ],
+            ),
+            onPointerDown: (event) {
+              if (event.isRightMouseClick()) {
+                widget.onRightMouseClick?.call(event.position, widget.album);
+              }
+            }),
+        onDragEntered: (details) {
+          SoundEffect.play(SoundType.bubble);
+          setState(() {
+            _isDragEntered = true;
+          });
+        },
+        onDragDone: (details) {
+          widget.onDragDone?.call(details);
+        },
+        onDragExited: (details) {
+          setState(() {
+            _isDragEntered = false;
+          });
+        });
   }
 }

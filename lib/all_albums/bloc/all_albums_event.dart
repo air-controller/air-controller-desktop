@@ -66,7 +66,8 @@ class AllAlbumsOpenStatusChanged extends AllAlbumsEvent {
   final bool isOpened;
   final AlbumItem? current;
 
-  const AllAlbumsOpenStatusChanged({required this.isOpened, this.current = null});
+  const AllAlbumsOpenStatusChanged(
+      {required this.isOpened, this.current = null});
 
   @override
   List<Object?> get props => [isOpened, current];
@@ -135,4 +136,25 @@ class AllAlbumsCopyImagesSubmitted extends AllAlbumsEvent {
 
   @override
   List<Object?> get props => [images, dir];
+}
+
+class AllAlbumsUploadPhotos extends AllAlbumsEvent {
+  final AlbumItem album;
+  final List<File> photos;
+
+  const AllAlbumsUploadPhotos({required this.album, required this.photos});
+
+  @override
+  List<Object?> get props => [album, photos];
+}
+
+class AllAlbumsUploadStatusChanged extends AllAlbumsEvent {
+  final AllAlbumsUploadStatusUnit status;
+  final AlbumItem album;
+  final List<ImageItem>? images;
+
+  const AllAlbumsUploadStatusChanged({required this.status, required this.album, this.images});
+
+  @override
+  List<Object?> get props => [status, album, images];
 }

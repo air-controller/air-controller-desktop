@@ -32,7 +32,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   shelf: ^1.2.0
   shelf_web_socket: ^1.0.1
-  device_info_plus: ^2.1.0
+  device_info_plus: ^4.0.0
   connectivity_plus: ^2.0.2
   network_info_plus: ^2.0.2
   fluttertoast: ^8.0.8
@@ -40,16 +40,16 @@ dependencies:
   statusbarmanager: ^0.0.1
   intl: ^0.17.0
   flutter_spinkit: ^5.1.0
-  material_segmented_control: ^3.1.2
+  material_segmented_control: ^4.0.0
   cached_network_image: ^3.1.0+1
   path_provider: ^2.0.6
-  sticky_headers: ^0.2.0
+  sticky_headers: ^0.3.0+2
   extended_image: ^6.0.1
-  flutter_html: ^2.1.5
+  flutter_html: ^3.0.0-alpha.5
   rflutter_alert: ^2.0.4
-  visibility_detector: ^0.2.2
+  visibility_detector: ^0.3.3
   event_bus: ^2.0.0
-  flutter_smart_dialog: ^3.0.2
+  flutter_smart_dialog: ^4.5.3+2
   data_table_2:
     path: packages/data_table_2
   url_launcher: ^6.0.17
@@ -72,7 +72,7 @@ dependencies:
   dio: ^4.0.6
   logger: ^1.1.0
   syncfusion_flutter_datagrid: ^20.1.60
-  audioplayers: ^0.20.1
+  audioplayers: ^1.0.1
   grouped_list: ^5.1.1
   desktop_drop: ^0.3.3
 

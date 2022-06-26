@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:air_controller/constant.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,6 +41,8 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     on<AllAlbumsCopyStatusChanged>(_onCopyAlbumsStatusChanged);
     on<AllAlbumsDeleteImagesSubmitted>(_onDeleteImagesSubmitted);
     on<AllAlbumsCopyImagesSubmitted>(_onCopyImagesSubmitted);
+    on<AllAlbumsUploadPhotos>(_onUploadPhotos);
+    on<AllAlbumsUploadStatusChanged>(_onUploadStatusChanged);
   }
 
   void _onSubscriptionRequested(
@@ -290,7 +295,8 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
             AllAlbumsDeleteStatusUnit(status: AllAlbumsDeleteStatus.loading)));
 
     try {
-      await _fileRepository.deleteFiles(event.albums.map((album) => album.path).toList());
+      await _fileRepository
+          .deleteFiles(event.albums.map((album) => album.path).toList());
 
       List<AlbumItem> albums = [...state.albums];
       List<AlbumItem> checkedAlbums = [...state.checkedAlbums];
@@ -299,30 +305,24 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
       checkedAlbums.removeWhere((album) => event.albums.contains(album));
 
       emit(state.copyWith(
-        albums: albums,
-        checkedAlbums: checkedAlbums,
-        deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
-            status: AllAlbumsDeleteStatus.success,
-          albums: albums
-        )
-      ));
+          albums: albums,
+          checkedAlbums: checkedAlbums,
+          deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
+              status: AllAlbumsDeleteStatus.success, albums: albums)));
     } catch (e) {
       emit(state.copyWith(
-        deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
-          status: AllAlbumsDeleteStatus.failure,
-          failureReason: (e as BusinessError).message
-        )
-      ));
+          deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
+              status: AllAlbumsDeleteStatus.failure,
+              failureReason: (e as BusinessError).message)));
     }
   }
 
   void _onCopyAlbumsSubmitted(
-      AllAlbumsCopySubmitted event,
-      Emitter<AllAlbumsState> emit) {
-    emit(state.copyWith(copyStatus: AllAlbumsCopyStatusUnit(
-      fileType: AllAlbumsFileType.album,
-        status: AllAlbumsCopyStatus.start
-    )));
+      AllAlbumsCopySubmitted event, Emitter<AllAlbumsState> emit) {
+    emit(state.copyWith(
+        copyStatus: AllAlbumsCopyStatusUnit(
+            fileType: AllAlbumsFileType.album,
+            status: AllAlbumsCopyStatus.start)));
 
     String? fileName = null;
 
@@ -331,7 +331,7 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     }
 
     _fileRepository.copyFilesTo(
-      fileName: fileName,
+        fileName: fileName,
         paths: event.albums.map((album) => album.path).toList(),
         dir: event.dir,
         onProgress: (fileName, current, total) {
@@ -340,77 +340,84 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
               status: AllAlbumsCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
               fileType: AllAlbumsFileType.album,
               status: AllAlbumsCopyStatus.success,
-              fileName: fileName
-          )));
-
+              fileName: fileName)));
         },
         onError: (String error) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
               fileType: AllAlbumsFileType.album,
               status: AllAlbumsCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              error: error)));
+        });
   }
 
   void _onCancelCopySubmitted(
-      AllAlbumsCancelCopySubmitted event,
-      Emitter<AllAlbumsState> emit) {
+      AllAlbumsCancelCopySubmitted event, Emitter<AllAlbumsState> emit) {
     _fileRepository.cancelCopy();
   }
 
   void _onCopyAlbumsStatusChanged(
-      AllAlbumsCopyStatusChanged event,
-      Emitter<AllAlbumsState> emit) {
+      AllAlbumsCopyStatusChanged event, Emitter<AllAlbumsState> emit) {
     emit(state.copyWith(copyStatus: event.status));
   }
 
-  void _onDeleteImagesSubmitted(
-      AllAlbumsDeleteImagesSubmitted event, Emitter<AllAlbumsState> emit) async {
+  void _onDeleteImagesSubmitted(AllAlbumsDeleteImagesSubmitted event,
+      Emitter<AllAlbumsState> emit) async {
     emit(state.copyWith(
         deleteAlbumStatus:
-        AllAlbumsDeleteStatusUnit(status: AllAlbumsDeleteStatus.loading)));
+            AllAlbumsDeleteStatusUnit(status: AllAlbumsDeleteStatus.loading)));
 
     try {
-      await _fileRepository.deleteFiles(event.images.map((album) => album.path).toList());
+      await _fileRepository
+          .deleteFiles(event.images.map((album) => album.path).toList());
 
       List<ImageItem> images = [...state.loadImagesInAlbumStatus.images];
-      List<ImageItem> checkedImages = [...state.loadImagesInAlbumStatus.checkedImages];
+      List<ImageItem> checkedImages = [
+        ...state.loadImagesInAlbumStatus.checkedImages
+      ];
+
+      final album = state.albumOpenStatus.current;
+
+      if (album != null) {
+        final albums = [...state.albums];
+
+        album.photoNum -= event.images.length;
+
+        int index = albums.indexOf(album);
+        albums[index] = album;
+
+        if (album.photoNum <= 0) {
+          albums.removeAt(index);
+        }
+
+        emit(state.copyWith(albums: albums));
+      }
 
       images.removeWhere((image) => event.images.contains(image));
       checkedImages.removeWhere((image) => event.images.contains(image));
 
       emit(state.copyWith(
-        loadImagesInAlbumStatus: state.loadImagesInAlbumStatus.copyWith(
-          images: images,
-          checkedImages: checkedImages
-        )
-      ));
+          loadImagesInAlbumStatus: state.loadImagesInAlbumStatus
+              .copyWith(images: images, checkedImages: checkedImages)));
     } catch (e) {
       emit(state.copyWith(
           deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
               status: AllAlbumsDeleteStatus.failure,
-              failureReason: (e as BusinessError).message
-          )
-      ));
+              failureReason: (e as BusinessError).message)));
     }
   }
 
   void _onCopyImagesSubmitted(
-      AllAlbumsCopyImagesSubmitted event,
-      Emitter<AllAlbumsState> emit) {
-    emit(state.copyWith(copyStatus: AllAlbumsCopyStatusUnit(
-        fileType: AllAlbumsFileType.image,
-        status: AllAlbumsCopyStatus.start
-    )));
+      AllAlbumsCopyImagesSubmitted event, Emitter<AllAlbumsState> emit) {
+    emit(state.copyWith(
+        copyStatus: AllAlbumsCopyStatusUnit(
+            fileType: AllAlbumsFileType.image,
+            status: AllAlbumsCopyStatus.start)));
 
     _fileRepository.copyFilesTo(
         paths: event.images.map((album) => album.path).toList(),
@@ -421,24 +428,96 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
               status: AllAlbumsCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
               fileType: AllAlbumsFileType.image,
               status: AllAlbumsCopyStatus.success,
-              fileName: fileName
-          )));
-
+              fileName: fileName)));
         },
         onError: (String error) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
               fileType: AllAlbumsFileType.image,
               status: AllAlbumsCopyStatus.failure,
-              error: error
-          )));
+              error: error)));
+        });
+  }
+
+  void _onUploadPhotos(
+      AllAlbumsUploadPhotos event, Emitter<AllAlbumsState> emit) {
+    emit(state.copyWith(
+        uploadStatus: state.uploadStatus.copyWith(
+            status: AllAlbumsUploadStatus.start, photos: event.photos)));
+
+    _imageRepository.uploadPhotos(
+        pos: Constant.posAlbumPictures,
+        photos: event.photos,
+        path: event.album.path,
+        onError: (error) {
+          add(AllAlbumsUploadStatusChanged(
+              status: state.uploadStatus.copyWith(
+                  status: AllAlbumsUploadStatus.failure, failureReason: error),
+              album: event.album));
+        },
+        onUploading: (sent, total) {
+          add(AllAlbumsUploadStatusChanged(
+              status: state.uploadStatus.copyWith(
+                  status: AllAlbumsUploadStatus.uploading,
+                  current: sent,
+                  total: total),
+              album: event.album));
+        },
+        onSuccess: (images) {
+          add(AllAlbumsUploadStatusChanged(
+              status: state.uploadStatus.copyWith(
+                  status: AllAlbumsUploadStatus.success, images: images),
+              album: event.album,
+              images: images));
+        });
+  }
+
+  void _onUploadStatusChanged(
+      AllAlbumsUploadStatusChanged event, Emitter<AllAlbumsState> emit) async {
+    final isAlbumOpened = state.albumOpenStatus.isOpened;
+
+    if (isAlbumOpened) {
+      if (event.status.status == AllAlbumsUploadStatus.success) {
+        final images = [...state.loadImagesInAlbumStatus.images];
+        List<ImageItem>? uploadedImages = event.images;
+
+        if (uploadedImages != null && uploadedImages.isNotEmpty) {
+          images.addAll(uploadedImages);
         }
-    );
+
+        final album = event.album;
+
+        final albums = [...state.albums];
+        final photos = event.status.photos;
+        album.photoNum += photos.length;
+
+        int index = albums.indexOf(album);
+        albums[index] = album;
+
+        emit(state.copyWith(
+            albums: albums,
+            loadImagesInAlbumStatus: state.loadImagesInAlbumStatus.copyWith(
+                status: LoadImagesInAlbumStatus.success, images: images)));
+      }
+    } else {
+      if (event.status.status == AllAlbumsUploadStatus.success) {
+        final album = event.album;
+
+        final albums = [...state.albums];
+        final photos = event.status.photos;
+        album.photoNum += photos.length;
+
+        int index = albums.indexOf(album);
+        albums[index] = album;
+        emit(state.copyWith(albums: albums));
+      }
+    }
+
+    emit(state.copyWith(uploadStatus: event.status));
   }
 }

@@ -1,4 +1,6 @@
 class Constant {
+  Constant._();
+  
   static const int PORT_SEARCH = 20000;
 
   static const int PORT_CMD = 20001;

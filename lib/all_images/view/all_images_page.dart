@@ -303,7 +303,7 @@ class AllImagesView extends StatelessWidget {
         ],
         child: DropTarget(
           onDragDone: (details) {
-            if (_isHide(context)) return;
+            if (!_isShowing(context)) return;
 
             final photos = details.files
                 .map((xFile) => File(xFile.path))
@@ -330,10 +330,10 @@ class AllImagesView extends StatelessWidget {
     );
   }
 
-  bool _isHide(BuildContext context) {
+  bool _isShowing(BuildContext context) {
     final tab = context.read<HomeImageBloc>().state.tab;
-    if (isFromCamera && tab == HomeImageTab.allImages) return true;
-    if (!isFromCamera && tab == HomeImageTab.allAlbums) return true;
+    if (isFromCamera && tab == HomeImageTab.cameraImages) return true;
+    if (!isFromCamera && tab == HomeImageTab.allImages) return true;
     return false;
   }
 

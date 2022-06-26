@@ -9,6 +9,8 @@ abstract class DeviceConnectionManager {
     return _instance;
   }
 
+  DeviceConnectionManager._internal();
+
   Device? currentDevice;
 
   String get rootURL;
