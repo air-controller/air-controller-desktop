@@ -90,6 +90,7 @@ class HomeView extends StatelessWidget {
 
   DownloaderCore? _downloaderCore;
   String? _downloadUpdateDir;
+  StreamSubscription<UpdateMobileInfo>? _updateMobileInfoSubscription;
 
   HomeView({Key? key}) : super(key: key);
 
@@ -105,8 +106,11 @@ class HomeView extends StatelessWidget {
 
     final bloc = context.select((HomeBloc bloc) => bloc);
 
-    eventBus.on<UpdateMobileInfo>().listen((event) {
-      bloc.add(HomeUpdateMobileInfo(event.mobileInfo));
+    _updateMobileInfoSubscription =
+        eventBus.on<UpdateMobileInfo>().listen((event) {
+      if (!bloc.isClosed) {
+        bloc.add(HomeUpdateMobileInfo(event.mobileInfo));
+      }
     });
 
     Color getTabBgColor(int currentIndex) {
@@ -774,7 +778,8 @@ class HomeView extends StatelessWidget {
 
   void _exitFileManager(BuildContext context) {
     DeviceConnectionManager.instance.currentDevice = null;
-
+    _updateMobileInfoSubscription?.cancel();
+    
     eventBus.fire(ExitCmdService());
     eventBus.fire(ExitHeartbeatService());
 
