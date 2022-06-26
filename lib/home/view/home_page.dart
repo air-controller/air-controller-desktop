@@ -57,7 +57,7 @@ class HomePage extends StatelessWidget {
       RepositoryProvider<VideoRepository>(
           create: (context) => VideoRepository(client: client)),
       RepositoryProvider<ContactRepository>(
-          create: (context) => ContactRepository(client: client))    
+          create: (context) => ContactRepository(client: client))
     ], child: HomeBlocProviderView());
   }
 }
@@ -101,11 +101,12 @@ class HomeView extends StatelessWidget {
     Stream<UpdateDownloadStatusUnit> updateDownloadStatusStream =
         context.select((HomeBloc bloc) => bloc.updateDownloadStatusStream);
     Stream<MobileInfo> updateMobileInfoStream =
-      context.select((HomeBloc bloc) => bloc.updateMobileInfoStream);
+        context.select((HomeBloc bloc) => bloc.updateMobileInfoStream);
+
+    final bloc = context.select((HomeBloc bloc) => bloc);
 
     eventBus.on<UpdateMobileInfo>().listen((event) {
-      log("HomePage, eventBus#UpdateMobileInfo, batteryLevel: ${event.mobileInfo.batteryLevel}");
-      context.read<HomeBloc>().add(HomeUpdateMobileInfo(event.mobileInfo));
+      bloc.add(HomeUpdateMobileInfo(event.mobileInfo));
     });
 
     Color getTabBgColor(int currentIndex) {
@@ -135,22 +136,25 @@ class HomeView extends StatelessWidget {
                   showDialog(
                       context: context,
                       builder: (context) {
-
-                        int publishTime = state.updateCheckStatus.publishTime ?? 0;
+                        int publishTime =
+                            state.updateCheckStatus.publishTime ?? 0;
 
                         final enterContext = EnterPage.enterKey.currentContext;
                         String languageCode = "en";
 
                         if (null != enterContext) {
-                          languageCode = Localizations.localeOf(enterContext).languageCode;
+                          languageCode =
+                              Localizations.localeOf(enterContext).languageCode;
                         }
 
                         String publishTimeStr = "";
 
                         if (languageCode == "en") {
-                          publishTimeStr = CommonUtil.convertToUSTime(publishTime);
+                          publishTimeStr =
+                              CommonUtil.convertToUSTime(publishTime);
                         } else {
-                          publishTimeStr = CommonUtil.formatTime(publishTime, "YYYY MM dd");
+                          publishTimeStr =
+                              CommonUtil.formatTime(publishTime, "YYYY MM dd");
                         }
 
                         return UpdateCheckDialogUI(
@@ -163,7 +167,8 @@ class HomeView extends StatelessWidget {
                             Navigator.of(context).pop();
                           },
                           onSeeMoreClick: () {
-                            SystemAppLauncher.openUrl(Constant.URL_VERSION_LIST);
+                            SystemAppLauncher.openUrl(
+                                Constant.URL_VERSION_LIST);
                           },
                           onUpdateClick: () {
                             String? name = state.updateCheckStatus.name;
@@ -177,8 +182,7 @@ class HomeView extends StatelessWidget {
                           },
                         );
                       },
-                      barrierDismissible: false
-                  );
+                      barrierDismissible: false);
                 } else {
                   if (!updateCheckStatus.isAutoCheck) {
                     SmartDialog.showToast(context.l10n.noUpdatesAvailable);
@@ -186,16 +190,17 @@ class HomeView extends StatelessWidget {
                 }
               }
 
-              if (updateCheckStatus.status == UpdateCheckStatus.start
-                  && !updateCheckStatus.isAutoCheck) {
+              if (updateCheckStatus.status == UpdateCheckStatus.start &&
+                  !updateCheckStatus.isAutoCheck) {
                 SmartDialog.showLoading();
               }
 
-              if (updateCheckStatus.status == UpdateCheckStatus.failure
-                  && !updateCheckStatus.isAutoCheck) {
+              if (updateCheckStatus.status == UpdateCheckStatus.failure &&
+                  !updateCheckStatus.isAutoCheck) {
                 SmartDialog.dismiss();
 
-                SmartDialog.showToast(updateCheckStatus.failureReason ?? context.l10n.failedToCheckForUpdates);
+                SmartDialog.showToast(updateCheckStatus.failureReason ??
+                    context.l10n.failedToCheckForUpdates);
               }
             },
             listenWhen: (previous, current) {
@@ -216,7 +221,7 @@ class HomeView extends StatelessWidget {
                                 alignment: Alignment.center,
                                 child: Text("",
                                     style:
-                                    TextStyle(color: "#656565".toColor()))),
+                                        TextStyle(color: "#656565".toColor()))),
                             height: 40.0,
                             padding: EdgeInsets.fromLTRB(10, 0, 0, 0)),
                         Divider(height: 1, color: "#e0e0e0".toColor()),
@@ -443,7 +448,8 @@ class HomeView extends StatelessWidget {
 
                             String batteryInfo = "";
                             if (null != mobileInfo) {
-                              batteryInfo = "${context.l10n.batteryLabel}${mobileInfo.batteryLevel}%";
+                              batteryInfo =
+                                  "${context.l10n.batteryLabel}${mobileInfo.batteryLevel}%";
                             }
 
                             String storageInfo = "";
@@ -457,30 +463,35 @@ class HomeView extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Container(
                                       child: Text(
                                         "${DeviceConnectionManager.instance.currentDevice?.name}",
                                         style: TextStyle(
-                                            fontSize: 16, color: Color(0xff656568)),
+                                            fontSize: 16,
+                                            color: Color(0xff656568)),
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.left,
                                       ),
                                       width: 100,
                                       // color: Colors.blue,
                                     ),
-                                    StatefulBuilder(builder: (context, setState) {
+                                    StatefulBuilder(
+                                        builder: (context, setState) {
                                       if (_isPopupIconDown) {
                                         hoverIconBgColor = Color(0xffe4e4e4);
                                       }
 
-                                      if (!_isPopupIconDown && _isPopupIconHover) {
+                                      if (!_isPopupIconDown &&
+                                          _isPopupIconHover) {
                                         hoverIconBgColor = Color(0xffededed);
                                       }
 
-                                      if (!_isPopupIconDown && !_isPopupIconHover) {
+                                      if (!_isPopupIconDown &&
+                                          !_isPopupIconHover) {
                                         hoverIconBgColor = Color(0xfffafafa);
                                       }
 
@@ -559,133 +570,137 @@ class HomeView extends StatelessWidget {
                   width: 1.0, thickness: 1.0, color: "#e1e1d3".toColor()),
               Expanded(
                   child: Stack(
+                children: [
+                  IndexedStack(
+                    index: tab.index,
                     children: [
-                      IndexedStack(
-                        index: tab.index,
-                        children: [
-                          HomeImageFlow(),
-                          MusicHomePage(),
-                          VideoHomePage(),
-                          FileHomePage(true),
-                          FileHomePage(false),
-                          ToolboxFlow(),
-                          HelpAndFeedbackPage()
-                        ],
-                      ),
+                      HomeImageFlow(),
+                      MusicHomePage(),
+                      VideoHomePage(),
+                      FileHomePage(true),
+                      FileHomePage(false),
+                      ToolboxFlow(),
+                      HelpAndFeedbackPage()
+                    ],
+                  ),
+                  StreamBuilder(
+                    builder: (context, snapshot) {
+                      HomeLinearProgressIndicatorStatus? status = null;
 
-                      StreamBuilder(
-                          builder: (context, snapshot) {
-                            HomeLinearProgressIndicatorStatus? status = null;
+                      if (snapshot.hasData) {
+                        status =
+                            snapshot.data as HomeLinearProgressIndicatorStatus;
+                      }
 
-                            if (snapshot.hasData) {
-                              status = snapshot.data as HomeLinearProgressIndicatorStatus;
-                            }
+                      return Visibility(
+                        child: Positioned(
+                          top: Constant.HOME_NAVI_BAR_HEIGHT,
+                          left: 0,
+                          right: 0,
+                          child: LinearProgressIndicator(
+                            value: status == null || status.total == 0
+                                ? 0
+                                : status.current / status.total,
+                            color: Color(0xff3174de),
+                            backgroundColor: Color(0xfffe3e3e3),
+                            minHeight: 2,
+                          ),
+                        ),
+                        visible: status?.visible == true,
+                      );
+                    },
+                    stream: progressIndicatorStream,
+                  ),
+                  StreamBuilder(
+                      stream: updateDownloadStatusStream,
+                      builder: (context, snapshot) {
+                        UpdateDownloadStatusUnit? updateDownloadStatus = null;
 
-                            return Visibility(child: Positioned(
+                        if (snapshot.hasData) {
+                          updateDownloadStatus =
+                              snapshot.data as UpdateDownloadStatusUnit;
+                        }
+
+                        return Visibility(
+                          child: Positioned(
                               top: Constant.HOME_NAVI_BAR_HEIGHT,
                               left: 0,
                               right: 0,
-                              child: LinearProgressIndicator(
-                                value: status == null || status.total == 0 ? 0 : status.current / status.total,
-                                color: Color(0xff3174de),
-                                backgroundColor: Color(0xfffe3e3e3),
-                                minHeight: 2,
-                              ),
-                            ),
-                              visible: status?.visible == true,
-                            );
-                          },
-                          stream: progressIndicatorStream,
-                      ),
-
-                      StreamBuilder(
-                        stream: updateDownloadStatusStream,
-                          builder: (context, snapshot) {
-                              UpdateDownloadStatusUnit? updateDownloadStatus = null;
-
-                              if (snapshot.hasData) {
-                                updateDownloadStatus = snapshot.data as UpdateDownloadStatusUnit;
-                              }
-
-                              return Visibility(
-                                  child: Positioned(
-                                      top: Constant.HOME_NAVI_BAR_HEIGHT,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.max,
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  context.l10n.packageHasReady,
-                                                  style: TextStyle(
-                                                      color: Colors.white
-                                                  ),
-                                                ),
-
-                                                Container(
-                                                  child: Text(
-                                                    "$_downloadUpdateDir",
-                                                    style: TextStyle(
-                                                        color: Colors.white
-                                                    ),
-                                                  ),
-                                                  margin: EdgeInsets.only(left: 10),
-                                                )
-                                              ],
-                                            ),
-
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  child: OutlinedButton(
-                                                    onPressed: () {
-                                                      context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-                                                          UpdateDownloadStatusUnit(status: UpdateDownloadStatus.initial)
-                                                      ));
-                                                    },
-                                                    child: Text(
-                                                      context.l10n.iKnow,
-                                                      style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14
-                                                      ),
-                                                    ),
-                                                    style: ButtonStyle(
-                                                        backgroundColor: MaterialStateColor.resolveWith((states) {
-                                                          if (states.contains(MaterialState.pressed)) {
-                                                            return Color(0xbbd5362c);
-                                                          }
-
-                                                          return Color(0xffd5362c);
-                                                        }),
-                                                        fixedSize: MaterialStateProperty.all(Size(80, 26)),
-                                                        minimumSize: MaterialStateProperty.all(Size(0, 0))
-                                                    ),
-                                                  ),
-                                                  margin: EdgeInsets.only(left: 15),
-                                                )
-                                              ],
-                                            )
-                                          ],
+                              child: Container(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          context.l10n.packageHasReady,
+                                          style: TextStyle(color: Colors.white),
                                         ),
-                                        height: 40,
-                                        color: Color(0xff3174de),
-                                        padding: EdgeInsets.only(left: 15, right: 15),
-                                      )
-                                  ),
-                                  visible: updateDownloadStatus?.status == UpdateDownloadStatus.success,
-                              );
-                          }
-                      )
-                    ],
-                  )),
+                                        Container(
+                                          child: Text(
+                                            "$_downloadUpdateDir",
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          margin: EdgeInsets.only(left: 10),
+                                        )
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          child: OutlinedButton(
+                                            onPressed: () {
+                                              context.read<HomeBloc>().add(
+                                                  HomeUpdateDownloadStatusChanged(
+                                                      UpdateDownloadStatusUnit(
+                                                          status:
+                                                              UpdateDownloadStatus
+                                                                  .initial)));
+                                            },
+                                            child: Text(
+                                              context.l10n.iKnow,
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14),
+                                            ),
+                                            style: ButtonStyle(
+                                                backgroundColor:
+                                                    MaterialStateColor
+                                                        .resolveWith((states) {
+                                                  if (states.contains(
+                                                      MaterialState.pressed)) {
+                                                    return Color(0xbbd5362c);
+                                                  }
 
-            ])
-    );
+                                                  return Color(0xffd5362c);
+                                                }),
+                                                fixedSize:
+                                                    MaterialStateProperty.all(
+                                                        Size(80, 26)),
+                                                minimumSize:
+                                                    MaterialStateProperty.all(
+                                                        Size(0, 0))),
+                                          ),
+                                          margin: EdgeInsets.only(left: 15),
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                height: 40,
+                                color: Color(0xff3174de),
+                                padding: EdgeInsets.only(left: 15, right: 15),
+                              )),
+                          visible: updateDownloadStatus?.status ==
+                              UpdateDownloadStatus.success,
+                        );
+                      })
+                ],
+              )),
+            ]));
   }
 
   void _tryToDownloadUpdate(BuildContext context, String name, String url) {
@@ -702,56 +717,40 @@ class HomeView extends StatelessWidget {
     });
   }
 
-  void _downloadUpdateToDir(BuildContext context, String name, String url, String dir) async {
+  void _downloadUpdateToDir(
+      BuildContext context, String name, String url, String dir) async {
     context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-      HomeLinearProgressIndicatorStatus(
-        visible: true
-      )
-    ));
+        HomeLinearProgressIndicatorStatus(visible: true)));
 
     context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-        UpdateDownloadStatusUnit(
-          status: UpdateDownloadStatus.start
-        )
-    ));
+        UpdateDownloadStatusUnit(status: UpdateDownloadStatus.start)));
 
     var options = DownloaderUtils(
-          progress: ProgressImplementation(),
-          file: File("$dir/$name"),
-          onDone: () {
-            context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-                HomeLinearProgressIndicatorStatus(
-                    visible: false,
-                    current: 0,
-                    total: 0
-                )
-            ));
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+              HomeLinearProgressIndicatorStatus(
+                  visible: false, current: 0, total: 0)));
 
-            context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-                UpdateDownloadStatusUnit(
-                    status: UpdateDownloadStatus.success,
+          context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
+              UpdateDownloadStatusUnit(
+                  status: UpdateDownloadStatus.success,
                   name: name,
-                  path: "$dir/$name"
-                )
-            ));
-          },
-          progressCallback: (current, total) {
-            log("_downloadUpdateToDir, name: $name, current: $current, total: $total");
-            context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
-                HomeLinearProgressIndicatorStatus(
-                    visible: true,
-                  current: current,
-                  total: total
-                )
-            ));
+                  path: "$dir/$name")));
+        },
+        progressCallback: (current, total) {
+          log("_downloadUpdateToDir, name: $name, current: $current, total: $total");
+          context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+              HomeLinearProgressIndicatorStatus(
+                  visible: true, current: current, total: total)));
 
-            context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
-                UpdateDownloadStatusUnit(
-                    status: UpdateDownloadStatus.downloading,
-                )
-            ));
-          }
-    );
+          context
+              .read<HomeBloc>()
+              .add(HomeUpdateDownloadStatusChanged(UpdateDownloadStatusUnit(
+                status: UpdateDownloadStatus.downloading,
+              )));
+        });
 
     try {
       if (null == _downloaderCore) {
@@ -762,18 +761,12 @@ class HomeView extends StatelessWidget {
     } catch (e) {
       context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
           HomeLinearProgressIndicatorStatus(
-              visible: false,
-              current: 0,
-              total: 0
-          )
-      ));
+              visible: false, current: 0, total: 0)));
 
       context.read<HomeBloc>().add(HomeUpdateDownloadStatusChanged(
           UpdateDownloadStatusUnit(
-            status: UpdateDownloadStatus.failure,
-            failureReason: "${e.toString()}"
-          )
-      ));
+              status: UpdateDownloadStatus.failure,
+              failureReason: "${e.toString()}")));
 
       SmartDialog.showToast(context.l10n.downloadUpdateFailure);
     }
