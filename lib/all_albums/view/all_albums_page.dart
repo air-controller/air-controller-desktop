@@ -943,7 +943,13 @@ class _AlbumsListItemState extends State<_AlbumsListItem> {
                               height: imageWidth,
                               memCacheWidth: 400,
                               fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero),
+                              fadeInDuration: Duration.zero,
+                              errorWidget: (context, url, error) {
+                                return Image.asset(
+                                    "assets/icons/brokenImage.png",
+                                    width: imageWidth,
+                                    height: imageWidth);
+                              }),
                           padding: EdgeInsets.all(imagePadding),
                           decoration: BoxDecoration(
                               color: Colors.white,

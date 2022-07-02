@@ -405,16 +405,19 @@ class _ImageGridItem extends StatelessWidget {
         child: SimpleGestureDetector(
           child: Container(
               child: CachedNetworkImage(
-                imageUrl:
-                    "$rootUrl/stream/image/thumbnail/${image.id}/${width.toInt() * 4}/${height.toInt() * 4}",
-                fit: BoxFit.cover,
-                width: width,
-                height: height,
-                memCacheWidth:
-                    (width > height ? width * 2 : height * 2).toInt(),
-                fadeOutDuration: Duration.zero,
-                fadeInDuration: Duration.zero,
-              ),
+                  imageUrl:
+                      "$rootUrl/stream/image/thumbnail/${image.id}/${width.toInt() * 4}/${height.toInt() * 4}",
+                  fit: BoxFit.cover,
+                  width: width,
+                  height: height,
+                  memCacheWidth:
+                      (width > height ? width * 2 : height * 2).toInt(),
+                  fadeOutDuration: Duration.zero,
+                  fadeInDuration: Duration.zero,
+                  errorWidget: (context, url, error) {
+                    return Image.asset("assets/icons/brokenImage.png",
+                        width: width, height: height);
+                  }),
               decoration: BoxDecoration(
                   border: new Border.all(
                       color: isChecked ? _checkedBorderColor : _borderColor,
