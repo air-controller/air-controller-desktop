@@ -331,9 +331,15 @@ class AllImagesView extends StatelessWidget {
   }
 
   bool _isShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
     final tab = context.read<HomeImageBloc>().state.tab;
-    if (isFromCamera && tab == HomeImageTab.cameraImages) return true;
-    if (!isFromCamera && tab == HomeImageTab.allImages) return true;
+
+    if (homeTab == HomeTab.image &&
+        isFromCamera &&
+        tab == HomeImageTab.cameraImages) return true;
+    if (homeTab == HomeTab.image &&
+        !isFromCamera &&
+        tab == HomeImageTab.allImages) return true;
     return false;
   }
 

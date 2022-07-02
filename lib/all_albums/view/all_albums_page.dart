@@ -722,6 +722,16 @@ class AllAlbumsView extends StatelessWidget {
                       isOpened: true, position: position, target: album)));
             },
             onDragDone: (details) {
+              final homeTab = context.read<HomeBloc>().state.tab;
+              if (homeTab != HomeTab.image) return;
+
+              final tab = context.read<HomeImageBloc>().state.tab;
+              if (tab != HomeImageTab.allAlbums) return;
+
+              final isAlbumOpened =
+                  context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+              if (isAlbumOpened) return;
+
               final photos = details.files
                   .map((e) => File(e.path))
                   .where((element) => element.isImage)
@@ -795,6 +805,16 @@ class AllAlbumsView extends StatelessWidget {
         },
       ),
       onDragDone: (details) {
+        final homeTab = context.read<HomeBloc>().state.tab;
+        if (homeTab != HomeTab.image) return;
+
+        final tab = context.read<HomeImageBloc>().state.tab;
+        if (tab != HomeImageTab.allAlbums) return;
+
+        final isAlbumOpened =
+            context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+        if (!isAlbumOpened) return;
+
         final photos = details.files
             .map((e) => File(e.path))
             .where((element) => element.isImage)
