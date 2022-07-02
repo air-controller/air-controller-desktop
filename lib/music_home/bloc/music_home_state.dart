@@ -7,8 +7,8 @@ enum MusicHomeSortColumn { folder, name, type, duration, size, modifyTime }
 extension MusicHomeSortColumnX on MusicHomeSortColumn {
   static MusicHomeSortColumn convertToColumn(int index) {
     try {
-      MusicHomeSortColumn column = MusicHomeSortColumn.values.firstWhere((
-          MusicHomeSortColumn column) => column.index == index);
+      MusicHomeSortColumn column = MusicHomeSortColumn.values
+          .firstWhere((MusicHomeSortColumn column) => column.index == index);
       return column;
     } catch (e) {
       return MusicHomeSortColumn.folder;
@@ -39,11 +39,10 @@ class MusicHomeDeleteStatusUnit extends Equatable {
   final List<AudioItem> musics;
   final String? failureReason;
 
-  const MusicHomeDeleteStatusUnit({
-    this.status = MusicHomeDeleteStatus.initial,
-    this.musics = const [],
-    this.failureReason = null
-  });
+  const MusicHomeDeleteStatusUnit(
+      {this.status = MusicHomeDeleteStatus.initial,
+      this.musics = const [],
+      this.failureReason = null});
 
   @override
   List<Object?> get props => [status, failureReason, musics];
@@ -58,16 +57,33 @@ class MusicHomeCopyStatusUnit extends Equatable {
   final String fileName;
   final String? error;
 
-  const MusicHomeCopyStatusUnit({
-    this.status = MusicHomeCopyStatus.initial,
-    this.current = 0,
-    this.total = 0,
-    this.fileName = '',
-    this.error
-  });
+  const MusicHomeCopyStatusUnit(
+      {this.status = MusicHomeCopyStatus.initial,
+      this.current = 0,
+      this.total = 0,
+      this.fileName = '',
+      this.error});
 
   @override
   List<Object?> get props => [status, current, total, fileName, error];
+}
+
+enum MusicHomeUploadStatus { initial, start, uploading, failure, success }
+
+class MusicHomeUploadStatusUnit extends Equatable {
+  final MusicHomeUploadStatus status;
+  final int total;
+  final int current;
+  final String? failureReason;
+
+  const MusicHomeUploadStatusUnit(
+      {this.status = MusicHomeUploadStatus.initial,
+      this.total = 1,
+      this.current = 0,
+      this.failureReason});
+
+  @override
+  List<Object?> get props => [status, total, current, failureReason];
 }
 
 class MusicHomeState extends Equatable {
@@ -81,23 +97,23 @@ class MusicHomeState extends Equatable {
   final MusicHomeOpenMenuStatus openMenuStatus;
   final MusicHomeDeleteStatusUnit deleteStatus;
   final MusicHomeCopyStatusUnit copyStatus;
+  final MusicHomeUploadStatusUnit uploadStatus;
 
-  const MusicHomeState({
-    this.musics = const [],
-    this.checkedMusics = const [],
-    this.status = MusicHomeStatus.initial,
-    this.failureReason = '',
-    this.sortColumn = MusicHomeSortColumn.folder,
-    this.sortDirection = MusicHomeSortDirection.descending,
-    this.keyStatus = MusicHomeBoardKeyStatus.none,
-    this.openMenuStatus = const MusicHomeOpenMenuStatus(),
-    this.deleteStatus = const MusicHomeDeleteStatusUnit(),
-    this.copyStatus = const MusicHomeCopyStatusUnit()
-  });
+  const MusicHomeState(
+      {this.musics = const [],
+      this.checkedMusics = const [],
+      this.status = MusicHomeStatus.initial,
+      this.failureReason = '',
+      this.sortColumn = MusicHomeSortColumn.folder,
+      this.sortDirection = MusicHomeSortDirection.descending,
+      this.keyStatus = MusicHomeBoardKeyStatus.none,
+      this.openMenuStatus = const MusicHomeOpenMenuStatus(),
+      this.deleteStatus = const MusicHomeDeleteStatusUnit(),
+      this.copyStatus = const MusicHomeCopyStatusUnit(),
+      this.uploadStatus = const MusicHomeUploadStatusUnit()});
 
   @override
-  List<Object?> get props =>
-      [
+  List<Object?> get props => [
         musics,
         checkedMusics,
         status,
@@ -107,21 +123,22 @@ class MusicHomeState extends Equatable {
         keyStatus,
         openMenuStatus,
         deleteStatus,
-        copyStatus
+        copyStatus,
+        uploadStatus,
       ];
 
-  MusicHomeState copyWith({
-    List<AudioItem>? musics,
-    List<AudioItem>? checkedMusics,
-    MusicHomeStatus? status,
-    String? failureReason,
-    MusicHomeSortColumn? sortColumn,
-    MusicHomeSortDirection? sortDirection,
-    MusicHomeBoardKeyStatus? keyStatus,
-    MusicHomeOpenMenuStatus? openMenuStatus,
-    MusicHomeDeleteStatusUnit? deleteStatus,
-    MusicHomeCopyStatusUnit? copyStatus
-  }) {
+  MusicHomeState copyWith(
+      {List<AudioItem>? musics,
+      List<AudioItem>? checkedMusics,
+      MusicHomeStatus? status,
+      String? failureReason,
+      MusicHomeSortColumn? sortColumn,
+      MusicHomeSortDirection? sortDirection,
+      MusicHomeBoardKeyStatus? keyStatus,
+      MusicHomeOpenMenuStatus? openMenuStatus,
+      MusicHomeDeleteStatusUnit? deleteStatus,
+      MusicHomeCopyStatusUnit? copyStatus,
+      MusicHomeUploadStatusUnit? uploadStatus}) {
     return MusicHomeState(
         musics: musics ?? this.musics,
         checkedMusics: checkedMusics ?? this.checkedMusics,
@@ -129,10 +146,10 @@ class MusicHomeState extends Equatable {
         failureReason: failureReason ?? this.failureReason,
         sortColumn: sortColumn ?? this.sortColumn,
         sortDirection: sortDirection ?? this.sortDirection,
-      keyStatus: keyStatus ?? this.keyStatus,
-      openMenuStatus: openMenuStatus ?? this.openMenuStatus,
+        keyStatus: keyStatus ?? this.keyStatus,
+        openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteStatus: deleteStatus ?? this.deleteStatus,
-        copyStatus: copyStatus ?? this.copyStatus
-    );
+        copyStatus: copyStatus ?? this.copyStatus,
+        uploadStatus: uploadStatus ?? this.uploadStatus);
   }
 }

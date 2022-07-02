@@ -87,3 +87,21 @@ class MusicHomeSortInfoChanged extends MusicHomeEvent {
   @override
   List<Object?> get props => [sortColumn, sortDirection];
 }
+
+class MusicHomeUploadAudios extends MusicHomeEvent {
+  final List<File> audios;
+
+  const MusicHomeUploadAudios(this.audios);
+
+  @override
+  List<Object?> get props => [audios];
+}
+
+class MusicHomeUploadStatusChanged extends MusicHomeEvent {
+  final MusicHomeUploadStatusUnit status;
+
+  const MusicHomeUploadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}

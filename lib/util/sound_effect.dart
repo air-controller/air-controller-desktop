@@ -11,7 +11,7 @@ class SoundEffect {
     switch (type) {
       case SoundType.done:
         {
-          await player.play(AssetSource('assets/done.mp3'));
+          await player.play(AssetSource('audios/done.mp3'));
           break;
         }
       case SoundType.bubble:

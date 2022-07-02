@@ -1,6 +1,6 @@
 class Constant {
   Constant._();
-  
+
   static const int PORT_SEARCH = 20000;
 
   static const int PORT_CMD = 20001;
@@ -150,6 +150,26 @@ class Constant {
     "cr2",
     "crw",
     "orf",
+  ];
+
+  static const allAudioSuffix = [
+    "mp3",
+    "wav",
+    "wma",
+    "flac",
+    "ape",
+    "aac",
+    "ogg",
+    "m4a",
+    "m4r",
+    "m4b",
+    "m4p",
+    "m4v",
+    "mpa",
+    "mp2",
+    "mp4",
+    "mov",
+    "cda"
   ];
 
   static const posAllPictures = 1;

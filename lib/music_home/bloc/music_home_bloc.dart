@@ -1,5 +1,5 @@
-
 import 'dart:developer';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
@@ -17,10 +17,8 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
   final AudioRepository audioRepository;
   final FileRepository fileRepository;
 
-  MusicHomeBloc({
-    required this.audioRepository,
-    required this.fileRepository
-  }) : super(MusicHomeState()) {
+  MusicHomeBloc({required this.audioRepository, required this.fileRepository})
+      : super(MusicHomeState()) {
     on<MusicHomeSubscriptionRequested>(_onSubscriptionRequested);
     on<MusicHomeCheckedChanged>(_onCheckedChanged);
     on<MusicHomeKeyStatusChanged>(_onKeyStatusChanged);
@@ -32,30 +30,26 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
     on<MusicHomeCopyStatusChanged>(_onCopyMusicsStatusChanged);
     on<MusicHomeCancelCopySubmitted>(_onCancelCopy);
     on<MusicHomeSortInfoChanged>(_onSortInfoChanged);
+    on<MusicHomeUploadAudios>(_onUploadAudios);
+    on<MusicHomeUploadStatusChanged>(_onUploadStatusChanged);
   }
 
-  void _onSubscriptionRequested(
-      MusicHomeSubscriptionRequested event,
+  void _onSubscriptionRequested(MusicHomeSubscriptionRequested event,
       Emitter<MusicHomeState> emit) async {
     emit(state.copyWith(status: MusicHomeStatus.loading));
 
     try {
       List<AudioItem> musics = await audioRepository.getAllAudios();
-      emit(state.copyWith(
-        status: MusicHomeStatus.success,
-        musics: musics
-      ));
+      emit(state.copyWith(status: MusicHomeStatus.success, musics: musics));
     } catch (e) {
       emit(state.copyWith(
           status: MusicHomeStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          failureReason: (e as BusinessError).message));
     }
   }
 
   void _onCheckedChanged(
-      MusicHomeCheckedChanged event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeCheckedChanged event, Emitter<MusicHomeState> emit) {
     List<AudioItem> allMusics = [...state.musics];
     List<AudioItem> checkedMusics = [...state.checkedMusics];
     AudioItem music = event.music;
@@ -129,37 +123,34 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
   }
 
   void _onKeyStatusChanged(
-      MusicHomeKeyStatusChanged event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeKeyStatusChanged event, Emitter<MusicHomeState> emit) {
     emit(state.copyWith(keyStatus: event.keyStatus));
   }
 
-  void _onCheckAll(
-      MusicHomeCheckAll event,
-      Emitter<MusicHomeState> emit) {
+  void _onCheckAll(MusicHomeCheckAll event, Emitter<MusicHomeState> emit) {
     List<AudioItem> allMusics = state.musics;
     emit(state.copyWith(checkedMusics: allMusics));
   }
 
   void _onClearAllChecked(
-      MusicHomeClearChecked event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeClearChecked event, Emitter<MusicHomeState> emit) {
     emit(state.copyWith(checkedMusics: []));
   }
 
   void _onMenuStatusChanged(
-      MusicHomeMenuStatusChanged event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeMenuStatusChanged event, Emitter<MusicHomeState> emit) {
     emit(state.copyWith(openMenuStatus: event.status));
   }
 
   void _onDeleteSubmitted(
-      MusicHomeDeleteSubmitted event,
-      Emitter<MusicHomeState> emit) async {
-    emit(state.copyWith(deleteStatus: MusicHomeDeleteStatusUnit(status: MusicHomeDeleteStatus.loading)));
+      MusicHomeDeleteSubmitted event, Emitter<MusicHomeState> emit) async {
+    emit(state.copyWith(
+        deleteStatus:
+            MusicHomeDeleteStatusUnit(status: MusicHomeDeleteStatus.loading)));
 
     try {
-      await fileRepository.deleteFiles(event.musics.map((music) => music.path).toList());
+      await fileRepository
+          .deleteFiles(event.musics.map((music) => music.path).toList());
 
       List<AudioItem> musics = [...state.musics];
       List<AudioItem> checkedMusics = [...state.checkedMusics];
@@ -168,29 +159,23 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       checkedMusics.removeWhere((audio) => event.musics.contains(audio));
 
       emit(state.copyWith(
-        musics: musics,
-        checkedMusics: checkedMusics,
-        deleteStatus: MusicHomeDeleteStatusUnit(
-            status: MusicHomeDeleteStatus.success,
-          musics: event.musics
-        )
-      ));
+          musics: musics,
+          checkedMusics: checkedMusics,
+          deleteStatus: MusicHomeDeleteStatusUnit(
+              status: MusicHomeDeleteStatus.success, musics: event.musics)));
     } catch (e) {
       emit(state.copyWith(
           deleteStatus: MusicHomeDeleteStatusUnit(
               status: MusicHomeDeleteStatus.failure,
-            failureReason: (e as BusinessError).message
-          )
-      ));
+              failureReason: (e as BusinessError).message)));
     }
   }
 
   void _onCopyMusicsSubmitted(
-      MusicHomeCopyMusicsSubmitted event,
-      Emitter<MusicHomeState> emit) {
-    emit(state.copyWith(copyStatus: MusicHomeCopyStatusUnit(
-        status: MusicHomeCopyStatus.start
-    )));
+      MusicHomeCopyMusicsSubmitted event, Emitter<MusicHomeState> emit) {
+    emit(state.copyWith(
+        copyStatus:
+            MusicHomeCopyStatusUnit(status: MusicHomeCopyStatus.start)));
 
     fileRepository.copyFilesTo(
         paths: event.musics.map((music) => music.path).toList(),
@@ -200,42 +185,32 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
               status: MusicHomeCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(MusicHomeCopyStatusChanged(MusicHomeCopyStatusUnit(
-              status: MusicHomeCopyStatus.success,
-              fileName: fileName
-          )));
-
+              status: MusicHomeCopyStatus.success, fileName: fileName)));
         },
         onError: (String error) {
           add(MusicHomeCopyStatusChanged(MusicHomeCopyStatusUnit(
-              status: MusicHomeCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              status: MusicHomeCopyStatus.failure, error: error)));
+        });
   }
 
   void _onCopyMusicsStatusChanged(
-      MusicHomeCopyStatusChanged event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeCopyStatusChanged event, Emitter<MusicHomeState> emit) {
     emit(state.copyWith(copyStatus: event.status));
   }
 
   void _onCancelCopy(
-      MusicHomeCancelCopySubmitted event,
-      Emitter<MusicHomeState> emit) {
+      MusicHomeCancelCopySubmitted event, Emitter<MusicHomeState> emit) {
     fileRepository.cancelCopy();
   }
 
   void _onSortInfoChanged(
-      MusicHomeSortInfoChanged event,
-      Emitter<MusicHomeState> emit) {
-    if (state.sortColumn == event.sortColumn
-        && state.sortDirection == event.sortDirection) {
+      MusicHomeSortInfoChanged event, Emitter<MusicHomeState> emit) {
+    if (state.sortColumn == event.sortColumn &&
+        state.sortDirection == event.sortDirection) {
       return;
     }
 
@@ -266,10 +241,9 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       });
 
       emit(state.copyWith(
-        sortColumn: event.sortColumn,
-        sortDirection: event.sortDirection,
-        musics: musics
-      ));
+          sortColumn: event.sortColumn,
+          sortDirection: event.sortDirection,
+          musics: musics));
     }
 
     if (event.sortColumn == MusicHomeSortColumn.name) {
@@ -283,8 +257,7 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       emit(state.copyWith(
           sortColumn: event.sortColumn,
           sortDirection: event.sortDirection,
-          musics: musics
-      ));
+          musics: musics));
     }
 
     if (event.sortColumn == MusicHomeSortColumn.duration) {
@@ -298,8 +271,7 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       emit(state.copyWith(
           sortColumn: event.sortColumn,
           sortDirection: event.sortDirection,
-          musics: musics
-      ));
+          musics: musics));
     }
 
     if (event.sortColumn == MusicHomeSortColumn.size) {
@@ -313,8 +285,7 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       emit(state.copyWith(
           sortColumn: event.sortColumn,
           sortDirection: event.sortDirection,
-          musics: musics
-      ));
+          musics: musics));
     }
 
     if (event.sortColumn == MusicHomeSortColumn.modifyTime) {
@@ -328,8 +299,41 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
       emit(state.copyWith(
           sortColumn: event.sortColumn,
           sortDirection: event.sortDirection,
-          musics: musics
-      ));
+          musics: musics));
+    }
+  }
+
+  void _onUploadAudios(
+      MusicHomeUploadAudios event, Emitter<MusicHomeState> emit) {
+    emit(state.copyWith(
+        uploadStatus:
+            MusicHomeUploadStatusUnit(status: MusicHomeUploadStatus.start)));
+
+    audioRepository.uploadAudios(
+        audios: event.audios,
+        onError: (msg) {
+          add(MusicHomeUploadStatusChanged(MusicHomeUploadStatusUnit(
+              status: MusicHomeUploadStatus.failure, failureReason: msg)));
+        },
+        onUploading: (sent, total) {
+          add(MusicHomeUploadStatusChanged(MusicHomeUploadStatusUnit(
+              status: MusicHomeUploadStatus.uploading,
+              current: sent,
+              total: total)));
+        },
+        onSuccess: () {
+          add(MusicHomeUploadStatusChanged(MusicHomeUploadStatusUnit(
+              status: MusicHomeUploadStatus.success)));
+        });
+  }
+
+  void _onUploadStatusChanged(
+      MusicHomeUploadStatusChanged event, Emitter<MusicHomeState> emit) async {
+    emit(state.copyWith(uploadStatus: event.status));
+
+    if (event.status.status == MusicHomeUploadStatus.success) {
+      final audios = await audioRepository.getAllAudios();
+      emit(state.copyWith(musics: audios));
     }
   }
 }

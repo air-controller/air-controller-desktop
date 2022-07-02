@@ -8,6 +8,11 @@ extension FileX on File {
     return Constant.allImageSuffix.contains(fileExtension.toLowerCase());
   }
 
+  bool get isAudio {
+    final fileExtension = this.extension;
+    return Constant.allAudioSuffix.contains(fileExtension.toLowerCase());
+  }
+
   String get extension {
     final fileName = this.path.split('/').last;
     final fileExtension = fileName.split('.').last;
