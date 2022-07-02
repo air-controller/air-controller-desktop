@@ -128,5 +128,6 @@
   "noteLabel": "备注：",
   "sure": "确定",
   "addCategory": "添加分类",
-  "allContacts": "所有联系人"
+  "allContacts": "所有联系人",
+  "loadImageFailure": "图片加载失败!"
 }

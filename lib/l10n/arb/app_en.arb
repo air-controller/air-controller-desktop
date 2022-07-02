@@ -128,5 +128,6 @@
   "noteLabel": "Note: ",
   "sure": "Ok",
   "addCategory": "Add category",
-  "allContacts": "All contacts"
+  "allContacts": "All contacts",
+  "loadImageFailure": "Load image failure!"
 }

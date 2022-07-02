@@ -446,31 +446,45 @@ class ImageDetailView extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return Listener(
                         child: ExtendedImage.network(
-                          "${_URL_SERVER}/stream/file?path=${images[index].path}",
-                          mode: ExtendedImageMode.gesture,
-                          fit: BoxFit.contain,
-                          initGestureConfigHandler: (state) {
-                            return GestureConfig(
-                                minScale: 1.0,
-                                animationMinScale: 1.0,
-                                maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
-                                animationMaxScale:
-                                    Constant.IMAGE_MAX_SCALE.toDouble(),
-                                speed: 1.0,
-                                inertialSpeed: 100.0,
-                                initialScale: imageScale,
-                                inPageView: false,
-                                initialAlignment: InitialAlignment.center,
-                                gestureDetailsIsChanged: (detail) {
-                                  context.read<ImageDetailBloc>().add(
-                                      ImageDetailScaleChanged(
-                                          detail?.totalScale ?? 1.0));
-                                });
-                          },
-                          onDoubleTap: (event) {
-                            _setImageScale(context, imageScale, true);
-                          },
-                        ),
+                            "${_URL_SERVER}/stream/file?path=${images[index].path}",
+                            mode: ExtendedImageMode.gesture,
+                            fit: BoxFit.contain,
+                            cache: true, initGestureConfigHandler: (state) {
+                          return GestureConfig(
+                              minScale: 1.0,
+                              animationMinScale: 1.0,
+                              maxScale: Constant.IMAGE_MAX_SCALE.toDouble(),
+                              animationMaxScale:
+                                  Constant.IMAGE_MAX_SCALE.toDouble(),
+                              speed: 1.0,
+                              inertialSpeed: 100.0,
+                              initialScale: imageScale,
+                              inPageView: false,
+                              initialAlignment: InitialAlignment.center,
+                              gestureDetailsIsChanged: (detail) {
+                                context.read<ImageDetailBloc>().add(
+                                    ImageDetailScaleChanged(
+                                        detail?.totalScale ?? 1.0));
+                              });
+                        }, loadStateChanged: (state) {
+                          if (state.extendedImageLoadState ==
+                              LoadState.failed) {
+                            return Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              child: Text(context.l10n.loadImageFailure,
+                                  style: TextStyle(
+                                      color: Color(0xff333333),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500)),
+                            );
+                          }
+
+                          return null;
+                        }, onDoubleTap: (event) {
+                          _setImageScale(context, imageScale, true);
+                        }),
                         onPointerDown: (event) {
                           if (event.isRightMouseClick()) {
                             _openMenu(
@@ -572,7 +586,9 @@ class ImageDetailView extends StatelessWidget {
         context.l10n.delete, (context) {
       Navigator.of(pageContext, rootNavigator: true).pop();
 
-      pageContext.read<ImageDetailBloc>().add(ImageDetailDeleteSubmitted(image));
+      pageContext
+          .read<ImageDetailBloc>()
+          .add(ImageDetailDeleteSubmitted(image));
     }, (context) {
       Navigator.of(pageContext, rootNavigator: true).pop();
     });
