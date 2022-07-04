@@ -387,8 +387,24 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
       videos.removeWhere((video) => event.videos.contains(video));
       checkedVideos.removeWhere((video) => event.videos.contains(video));
 
+      // Recompute video count in video folders data after deleting videos.
+      final videoFolders = [...state.videoFolders];
+      final currentFolder = state.videoFolderOpenStatus.current;
+
+      if (currentFolder != null) {
+        final currentFolderIndex = videoFolders.indexOf(currentFolder);
+
+        currentFolder.videoCount -= event.videos.length;
+        if (currentFolder.videoCount == 0) {
+          videoFolders.removeAt(currentFolderIndex);
+        } else {
+          videoFolders[currentFolderIndex] = currentFolder;
+        }
+      }
+
       emit(state.copyWith(
           deleteStatus: VideoFoldersDeleteStatus.success,
+          videoFolders: videoFolders,
           loadVideosInFolderStatus: state.loadVideosInFolderStatus
               .copyWith(videos: videos, checkedVideos: checkedVideos)));
     } catch (e) {
