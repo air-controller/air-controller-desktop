@@ -77,3 +77,21 @@ class AllVideosCopyStatusChanged extends AllVideosEvent {
 class AllVideosCancelCopy extends AllVideosEvent {
   const AllVideosCancelCopy();
 }
+
+class AllVideosUploadVideos extends AllVideosEvent {
+  final List<File> videos;
+
+  const AllVideosUploadVideos(this.videos);
+
+  @override
+  List<Object?> get props => [videos];
+}
+
+class AllVideosUploadStatusChanged extends AllVideosEvent {
+  final AllVideosUploadStatusUnit status;
+
+  const AllVideosUploadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}

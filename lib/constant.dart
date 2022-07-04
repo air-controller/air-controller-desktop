@@ -167,9 +167,27 @@ class Constant {
     "m4v",
     "mpa",
     "mp2",
-    "mp4",
     "mov",
     "cda"
+  ];
+
+  static const allVideoSuffix = [
+    "mp4",
+    "3gp",
+    "avi",
+    "mov",
+    "wmv",
+    "asf",
+    "asx",
+    "mpg",
+    "mpeg",
+    "mpe",
+    "mpv",
+    "m2v",
+    "m4v",
+    "mkv",
+    "flv",
+    "rmvb"
   ];
 
   static const posAllPictures = 1;

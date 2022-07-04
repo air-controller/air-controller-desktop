@@ -13,6 +13,11 @@ extension FileX on File {
     return Constant.allAudioSuffix.contains(fileExtension.toLowerCase());
   }
 
+  bool get isVideo {
+    final fileExtension = this.extension;
+    return Constant.allVideoSuffix.contains(fileExtension.toLowerCase());
+  }
+
   String get extension {
     final fileName = this.path.split('/').last;
     final fileExtension = fileName.split('.').last;

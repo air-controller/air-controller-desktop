@@ -800,6 +800,11 @@ class MusicHomeView extends StatelessWidget {
                 },
               ),
               onDragDone: (details) {
+                final homeTab = context.read<HomeBloc>().state.tab;
+                if (homeTab != HomeTab.music) {
+                  return;
+                }
+                
                 final audios = details.files
                     .map((e) => File(e.path))
                     .where((element) => element.isAudio)

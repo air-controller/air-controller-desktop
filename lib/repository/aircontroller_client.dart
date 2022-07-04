@@ -1189,6 +1189,58 @@ class AirControllerClient {
     return cancelToken;
   }
 
+  DioCore.CancelToken uploadVideos(
+      {required List<File> videos,
+      String? folder = null,
+      Function()? onSuccess,
+      Function(int, int)? onUploading,
+      Function(String? error)? onError,
+      VoidCallback? onCancel}) {
+    final cancelToken = DioCore.CancelToken();
+    final formData = DioCore.FormData();
+
+    formData.fields.add(MapEntry("folder", "$folder"));
+
+    videos.forEach((video) {
+      formData.files.add(
+          MapEntry("videos", DioCore.MultipartFile.fromFileSync(video.path)));
+    });
+
+    final headers = _commonHeaders();
+    headers.remove("Content-Type");
+
+    dio.post("/video/uploadVideos",
+        data: formData,
+        options: DioCore.Options(headers: headers, receiveTimeout: 0),
+        onSendProgress: (int sent, int total) {
+      onUploading?.call(sent, total);
+    }, cancelToken: cancelToken).then((response) {
+      if (response.statusCode != 200) {
+        onError?.call("${response.statusMessage}");
+      } else {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess?.call();
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).onError((error, stackTrace) {
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call(error?.toString());
+      }
+    });
+
+    return cancelToken;
+  }
+
   Map<String, String> _commonHeaders() {
     BuildContext? context = EnterPage.enterKey.currentContext;
 

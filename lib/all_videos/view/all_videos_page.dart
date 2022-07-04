@@ -1,16 +1,19 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/context_menu_helper.dart';
+import 'package:air_controller/util/sound_effect.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../../constant.dart';
+import '../../home/bloc/home_bloc.dart';
 import '../../model/video_item.dart';
 import '../../model/video_order_type.dart';
 import '../../network/device_connection_manager.dart';
@@ -208,95 +211,159 @@ class AllVideosView extends StatelessWidget {
               listenWhen: (previous, current) =>
                   previous.deleteTapStatus != current.deleteTapStatus &&
                   current.deleteTapStatus == VideoHomeDeleteTapStatus.tap),
-        ],
-        child: Stack(
-          children: [
-            Focus(
-                autofocus: true,
-                focusNode: _rootFocusNode,
-                child: VideoFlowWidget(
-                  rootUrl:
-                      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}",
-                  sortOrder: orderType,
-                  videos: videos,
-                  selectedVideos: checkedVideos,
-                  onVisibleChange: (isTotalVisible, isPartOfVisible) {},
-                  onPointerDown: (event, video) {
-                    if (event.isRightMouseClick()) {
-                      List<VideoItem> checkedVideos =
-                          context.read<AllVideosBloc>().state.checkedVideos;
+          BlocListener<AllVideosBloc, AllVideosState>(
+            listener: (context, state) {
+              if (state.uploadStatus.status == AllVideosUploadStatus.start) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: true)));
+              }
 
-                      if (!checkedVideos.contains(video)) {
+              if (state.uploadStatus.status ==
+                  AllVideosUploadStatus.uploading) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                        HomeLinearProgressIndicatorStatus(
+                      visible: true,
+                      current: state.uploadStatus.current,
+                      total: state.uploadStatus.total,
+                    )));
+              }
+
+              if (state.uploadStatus.status == AllVideosUploadStatus.failure) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.uploadStatus.failureReason ??
+                          context.l10n.unknownError)));
+              }
+
+              if (state.uploadStatus.status == AllVideosUploadStatus.success) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+                SoundEffect.play(SoundType.done);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.uploadStatus != current.uploadStatus &&
+                current.uploadStatus.status != AllVideosUploadStatus.initial,
+          )
+        ],
+        child: DropTarget(
+            onDragEntered: (details) {
+              SoundEffect.play(SoundType.bubble);
+            },
+            onDragDone: (details) {
+              final homeTab = context.read<HomeBloc>().state.tab;
+
+              if (homeTab != HomeTab.video) {
+                return;
+              }
+
+              final videos = details.files
+                  .map((xFile) => File(xFile.path))
+                  .where((file) => file.isVideo)
+                  .toList();
+
+              if (videos.isEmpty) return;
+
+              context.read<AllVideosBloc>().add(AllVideosUploadVideos(videos));
+            },
+            child: Stack(
+              children: [
+                Focus(
+                    autofocus: true,
+                    focusNode: _rootFocusNode,
+                    child: VideoFlowWidget(
+                      rootUrl: DeviceConnectionManager.instance.rootURL,
+                      sortOrder: orderType,
+                      videos: videos,
+                      selectedVideos: checkedVideos,
+                      onVisibleChange: (isTotalVisible, isPartOfVisible) {},
+                      onPointerDown: (event, video) {
+                        if (event.isRightMouseClick()) {
+                          List<VideoItem> checkedVideos =
+                              context.read<AllVideosBloc>().state.checkedVideos;
+
+                          if (!checkedVideos.contains(video)) {
+                            context
+                                .read<AllVideosBloc>()
+                                .add(AllVideosCheckedChanged(video));
+                          }
+
+                          context.read<AllVideosBloc>().add(
+                              AllVideosOpenMenuStatusChanged(
+                                  AllVideosOpenMenuStatus(
+                                      isOpened: true,
+                                      position: event.position,
+                                      target: video)));
+                        }
+                      },
+                      onVideoTap: (video) {
                         context
                             .read<AllVideosBloc>()
                             .add(AllVideosCheckedChanged(video));
+                      },
+                      onVideoDoubleTap: (video) {
+                        context
+                            .read<AllVideosBloc>()
+                            .add(AllVideosCheckedChanged(video));
+
+                        SystemAppLauncher.openVideo(video);
+                      },
+                      onOutsideTap: () {
+                        context
+                            .read<AllVideosBloc>()
+                            .add(AllVideosClearChecked());
+                      },
+                    ),
+                    onKey: (node, event) {
+                      _isControlPressed = Platform.isMacOS
+                          ? event.isMetaPressed
+                          : event.isControlPressed;
+                      _isShiftPressed = event.isShiftPressed;
+
+                      AllVideosBoardKeyStatus status =
+                          AllVideosBoardKeyStatus.none;
+
+                      if (_isControlPressed) {
+                        status = AllVideosBoardKeyStatus.ctrlDown;
+                      } else if (_isShiftPressed) {
+                        status = AllVideosBoardKeyStatus.shiftDown;
                       }
 
-                      context.read<AllVideosBloc>().add(
-                          AllVideosOpenMenuStatusChanged(
-                              AllVideosOpenMenuStatus(
-                                  isOpened: true,
-                                  position: event.position,
-                                  target: video)));
-                    }
-                  },
-                  onVideoTap: (video) {
-                    context
-                        .read<AllVideosBloc>()
-                        .add(AllVideosCheckedChanged(video));
-                  },
-                  onVideoDoubleTap: (video) {
-                    context
-                        .read<AllVideosBloc>()
-                        .add(AllVideosCheckedChanged(video));
+                      context
+                          .read<AllVideosBloc>()
+                          .add(AllVideosKeyStatusChanged(status));
 
-                    SystemAppLauncher.openVideo(video);
-                  },
-                  onOutsideTap: () {
-                    context.read<AllVideosBloc>().add(AllVideosClearChecked());
-                  },
-                ),
-                onKey: (node, event) {
-                  _isControlPressed = Platform.isMacOS
-                      ? event.isMetaPressed
-                      : event.isControlPressed;
-                  _isShiftPressed = event.isShiftPressed;
+                      if (Platform.isMacOS) {
+                        if (event.isMetaPressed &&
+                            event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                          context
+                              .read<AllVideosBloc>()
+                              .add(AllVideosCheckAll());
+                          return KeyEventResult.handled;
+                        }
+                      } else {
+                        if (event.isControlPressed &&
+                            event.isKeyPressed(LogicalKeyboardKey.keyA)) {
+                          context
+                              .read<AllVideosBloc>()
+                              .add(AllVideosCheckAll());
+                          return KeyEventResult.handled;
+                        }
+                      }
 
-                  AllVideosBoardKeyStatus status = AllVideosBoardKeyStatus.none;
-
-                  if (_isControlPressed) {
-                    status = AllVideosBoardKeyStatus.ctrlDown;
-                  } else if (_isShiftPressed) {
-                    status = AllVideosBoardKeyStatus.shiftDown;
-                  }
-
-                  context
-                      .read<AllVideosBloc>()
-                      .add(AllVideosKeyStatusChanged(status));
-
-                  if (Platform.isMacOS) {
-                    if (event.isMetaPressed &&
-                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                      context.read<AllVideosBloc>().add(AllVideosCheckAll());
-                      return KeyEventResult.handled;
-                    }
-                  } else {
-                    if (event.isControlPressed &&
-                        event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                      context.read<AllVideosBloc>().add(AllVideosCheckAll());
-                      return KeyEventResult.handled;
-                    }
-                  }
-
-                  return KeyEventResult.ignored;
-                }),
-            Visibility(
-              child: Container(child: spinKit, color: Colors.white),
-              maintainSize: false,
-              visible: status == AllVideosStatus.loading,
-            )
-          ],
-        ),
+                      return KeyEventResult.ignored;
+                    }),
+                Visibility(
+                  child: Container(child: spinKit, color: Colors.white),
+                  maintainSize: false,
+                  visible: status == AllVideosStatus.loading,
+                )
+              ],
+            )),
       ),
     );
   }
@@ -308,7 +375,7 @@ class AllVideosView extends StatelessWidget {
     String copyTitle = "";
 
     final checkedVideos = pageContext.read<AllVideosBloc>().state.checkedVideos;
-    
+
     if (checkedVideos.length == 1) {
       VideoItem videoItem = checkedVideos.single;
 

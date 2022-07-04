@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,7 +18,8 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
   final VideoRepository _videoRepository;
 
   AllVideosBloc(
-      {required FileRepository fileRepository, required VideoRepository videoRepository})
+      {required FileRepository fileRepository,
+      required VideoRepository videoRepository})
       : _fileRepository = fileRepository,
         _videoRepository = videoRepository,
         super(AllVideosState()) {
@@ -30,31 +33,27 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
     on<AllVideosCopySubmitted>(_onCopySubmitted);
     on<AllVideosCopyStatusChanged>(_onCopyStatusChanged);
     on<AllVideosCancelCopy>(_onCancelCopy);
+    on<AllVideosUploadVideos>(_onUploadVideos);
+    on<AllVideosUploadStatusChanged>(_onUploadStatusChanged);
   }
 
-  void _onSubscriptionRequested(
-      AllVideosSubscriptionRequested event,
+  void _onSubscriptionRequested(AllVideosSubscriptionRequested event,
       Emitter<AllVideosState> emit) async {
     emit(state.copyWith(status: AllVideosStatus.loading));
 
     try {
       List<VideoItem> videos = await _videoRepository.getAllVideos();
 
-      emit(state.copyWith(
-        status: AllVideosStatus.success,
-        videos: videos
-      ));
+      emit(state.copyWith(status: AllVideosStatus.success, videos: videos));
     } catch (e) {
       emit(state.copyWith(
-        status: AllVideosStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          status: AllVideosStatus.failure,
+          failureReason: (e as BusinessError).message));
     }
   }
 
   void _onCheckedChanged(
-      AllVideosCheckedChanged event,
-      Emitter<AllVideosState> emit) {
+      AllVideosCheckedChanged event, Emitter<AllVideosState> emit) {
     List<VideoItem> allVideos = state.videos;
     List<VideoItem> checkedVideos = [...state.checkedVideos];
     VideoItem image = event.video;
@@ -126,38 +125,33 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
   }
 
   void _onKeyStatusChanged(
-      AllVideosKeyStatusChanged event,
-      Emitter<AllVideosState> emit) {
+      AllVideosKeyStatusChanged event, Emitter<AllVideosState> emit) {
     emit(state.copyWith(keyStatus: event.keyStatus));
   }
 
   void _onClearChecked(
-      AllVideosClearChecked event,
-      Emitter<AllVideosState> emit) {
+      AllVideosClearChecked event, Emitter<AllVideosState> emit) {
     emit(state.copyWith(checkedVideos: []));
   }
 
-  void _onCheckAll(
-      AllVideosCheckAll event,
-      Emitter<AllVideosState> emit) {
+  void _onCheckAll(AllVideosCheckAll event, Emitter<AllVideosState> emit) {
     emit(state.copyWith(checkedVideos: state.videos));
   }
 
   void _onOpenMenuStatusChanged(
-      AllVideosOpenMenuStatusChanged event,
-      Emitter<AllVideosState> emit) {
+      AllVideosOpenMenuStatusChanged event, Emitter<AllVideosState> emit) {
     emit(state.copyWith(openMenuStatus: event.status));
   }
 
   void _onDeleteSubmitted(
-      AllVideosDeleteSubmitted event,
-      Emitter<AllVideosState> emit) async {
+      AllVideosDeleteSubmitted event, Emitter<AllVideosState> emit) async {
     emit(state.copyWith(
-        deleteStatus: AllVideosDeleteStatusUnit(status: AllVideosDeleteStatus.loading))
-    );
+        deleteStatus:
+            AllVideosDeleteStatusUnit(status: AllVideosDeleteStatus.loading)));
 
     try {
-      await _fileRepository.deleteFiles(event.videos.map((video) => video.path).toList());
+      await _fileRepository
+          .deleteFiles(event.videos.map((video) => video.path).toList());
 
       List<VideoItem> videos = [...state.videos];
       List<VideoItem> checkedVideos = [...state.checkedVideos];
@@ -166,27 +160,23 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
       checkedVideos.removeWhere((video) => event.videos.contains(video));
 
       emit(state.copyWith(
-        deleteStatus: AllVideosDeleteStatusUnit(
-            status: AllVideosDeleteStatus.success,
-          videos: event.videos
-        ),
-        videos: videos,
-        checkedVideos: checkedVideos
-      ));
+          deleteStatus: AllVideosDeleteStatusUnit(
+              status: AllVideosDeleteStatus.success, videos: event.videos),
+          videos: videos,
+          checkedVideos: checkedVideos));
     } catch (e) {
       emit(state.copyWith(
           deleteStatus: AllVideosDeleteStatusUnit(
               status: AllVideosDeleteStatus.failure,
-            failureReason: (e as BusinessError).message
-          )
-      ));
+              failureReason: (e as BusinessError).message)));
     }
   }
 
   void _onCopySubmitted(
-      AllVideosCopySubmitted event,
-      Emitter<AllVideosState> emit) async {
-    emit(state.copyWith(copyStatus: AllVideosCopyStatusUnit(status: AllVideosCopyStatus.start)));
+      AllVideosCopySubmitted event, Emitter<AllVideosState> emit) async {
+    emit(state.copyWith(
+        copyStatus:
+            AllVideosCopyStatusUnit(status: AllVideosCopyStatus.start)));
 
     _fileRepository.copyFilesTo(
         paths: event.videos.map((video) => video.path).toList(),
@@ -196,36 +186,57 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
               status: AllVideosCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(AllVideosCopyStatusChanged(AllVideosCopyStatusUnit(
-              status: AllVideosCopyStatus.success,
-              fileName: fileName
-          )));
-
+              status: AllVideosCopyStatus.success, fileName: fileName)));
         },
         onError: (String error) {
           add(AllVideosCopyStatusChanged(AllVideosCopyStatusUnit(
-              status: AllVideosCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              status: AllVideosCopyStatus.failure, error: error)));
+        });
   }
 
   void _onCopyStatusChanged(
-      AllVideosCopyStatusChanged event,
-      Emitter<AllVideosState> emit) {
-    emit(state.copyWith(
-      copyStatus: event.status
-    ));
+      AllVideosCopyStatusChanged event, Emitter<AllVideosState> emit) {
+    emit(state.copyWith(copyStatus: event.status));
   }
 
-  void _onCancelCopy(
-      AllVideosCancelCopy event,
-      Emitter<AllVideosState> emit) {
+  void _onCancelCopy(AllVideosCancelCopy event, Emitter<AllVideosState> emit) {
     _fileRepository.cancelCopy();
+  }
+
+  void _onUploadVideos(
+      AllVideosUploadVideos event, Emitter<AllVideosState> emit) {
+    emit(state.copyWith(
+        uploadStatus:
+            AllVideosUploadStatusUnit(status: AllVideosUploadStatus.start)));
+
+    _videoRepository.uploadVideos(
+        videos: event.videos,
+        onError: (msg) {
+          add(AllVideosUploadStatusChanged(AllVideosUploadStatusUnit(
+              status: AllVideosUploadStatus.failure, failureReason: msg)));
+        },
+        onSuccess: () {
+          add(AllVideosUploadStatusChanged(AllVideosUploadStatusUnit(
+              status: AllVideosUploadStatus.success)));
+        },
+        onUploading: (sent, total) {
+          add(AllVideosUploadStatusChanged(AllVideosUploadStatusUnit(
+              status: AllVideosUploadStatus.uploading,
+              current: sent,
+              total: total)));
+        });
+  }
+
+  void _onUploadStatusChanged(
+      AllVideosUploadStatusChanged event, Emitter<AllVideosState> emit) async {
+    emit(state.copyWith(uploadStatus: event.status));
+    if (event.status.status == AllVideosUploadStatus.success) {
+      List<VideoItem> videos = await _videoRepository.getAllVideos();
+      emit(state.copyWith(videos: videos));
+    }
   }
 }
