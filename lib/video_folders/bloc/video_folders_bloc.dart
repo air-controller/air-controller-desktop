@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
@@ -37,6 +38,8 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
     on<VideoFoldersCancelCopy>(_onCancelCopy);
     on<VideoFoldersVideosCopySubmitted>(_onCopyVideosSubmitted);
     on<VideoFoldersDeleteVideosSubmitted>(_onDeleteVideosSubmitted);
+    on<VideoFoldersUploadVideos>(_onUploadVideos);
+    on<VideoFoldersUploadStatusChanged>(_onUploadStatusChanged);
   }
 
   void _onSubscriptionRequested(VideoFoldersSubscriptionRequested event,
@@ -264,35 +267,35 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
     emit(state.copyWith(deleteStatus: VideoFoldersDeleteStatus.loading));
 
     try {
-      await _fileRepository
-          .deleteFiles(event.videoFolders.map((folder) => folder.path).toList());
+      await _fileRepository.deleteFiles(
+          event.videoFolders.map((folder) => folder.path).toList());
 
       List<VideoFolderItem> videoFolders = [...state.videoFolders];
-      List<VideoFolderItem> checkedVideoFolders = [ ...state.checkedVideoFolders];
+      List<VideoFolderItem> checkedVideoFolders = [
+        ...state.checkedVideoFolders
+      ];
 
       videoFolders.removeWhere((folder) => event.videoFolders.contains(folder));
-      checkedVideoFolders.removeWhere((folder) => event.videoFolders.contains(folder));
+      checkedVideoFolders
+          .removeWhere((folder) => event.videoFolders.contains(folder));
 
       emit(state.copyWith(
-        deleteStatus: VideoFoldersDeleteStatus.success,
-        videoFolders: videoFolders,
-        checkedVideoFolders: checkedVideoFolders
-      ));
+          deleteStatus: VideoFoldersDeleteStatus.success,
+          videoFolders: videoFolders,
+          checkedVideoFolders: checkedVideoFolders));
     } catch (e) {
       emit(state.copyWith(
-        deleteStatus: VideoFoldersDeleteStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          deleteStatus: VideoFoldersDeleteStatus.failure,
+          failureReason: (e as BusinessError).message));
     }
   }
-  
+
   void _onCopySubmitted(
-      VideoFoldersCopySubmitted event,
-      Emitter<VideoFoldersState> emit) {
-    emit(state.copyWith(copyStatus: VideoFoldersCopyStatusUnit(
-        fileType: VideoFoldersFileType.folder,
-        status: VideoFoldersCopyStatus.start
-    )));
+      VideoFoldersCopySubmitted event, Emitter<VideoFoldersState> emit) {
+    emit(state.copyWith(
+        copyStatus: VideoFoldersCopyStatusUnit(
+            fileType: VideoFoldersFileType.folder,
+            status: VideoFoldersCopyStatus.start)));
 
     String? fileName = null;
 
@@ -310,46 +313,38 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
               status: VideoFoldersCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
               fileType: VideoFoldersFileType.folder,
               status: VideoFoldersCopyStatus.success,
-              fileName: fileName
-          )));
-
+              fileName: fileName)));
         },
         onError: (String error) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
               fileType: VideoFoldersFileType.folder,
               status: VideoFoldersCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              error: error)));
+        });
   }
 
   void _onCopyStatusChanged(
-      VideoFoldersCopyStatusChanged event,
-      Emitter<VideoFoldersState> emit) {
+      VideoFoldersCopyStatusChanged event, Emitter<VideoFoldersState> emit) {
     emit(state.copyWith(copyStatus: event.status));
   }
 
   void _onCancelCopy(
-      VideoFoldersCancelCopy event,
-      Emitter<VideoFoldersState> emit) {
+      VideoFoldersCancelCopy event, Emitter<VideoFoldersState> emit) {
     _fileRepository.cancelCopy();
   }
 
   void _onCopyVideosSubmitted(
-      VideoFoldersVideosCopySubmitted event,
-      Emitter<VideoFoldersState> emit) {
-    emit(state.copyWith(copyStatus: VideoFoldersCopyStatusUnit(
-        fileType: VideoFoldersFileType.folder,
-        status: VideoFoldersCopyStatus.start
-    )));
+      VideoFoldersVideosCopySubmitted event, Emitter<VideoFoldersState> emit) {
+    emit(state.copyWith(
+        copyStatus: VideoFoldersCopyStatusUnit(
+            fileType: VideoFoldersFileType.folder,
+            status: VideoFoldersCopyStatus.start)));
 
     _fileRepository.copyFilesTo(
         paths: event.videos.map((folder) => folder.path).toList(),
@@ -360,25 +355,20 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
               status: VideoFoldersCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
               fileType: VideoFoldersFileType.video,
               status: VideoFoldersCopyStatus.success,
-              fileName: fileName
-          )));
-
+              fileName: fileName)));
         },
         onError: (String error) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
               fileType: VideoFoldersFileType.video,
               status: VideoFoldersCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              error: error)));
+        });
   }
 
   void _onDeleteVideosSubmitted(VideoFoldersDeleteVideosSubmitted event,
@@ -390,24 +380,74 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
           .deleteFiles(event.videos.map((folder) => folder.path).toList());
 
       List<VideoItem> videos = [...state.loadVideosInFolderStatus.videos];
-      List<VideoItem> checkedVideos = [ ...state.loadVideosInFolderStatus.checkedVideos];
+      List<VideoItem> checkedVideos = [
+        ...state.loadVideosInFolderStatus.checkedVideos
+      ];
 
       videos.removeWhere((video) => event.videos.contains(video));
       checkedVideos.removeWhere((video) => event.videos.contains(video));
 
       emit(state.copyWith(
-        deleteStatus: VideoFoldersDeleteStatus.success,
-        loadVideosInFolderStatus: state.loadVideosInFolderStatus.copyWith(
-          videos: videos,
-          checkedVideos: checkedVideos
-        )
-      ));
+          deleteStatus: VideoFoldersDeleteStatus.success,
+          loadVideosInFolderStatus: state.loadVideosInFolderStatus
+              .copyWith(videos: videos, checkedVideos: checkedVideos)));
     } catch (e) {
       emit(state.copyWith(
           deleteStatus: VideoFoldersDeleteStatus.failure,
-          failureReason: (e as BusinessError).message
-      ));
+          failureReason: (e as BusinessError).message));
     }
   }
 
+  void _onUploadVideos(
+      VideoFoldersUploadVideos event, Emitter<VideoFoldersState> emit) {
+    emit(state.copyWith(
+        uploadStatus: VideoFoldersUploadStatusUnit(
+            status: VideoFoldersUploadStatus.start)));
+
+    _videoRepository.uploadVideos(
+        videos: event.videos,
+        folder: event.folder?.path,
+        onError: (msg) {
+          add(VideoFoldersUploadStatusChanged(
+              status: VideoFoldersUploadStatusUnit(
+                  status: VideoFoldersUploadStatus.failure,
+                  failureReason: msg)));
+        },
+        onSuccess: () {
+          add(VideoFoldersUploadStatusChanged(
+              status: VideoFoldersUploadStatusUnit(
+                  status: VideoFoldersUploadStatus.success),
+              folder: event.folder,
+              addedVideoCount: event.videos.length));
+        },
+        onUploading: (sent, total) {
+          add(VideoFoldersUploadStatusChanged(
+              status: VideoFoldersUploadStatusUnit(
+                  status: VideoFoldersUploadStatus.uploading,
+                  current: sent,
+                  total: total)));
+        });
+  }
+
+  void _onUploadStatusChanged(VideoFoldersUploadStatusChanged event,
+      Emitter<VideoFoldersState> emit) async {
+    emit(state.copyWith(uploadStatus: event.status));
+
+    if (event.status.status == VideoFoldersUploadStatus.success) {
+      final isOpened = state.videoFolderOpenStatus.isOpened;
+      if (isOpened) {
+        final currentFolder = state.videoFolderOpenStatus.current;
+        if (currentFolder != null) {
+          final videos =
+              await _videoRepository.getVideosInFolder(currentFolder.id);
+          emit(state.copyWith(
+              loadVideosInFolderStatus:
+                  state.loadVideosInFolderStatus.copyWith(videos: videos)));
+        }
+      } else {
+        final videoFolders = await _videoRepository.getAllVideoFolders();
+        emit(state.copyWith(videoFolders: videoFolders));
+      }
+    }
+  }
 }

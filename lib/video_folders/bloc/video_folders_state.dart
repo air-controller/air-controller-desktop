@@ -82,6 +82,40 @@ class VideoFoldersCopyStatusUnit extends Equatable {
       [fileType, status, current, total, fileName, error];
 }
 
+enum VideoFoldersUploadStatus { initial, start, uploading, failure, success }
+
+class VideoFoldersUploadStatusUnit extends Equatable {
+  final VideoFoldersUploadStatus status;
+  final int total;
+  final int current;
+  final List<File> videos;
+  final String? failureReason;
+
+  const VideoFoldersUploadStatusUnit(
+      {this.status = VideoFoldersUploadStatus.initial,
+      this.total = 1,
+      this.current = 0,
+      this.videos = const [],
+      this.failureReason});
+
+  @override
+  List<Object?> get props => [status, total, current, videos, failureReason];
+
+  VideoFoldersUploadStatusUnit copyWith(
+      {VideoFoldersUploadStatus? status,
+      int? total,
+      int? current,
+      List<File>? photos,
+      String? failureReason}) {
+    return VideoFoldersUploadStatusUnit(
+        status: status ?? this.status,
+        current: current ?? this.current,
+        total: total ?? this.total,
+        videos: photos ?? this.videos,
+        failureReason: failureReason ?? this.failureReason);
+  }
+}
+
 class VideoFoldersState extends Equatable {
   final List<VideoFolderItem> videoFolders;
   final List<VideoFolderItem> checkedVideoFolders;
@@ -93,6 +127,7 @@ class VideoFoldersState extends Equatable {
   final VideoFoldersOpenMenuStatus openMenuStatus;
   final VideoFoldersDeleteStatus deleteStatus;
   final VideoFoldersCopyStatusUnit copyStatus;
+  final VideoFoldersUploadStatusUnit uploadStatus;
 
   const VideoFoldersState(
       {this.videoFolders = const [],
@@ -105,7 +140,8 @@ class VideoFoldersState extends Equatable {
       this.openMenuStatus = const VideoFoldersOpenMenuStatus(),
       this.deleteStatus = VideoFoldersDeleteStatus.initial,
       this.copyStatus = const VideoFoldersCopyStatusUnit(
-          fileType: VideoFoldersFileType.folder)});
+          fileType: VideoFoldersFileType.folder),
+      this.uploadStatus = const VideoFoldersUploadStatusUnit()});
 
   @override
   List<Object?> get props => [
@@ -118,7 +154,8 @@ class VideoFoldersState extends Equatable {
         keyStatus,
         openMenuStatus,
         deleteStatus,
-        copyStatus
+        copyStatus,
+        uploadStatus
       ];
 
   VideoFoldersState copyWith(
@@ -131,7 +168,8 @@ class VideoFoldersState extends Equatable {
       VideoFoldersBoardKeyStatus? keyStatus,
       VideoFoldersOpenMenuStatus? openMenuStatus,
       VideoFoldersDeleteStatus? deleteStatus,
-      VideoFoldersCopyStatusUnit? copyStatus}) {
+      VideoFoldersCopyStatusUnit? copyStatus,
+      VideoFoldersUploadStatusUnit? uploadStatus}) {
     return VideoFoldersState(
         videoFolders: videoFolders ?? this.videoFolders,
         checkedVideoFolders: checkedVideoFolders ?? this.checkedVideoFolders,
@@ -144,6 +182,7 @@ class VideoFoldersState extends Equatable {
         keyStatus: keyStatus ?? this.keyStatus,
         openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteStatus: deleteStatus ?? this.deleteStatus,
-        copyStatus: copyStatus ?? this.copyStatus);
+        copyStatus: copyStatus ?? this.copyStatus,
+        uploadStatus: uploadStatus ?? this.uploadStatus);
   }
 }

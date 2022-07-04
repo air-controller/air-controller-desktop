@@ -13,9 +13,9 @@ class VideoFoldersSubscriptionRequested extends VideoFoldersEvent {
 
 class VideoFoldersOpenStatusChanged extends VideoFoldersEvent {
   final VideoFolderOpenStatus status;
-  
+
   const VideoFoldersOpenStatusChanged(this.status);
-  
+
   @override
   List<Object?> get props => [status];
 }
@@ -112,4 +112,29 @@ class VideoFoldersDeleteVideosSubmitted extends VideoFoldersEvent {
   const VideoFoldersDeleteVideosSubmitted(this.videos);
 
   List<Object?> get props => [this.videos];
+}
+
+class VideoFoldersUploadVideos extends VideoFoldersEvent {
+  final VideoFolderItem? folder;
+  final List<File> videos;
+
+  const VideoFoldersUploadVideos({
+    this.folder,
+    required this.videos,
+  });
+
+  @override
+  List<Object?> get props => [folder, videos];
+}
+
+class VideoFoldersUploadStatusChanged extends VideoFoldersEvent {
+  final VideoFoldersUploadStatusUnit status;
+  final int addedVideoCount;
+  final VideoFolderItem? folder;
+
+  const VideoFoldersUploadStatusChanged(
+      {required this.status, this.addedVideoCount = 0, this.folder = null});
+
+  @override
+  List<Object?> get props => [status, addedVideoCount, folder];
 }

@@ -261,6 +261,11 @@ class AllVideosView extends StatelessWidget {
                 return;
               }
 
+              final videoTab = context.read<VideoHomeBloc>().state.tab;
+              if (videoTab != VideoHomeTab.allVideos) {
+                return;
+              }
+
               final videos = details.files
                   .map((xFile) => File(xFile.path))
                   .where((file) => file.isVideo)

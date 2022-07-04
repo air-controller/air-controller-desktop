@@ -1,16 +1,18 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../../constant.dart';
+import '../../home/bloc/home_bloc.dart';
 import '../../model/video_folder_item.dart';
 import '../../model/video_item.dart';
 import '../../model/video_order_type.dart';
@@ -19,9 +21,9 @@ import '../../repository/file_repository.dart';
 import '../../repository/video_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/context_menu_helper.dart';
+import '../../util/sound_effect.dart';
 import '../../util/system_app_launcher.dart';
 import '../../video_home/bloc/video_home_bloc.dart';
-import '../../widget/overlay_menu_item.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/simple_gesture_detector.dart';
 import '../../widget/video_flow_widget.dart';
@@ -42,30 +44,16 @@ class VideoFoldersPage extends StatelessWidget {
 
 class VideoFoldersView extends StatelessWidget {
   FocusNode? _rootFocus1;
-  FocusNode? _rootFocus2;
 
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
 
   ProgressIndicatorDialog? _progressIndicatorDialog;
 
-  final _BACKGROUND_ALBUM_SELECTED = Color(0xffe6e6e6);
-  final _BACKGROUND_ALBUM_NORMAL = Colors.white;
-
-  final _ALBUM_NAME_TEXT_COLOR_NORMAL = Color(0xff515151);
-  final _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL = Color(0xff929292);
-
-  final _ALBUM_NAME_TEXT_COLOR_SELECTED = Colors.white;
-  final _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED = Colors.white;
-
-  final _BACKGROUND_ALBUM_NAME_NORMAL = Colors.white;
-  final _BACKGROUND_ALBUM_NAME_SELECTED = Color(0xff5d87ed);
-
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
 
-  final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
+  final _URL_SERVER = DeviceConnectionManager.instance.rootURL;
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +386,46 @@ class VideoFoldersView extends StatelessWidget {
               listenWhen: (previous, current) =>
                   previous.status != current.status &&
                   current.status == VideoFoldersStatus.failure),
+          BlocListener<VideoFoldersBloc, VideoFoldersState>(
+            listener: (context, state) {
+              if (state.uploadStatus.status == VideoFoldersUploadStatus.start) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: true)));
+              }
+
+              if (state.uploadStatus.status ==
+                  VideoFoldersUploadStatus.uploading) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                        HomeLinearProgressIndicatorStatus(
+                      visible: true,
+                      current: state.uploadStatus.current,
+                      total: state.uploadStatus.total,
+                    )));
+              }
+
+              if (state.uploadStatus.status ==
+                  VideoFoldersUploadStatus.failure) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(
+                      content: Text(state.uploadStatus.failureReason ??
+                          context.l10n.unknownError)));
+              }
+
+              if (state.uploadStatus.status ==
+                  VideoFoldersUploadStatus.success) {
+                context.read<HomeBloc>().add(HomeProgressIndicatorStatusChanged(
+                    HomeLinearProgressIndicatorStatus(visible: false)));
+                SoundEffect.play(SoundType.done);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.uploadStatus != current.uploadStatus &&
+                current.uploadStatus.status != VideoFoldersUploadStatus.initial,
+          )
         ],
         child: Stack(
           children: [
@@ -466,51 +494,93 @@ class VideoFoldersView extends StatelessWidget {
             ),
             // 文件夹内视频页面
             Visibility(
-              child: Column(
-                children: [
-                  Container(
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          child: Container(
-                            child: Text(context.l10n.videoFolders,
-                                style: TextStyle(
-                                    color: Color(0xff5b5c62), fontSize: 14)),
-                            padding: EdgeInsets.only(left: 10),
+              child: DropTarget(
+                onDragEntered: (details) {
+                  SoundEffect.play(SoundType.bubble);
+                },
+                onDragDone: (details) {
+                  final homeTab = context.read<HomeBloc>().state.tab;
+
+                  if (homeTab != HomeTab.video) {
+                    return;
+                  }
+
+                  final videoTab = context.read<VideoHomeBloc>().state.tab;
+                  if (videoTab != VideoHomeTab.videoFolders) {
+                    return;
+                  }
+
+                  final isFolderOpened = context
+                      .read<VideoFoldersBloc>()
+                      .state
+                      .videoFolderOpenStatus
+                      .isOpened;
+
+                  if (!isFolderOpened) {
+                    return;
+                  }
+
+                  final videos = details.files
+                      .map((file) => File(file.path))
+                      .where((element) => element.isVideo)
+                      .toList();
+                  if (videos.isEmpty) return;
+
+                  final folder = context
+                      .read<VideoFoldersBloc>()
+                      .state
+                      .videoFolderOpenStatus
+                      .current;
+
+                  context.read<VideoFoldersBloc>().add(
+                      VideoFoldersUploadVideos(videos: videos, folder: folder));
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              child: Text(context.l10n.videoFolders,
+                                  style: TextStyle(
+                                      color: Color(0xff5b5c62), fontSize: 14)),
+                              padding: EdgeInsets.only(left: 10),
+                            ),
+                            onTap: () {
+                              context.read<VideoFoldersBloc>().add(
+                                  VideoFoldersOpenStatusChanged(
+                                      VideoFolderOpenStatus(isOpened: false)));
+                            },
                           ),
-                          onTap: () {
-                            context.read<VideoFoldersBloc>().add(
-                                VideoFoldersOpenStatusChanged(
-                                    VideoFolderOpenStatus(isOpened: false)));
-                          },
-                        ),
-                        Image.asset("assets/icons/ic_right_arrow.png",
-                            height: 20),
-                        Text(videoFolderOpenStatus.current?.name ?? "",
-                            style: TextStyle(
-                                color: Color(0xff5b5c62), fontSize: 14))
-                      ],
+                          Image.asset("assets/icons/ic_right_arrow.png",
+                              height: 20),
+                          Text(videoFolderOpenStatus.current?.name ?? "",
+                              style: TextStyle(
+                                  color: Color(0xff5b5c62), fontSize: 14))
+                        ],
+                      ),
+                      color: Color(0xfffafafa),
+                      height: 30,
                     ),
-                    color: Color(0xfffafafa),
-                    height: 30,
-                  ),
-                  Divider(
-                      color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
-                  Expanded(
-                      child: Stack(
-                    children: [
-                      videosInFolderWidget,
-                      Visibility(
-                        child: Container(child: spinKit, color: Colors.white),
-                        maintainSize: false,
-                        visible: videoFolderOpenStatus.isOpened &&
-                            loadVideosInFolderStatus.status ==
-                                VideoFoldersStatus.loading,
-                      )
-                    ],
-                    fit: StackFit.expand,
-                  ))
-                ],
+                    Divider(
+                        color: Color(0xffe0e0e0), height: 1.0, thickness: 1.0),
+                    Expanded(
+                        child: Stack(
+                      children: [
+                        videosInFolderWidget,
+                        Visibility(
+                          child: Container(child: spinKit, color: Colors.white),
+                          maintainSize: false,
+                          visible: videoFolderOpenStatus.isOpened &&
+                              loadVideosInFolderStatus.status ==
+                                  VideoFoldersStatus.loading,
+                        )
+                      ],
+                      fit: StackFit.expand,
+                    ))
+                  ],
+                ),
               ),
               visible: videoFolderOpenStatus.isOpened,
             )
@@ -570,9 +640,6 @@ class VideoFoldersView extends StatelessWidget {
 
   Widget _createGridContent(
       List<VideoFolderItem> videoFolders, List<VideoFolderItem> checkedVideos) {
-    final imageWidth = 140.0;
-    final imageHeight = 140.0;
-    final imagePadding = 3.0;
 
     return Container(
       child: GridView.builder(
@@ -587,146 +654,44 @@ class VideoFoldersView extends StatelessWidget {
         itemBuilder: (BuildContext context, int index) {
           VideoFolderItem videoFolder = videoFolders[index];
 
-          return Listener(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SimpleGestureDetector(
-                  child: Container(
-                    child: Stack(
-                      children: [
-                        Visibility(
-                          child: RotationTransition(
-                              turns: AlwaysStoppedAnimation(5 / 360),
-                              child: Container(
-                                width: imageWidth,
-                                height: imageHeight,
-                                padding: EdgeInsets.all(imagePadding),
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                        color: Color(0xffdddddd), width: 1.0),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(3.0))),
-                              )),
-                          visible: videoFolder.videoCount > 1 ? true : false,
-                        ),
-                        Visibility(
-                          child: RotationTransition(
-                              turns: AlwaysStoppedAnimation(-5 / 360),
-                              child: Container(
-                                width: imageWidth,
-                                height: imageHeight,
-                                padding: EdgeInsets.all(imagePadding),
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                        color: Color(0xffdddddd), width: 1.0),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(3.0))),
-                              )),
-                          visible: videoFolder.videoCount > 2 ? true : false,
-                        ),
-                        Container(
-                          child: CachedNetworkImage(
-                              imageUrl:
-                                  "${_URL_SERVER}/stream/video/thumbnail/${videoFolder.coverVideoId}/400/400"
-                                      .replaceAll("storage/emulated/0/", ""),
-                              fit: BoxFit.cover,
-                              width: imageWidth,
-                              height: imageWidth,
-                              memCacheWidth: 400,
-                              fadeOutDuration: Duration.zero,
-                              fadeInDuration: Duration.zero),
-                          padding: EdgeInsets.all(imagePadding),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(
-                                  color: Color(0xffdddddd), width: 1.0),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(3.0))),
-                        )
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                        color: checkedVideos.contains(videoFolder)
-                            ? _BACKGROUND_ALBUM_SELECTED
-                            : _BACKGROUND_ALBUM_NORMAL,
-                        borderRadius: BorderRadius.all(Radius.circular(4.0))),
-                    padding: EdgeInsets.all(8),
-                  ),
-                  onTap: () {
-                    context
-                        .read<VideoFoldersBloc>()
-                        .add(VideoFoldersCheckedChanged(videoFolder));
-                  },
-                  onDoubleTap: () {
-                    context
-                        .read<VideoFoldersBloc>()
-                        .add(VideoFoldersCheckedChanged(videoFolder));
+          final checkedVideos =
+              context.read<VideoFoldersBloc>().state.checkedVideoFolders;
+          return _VideoFolderListItem(
+            folder: videoFolder,
+            isChecked: checkedVideos.contains(videoFolder),
+            onTap: (videoFolder) {
+              context
+                  .read<VideoFoldersBloc>()
+                  .add(VideoFoldersCheckedChanged(videoFolder));
+            },
+            onDoubleTap: (videoFolder) {
+              context
+                  .read<VideoFoldersBloc>()
+                  .add(VideoFoldersCheckedChanged(videoFolder));
 
-                    context.read<VideoFoldersBloc>().add(
-                        VideoFoldersOpenStatusChanged(VideoFolderOpenStatus(
-                            isOpened: true, current: videoFolder)));
-                  },
-                ),
-                GestureDetector(
-                  child: Container(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          videoFolder.name,
-                          style: TextStyle(
-                              color: checkedVideos.contains(videoFolder)
-                                  ? _ALBUM_NAME_TEXT_COLOR_SELECTED
-                                  : _ALBUM_NAME_TEXT_COLOR_NORMAL),
-                        ),
-                        Container(
-                          child: Text(
-                            "(${videoFolder.videoCount})",
-                            style: TextStyle(
-                                color: checkedVideos.contains(videoFolder)
-                                    ? _ALBUM_IMAGE_NUM_TEXT_COLOR_SELECTED
-                                    : _ALBUM_IMAGE_NUM_TEXT_COLOR_NORMAL),
-                          ),
-                          margin: EdgeInsets.only(left: 3),
-                        )
-                      ],
-                    ),
-                    margin: EdgeInsets.only(top: 10),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(3)),
-                        color: checkedVideos.contains(videoFolder)
-                            ? _BACKGROUND_ALBUM_NAME_SELECTED
-                            : _BACKGROUND_ALBUM_NAME_NORMAL),
-                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                  ),
-                  onTap: () {
-                    // setState(() {
-                    // _setAlbumSelected(album);
-                    // });
-                  },
-                )
-              ],
-            ),
-            onPointerDown: (event) {
-              if (event.isRightMouseClick()) {
-                List<VideoFolderItem> checkedVideoFolders =
-                    context.read<VideoFoldersBloc>().state.checkedVideoFolders;
+              context.read<VideoFoldersBloc>().add(
+                  VideoFoldersOpenStatusChanged(VideoFolderOpenStatus(
+                      isOpened: true, current: videoFolder)));
+            },
+            onMouseRightTap: (position, videoFolder) {
+              List<VideoFolderItem> checkedVideoFolders =
+                  context.read<VideoFoldersBloc>().state.checkedVideoFolders;
 
-                if (!checkedVideoFolders.contains(videoFolder)) {
-                  context
-                      .read<VideoFoldersBloc>()
-                      .add(VideoFoldersCheckedChanged(videoFolder));
-                }
-
-                context.read<VideoFoldersBloc>().add(
-                    VideoFoldersMenuStatusChanged(VideoFoldersOpenMenuStatus(
-                        isOpened: true,
-                        position: event.position,
-                        target: videoFolder)));
+              if (!checkedVideoFolders.contains(videoFolder)) {
+                context
+                    .read<VideoFoldersBloc>()
+                    .add(VideoFoldersCheckedChanged(videoFolder));
               }
+
+              context.read<VideoFoldersBloc>().add(
+                  VideoFoldersMenuStatusChanged(VideoFoldersOpenMenuStatus(
+                      isOpened: true,
+                      position: position,
+                      target: videoFolder)));
+            },
+            onVideosDragDone: (folder, videos) {
+              context.read<VideoFoldersBloc>().add(VideoFoldersUploadVideos(
+                  folder: folder, videos: videos));
             },
           );
         },
@@ -941,5 +906,215 @@ class VideoFoldersView extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+class _VideoFolderListItem extends StatefulWidget {
+  final VideoFolderItem folder;
+  final bool isChecked;
+  final Function(VideoFolderItem)? onTap;
+  final Function(VideoFolderItem)? onDoubleTap;
+  final Function(Offset, VideoFolderItem)? onMouseRightTap;
+  final Function(VideoFolderItem, List<File>)? onVideosDragDone;
+
+  _VideoFolderListItem(
+      {Key? key,
+      required this.folder,
+      required this.isChecked,
+      this.onTap,
+      this.onDoubleTap,
+      this.onMouseRightTap,
+      this.onVideosDragDone})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _VideoFolderListItemState();
+  }
+}
+
+class _VideoFolderListItemState extends State<_VideoFolderListItem> {
+  bool _isDragEntered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageWidth = 140.0;
+    final imageHeight = 140.0;
+    final imagePadding = 3.0;
+    final selectedBackgroundColor = Color(0xffe6e6e6);
+    final normalBackgroundColor = Colors.white;
+
+    final normalTextColor = Color(0xff515151);
+    final normalNumTextColor = Color(0xff929292);
+
+    final selectedNameTextColor = Colors.white;
+    final selectedNumTextColor = Colors.white;
+
+    final normalNameBackgroundColor = Colors.white;
+    final selectedNameBackgroundColor = Color(0xff5d87ed);
+
+    return DropTarget(
+        child: Listener(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SimpleGestureDetector(
+                child: Container(
+                  child: Stack(
+                    children: [
+                      Visibility(
+                        child: RotationTransition(
+                            turns: AlwaysStoppedAnimation(5 / 360),
+                            child: Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              padding: EdgeInsets.all(imagePadding),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(
+                                      color: Color(0xffdddddd), width: 1.0),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(3.0))),
+                            )),
+                        visible: widget.folder.videoCount > 1 ? true : false,
+                      ),
+                      Visibility(
+                        child: RotationTransition(
+                            turns: AlwaysStoppedAnimation(-5 / 360),
+                            child: Container(
+                              width: imageWidth,
+                              height: imageHeight,
+                              padding: EdgeInsets.all(imagePadding),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(
+                                      color: Color(0xffdddddd), width: 1.0),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(3.0))),
+                            )),
+                        visible: widget.folder.videoCount > 2 ? true : false,
+                      ),
+                      Container(
+                        child: CachedNetworkImage(
+                            imageUrl:
+                                "${DeviceConnectionManager.instance.rootURL}/stream/video/thumbnail/${widget.folder.coverVideoId}/400/400",
+                            fit: BoxFit.cover,
+                            width: imageWidth,
+                            height: imageWidth,
+                            memCacheWidth: 400,
+                            fadeOutDuration: Duration.zero,
+                            fadeInDuration: Duration.zero),
+                        padding: EdgeInsets.all(imagePadding),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                                color: Color(0xffdddddd), width: 1.0),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(3.0))),
+                      )
+                    ],
+                  ),
+                  decoration: BoxDecoration(
+                      color: widget.isChecked || _isDragEntered
+                          ? selectedBackgroundColor
+                          : normalBackgroundColor,
+                      borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                  padding: EdgeInsets.all(8),
+                ),
+                onTap: () {
+                  widget.onTap?.call(widget.folder);
+                },
+                onDoubleTap: () {
+                  widget.onDoubleTap?.call(widget.folder);
+                },
+              ),
+              GestureDetector(
+                child: Container(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.folder.name,
+                        style: TextStyle(
+                            color: widget.isChecked || _isDragEntered
+                                ? selectedNameTextColor
+                                : normalTextColor),
+                      ),
+                      Container(
+                        child: Text(
+                          "(${widget.folder.videoCount})",
+                          style: TextStyle(
+                              color: widget.isChecked || _isDragEntered
+                                  ? selectedNumTextColor
+                                  : normalNumTextColor),
+                        ),
+                        margin: EdgeInsets.only(left: 3),
+                      )
+                    ],
+                  ),
+                  margin: EdgeInsets.only(top: 10),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(3)),
+                      color: widget.isChecked || _isDragEntered
+                          ? selectedNameBackgroundColor
+                          : normalNameBackgroundColor),
+                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                ),
+                onTap: () {
+                  // setState(() {
+                  // _setAlbumSelected(album);
+                  // });
+                },
+              )
+            ],
+          ),
+          onPointerDown: (event) {
+            if (event.isRightMouseClick()) {
+              widget.onMouseRightTap?.call(event.position, widget.folder);
+            }
+          },
+        ),
+        onDragEntered: (details) {
+          SoundEffect.play(SoundType.bubble);
+
+          setState(() {
+            _isDragEntered = true;
+          });
+        },
+        onDragDone: (details) {
+          final homeTab = context.read<HomeBloc>().state.tab;
+
+          if (homeTab != HomeTab.video) {
+            return;
+          }
+
+          final videoTab = context.read<VideoHomeBloc>().state.tab;
+          if (videoTab != VideoHomeTab.videoFolders) {
+            return;
+          }
+
+          final isFolderOpened = context
+              .read<VideoFoldersBloc>()
+              .state
+              .videoFolderOpenStatus
+              .isOpened;
+
+          if (isFolderOpened) {
+            return;
+          }
+
+          final videos = details.files
+              .map((file) => File(file.path))
+              .where((element) => element.isVideo)
+              .toList();
+          if (videos.isNotEmpty) {
+            widget.onVideosDragDone?.call(widget.folder, videos);
+          }
+        },
+        onDragExited: (details) {
+          setState(() {
+            _isDragEntered = false;
+          });
+        });
   }
 }
