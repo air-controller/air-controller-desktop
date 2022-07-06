@@ -150,7 +150,6 @@ class FileHomeBackToLastDir extends FileHomeEvent {
   const FileHomeBackToLastDir();
 }
 
-
 class FileHomeSortInfoChanged extends FileHomeEvent {
   final FileHomeSortColumn sortColumn;
   final FileHomeSortDirection sortDirection;
@@ -159,4 +158,15 @@ class FileHomeSortInfoChanged extends FileHomeEvent {
 
   @override
   List<Object?> get props => [sortColumn, sortDirection];
+}
+
+class FileHomeDraggingUpdate extends FileHomeEvent {
+  final bool isDraggingToRoot;
+  final FileNode? currentDraggingTarget;
+
+  const FileHomeDraggingUpdate(
+      this.isDraggingToRoot, this.currentDraggingTarget);
+
+  @override
+  List<Object?> get props => [isDraggingToRoot, currentDraggingTarget];
 }

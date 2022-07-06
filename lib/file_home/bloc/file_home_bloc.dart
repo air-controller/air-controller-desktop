@@ -18,11 +18,9 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
   final FileRepository _fileRepository;
   final bool isOnlyDownloadDir;
 
-  FileHomeBloc(
-      FileRepository fileRepository,
-      bool isOnlyDownloadDir):
-        _fileRepository = fileRepository,
-  isOnlyDownloadDir = isOnlyDownloadDir,
+  FileHomeBloc(FileRepository fileRepository, bool isOnlyDownloadDir)
+      : _fileRepository = fileRepository,
+        isOnlyDownloadDir = isOnlyDownloadDir,
         super(FileHomeState()) {
     on<FileHomeDisplayTypeChanged>(_onDisplayTypeChanged);
     on<FileHomeSubscriptionRequested>(_onSubscriptionRequested);
@@ -44,9 +42,11 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeCancelCopySubmitted>(_onCancelCopySubmitted);
     on<FileHomeBackToLastDir>(_onBackToLastDir);
     on<FileHomeSortInfoChanged>(_onSortInfoChanged);
+    on<FileHomeDraggingUpdate>(_onDraggingUpdate);
   }
 
-  void _onDisplayTypeChanged(FileHomeDisplayTypeChanged event, Emitter<FileHomeState> emit) {
+  void _onDisplayTypeChanged(
+      FileHomeDisplayTypeChanged event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(displayType: event.displayType));
   }
 
@@ -189,15 +189,14 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
       }
 
       emit(state.copyWith(
-        openDirStatus: FileHomeOpenDirStatus.success,
-        currentDir: event.dir,
-        files: fileItems
-            .map((item) => FileNode(
-                event.dir, item, event.dir == null ? 1 : event.dir!.level + 1))
-            .toList(),
-        dirStack: dirStack,
-        isRootDir: event.dir == null
-      ));
+          openDirStatus: FileHomeOpenDirStatus.success,
+          currentDir: event.dir,
+          files: fileItems
+              .map((item) => FileNode(event.dir, item,
+                  event.dir == null ? 1 : event.dir!.level + 1))
+              .toList(),
+          dirStack: dirStack,
+          isRootDir: event.dir == null));
     } catch (e) {
       emit(state.copyWith(
           openDirStatus: FileHomeOpenDirStatus.failure,
@@ -206,14 +205,12 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
   }
 
   void _onClearChecked(
-      FileHomeClearChecked event,
-      Emitter<FileHomeState> emit) {
+      FileHomeClearChecked event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(checkedFiles: []));
   }
 
   void _onRenameSubmitted(
-      FileHomeRenameSubmitted event,
-      Emitter<FileHomeState> emit) async {
+      FileHomeRenameSubmitted event, Emitter<FileHomeState> emit) async {
     emit(state.copyWith(renameStatus: FileHomeRenameStatus.loading));
 
     try {
@@ -239,33 +236,30 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
       }
 
       emit(state.copyWith(
-        renameStatus: FileHomeRenameStatus.success,
-        files: files,
-        checkedFiles: checkedFiles,
-        isRenamingMode: false
-      ));
+          renameStatus: FileHomeRenameStatus.success,
+          files: files,
+          checkedFiles: checkedFiles,
+          isRenamingMode: false));
     } catch (e) {
       emit(state.copyWith(
           renameStatus: FileHomeRenameStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          failureReason: (e as BusinessError).message));
     }
   }
 
-  void _onEnterTapped(
-      FileHomeEnterTapped event,
-      Emitter<FileHomeState> emit) {
+  void _onEnterTapped(FileHomeEnterTapped event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(enterTapStatus: FileHomeEnterTapStatus.tap));
     emit(state.copyWith(enterTapStatus: FileHomeEnterTapStatus.none));
   }
 
   void _onDeleteSubmitted(
-      FileHomeDeleteSubmitted event,
-      Emitter<FileHomeState> emit) async {
+      FileHomeDeleteSubmitted event, Emitter<FileHomeState> emit) async {
     emit(state.copyWith(deleteStatus: FileHomeDeleteStatus.loading));
 
     try {
-      await _fileRepository.deleteFiles(event.files.map((file) => "${file.data.folder}/${file.data.name}").toList());
+      await _fileRepository.deleteFiles(event.files
+          .map((file) => "${file.data.folder}/${file.data.name}")
+          .toList());
 
       List<FileNode> files = [...state.files];
       List<FileNode> checkedFiles = [...state.checkedFiles];
@@ -275,29 +269,26 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
 
       emit(state.copyWith(
           deleteStatus: FileHomeDeleteStatus.success,
-        files: files,
-        checkedFiles: checkedFiles
-      ));
+          files: files,
+          checkedFiles: checkedFiles));
     } catch (e) {
       emit(state.copyWith(
-        deleteStatus: FileHomeDeleteStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          deleteStatus: FileHomeDeleteStatus.failure,
+          failureReason: (e as BusinessError).message));
     }
   }
-  
+
   void _onExpandChildTree(
-      FileHomeExpandChildTree event,
-      Emitter<FileHomeState> emit) async {
+      FileHomeExpandChildTree event, Emitter<FileHomeState> emit) async {
     try {
       String path = "${event.file.data.folder}/${event.file.data.name}";
       List<FileItem> files = await _fileRepository.getFiles(path);
 
       List<FileNode> allFiles = [...state.files];
-      
-      
+
       int index = allFiles.indexWhere((file) =>
-      "${file.data.folder}/${file.data.name}" == "${event.file.data.folder}/${event.file.data.name}");
+          "${file.data.folder}/${file.data.name}" ==
+          "${event.file.data.folder}/${event.file.data.name}");
 
       if (index >= 0) {
         allFiles.insertAll(index + 1, files.map((file) {
@@ -310,17 +301,14 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
         current.isExpand = true;
       }
 
-      emit(state.copyWith(
-        files: allFiles
-      ));
+      emit(state.copyWith(files: allFiles));
     } catch (e) {
       log("_onExpandChildTree, failure: ${e.toString()}");
     }
   }
 
   void _onFoldUpTree(
-      FileHomeFoldUpChildTree event,
-      Emitter<FileHomeState> emit) async {
+      FileHomeFoldUpChildTree event, Emitter<FileHomeState> emit) async {
     List<FileNode> allFiles = [...state.files];
 
     allFiles.removeWhere((node) => _isChild(event.file, node));
@@ -342,44 +330,30 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
   }
 
   void _onMenuStatusChanged(
-      FileHomeMenuStatusChanged event,
-      Emitter<FileHomeState> emit) {
+      FileHomeMenuStatusChanged event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(menuStatus: event.status));
   }
 
-  void _onRenameEnter(
-      FileHomeRenameEnter event,
-      Emitter<FileHomeState> emit) {
-
+  void _onRenameEnter(FileHomeRenameEnter event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(
         isRenamingMode: true,
         currentRenamingFile: event.file,
-      newFileName: event.file.data.name
-    ));
+        newFileName: event.file.data.name));
   }
 
-  void _onRenameExit(
-      FileHomeRenameExit event,
-      Emitter<FileHomeState> emit) {
-    emit(state.copyWith(
-        isRenamingMode: false
-    ));
+  void _onRenameExit(FileHomeRenameExit event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(isRenamingMode: false));
   }
 
   void _onNewNameChanged(
-      FileHomeNewNameChanged event,
-      Emitter<FileHomeState> emit) {
-    emit(state.copyWith(
-        newFileName: event.name
-    ));
+      FileHomeNewNameChanged event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(newFileName: event.name));
   }
 
   void _onCopyFilesSubmitted(
-      FileHomeCopySubmitted event,
-      Emitter<FileHomeState> emit) {
-    emit(state.copyWith(copyStatus: FileHomeCopyStatusUnit(
-        status: FileHomeCopyStatus.start
-    )));
+      FileHomeCopySubmitted event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(
+        copyStatus: FileHomeCopyStatusUnit(status: FileHomeCopyStatus.start)));
 
     String? fileName = null;
 
@@ -389,48 +363,40 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
 
     _fileRepository.copyFilesTo(
         fileName: fileName,
-        paths: event.files.map((file) => "${file.data.folder}/${file.data.name}").toList(),
+        paths: event.files
+            .map((file) => "${file.data.folder}/${file.data.name}")
+            .toList(),
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(FileHomeCopyStatusChanged(FileHomeCopyStatusUnit(
               status: FileHomeCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(FileHomeCopyStatusChanged(FileHomeCopyStatusUnit(
-              status: FileHomeCopyStatus.success,
-              fileName: fileName
-          )));
-
+              status: FileHomeCopyStatus.success, fileName: fileName)));
         },
         onError: (String error) {
           add(FileHomeCopyStatusChanged(FileHomeCopyStatusUnit(
-              status: FileHomeCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              status: FileHomeCopyStatus.failure, error: error)));
+        });
   }
 
   void _onCopyStatusChanged(
-      FileHomeCopyStatusChanged event,
-      Emitter<FileHomeState> emit) {
+      FileHomeCopyStatusChanged event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(copyStatus: event.status));
   }
 
   void _onCancelCopySubmitted(
-      FileHomeCancelCopySubmitted event,
-      Emitter<FileHomeState> emit) {
+      FileHomeCancelCopySubmitted event, Emitter<FileHomeState> emit) {
     _fileRepository.cancelCopy();
     emit(state.copyWith(copyStatus: FileHomeCopyStatusUnit()));
   }
 
   void _onBackToLastDir(
-      FileHomeBackToLastDir event,
-      Emitter<FileHomeState> emit) async {
+      FileHomeBackToLastDir event, Emitter<FileHomeState> emit) async {
     List<FileNode> dirStack = [...state.dirStack];
 
     if (dirStack.isEmpty) {
@@ -447,32 +413,33 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     emit(state.copyWith(openDirStatus: FileHomeOpenDirStatus.loading));
 
     try {
-      List<FileItem> files = await _fileRepository.getFiles(
-          lastDir == null ? null : "${lastDir.data.folder}/${lastDir.data
-              .name}");
+      List<FileItem> files = await _fileRepository.getFiles(lastDir == null
+          ? null
+          : "${lastDir.data.folder}/${lastDir.data.name}");
 
       dirStack.removeAt(dirStack.length - 1);
 
       emit(state.copyWith(
-        files: files.map((file) => FileNode(lastDir, file, lastDir == null ? 0 : lastDir.level + 1)).toList(),
-        dirStack: dirStack,
+          files: files
+              .map((file) => FileNode(
+                  lastDir, file, lastDir == null ? 0 : lastDir.level + 1))
+              .toList(),
+          dirStack: dirStack,
           openDirStatus: FileHomeOpenDirStatus.success,
-        currentDir: lastDir,
-        isRootDir: lastDir == null
-      ));
+          currentDir: lastDir,
+          isRootDir: lastDir == null));
     } catch (e) {
       log("_onBackToLastDir, failure: ${e.toString()}");
       emit(state.copyWith(
           openDirStatus: FileHomeOpenDirStatus.failure,
-        failureReason: (e as BusinessError).message
-      ));
+          failureReason: (e as BusinessError).message));
     }
   }
 
   void _onSortInfoChanged(
-      FileHomeSortInfoChanged event,
-      Emitter<FileHomeState> emit) {
-    if (state.sortColumn == event.sortColumn && state.sortDirection == event.sortDirection) {
+      FileHomeSortInfoChanged event, Emitter<FileHomeState> emit) {
+    if (state.sortColumn == event.sortColumn &&
+        state.sortDirection == event.sortDirection) {
       log("_onSortInfoChanged, sort info is not changed");
       return;
     }
@@ -484,9 +451,8 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     FileHomeSortDirection sortDirection = event.sortDirection;
 
     // 1.找到当前节点下的所有节点
-    List<FileNode> directedChildNodes = allFileNodes
-        .where((element) => element.parent == currentDir)
-        .toList();
+    List<FileNode> directedChildNodes =
+        allFileNodes.where((element) => element.parent == currentDir).toList();
 
     int _sortFile(FileNode nodeA, FileNode nodeB, FileHomeSortColumn column,
         FileHomeSortDirection direction) {
@@ -564,7 +530,8 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
         // 4.将分组后的节点依次排序并插入到父节点位置处
         groupFileNodes.forEach((parent, childNodes) {
           childNodes.sort((nodeA, nodeB) {
-            return _sortFile(nodeA, nodeB, sortColumn, sortDirection);;
+            return _sortFile(nodeA, nodeB, sortColumn, sortDirection);
+            ;
           });
 
           int index = directedChildNodes.indexOf(parent);
@@ -576,9 +543,18 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     }
 
     emit(state.copyWith(
-      files: directedChildNodes,
-      sortColumn: sortColumn,
-      sortDirection: sortDirection
-    ));
+        files: directedChildNodes,
+        sortColumn: sortColumn,
+        sortDirection: sortDirection));
+  }
+
+  void _onDraggingUpdate(
+      FileHomeDraggingUpdate event, Emitter<FileHomeState> emit) {
+    if (event.isDraggingToRoot != state.isDraggingToRoot ||
+        event.currentDraggingTarget != state.currentDraggingTarget) {
+      emit(state.copyWith(
+          isDraggingToRoot: event.isDraggingToRoot,
+          currentDraggingTarget: event.currentDraggingTarget));
+    }
   }
 }
