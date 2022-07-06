@@ -239,6 +239,7 @@ class MusicHomeView extends StatelessWidget {
           ],
           child: Stack(children: [
             DropTarget(
+              enable: _isShowing(context),
               child: Focus(
                 autofocus: true,
                 focusNode: _rootFocusNode,
@@ -804,7 +805,7 @@ class MusicHomeView extends StatelessWidget {
                 if (homeTab != HomeTab.music) {
                   return;
                 }
-                
+
                 final audios = details.files
                     .map((e) => File(e.path))
                     .where((element) => element.isAudio)
@@ -829,6 +830,11 @@ class MusicHomeView extends StatelessWidget {
             )
           ])),
     );
+  }
+
+  bool _isShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+    return homeTab == HomeTab.music;
   }
 
   void _performSort(BuildContext context, MusicHomeSortColumn sortColumn,

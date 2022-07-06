@@ -302,6 +302,7 @@ class AllImagesView extends StatelessWidget {
           )
         ],
         child: DropTarget(
+          enable: _isShowing(context),
           onDragDone: (details) {
             if (!_isShowing(context)) return;
 

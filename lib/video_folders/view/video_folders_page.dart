@@ -495,6 +495,7 @@ class VideoFoldersView extends StatelessWidget {
             // 文件夹内视频页面
             Visibility(
               child: DropTarget(
+                enable: _isVideoFolderOpenedAndShowing(context),
                 onDragEntered: (details) {
                   SoundEffect.play(SoundType.bubble);
                 },
@@ -590,6 +591,50 @@ class VideoFoldersView extends StatelessWidget {
     );
   }
 
+  bool _isVideoFolderListShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+
+    if (homeTab != HomeTab.video) {
+      return false;
+    }
+
+    final videoTab = context.read<VideoHomeBloc>().state.tab;
+    if (videoTab != VideoHomeTab.videoFolders) {
+      return false;
+    }
+
+    final isFolderOpened =
+        context.read<VideoFoldersBloc>().state.videoFolderOpenStatus.isOpened;
+
+    if (isFolderOpened) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _isVideoFolderOpenedAndShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+
+    if (homeTab != HomeTab.video) {
+      return false;
+    }
+
+    final videoTab = context.read<VideoHomeBloc>().state.tab;
+    if (videoTab != VideoHomeTab.videoFolders) {
+      return false;
+    }
+
+    final isFolderOpened =
+        context.read<VideoFoldersBloc>().state.videoFolderOpenStatus.isOpened;
+
+    if (!isFolderOpened) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool _needListenItemCountChange(
       VideoFoldersState previous, VideoFoldersState current) {
     if (previous.videoFolders.length != current.videoFolders.length)
@@ -640,7 +685,6 @@ class VideoFoldersView extends StatelessWidget {
 
   Widget _createGridContent(
       List<VideoFolderItem> videoFolders, List<VideoFolderItem> checkedVideos) {
-
     return Container(
       child: GridView.builder(
         scrollDirection: Axis.vertical,
@@ -657,6 +701,7 @@ class VideoFoldersView extends StatelessWidget {
           final checkedVideos =
               context.read<VideoFoldersBloc>().state.checkedVideoFolders;
           return _VideoFolderListItem(
+            enableDrag: _isVideoFolderListShowing(context),
             folder: videoFolder,
             isChecked: checkedVideos.contains(videoFolder),
             onTap: (videoFolder) {
@@ -690,8 +735,8 @@ class VideoFoldersView extends StatelessWidget {
                       target: videoFolder)));
             },
             onVideosDragDone: (folder, videos) {
-              context.read<VideoFoldersBloc>().add(VideoFoldersUploadVideos(
-                  folder: folder, videos: videos));
+              context.read<VideoFoldersBloc>().add(
+                  VideoFoldersUploadVideos(folder: folder, videos: videos));
             },
           );
         },
@@ -912,6 +957,7 @@ class VideoFoldersView extends StatelessWidget {
 class _VideoFolderListItem extends StatefulWidget {
   final VideoFolderItem folder;
   final bool isChecked;
+  final bool enableDrag;
   final Function(VideoFolderItem)? onTap;
   final Function(VideoFolderItem)? onDoubleTap;
   final Function(Offset, VideoFolderItem)? onMouseRightTap;
@@ -921,6 +967,7 @@ class _VideoFolderListItem extends StatefulWidget {
       {Key? key,
       required this.folder,
       required this.isChecked,
+      required this.enableDrag,
       this.onTap,
       this.onDoubleTap,
       this.onMouseRightTap,
@@ -954,6 +1001,7 @@ class _VideoFolderListItemState extends State<_VideoFolderListItem> {
     final selectedNameBackgroundColor = Color(0xff5d87ed);
 
     return DropTarget(
+      enable: widget.enableDrag,
         child: Listener(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

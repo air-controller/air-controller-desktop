@@ -701,6 +701,7 @@ class AllAlbumsView extends StatelessWidget {
           AlbumItem album = albums[index];
 
           return _AlbumsListItem(
+            enableDrag: _isAlbumListShowing(context),
             album: album,
             isChecked: isChecked(album),
             onTap: () {
@@ -771,6 +772,7 @@ class AllAlbumsView extends StatelessWidget {
     }
 
     return DropTarget(
+      enable: _isAlbumOpenAndShowing(context),
       child: ImageFlowWidget(
         languageCode: languageCode,
         rootUrl: DeviceConnectionManager.instance.rootURL,
@@ -846,11 +848,42 @@ class AllAlbumsView extends StatelessWidget {
     navigatorKey.currentState
         ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
   }
+
+  bool _isAlbumOpenAndShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+
+    if (homeTab != HomeTab.image) return false;
+
+    final tab = context.read<HomeImageBloc>().state.tab;
+    if (tab != HomeImageTab.allAlbums) return false;
+
+    final isAlbumOpened =
+        context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+    if (!isAlbumOpened) return false;
+
+    return true;
+  }
+
+  bool _isAlbumListShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+
+    if (homeTab != HomeTab.image) return false;
+
+    final tab = context.read<HomeImageBloc>().state.tab;
+    if (tab != HomeImageTab.allAlbums) return false;
+
+    final isAlbumOpened =
+        context.read<AllAlbumsBloc>().state.albumOpenStatus.isOpened;
+    if (isAlbumOpened) return false;
+
+    return true;
+  }
 }
 
 class _AlbumsListItem extends StatefulWidget {
   final AlbumItem album;
   final bool isChecked;
+  final bool enableDrag;
   final Function? onTap;
   final Function? onDoubleTap;
   final Function(Offset, AlbumItem)? onRightMouseClick;
@@ -860,6 +893,7 @@ class _AlbumsListItem extends StatefulWidget {
       {Key? key,
       required this.album,
       required this.isChecked,
+      required this.enableDrag,
       this.onTap,
       this.onDoubleTap,
       this.onRightMouseClick,
@@ -895,6 +929,7 @@ class _AlbumsListItemState extends State<_AlbumsListItem> {
         "${DeviceConnectionManager.instance.rootURL}/stream/image/thumbnail/${widget.album.coverImageId}/400/400";
 
     return DropTarget(
+        enable: widget.enableDrag,
         child: Listener(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

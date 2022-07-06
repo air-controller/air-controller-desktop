@@ -251,6 +251,7 @@ class AllVideosView extends StatelessWidget {
           )
         ],
         child: DropTarget(
+            enable: _isShowing(context),
             onDragEntered: (details) {
               SoundEffect.play(SoundType.bubble);
             },
@@ -371,6 +372,20 @@ class AllVideosView extends StatelessWidget {
             )),
       ),
     );
+  }
+
+  bool _isShowing(BuildContext context) {
+    final homeTab = context.read<HomeBloc>().state.tab;
+
+    if (homeTab != HomeTab.video) {
+      return false;
+    }
+
+    final videoTab = context.read<VideoHomeBloc>().state.tab;
+    if (videoTab != VideoHomeTab.allVideos) {
+      return false;
+    }
+    return true;
   }
 
   void _openMenu(
