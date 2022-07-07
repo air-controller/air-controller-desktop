@@ -1,5 +1,4 @@
 import 'package:air_controller/ext/pointer_down_event_x.dart';
-import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/widget/simple_gesture_detector.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:sticky_headers/sticky_headers.dart';
 
 import '../model/arrangement_mode.dart';
 import '../model/image_item.dart';
-import '../util/common_util.dart';
 
 /**
  * 图片瀑布流，用于首页不同类型排列图片列表展示.
@@ -53,21 +51,15 @@ class _ImageFlowState extends State<ImageFlowWidget> {
   Widget _createDailyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
-    final timeFormat = context.l10n.yMdPattern;
-
     for (ImageItem imageItem in widget.images) {
       int createTime = imageItem.createTime;
 
-      final df = DateFormat(timeFormat);
-      String createTimeStr = "";
+      Locale locale = Localizations.localeOf(context);
 
-      final languageCode = widget.languageCode;
-      if (languageCode == "en") {
-        createTimeStr = CommonUtil.convertToUSTime(createTime);
-      } else {
-        createTimeStr =
-            df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
-      }
+      final df = DateFormat.yMMMMd(locale.toString());
+
+      final createTimeStr =
+          df.format(DateTime.fromMillisecondsSinceEpoch(createTime));
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {
@@ -143,21 +135,14 @@ class _ImageFlowState extends State<ImageFlowWidget> {
   Widget _createMonthlyContent(BuildContext context) {
     final map = LinkedHashMap<String, List<ImageItem>>();
 
-    final timeFormat = context.l10n.yMPattern;
-
     for (ImageItem imageItem in widget.images) {
       int createTime = imageItem.createTime;
 
-      final df = DateFormat(timeFormat);
-      String createTimeStr = "";
+      Locale locale = Localizations.localeOf(context);
 
-      final languageCode = widget.languageCode;
-      if (languageCode == "en") {
-        createTimeStr = _convertToUSTimeYM(createTime);
-      } else {
-        createTimeStr =
-            df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
-      }
+      final df = DateFormat.MMMMd(locale.toString());
+
+      String createTimeStr = df.format(new DateTime.fromMillisecondsSinceEpoch(createTime));
 
       List<ImageItem>? images = map[createTimeStr];
       if (null == images) {

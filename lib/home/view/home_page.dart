@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:air_controller/event/update_mobile_info.dart';
+import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/repository/contact_repository.dart';
@@ -11,10 +12,10 @@ import 'package:flowder/flowder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant.dart';
-import '../../enter/view/enter_page.dart';
 import '../../event/exit_cmd_service.dart';
 import '../../event/exit_heartbeat_service.dart';
 import '../../file_home/view/file_home_page.dart';
@@ -143,23 +144,11 @@ class HomeView extends StatelessWidget {
                         int publishTime =
                             state.updateCheckStatus.publishTime ?? 0;
 
-                        final enterContext = EnterPage.enterKey.currentContext;
-                        String languageCode = "en";
-
-                        if (null != enterContext) {
-                          languageCode =
-                              Localizations.localeOf(enterContext).languageCode;
-                        }
-
-                        String publishTimeStr = "";
-
-                        if (languageCode == "en") {
-                          publishTimeStr =
-                              CommonUtil.convertToUSTime(publishTime);
-                        } else {
-                          publishTimeStr =
-                              CommonUtil.formatTime(publishTime, "YYYY MM dd");
-                        }
+                        final df = DateFormat.yMMMMd(
+                                context.currentAppLocale.toString())
+                            .addPattern("HH:mm:ss");
+                        String publishTimeStr = df.format(
+                            DateTime.fromMillisecondsSinceEpoch(publishTime));
 
                         return UpdateCheckDialogUI(
                           title: context.l10n.updateDialogTitle,
@@ -779,7 +768,7 @@ class HomeView extends StatelessWidget {
   void _exitFileManager(BuildContext context) {
     DeviceConnectionManager.instance.currentDevice = null;
     _updateMobileInfoSubscription?.cancel();
-    
+
     eventBus.fire(ExitCmdService());
     eventBus.fire(ExitHeartbeatService());
 

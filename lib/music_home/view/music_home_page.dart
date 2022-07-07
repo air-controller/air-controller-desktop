@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 
 import '../../constant.dart';
 import '../../home/bloc/home_bloc.dart';
@@ -672,9 +674,8 @@ class MusicHomeView extends StatelessWidget {
                                     alignment: Alignment.centerLeft,
                                     padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
                                     child: Text(
-                                        CommonUtil.formatTime(
-                                            audioItem.modifyDate * 1000,
-                                            context.l10n.yMdHmPattern),
+                                        _formatTime(context,
+                                            audioItem.modifyDate * 1000),
                                         overflow: TextOverflow.ellipsis,
                                         softWrap: false,
                                         style: textStyle),
@@ -960,5 +961,13 @@ class MusicHomeView extends StatelessWidget {
     if (!_progressIndicatorDialog!.isShowing) {
       _progressIndicatorDialog!.show();
     }
+  }
+
+  String _formatTime(BuildContext context, int timeInMills) {
+    final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
+    final DateFormat dateFormat =
+        DateFormat.yMMMd(context.currentAppLocale.toString())
+            .addPattern("HH:mm");
+    return dateFormat.format(dateTime);
   }
 }

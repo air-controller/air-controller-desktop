@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/ext/global_key_x.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/l10n/l10n.dart';
@@ -7,6 +8,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../bootstrap.dart';
 import '../../file_home/bloc/file_home_bloc.dart';
@@ -274,9 +276,7 @@ class ListModeFilesView extends StatelessWidget {
                 key: key4,
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.fromLTRB(15.0, 0, 0, 0),
-                child: Text(
-                    CommonUtil.formatTime(
-                        file.data.changeDate, context.l10n.yMdHmPattern),
+                child: Text(_formatTime(context, file.data.changeDate),
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
                     style: textStyle),
@@ -497,8 +497,9 @@ class ListModeFilesView extends StatelessWidget {
     Color textColor = Color(0xff313237);
 
     if ((dragToUploadStatus == DragToUploadStatus.enter &&
-        !isDraggingToRoot &&
-        file == currentDraggingTarget) || checkedFiles.contains(file)) {
+            !isDraggingToRoot &&
+            file == currentDraggingTarget) ||
+        checkedFiles.contains(file)) {
       textColor = Colors.white;
     }
 
@@ -613,5 +614,13 @@ class ListModeFilesView extends StatelessWidget {
 
       return context.l10n.document;
     }
+  }
+
+  String _formatTime(BuildContext context, int timeInMills) {
+    final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timeInMills);
+    final DateFormat dateFormat =
+        DateFormat.yMMMd(context.currentAppLocale.toString())
+            .addPattern("HH:mm");
+    return dateFormat.format(dateTime);
   }
 }

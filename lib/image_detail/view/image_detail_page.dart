@@ -1,3 +1,4 @@
+import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:intl/intl.dart';
 
 import '../../all_albums/bloc/all_albums_bloc.dart';
 import '../../all_images/bloc/all_images_bloc.dart';
@@ -817,7 +819,7 @@ class ImageDetailView extends StatelessWidget {
                                       ),
                                       Container(
                                         child: Text(
-                                          "${CommonUtil.formatTime(imageItem.createTime, context.l10n.yMdHmPattern)}",
+                                          _convertToIntlTime(context, imageItem.createTime),
                                           style: textStyle,
                                         ),
                                         width: contentWidth,
@@ -840,7 +842,7 @@ class ImageDetailView extends StatelessWidget {
                                       ),
                                       Container(
                                         child: Text(
-                                          "${CommonUtil.formatTime(imageItem.modifyTime * 1000, context.l10n.yMdHmPattern)}",
+                                          _convertToIntlTime(context, imageItem.modifyTime * 1000),
                                           style: textStyle,
                                         ),
                                         width: contentWidth,
@@ -885,5 +887,10 @@ class ImageDetailView extends StatelessWidget {
       _isImageInfoDialogShowing = false;
     });
     _isImageInfoDialogShowing = true;
+  }
+
+  String _convertToIntlTime(BuildContext context, int time) {
+    final df = DateFormat.yMMMd(context.currentAppLocale.toString()).addPattern("HH:mm:ss");
+    return df.format(DateTime.fromMillisecondsSinceEpoch(time));
   }
 }
