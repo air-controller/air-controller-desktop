@@ -420,112 +420,120 @@ class _FileGridItemState extends State<_FileGridItem> {
     final backgroundFileNameNormal = Colors.white;
     final backgroundFileNameSelected = Color(0xff5d87ed);
 
-    return Listener(
-      child: Column(children: [
-        SimpleGestureDetector(
+    return Tooltip(
+      message: file.data.name,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white
+      ),
+      child: Listener(
+        child: Column(children: [
+          SimpleGestureDetector(
+              child: Container(
+                child: icon,
+                decoration: BoxDecoration(
+                    color: widget.isChecked || widget.isDragEntered
+                        ? backgroundFileSelected
+                        : backgroundFileNormal,
+                    borderRadius: BorderRadius.all(Radius.circular(4.0))),
+                padding: EdgeInsets.all(8),
+              ),
+              onTap: () {
+                widget.onTap?.call(widget.file);
+              },
+              onDoubleTap: () {
+                widget.onDoubleTap?.call(widget.file);
+              }),
+          SimpleGestureDetector(
             child: Container(
-              child: icon,
+              constraints: BoxConstraints(maxWidth: 150),
+              child: Stack(
+                children: [
+                  Visibility(
+                    child: Text(
+                      file.data.name,
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: (widget.isChecked &&
+                                      file != widget.currentRenamingFile) ||
+                                  widget.isDragEntered
+                              ? fileNameTextColorSelected
+                              : fileNameTextColorNormal),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    visible: widget.isRenamingMode
+                        ? file != widget.currentRenamingFile
+                        : true,
+                  ),
+                  Visibility(
+                    child: Container(
+                      child: IntrinsicWidth(
+                        child: TextField(
+                          focusNode: focusNode,
+                          controller: inputController,
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Color(0xffcccbcd),
+                                      width: 3,
+                                      style: BorderStyle.solid)),
+                              enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Color(0xffcccbcd),
+                                      width: 3,
+                                      style: BorderStyle.solid),
+                                  borderRadius: BorderRadius.circular(4)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Color(0xffcccbcd),
+                                      width: 4,
+                                      style: BorderStyle.solid),
+                                  borderRadius: BorderRadius.circular(4)),
+                              contentPadding: EdgeInsets.fromLTRB(8, 3, 8, 3)),
+                          cursorColor: Color(0xff333333),
+                          style:
+                              TextStyle(fontSize: 14, color: Color(0xff333333)),
+                          onChanged: (value) {
+                            widget.onNewNameChanged?.call(value);
+                          },
+                        ),
+                      ),
+                      height: 30,
+                    ),
+                    visible: file == widget.currentRenamingFile &&
+                        widget.isRenamingMode,
+                    maintainState: false,
+                    maintainSize: false,
+                  )
+                ],
+              ),
               decoration: BoxDecoration(
-                  color: widget.isChecked || widget.isDragEntered
-                      ? backgroundFileSelected
-                      : backgroundFileNormal,
-                  borderRadius: BorderRadius.all(Radius.circular(4.0))),
-              padding: EdgeInsets.all(8),
+                borderRadius: BorderRadius.all(Radius.circular(3)),
+                color:
+                    (widget.isChecked && file != widget.currentRenamingFile) ||
+                            widget.isDragEntered
+                        ? backgroundFileNameSelected
+                        : backgroundFileNameNormal,
+              ),
+              margin: EdgeInsets.only(top: 10),
+              padding: EdgeInsets.fromLTRB(5, 3, 5, 3),
             ),
             onTap: () {
-              widget.onTap?.call(widget.file);
+              widget.onTap?.call(file);
             },
             onDoubleTap: () {
               widget.onDoubleTap?.call(widget.file);
-            }),
-        SimpleGestureDetector(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 150),
-            child: Stack(
-              children: [
-                Visibility(
-                  child: Text(
-                    file.data.name,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: (widget.isChecked &&
-                                    file != widget.currentRenamingFile) ||
-                                widget.isDragEntered
-                            ? fileNameTextColorSelected
-                            : fileNameTextColorNormal),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  visible: widget.isRenamingMode
-                      ? file != widget.currentRenamingFile
-                      : true,
-                ),
-                Visibility(
-                  child: Container(
-                    child: IntrinsicWidth(
-                      child: TextField(
-                        focusNode: focusNode,
-                        controller: inputController,
-                        decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xffcccbcd),
-                                    width: 3,
-                                    style: BorderStyle.solid)),
-                            enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xffcccbcd),
-                                    width: 3,
-                                    style: BorderStyle.solid),
-                                borderRadius: BorderRadius.circular(4)),
-                            focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: Color(0xffcccbcd),
-                                    width: 4,
-                                    style: BorderStyle.solid),
-                                borderRadius: BorderRadius.circular(4)),
-                            contentPadding: EdgeInsets.fromLTRB(8, 3, 8, 3)),
-                        cursorColor: Color(0xff333333),
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xff333333)),
-                        onChanged: (value) {
-                          widget.onNewNameChanged?.call(value);
-                        },
-                      ),
-                    ),
-                    height: 30,
-                  ),
-                  visible: file == widget.currentRenamingFile &&
-                      widget.isRenamingMode,
-                  maintainState: false,
-                  maintainSize: false,
-                )
-              ],
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(3)),
-              color: (widget.isChecked && file != widget.currentRenamingFile) ||
-                      widget.isDragEntered
-                  ? backgroundFileNameSelected
-                  : backgroundFileNameNormal,
-            ),
-            margin: EdgeInsets.only(top: 10),
-            padding: EdgeInsets.fromLTRB(5, 3, 5, 3),
-          ),
-          onTap: () {
-            widget.onTap?.call(file);
-          },
-          onDoubleTap: () {
-            widget.onDoubleTap?.call(widget.file);
-          },
-        )
-      ]),
-      onPointerDown: (event) {
-        if (event.isRightMouseClick()) {
-          widget.onMouseRightTap?.call(event.position, widget.file);
-        }
-      },
+            },
+          )
+        ]),
+        onPointerDown: (event) {
+          if (event.isRightMouseClick()) {
+            widget.onMouseRightTap?.call(event.position, widget.file);
+          }
+        },
+      ),
     );
   }
 
