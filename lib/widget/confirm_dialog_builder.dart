@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class ConfirmDialogBuilder {
@@ -19,12 +21,14 @@ class ConfirmDialogBuilder {
     return this;
   }
 
-  ConfirmDialogBuilder onPositiveClick(Function(BuildContext context)? onPositiveClick) {
+  ConfirmDialogBuilder onPositiveClick(
+      Function(BuildContext context)? onPositiveClick) {
     _onPositiveClick = onPositiveClick;
     return this;
   }
 
-  ConfirmDialogBuilder onNegativeClick(Function(BuildContext context)? onNegativeClick) {
+  ConfirmDialogBuilder onNegativeClick(
+      Function(BuildContext context)? onNegativeClick) {
     _onNegativeClick = onNegativeClick;
     return this;
   }
@@ -46,127 +50,128 @@ class ConfirmDialogBuilder {
 
   Dialog build() {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10)
-      ),
-      backgroundColor: Color(0xffc6c6c6),
-      elevation: 0,
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset("assets/icons/ic_app_icon.png", width: 60, height: 60),
-
-                  Container(
-                    child: Text(contentStr ?? "", style: TextStyle(
-                        color: Color(0xff3d3d3d),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600
-                    )),
-                    margin: EdgeInsets.only(top: 5),
-                  ),
-
-                  Container(
-                    child: Text(descStr ?? "", style: TextStyle(
-                        color: Color(0xff262626),
-                        fontSize: 14
-                    ),
-                      textAlign: TextAlign.center,
-                    ),
-                    margin: EdgeInsets.only(top: 5),
-                  ),
-
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          child: Container(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: Color(0xffdddddd).withOpacity(0.85),
+        elevation: 0,
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return ClipRect(
+              child: BackdropFilter(
+                  filter: new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset("assets/icons/ic_app_icon.png",
+                              width: 60, height: 60),
+                          Container(
+                            child: Text(contentStr ?? "",
+                                style: TextStyle(
+                                    color: Color(0xff3d3d3d),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600)),
+                            margin: EdgeInsets.only(top: 5),
+                          ),
+                          Container(
                             child: Text(
-                              negativeBtnStr,
+                              descStr ?? "",
                               style: TextStyle(
-                                  color: Color(0xff383838),
-                                  fontSize: 14.0
-                              ),
+                                  color: Color(0xff262626), fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
-                            decoration: BoxDecoration(
-                                color: _isNegativeBtnDown ? Color(0xffadaba7) : Color(0xffd0cecf),//adaba7
-                                borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                                border: Border.all(color: Color(0xffadacac), width: 3.0)
-                            ),
-                            width: _OPERATE_BTN_WIDTH,
-                            height: _OPERATE_BTN_HEIGHT,
-                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(top: 5),
                           ),
-
-                          onTapDown: (detail) {
-                            setState(() => _isNegativeBtnDown = true);
-                          },
-
-                          onTapUp: (detail) {
-                            setState(() => _isNegativeBtnDown = false);
-                          },
-
-                          onTapCancel: () {
-                            setState(() => _isNegativeBtnDown = false);
-                          },
-
-                          onTap: () {
-                            debugPrint("Negative button clicked");
-                            _onNegativeClick?.call(context);
-                          },
-                        ),
-
-                        GestureDetector(
-                          child: Container(
-                            child: Text(
-                              positiveBtnStr,
-                              style: TextStyle(
-                                color: Colors.white, fontSize: 14.0,
-                              ),
-                              textAlign: TextAlign.center,
+                          Container(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    child: Text(
+                                      negativeBtnStr,
+                                      style: TextStyle(
+                                          color: Color(0xff383838),
+                                          fontSize: 14.0),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    decoration: BoxDecoration(
+                                        color: _isNegativeBtnDown
+                                            ? Color(0xffadaba7)
+                                            : Color(0xffd0cecf), //adaba7
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(5.0)),
+                                        border: Border.all(
+                                            color: Color(0xffadacac),
+                                            width: 3.0)),
+                                    width: _OPERATE_BTN_WIDTH,
+                                    height: _OPERATE_BTN_HEIGHT,
+                                    alignment: Alignment.center,
+                                  ),
+                                  onTapDown: (detail) {
+                                    setState(() => _isNegativeBtnDown = true);
+                                  },
+                                  onTapUp: (detail) {
+                                    setState(() => _isNegativeBtnDown = false);
+                                  },
+                                  onTapCancel: () {
+                                    setState(() => _isNegativeBtnDown = false);
+                                  },
+                                  onTap: () {
+                                    debugPrint("Negative button clicked");
+                                    _onNegativeClick?.call(context);
+                                  },
+                                ),
+                                GestureDetector(
+                                  child: Container(
+                                    child: Text(
+                                      positiveBtnStr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.0,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _isPositiveBtnDown
+                                          ? Color(0xff373a3d)
+                                          : Color(0xff2d373e),
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(5.0)),
+                                    ),
+                                    width: _OPERATE_BTN_WIDTH,
+                                    height: _OPERATE_BTN_HEIGHT,
+                                    margin: EdgeInsets.fromLTRB(15, 0, 0, 0),
+                                    alignment: Alignment.center,
+                                  ),
+                                  onTap: () {
+                                    debugPrint("Positive button clicked");
+                                    _onPositiveClick?.call(context);
+                                  },
+                                  onTapDown: (detail) {
+                                    setState(() => _isPositiveBtnDown = true);
+                                  },
+                                  onTapCancel: () {
+                                    setState(() => _isPositiveBtnDown = false);
+                                  },
+                                  onTapUp: (detail) {
+                                    setState(() => _isPositiveBtnDown = false);
+                                  },
+                                )
+                              ],
                             ),
-                            decoration: BoxDecoration(
-                              color: _isPositiveBtnDown ? Color(0xff373a3d) : Color(0xff2d373e),
-                              borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                            ),
-                            width: _OPERATE_BTN_WIDTH,
-                            height: _OPERATE_BTN_HEIGHT,
-                            margin: EdgeInsets.fromLTRB(15, 0, 0, 0),
-                            alignment: Alignment.center,
-                          ),
-                          onTap: () {
-                            debugPrint("Positive button clicked");
-                            _onPositiveClick?.call(context);
-                          },
-                          onTapDown: (detail) {
-                            setState(() => _isPositiveBtnDown = true);
-                          },
-                          onTapCancel: () {
-                            setState(() => _isPositiveBtnDown = false);
-                          },
-                          onTapUp: (detail) {
-                            setState(() => _isPositiveBtnDown = false);
-                          },
-                        )
-                      ],
+                            margin: EdgeInsets.only(top: 30),
+                          )
+                        ]),
+                    decoration: BoxDecoration(
+                      color: Color(0xffdddddd).withOpacity(0.85),
+                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                      border: Border.all(color: Color(0xffb8b8b8), width: 1)
                     ),
-                    margin: EdgeInsets.only(top: 30),
-                  )
-                ]
-            ),
-            decoration: BoxDecoration(
-              color: Color(0xffc6c6c6),
-              borderRadius: BorderRadius.all(Radius.circular(5.0)),
-            ),
-            width: 260,
-            height: 220,
-          );
-        },
-      )
-    );
+                    width: 320,
+                    height: 220,
+                  )),
+            );
+          },
+        ));
   }
 }
