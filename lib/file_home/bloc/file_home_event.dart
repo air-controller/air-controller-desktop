@@ -189,3 +189,12 @@ class FileHomeUploadStatusChanged extends FileHomeEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class FileHomeDragToUploadStatusChanged extends FileHomeEvent {
+  final DragToUploadStatus status;
+
+  const FileHomeDragToUploadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}

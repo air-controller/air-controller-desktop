@@ -186,11 +186,14 @@ class GridModeFilesView extends StatelessWidget {
     return Scaffold(
       body: GestureDetector(
         child: DropTarget(
+            enable: _isShowing(context),
             onDragEntered: (details) {
               if (!_isShowing(context)) return;
 
               _updateDraggingStatus(context, details);
               SoundEffect.play(SoundType.bubble);
+              context.read<FileHomeBloc>().add(
+                  FileHomeDragToUploadStatusChanged(DragToUploadStatus.enter));
             },
             onDragDone: (details) {
               if (!_isShowing(context)) return;
@@ -225,6 +228,9 @@ class GridModeFilesView extends StatelessWidget {
             },
             onDragExited: (details) {
               if (!_isShowing(context)) return;
+
+              context.read<FileHomeBloc>().add(
+                  FileHomeDragToUploadStatusChanged(DragToUploadStatus.exit));
             },
             child: content),
         onTap: () {

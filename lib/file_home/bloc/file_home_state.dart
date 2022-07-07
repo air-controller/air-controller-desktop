@@ -75,6 +75,10 @@ class FileHomeUploadStatusUnit {
       this.failureReason});
 }
 
+enum DragToUploadStatus {
+  initial, enter, exit
+}
+
 class FileHomeState extends Equatable {
   final DisplayType displayType;
   final List<FileNode> files;
@@ -99,6 +103,7 @@ class FileHomeState extends Equatable {
   final bool isDraggingToRoot;
   final FileNode? currentDraggingTarget;
   final FileHomeUploadStatusUnit uploadStatus;
+  final DragToUploadStatus dragToUploadStatus;
 
   FileHomeState(
       {this.displayType = DisplayType.icon,
@@ -123,7 +128,8 @@ class FileHomeState extends Equatable {
       this.isRootDir = true,
       this.isDraggingToRoot = false,
       this.currentDraggingTarget = null,
-      this.uploadStatus = const FileHomeUploadStatusUnit()});
+      this.uploadStatus = const FileHomeUploadStatusUnit(),
+      this.dragToUploadStatus = DragToUploadStatus.initial});
 
   @override
   List<Object?> get props => [
@@ -149,7 +155,8 @@ class FileHomeState extends Equatable {
         isRootDir,
         isDraggingToRoot,
         currentDraggingTarget,
-        uploadStatus
+        uploadStatus,
+        dragToUploadStatus
       ];
 
   FileHomeState copyWith(
@@ -175,7 +182,8 @@ class FileHomeState extends Equatable {
       bool? isRootDir,
       bool? isDraggingToRoot,
       FileNode? currentDraggingTarget,
-      FileHomeUploadStatusUnit? uploadStatus}) {
+      FileHomeUploadStatusUnit? uploadStatus,
+      DragToUploadStatus? dragToUploadStatus}) {
     return FileHomeState(
         displayType: displayType ?? this.displayType,
         files: files ?? this.files,
@@ -200,6 +208,7 @@ class FileHomeState extends Equatable {
         isDraggingToRoot: isDraggingToRoot ?? this.isDraggingToRoot,
         currentDraggingTarget:
             currentDraggingTarget ?? this.currentDraggingTarget,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        dragToUploadStatus: dragToUploadStatus ?? this.dragToUploadStatus);
   }
 }

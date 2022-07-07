@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' hide log;
@@ -47,6 +48,7 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeDraggingUpdate>(_onDraggingUpdate);
     on<FileHomeUploadFiles>(_onUploadFiles);
     on<FileHomeUploadStatusChanged>(_onUploadStatusChanged);
+    on<FileHomeDragToUploadStatusChanged>(_onDragToUploadStatusChanged);
   }
 
   void _onDisplayTypeChanged(
@@ -620,5 +622,9 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
           .toList();
       emit(state.copyWith(files: fileNodes));
     }
+  }
+
+  void _onDragToUploadStatusChanged(FileHomeDragToUploadStatusChanged event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(dragToUploadStatus: event.status));
   }
 }
