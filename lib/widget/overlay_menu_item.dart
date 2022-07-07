@@ -18,7 +18,7 @@ class OverlayMenuItem extends StatelessWidget {
   final double textSize;
   final Function()? onTap;
 
-  static const Color DEFAULT_TEXT_COLOR = const Color(0xff212121);
+  static const Color DEFAULT_TEXT_COLOR = const Color(0xff1f1f1f);
   static const Color DEFAULT_PRESS_TEXT_COLOR = Colors.white;
   static const Color DEFAULT_HOVER_TEXT_COLOR = Colors.white;
 

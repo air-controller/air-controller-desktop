@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
@@ -20,30 +22,33 @@ class ContextMenuHelper {
         attachedBuilder: (cancelFunc) {
           _cancelFunc = cancelFunc;
 
-          return Container(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(items.length * 2 - 1, (index) {
-                Divider divider = Divider(
-                    height: 1,
-                    thickness: 1,
-                    indent: 6,
-                    endIndent: 6,
-                    color: Color(0xffbabebf));
+          return ClipRect(child: BackdropFilter(
+              filter: new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(items.length * 2 - 1, (index) {
+                    Divider divider = Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 6,
+                        endIndent: 6,
+                        color: Color(0xffbabebf));
 
-                if (index.isEven) {
-                  return items[index ~/ 2];
-                } else {
-                  return divider;
-                }
-              }),
-            ),
-            decoration: BoxDecoration(
-                color: Color(0xffd8d5d3),
-                borderRadius: BorderRadius.all(Radius.circular(6))),
-            padding: EdgeInsets.all(5),
-            width: 320,
-          );
+                    if (index.isEven) {
+                      return items[index ~/ 2];
+                    } else {
+                      return divider;
+                    }
+                  }),
+                ),
+                decoration: BoxDecoration(
+                    color: Color(0xffdddddd).withOpacity(0.85),
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                    border: Border.all(color: Color(0xffb8b8b8), width: 1)),
+                padding: EdgeInsets.all(5),
+                width: 320,
+              )),);
         },
         allowClick: false,
         target: globalOffset,
@@ -75,7 +80,7 @@ class ContextMenuItem extends StatelessWidget {
       this.padding = const EdgeInsets.symmetric(horizontal: 8),
       this.margin = const EdgeInsets.symmetric(vertical: 6),
       required this.title,
-      this.backgroundColor = const Color(0xffd8d5d3),
+      this.backgroundColor = Colors.transparent,
       this.onTap})
       : super(key: key);
 
