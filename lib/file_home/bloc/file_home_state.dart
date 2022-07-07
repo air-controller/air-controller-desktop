@@ -60,6 +60,21 @@ extension FileHomeSortColumnX on FileHomeSortColumn {
 
 enum FileHomeSortDirection { ascending, descending }
 
+enum FileHomeUploadStatus { initial, start, uploading, success, failure }
+
+class FileHomeUploadStatusUnit {
+  final FileHomeUploadStatus status;
+  final int current;
+  final int total;
+  final String? failureReason;
+
+  const FileHomeUploadStatusUnit(
+      {this.status = FileHomeUploadStatus.start,
+      this.current = 0,
+      this.total = 1,
+      this.failureReason});
+}
+
 class FileHomeState extends Equatable {
   final DisplayType displayType;
   final List<FileNode> files;
@@ -83,6 +98,7 @@ class FileHomeState extends Equatable {
   final bool isRootDir;
   final bool isDraggingToRoot;
   final FileNode? currentDraggingTarget;
+  final FileHomeUploadStatusUnit uploadStatus;
 
   FileHomeState(
       {this.displayType = DisplayType.icon,
@@ -106,7 +122,8 @@ class FileHomeState extends Equatable {
       this.sortDirection = FileHomeSortDirection.descending,
       this.isRootDir = true,
       this.isDraggingToRoot = false,
-      this.currentDraggingTarget = null});
+      this.currentDraggingTarget = null,
+      this.uploadStatus = const FileHomeUploadStatusUnit()});
 
   @override
   List<Object?> get props => [
@@ -131,7 +148,8 @@ class FileHomeState extends Equatable {
         sortDirection,
         isRootDir,
         isDraggingToRoot,
-        currentDraggingTarget
+        currentDraggingTarget,
+        uploadStatus
       ];
 
   FileHomeState copyWith(
@@ -156,7 +174,8 @@ class FileHomeState extends Equatable {
       FileHomeSortDirection? sortDirection,
       bool? isRootDir,
       bool? isDraggingToRoot,
-      FileNode? currentDraggingTarget}) {
+      FileNode? currentDraggingTarget,
+      FileHomeUploadStatusUnit? uploadStatus}) {
     return FileHomeState(
         displayType: displayType ?? this.displayType,
         files: files ?? this.files,
@@ -180,6 +199,7 @@ class FileHomeState extends Equatable {
         isRootDir: isRootDir ?? this.isRootDir,
         isDraggingToRoot: isDraggingToRoot ?? this.isDraggingToRoot,
         currentDraggingTarget:
-            currentDraggingTarget ?? this.currentDraggingTarget);
+            currentDraggingTarget ?? this.currentDraggingTarget,
+        uploadStatus: uploadStatus ?? this.uploadStatus);
   }
 }

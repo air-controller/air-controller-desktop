@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:air_controller/ext/global_key_x.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/home/bloc/home_bloc.dart';
@@ -9,6 +11,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../bootstrap.dart';
 import '../../constant_pool.dart';
 import '../../file_home/bloc/file_home_bloc.dart';
 import '../../model/file_node.dart';
@@ -187,9 +190,17 @@ class GridModeFilesView extends StatelessWidget {
               if (!_isShowing(context)) return;
 
               _updateDraggingStatus(context, details);
+              SoundEffect.play(SoundType.bubble);
             },
             onDragDone: (details) {
               if (!_isShowing(context)) return;
+
+              final files = details.files.map((e) => File(e.path)).toList();
+
+              if (files.isEmpty) {
+                logger.d("Selected files is empty");
+                return;
+              }
 
               final currentDraggingTarget =
                   context.read<FileHomeBloc>().state.currentDraggingTarget;
@@ -197,9 +208,14 @@ class GridModeFilesView extends StatelessWidget {
                   context.read<FileHomeBloc>().state.isDraggingToRoot;
 
               if (isDraggingToRoot) {
-
+                final currentDir =
+                    context.read<FileHomeBloc>().state.currentDir;
+                context
+                    .read<FileHomeBloc>()
+                    .add(FileHomeUploadFiles(files, currentDir?.data.path));
               } else {
-
+                context.read<FileHomeBloc>().add(FileHomeUploadFiles(
+                    files, currentDraggingTarget?.data.path));
               }
             },
             onDragUpdated: (details) {

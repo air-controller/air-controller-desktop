@@ -170,3 +170,22 @@ class FileHomeDraggingUpdate extends FileHomeEvent {
   @override
   List<Object?> get props => [isDraggingToRoot, currentDraggingTarget];
 }
+
+class FileHomeUploadFiles extends FileHomeEvent {
+  final List<File> files;
+  final String? folder;
+
+  const FileHomeUploadFiles(this.files, this.folder);
+
+  @override
+  List<Object?> get props => [files, folder];
+}
+
+class FileHomeUploadStatusChanged extends FileHomeEvent {
+  final FileHomeUploadStatusUnit status;
+
+  const FileHomeUploadStatusChanged(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}

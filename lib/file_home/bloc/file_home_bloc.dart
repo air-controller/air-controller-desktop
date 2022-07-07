@@ -1,7 +1,9 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' hide log;
 import 'dart:ui';
 
+import 'package:air_controller/repository/root_dir_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,6 +45,8 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeBackToLastDir>(_onBackToLastDir);
     on<FileHomeSortInfoChanged>(_onSortInfoChanged);
     on<FileHomeDraggingUpdate>(_onDraggingUpdate);
+    on<FileHomeUploadFiles>(_onUploadFiles);
+    on<FileHomeUploadStatusChanged>(_onUploadStatusChanged);
   }
 
   void _onDisplayTypeChanged(
@@ -555,6 +559,66 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
       emit(state.copyWith(
           isDraggingToRoot: event.isDraggingToRoot,
           currentDraggingTarget: event.currentDraggingTarget));
+    }
+  }
+
+  void _onUploadFiles(FileHomeUploadFiles event, Emitter<FileHomeState> emit) {
+    emit(state.copyWith(
+        uploadStatus:
+            FileHomeUploadStatusUnit(status: FileHomeUploadStatus.start)));
+
+    final rootDirType =
+        isOnlyDownloadDir ? RootDirType.downloadDir : RootDirType.sdcard;
+    _fileRepository.uploadFiles(
+        rootDirType: rootDirType,
+        files: event.files,
+        folder: event.folder,
+        onError: (msg) {
+          add(FileHomeUploadStatusChanged(FileHomeUploadStatusUnit(
+              status: FileHomeUploadStatus.failure, failureReason: msg)));
+        },
+        onUploading: (sent, total) {
+          add(FileHomeUploadStatusChanged(FileHomeUploadStatusUnit(
+              status: FileHomeUploadStatus.uploading,
+              current: sent,
+              total: total)));
+        },
+        onSuccess: () {
+          add(FileHomeUploadStatusChanged(
+              FileHomeUploadStatusUnit(status: FileHomeUploadStatus.success)));
+        });
+  }
+
+  void _onUploadStatusChanged(
+      FileHomeUploadStatusChanged event, Emitter<FileHomeState> emit) async {
+    emit(state.copyWith(uploadStatus: event.status));
+
+    // Refresh the file list after upload finished if it's uploading to current folder.
+    if (event.status.status == FileHomeUploadStatus.success &&
+        state.isDraggingToRoot) {
+      final currentDir = state.currentDir;
+
+      final files = [];
+
+      if (currentDir == null) {
+        if (isOnlyDownloadDir) {
+          final fileItems = await _fileRepository.getDownloadFiles();
+          files.addAll(fileItems);
+        } else {
+          final fileItems =
+              await _fileRepository.getFiles(currentDir?.data.path);
+          files.addAll(fileItems);
+        }
+      } else {
+        final fileItems = await _fileRepository.getFiles(currentDir.data.path);
+        files.addAll(fileItems);
+      }
+
+      final fileNodes = files
+          .map((item) => FileNode(
+              currentDir, item, currentDir == null ? 1 : currentDir.level + 1))
+          .toList();
+      emit(state.copyWith(files: fileNodes));
     }
   }
 }

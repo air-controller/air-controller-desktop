@@ -11,12 +11,14 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../constant.dart';
 import '../../grid_mode_files/view/grid_mode_files_page.dart';
+import '../../home/bloc/home_bloc.dart';
 import '../../list_mode_files/view/list_mode_files_page.dart';
 import '../../model/display_type.dart';
 import '../../model/file_node.dart';
 import '../../repository/file_repository.dart';
 import '../../util/common_util.dart';
 import '../../util/context_menu_helper.dart';
+import '../../util/sound_effect.dart';
 import '../../util/system_app_launcher.dart';
 import '../../widget/progress_indictor_dialog.dart';
 import '../../widget/unified_delete_button.dart';
@@ -252,6 +254,48 @@ class FileHomeView extends StatelessWidget {
               listenWhen: (previous, current) =>
                   previous.deleteStatus != current.deleteStatus &&
                   current.deleteStatus == FileHomeDeleteStatus.initial,
+            ),
+            BlocListener<FileHomeBloc, FileHomeState>(
+              listener: (context, state) {
+                if (state.uploadStatus.status == FileHomeUploadStatus.start) {
+                  context.read<HomeBloc>().add(
+                      HomeProgressIndicatorStatusChanged(
+                          HomeLinearProgressIndicatorStatus(visible: true)));
+                }
+
+                if (state.uploadStatus.status ==
+                    FileHomeUploadStatus.uploading) {
+                  context.read<HomeBloc>().add(
+                          HomeProgressIndicatorStatusChanged(
+                              HomeLinearProgressIndicatorStatus(
+                        visible: true,
+                        current: state.uploadStatus.current,
+                        total: state.uploadStatus.total,
+                      )));
+                }
+
+                if (state.uploadStatus.status == FileHomeUploadStatus.failure) {
+                  context.read<HomeBloc>().add(
+                      HomeProgressIndicatorStatusChanged(
+                          HomeLinearProgressIndicatorStatus(visible: false)));
+
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(
+                        content: Text(state.uploadStatus.failureReason ??
+                            context.l10n.unknownError)));
+                }
+
+                if (state.uploadStatus.status == FileHomeUploadStatus.success) {
+                  context.read<HomeBloc>().add(
+                      HomeProgressIndicatorStatusChanged(
+                          HomeLinearProgressIndicatorStatus(visible: false)));
+                  SoundEffect.play(SoundType.done);
+                }
+              },
+              listenWhen: (previous, current) =>
+                  previous.uploadStatus != current.uploadStatus &&
+                  current.uploadStatus.status != FileHomeUploadStatus.initial,
             )
           ],
           child: Focus(

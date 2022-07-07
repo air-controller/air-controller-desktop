@@ -8,6 +8,7 @@ import 'package:air_controller/model/contact_data_type_map.dart';
 import 'package:air_controller/model/contact_detail.dart';
 import 'package:air_controller/model/delete_contacts_request_entity.dart';
 import 'package:air_controller/model/update_contact_request_entity.dart';
+import 'package:air_controller/util/common_util.dart';
 import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,6 +16,7 @@ import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../constant.dart';
 import '../enter/view/enter_page.dart';
@@ -28,6 +30,7 @@ import '../model/new_contact_request_entity.dart';
 import '../model/response_entity.dart';
 import '../model/video_folder_item.dart';
 import '../model/video_item.dart';
+import 'root_dir_type.dart';
 
 class BusinessError implements Exception {
   final String? message;
@@ -1210,6 +1213,86 @@ class AirControllerClient {
     headers.remove("Content-Type");
 
     dio.post("/video/uploadVideos",
+        data: formData,
+        options: DioCore.Options(headers: headers, receiveTimeout: 0),
+        onSendProgress: (int sent, int total) {
+      onUploading?.call(sent, total);
+    }, cancelToken: cancelToken).then((response) {
+      if (response.statusCode != 200) {
+        onError?.call("${response.statusMessage}");
+      } else {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        if (httpResponseEntity.isSuccessful()) {
+          onSuccess?.call();
+        } else {
+          onError?.call(httpResponseEntity.msg == null
+              ? "Unknown error"
+              : httpResponseEntity.msg!);
+        }
+      }
+    }).onError((error, stackTrace) {
+      if (error is DioCore.DioError &&
+          error.type == DioCore.DioErrorType.cancel) {
+        onCancel?.call();
+      } else {
+        onError?.call(error?.toString());
+      }
+    });
+
+    return cancelToken;
+  }
+
+  Future<DioCore.CancelToken> uploadFiles(
+      { required RootDirType rootDirType,
+        required List<File> files,
+      String? folder = null,
+      Function()? onSuccess,
+      Function(int, int)? onUploading,
+      Function(String? error)? onError,
+      VoidCallback? onCancel}) async {
+    final cancelToken = DioCore.CancelToken();
+    final formData = DioCore.FormData();
+
+    formData.fields.add(MapEntry("rootDirType", rootDirType.value.toString()));
+    formData.fields.add(MapEntry("folder", "$folder"));
+
+    Map<String, bool> zipInfo = Map<String, bool>();
+    Directory tempDir = await getTemporaryDirectory();
+
+    await Future.forEach(files, (File file) async {
+      if (FileSystemEntity.typeSync(file.path) ==
+          FileSystemEntityType.directory) {
+        Directory tempZipDir = Directory("${tempDir.path}/zip");
+        if (!tempZipDir.existsSync()) {
+          tempZipDir.createSync();
+        }
+
+        bool isSuccess = await CommonUtil.zipFile(file, tempZipDir);
+
+        final newFileName = "${file.path.split("/").last}.zip";
+        logger.d(
+            "uploadFiles zipFile: $isSuccess, directory: ${tempZipDir.path}, filename: $newFileName");
+
+        zipInfo[newFileName] = true;
+
+        formData.files.add(MapEntry(
+            "files",
+            DioCore.MultipartFile.fromFileSync(
+                "${tempZipDir.path}/$newFileName")));
+      } else {
+        formData.files.add(
+            MapEntry("files", DioCore.MultipartFile.fromFileSync(file.path)));
+      }
+    });
+
+    formData.fields.add(MapEntry("zipInfo", jsonEncode(zipInfo)));
+
+    final headers = _commonHeaders();
+    headers.remove("Content-Type");
+
+    dio.post("/file/uploadFiles",
         data: formData,
         options: DioCore.Options(headers: headers, receiveTimeout: 0),
         onSendProgress: (int sent, int total) {

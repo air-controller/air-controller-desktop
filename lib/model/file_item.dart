@@ -18,4 +18,6 @@ class FileItem {
         parsedJson["isEmpty"]
     );
   }
+
+  String get path => "${this.folder}/${this.name}";
 }
