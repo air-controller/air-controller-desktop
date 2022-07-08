@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/common_util.dart';
@@ -9,7 +7,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../constant.dart';
-import '../enter/view/enter_page.dart';
 import '../home/bloc/home_bloc.dart';
 import '../util/system_app_launcher.dart';
 
