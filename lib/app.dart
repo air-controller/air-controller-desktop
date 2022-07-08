@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'constant.dart';
 import 'enter/bloc/enter_bloc.dart';
@@ -14,6 +15,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return BlocProvider(
       create: (context) => EnterBloc(),
       child: MaterialApp(
@@ -31,9 +34,12 @@ class App extends StatelessWidget {
               primarySwatch: Colors.blue,
               textSelectionTheme:
                   TextSelectionThemeData(selectionColor: Color(0xffe0e0e0)),
-              fontFamily: 'NotoSansSC'),
+              textTheme: GoogleFonts.robotoSerifTextTheme(textTheme)),
           home: EnterPage(key: EnterPage.enterKey),
-          navigatorObservers: [FlutterSmartDialog.observer, BotToastNavigatorObserver()],
+          navigatorObservers: [
+            FlutterSmartDialog.observer,
+            BotToastNavigatorObserver()
+          ],
           builder: (context, child) {
             final smartDialogBuilder = FlutterSmartDialog.init();
             child = smartDialogBuilder(context, child);
