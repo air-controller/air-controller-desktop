@@ -350,6 +350,7 @@ class MusicHomeView extends StatelessWidget {
                             sortDirection == MusicHomeSortDirection.ascending,
                         showCheckboxColumn: false,
                         showBottomBorder: false,
+                        scrollController: ScrollController(),
                         columns: [
                           DataColumn2(
                               label: Container(

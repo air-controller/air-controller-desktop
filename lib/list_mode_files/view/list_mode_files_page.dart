@@ -312,8 +312,6 @@ class ListModeFilesView extends StatelessWidget {
       });
     }
 
-    final scrollController = ScrollController();
-
     return DropTarget(
         enable: _isShowing(context),
         onDragEntered: (details) {
@@ -363,7 +361,7 @@ class ListModeFilesView extends StatelessWidget {
               sortAscending: sortDirection == FileHomeSortDirection.ascending,
               showCheckboxColumn: false,
               showBottomBorder: false,
-              scrollController: scrollController,
+              scrollController: ScrollController(),
               columns: [
                 DataColumn2(
                     label: Container(
