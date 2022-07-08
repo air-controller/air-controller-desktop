@@ -49,6 +49,7 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeUploadFiles>(_onUploadFiles);
     on<FileHomeUploadStatusChanged>(_onUploadStatusChanged);
     on<FileHomeDragToUploadStatusChanged>(_onDragToUploadStatusChanged);
+    on<FileHomeSelectAll>(_onSelectAll);
   }
 
   void _onDisplayTypeChanged(
@@ -624,7 +625,13 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     }
   }
 
-  void _onDragToUploadStatusChanged(FileHomeDragToUploadStatusChanged event, Emitter<FileHomeState> emit) {
+  void _onDragToUploadStatusChanged(
+      FileHomeDragToUploadStatusChanged event, Emitter<FileHomeState> emit) {
     emit(state.copyWith(dragToUploadStatus: event.status));
+  }
+
+  void _onSelectAll(FileHomeSelectAll event, Emitter<FileHomeState> emit) {
+    final checkedFiles = [...state.files];
+    emit(state.copyWith(checkedFiles: checkedFiles));
   }
 }

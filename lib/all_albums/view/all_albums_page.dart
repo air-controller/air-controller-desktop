@@ -78,14 +78,14 @@ class AllAlbumsView extends StatelessWidget {
         .select((AllAlbumsBloc bloc) => bloc.state.albumOpenStatus.current);
     LoadImagesInAlbumStatusUnit loadImagesInAlbumStatusUnit = context
         .select((AllAlbumsBloc bloc) => bloc.state.loadImagesInAlbumStatus);
-
+    final homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
     HomeImageTab currentTab =
         context.select((HomeImageBloc bloc) => bloc.state.tab);
 
     _rootFocusNode = FocusNode();
     _rootFocusNode?.canRequestFocus = true;
 
-    if (currentTab == HomeImageTab.allAlbums) {
+    if (homeTab == HomeTab.image && currentTab == HomeImageTab.allAlbums) {
       _rootFocusNode?.requestFocus();
     }
 

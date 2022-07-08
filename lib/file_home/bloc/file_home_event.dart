@@ -198,3 +198,7 @@ class FileHomeDragToUploadStatusChanged extends FileHomeEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class FileHomeSelectAll extends FileHomeEvent {
+  const FileHomeSelectAll();
+}

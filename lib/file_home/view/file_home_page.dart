@@ -67,6 +67,7 @@ class FileHomeView extends StatelessWidget {
         context.select((FileHomeBloc bloc) => bloc.state.status);
     List<FileNode> dirStack =
         context.select((FileHomeBloc bloc) => bloc.state.dirStack);
+    final homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
 
     Widget content =
         _createContent(context, displayType, files, checkedFiles, dirStack);
@@ -76,7 +77,11 @@ class FileHomeView extends StatelessWidget {
 
     _rootFocusNode = FocusNode();
     _rootFocusNode?.canRequestFocus = true;
-    _rootFocusNode?.requestFocus();
+
+    if ((homeTab == HomeTab.allFile && !isOnlyDownloadDir) ||
+        (homeTab == HomeTab.download && isOnlyDownloadDir)) {
+      _rootFocusNode?.requestFocus();
+    }
 
     return Scaffold(
       body: MultiBlocListener(
@@ -362,13 +367,13 @@ class FileHomeView extends StatelessWidget {
                 if (Platform.isMacOS) {
                   if (event.isMetaPressed &&
                       event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                    // _onControlAndAPressed();
+                    context.read<FileHomeBloc>().add(FileHomeSelectAll());
                     return KeyEventResult.handled;
                   }
                 } else {
                   if (event.isControlPressed &&
                       event.isKeyPressed(LogicalKeyboardKey.keyA)) {
-                    // _onControlAndAPressed();
+                    context.read<FileHomeBloc>().add(FileHomeSelectAll());
                     return KeyEventResult.handled;
                   }
                 }

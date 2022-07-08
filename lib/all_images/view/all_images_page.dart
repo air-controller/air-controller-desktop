@@ -356,15 +356,17 @@ class AllImagesView extends StatelessWidget {
         context.select((AllImagesBloc bloc) => bloc.state.checkedImages);
     bool isLoadingComplete = context.select(
         (AllImagesBloc bloc) => bloc.state.status == AllImagesStatus.success);
+    final homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
+
     HomeImageTab currentTab =
         context.select((HomeImageBloc bloc) => bloc.state.tab);
 
     _rootFocusNode = FocusNode();
-
     _rootFocusNode?.canRequestFocus = true;
 
-    if ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
-        currentTab == HomeImageTab.cameraImages && isFromCamera) {
+    if (homeTab == HomeTab.image &&
+        ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
+            currentTab == HomeImageTab.cameraImages && isFromCamera)) {
       _rootFocusNode?.requestFocus();
     }
 

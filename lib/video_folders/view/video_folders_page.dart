@@ -43,7 +43,7 @@ class VideoFoldersPage extends StatelessWidget {
 }
 
 class VideoFoldersView extends StatelessWidget {
-  FocusNode? _rootFocus1;
+  FocusNode? _rootFocusNode;
 
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
@@ -60,10 +60,6 @@ class VideoFoldersView extends StatelessWidget {
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
-    _rootFocus1 = FocusNode();
-    _rootFocus1?.canRequestFocus = true;
-    _rootFocus1?.requestFocus();
-
     List<VideoFolderItem> videoFolders =
         context.select((VideoFoldersBloc bloc) => bloc.state.videoFolders);
     List<VideoFolderItem> checkedVideoFolders = context
@@ -77,6 +73,16 @@ class VideoFoldersView extends StatelessWidget {
         .select((VideoFoldersBloc bloc) => bloc.state.videoFolderOpenStatus);
     VideoOrderType orderType =
         context.select((VideoHomeBloc bloc) => bloc.state.orderType);
+
+    final homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
+    final currentTab = context.select((VideoHomeBloc bloc) => bloc.state.tab);
+
+    _rootFocusNode = FocusNode();
+    _rootFocusNode?.canRequestFocus = true;
+
+    if (homeTab == HomeTab.video && currentTab == VideoHomeTab.videoFolders) {
+      _rootFocusNode?.requestFocus();
+    }
 
     Widget content = _createGridContent(videoFolders, checkedVideoFolders);
 
@@ -432,7 +438,7 @@ class VideoFoldersView extends StatelessWidget {
             // 视频文件夹页面
             Focus(
               autofocus: true,
-              focusNode: _rootFocus1,
+              focusNode: _rootFocusNode,
               child: GestureDetector(
                 child: Visibility(
                   child: Stack(
@@ -1001,7 +1007,7 @@ class _VideoFolderListItemState extends State<_VideoFolderListItem> {
     final selectedNameBackgroundColor = Color(0xff5d87ed);
 
     return DropTarget(
-      enable: widget.enableDrag,
+        enable: widget.enableDrag,
         child: Listener(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

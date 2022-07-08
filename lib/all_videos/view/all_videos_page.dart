@@ -51,10 +51,6 @@ class AllVideosView extends StatelessWidget {
     const color = Color(0xff85a8d0);
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
-    _rootFocusNode = FocusNode();
-    _rootFocusNode?.canRequestFocus = true;
-    _rootFocusNode?.requestFocus();
-
     AllVideosStatus status =
         context.select((AllVideosBloc bloc) => bloc.state.status);
     List<VideoItem> videos =
@@ -63,6 +59,15 @@ class AllVideosView extends StatelessWidget {
         context.select((AllVideosBloc bloc) => bloc.state.checkedVideos);
     VideoOrderType orderType =
         context.select((VideoHomeBloc bloc) => bloc.state.orderType);
+    final homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
+    final currentTab = context.select((VideoHomeBloc bloc) => bloc.state.tab);
+
+    _rootFocusNode = FocusNode();
+    _rootFocusNode?.canRequestFocus = true;
+
+    if (homeTab == HomeTab.video && currentTab == VideoHomeTab.allVideos) {
+      _rootFocusNode?.requestFocus();
+    }
 
     return Scaffold(
       body: MultiBlocListener(

@@ -16,6 +16,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 
+import '../../bootstrap.dart';
 import '../../constant.dart';
 import '../../home/bloc/home_bloc.dart';
 import '../../model/audio_item.dart';
@@ -59,10 +60,6 @@ class MusicHomeView extends StatelessWidget {
 
     const spinKit = SpinKitCircle(color: color, size: 60.0);
 
-    _rootFocusNode = FocusNode();
-    _rootFocusNode?.canRequestFocus = true;
-    _rootFocusNode?.requestFocus();
-
     MusicHomeStatus status =
         context.select((MusicHomeBloc bloc) => bloc.state.status);
     List<AudioItem> musics =
@@ -73,6 +70,13 @@ class MusicHomeView extends StatelessWidget {
         context.select((MusicHomeBloc bloc) => bloc.state.sortColumn);
     MusicHomeSortDirection sortDirection =
         context.select((MusicHomeBloc bloc) => bloc.state.sortDirection);
+    HomeTab homeTab = context.select((HomeBloc bloc) => bloc.state.tab);
+
+    _rootFocusNode = FocusNode();
+    _rootFocusNode?.canRequestFocus = true;
+    if (homeTab == HomeTab.music) {
+      _rootFocusNode?.requestFocus();
+    }
 
     bool isDeleteEnabled = checkedMusics.length > 0;
 
