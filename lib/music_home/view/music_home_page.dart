@@ -520,10 +520,16 @@ class MusicHomeView extends StatelessWidget {
                                     child: Stack(
                                       children: [
                                         Visibility(
-                                          child: Text(audioItem.name,
-                                              softWrap: false,
+                                          child: Tooltip(
+                                            message: audioItem.name,
+                                            textStyle: textStyle.copyWith(color: Colors.white),
+                                            child: Text(
+                                              audioItem.name,
                                               overflow: TextOverflow.ellipsis,
-                                              style: textStyle),
+                                              softWrap: false,
+                                              style: textStyle,
+                                            ),
+                                          ),
                                           visible: true,
                                         ),
                                         Visibility(
@@ -531,8 +537,6 @@ class MusicHomeView extends StatelessWidget {
                                             child: IntrinsicWidth(
                                               child: TextField(
                                                 controller: inputController,
-                                                focusNode:
-                                                    false ? focusNode : null,
                                                 decoration: InputDecoration(
                                                     border: OutlineInputBorder(
                                                         borderSide: BorderSide(
