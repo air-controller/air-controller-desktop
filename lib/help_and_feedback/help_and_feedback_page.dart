@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/common_util.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,6 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
     super.initState();
 
     _updateVersionInfo();
-    _loadHelpMdText();
   }
 
   void _updateVersionInfo() {
@@ -45,19 +45,16 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
   }
 
   void _loadHelpMdText() {
-    final enterContext = EnterPage.enterKey.currentContext;
-    String languageCode = "en";
+    final currentAppLocale = context.currentAppLocale;
 
-    if (null != enterContext) {
-      languageCode = Localizations.localeOf(enterContext).languageCode;
+    String helpFileName = "help.zh.md";
+    if (currentAppLocale.languageCode != "zh") {
+      helpFileName = "help.en.md";
     }
 
-    log("languageCode: $languageCode");
-
     DefaultAssetBundle.of(context)
-        .loadString('assets/docs/help.${languageCode}.md')
+        .loadString('assets/docs/$helpFileName')
         .then((value) {
-      debugPrint("_loadHelpMdText: $value");
       setState(() {
         _mdContent = value;
       });
@@ -68,7 +65,7 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
 
   @override
   Widget build(BuildContext context) {
-
+    _loadHelpMdText();
 
     return Column(
       children: [
@@ -95,21 +92,19 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
             ),
           ),
         ),
-
         Container(
           child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                    context.l10n.placeholderCurrentVersion.replaceFirst("%s", _currentVersion ?? ""),
+                  context.l10n.placeholderCurrentVersion
+                      .replaceFirst("%s", _currentVersion ?? ""),
                   style: TextStyle(
-                    color: Color(0xff333333),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold
-                  ),
+                      color: Color(0xff333333),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold),
                 ),
-
                 Container(
                   child: InkWell(
                     child: Text(
@@ -119,8 +114,7 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
                               ? TextDecoration.underline
                               : TextDecoration.none,
                           color: Color(0xff2a6ad3),
-                          fontSize: 14
-                      ),
+                          fontSize: 14),
                     ),
                     onHover: (isHover) {
                       setState(() {
@@ -129,12 +123,13 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
                     },
                     onTap: () {
                       // eventBus.fire(CheckForUpdatesEvent(false));
-                      context.read<HomeBloc>().add(HomeCheckUpdateRequested(isAutoCheck: false));
+                      context
+                          .read<HomeBloc>()
+                          .add(HomeCheckUpdateRequested(isAutoCheck: false));
                     },
                   ),
                   margin: EdgeInsets.only(left: 10),
                 )
-
               ],
             ),
           ),
