@@ -349,12 +349,8 @@ class MusicHomeView extends StatelessWidget {
                         columns: [
                           DataColumn2(
                               label: Container(
-                                child: Text(
-                                  context.l10n.folder,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      inherit: true, fontFamily: 'NotoSansSC'),
-                                ),
+                                child: Text(context.l10n.folder,
+                                    textAlign: TextAlign.center),
                               ),
                               onSort: (sortColumnIndex, isSortAscending) {
                                 MusicHomeSortColumn sortColumn =
@@ -374,9 +370,6 @@ class MusicHomeView extends StatelessWidget {
                                   child: Text(
                                     context.l10n.name,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        inherit: true,
-                                        fontFamily: 'NotoSansSC'),
                                   ),
                                   padding: EdgeInsets.only(left: 15)),
                               onSort: (sortColumnIndex, isSortAscending) {
@@ -393,12 +386,8 @@ class MusicHomeView extends StatelessWidget {
                               }),
                           DataColumn2(
                               label: Container(
-                            child: Text(
-                              context.l10n.type,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  inherit: true, fontFamily: 'NotoSansSC'),
-                            ),
+                            child: Text(context.l10n.type,
+                                textAlign: TextAlign.center),
                             padding: EdgeInsets.only(left: 15),
                           )),
                           DataColumn2(
@@ -406,8 +395,6 @@ class MusicHomeView extends StatelessWidget {
                                 child: Text(
                                   context.l10n.duration,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      inherit: true, fontFamily: 'NotoSansSC'),
                                 ),
                                 padding: EdgeInsets.only(left: 15),
                               ),
@@ -428,8 +415,6 @@ class MusicHomeView extends StatelessWidget {
                                 child: Text(
                                   context.l10n.size,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      inherit: true, fontFamily: 'NotoSansSC'),
                                 ),
                                 padding: EdgeInsets.only(left: 15),
                               ),
@@ -450,8 +435,6 @@ class MusicHomeView extends StatelessWidget {
                                 child: Text(
                                   context.l10n.dateModified,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      inherit: true, fontFamily: 'NotoSansSC'),
                                 ),
                                 padding: EdgeInsets.only(left: 15),
                               ),

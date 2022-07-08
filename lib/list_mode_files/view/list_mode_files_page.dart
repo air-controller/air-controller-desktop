@@ -370,8 +370,6 @@ class ListModeFilesView extends StatelessWidget {
                       child: Text(
                         context.l10n.name,
                         textAlign: TextAlign.center,
-                        style:
-                            TextStyle(inherit: true, fontFamily: 'NotoSansSC'),
                       ),
                     ),
                     onSort: (sortColumnIndex, isSortAscending) {
@@ -390,8 +388,6 @@ class ListModeFilesView extends StatelessWidget {
                         child: Text(
                           context.l10n.size,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              inherit: true, fontFamily: 'NotoSansSC'),
                         ),
                         padding: EdgeInsets.only(left: 15)),
                     onSort: (sortColumnIndex, isSortAscending) {
@@ -409,7 +405,6 @@ class ListModeFilesView extends StatelessWidget {
                   child: Text(
                     context.l10n.type,
                     textAlign: TextAlign.center,
-                    style: TextStyle(inherit: true, fontFamily: 'NotoSansSC'),
                   ),
                   padding: EdgeInsets.only(left: 15),
                 )),
@@ -418,8 +413,6 @@ class ListModeFilesView extends StatelessWidget {
                       child: Text(
                         context.l10n.dateModified,
                         textAlign: TextAlign.center,
-                        style:
-                            TextStyle(inherit: true, fontFamily: 'NotoSansSC'),
                       ),
                       padding: EdgeInsets.only(left: 15),
                     ),
