@@ -132,16 +132,20 @@ class _EnterState extends State<EnterPage>
   void _registerEventBus() {
     _exitHeartbeatServiceStream =
         eventBus.on<ExitHeartbeatService>().listen((event) {
-      _exitHeartbeatService();
+      if (mounted) {
+        _exitHeartbeatService();
+      }
     });
 
     _exitCmdServiceStream = eventBus.on<ExitCmdService>().listen((event) {
-      _exitCmdService();
+      if (mounted) {
+        _exitCmdService();
+      }
     });
   }
 
-  void _exitHeartbeatService() {
-    _heartbeatClient?.quit();
+  void _exitHeartbeatService() async {
+    await _heartbeatClient?.quit();
     _heartbeatClient = null;
     log("Heartbeat: Exit heartbeat service...");
   }
@@ -471,7 +475,7 @@ class _EnterState extends State<EnterPage>
               children: [
                 ConnectButton(
                   context.l10n.connect,
-                  onTap: () {
+                  onTap: () async {
                     if (devices.isEmpty) return;
 
                     final device = devices[index];
@@ -501,7 +505,7 @@ class _EnterState extends State<EnterPage>
 
                     _heartbeatClient?.addListener(this);
 
-                    _heartbeatClient!.connectToServer();
+                    await _heartbeatClient!.connectToServer();
 
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
@@ -659,6 +663,8 @@ class _EnterState extends State<EnterPage>
     _refreshDeviceScheduler?.stop();
 
     _unRegisterEventBus();
+    _exitCmdService();
+    _exitHeartbeatService();
   }
 
   @override
@@ -672,15 +678,8 @@ class _EnterState extends State<EnterPage>
   }
 
   @override
-  void onRequestTimeout() {
+  void onTimeOut() {
     log("Heartbeat client single timeout!");
-  }
-
-  @override
-  void onRetryTimeout() {
-    log("Heartbeat client onRetryTimeout!");
-
-    _pushToErrorPage();
   }
 
   @override
