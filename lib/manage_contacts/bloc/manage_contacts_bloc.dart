@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/contact_basic_info.dart';
+import '../../util/common_util.dart';
 
 part 'manage_contacts_event.dart';
 part 'manage_contacts_state.dart';
@@ -46,9 +47,9 @@ class ManageContactsBloc
           isAllContactsChecked: true,
           contacts: allContacts,
           isInitDone: true));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(ManageContactsState(
-          failureReason: (e as BusinessError).message, showError: true));
+          failureReason: CommonUtil.convertHttpError(e), showError: true));
       emit(state.copyWith(showError: false));
     }
   }
@@ -80,9 +81,9 @@ class ManageContactsBloc
             checkedItem.account.name, checkedItem.account.type);
 
         emit(state.copyWith(contacts: contacts, showSpinkit: false));
-      } catch (e) {
+      } on Exception catch (e) {
         emit(state.copyWith(
-            failureReason: (e as BusinessError).message, showError: true));
+            failureReason: CommonUtil.convertHttpError(e), showError: true));
         emit(state.copyWith(showError: false));
       }
 
@@ -97,9 +98,9 @@ class ManageContactsBloc
             await _contactRepository.getContactsByGroupId(checkedItem.id);
 
         emit(state.copyWith(contacts: contacts, showSpinkit: false));
-      } catch (e) {
+      } on Exception catch (e) {
         emit(state.copyWith(
-            failureReason: (e as BusinessError).message, showError: true));
+            failureReason: CommonUtil.convertHttpError(e), showError: true));
         emit(state.copyWith(showError: false));
       }
 
@@ -130,9 +131,9 @@ class ManageContactsBloc
       try {
         final contacts = await _contactRepository.getAllContacts();
         emit(state.copyWith(contacts: contacts, showSpinkit: false));
-      } catch (e) {
+      } on Exception catch (e) {
         emit(state.copyWith(
-            failureReason: (e as BusinessError).message,
+            failureReason: CommonUtil.convertHttpError(e),
             showSpinkit: false,
             showError: true));
         emit(state.copyWith(showError: false));
@@ -186,9 +187,9 @@ class ManageContactsBloc
       }
 
       emit(state.copyWith(contacts: contacts, showSpinkit: false));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
-          failureReason: (e as BusinessError).message,
+          failureReason: CommonUtil.convertHttpError(e),
           showSpinkit: false,
           showError: true));
       emit(state.copyWith(showError: false));

@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/image_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/image_repository.dart';
+import '../../util/common_util.dart';
 import '../model/delete_images_result.dart';
 import '../model/image_detail_copy_status.dart';
 
@@ -60,10 +60,10 @@ class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
         images: images,
         currentIndex: currentIndex
       ));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(deleteStatus: DeleteImagesStatusUnit(
           status: DeleteImagesStatus.failure,
-        failureReason: (e as BusinessError).message
+        failureReason: CommonUtil.convertHttpError(e)
       )));
     }
   }

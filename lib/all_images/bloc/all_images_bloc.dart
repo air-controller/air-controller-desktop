@@ -2,12 +2,11 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:dio/dio.dart' as DioCore;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/image_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/image_repository.dart';
+import '../../util/common_util.dart';
 import '../model/all_image_copy_status.dart';
 import '../model/all_image_menu_arguments.dart';
 import '../model/all_image_delete_status.dart';
@@ -183,11 +182,11 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
               status: AllImageDeleteImagesStatus.success, images: images),
           images: images,
           checkedImages: checkedImages));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: AllImageDeleteImagesStatusUnit(
               status: AllImageDeleteImagesStatus.failure,
-              failureReason: (e as BusinessError).message)));
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 

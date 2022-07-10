@@ -6,9 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/video_folder_item.dart';
 import '../../model/video_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/video_repository.dart';
+import '../../util/common_util.dart';
 
 part 'video_folders_event.dart';
 
@@ -51,10 +51,10 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
           await _videoRepository.getAllVideoFolders();
       emit(state.copyWith(
           status: VideoFoldersStatus.success, videoFolders: videoFolders));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           status: VideoFoldersStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -73,11 +73,11 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
         emit(state.copyWith(
             loadVideosInFolderStatus: state.loadVideosInFolderStatus
                 .copyWith(status: VideoFoldersStatus.success, videos: videos)));
-      } catch (e) {
+      } on Exception catch (e) {
         emit(state.copyWith(
             loadVideosInFolderStatus: state.loadVideosInFolderStatus.copyWith(
                 status: VideoFoldersStatus.failure,
-                error: (e as BusinessError).message)));
+                error: CommonUtil.convertHttpError(e))));
       }
     } else {
       emit(state.copyWith(
@@ -283,10 +283,10 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
           deleteStatus: VideoFoldersDeleteStatus.success,
           videoFolders: videoFolders,
           checkedVideoFolders: checkedVideoFolders));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: VideoFoldersDeleteStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -407,10 +407,10 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
           videoFolders: videoFolders,
           loadVideosInFolderStatus: state.loadVideosInFolderStatus
               .copyWith(videos: videos, checkedVideos: checkedVideos)));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: VideoFoldersDeleteStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 

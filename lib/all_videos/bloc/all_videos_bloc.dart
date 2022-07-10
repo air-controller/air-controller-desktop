@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/video_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/video_repository.dart';
+import '../../util/common_util.dart';
 
 part 'all_videos_state.dart';
 
@@ -45,10 +45,10 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
       List<VideoItem> videos = await _videoRepository.getAllVideos();
 
       emit(state.copyWith(status: AllVideosStatus.success, videos: videos));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           status: AllVideosStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -164,11 +164,11 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
               status: AllVideosDeleteStatus.success, videos: event.videos),
           videos: videos,
           checkedVideos: checkedVideos));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: AllVideosDeleteStatusUnit(
               status: AllVideosDeleteStatus.failure,
-              failureReason: (e as BusinessError).message)));
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 

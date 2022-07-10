@@ -11,8 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../model/display_type.dart';
 import '../../model/file_item.dart';
 import '../../model/file_node.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
+import '../../util/common_util.dart';
 
 part 'file_home_event.dart';
 part 'file_home_state.dart';
@@ -73,10 +73,10 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
       emit(state.copyWith(
           status: FileHomeStatus.success,
           files: files.map((file) => FileNode(null, file, 0)).toList()));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           status: FileHomeStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -204,10 +204,10 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
               .toList(),
           dirStack: dirStack,
           isRootDir: event.dir == null));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           openDirStatus: FileHomeOpenDirStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -247,10 +247,10 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
           files: files,
           checkedFiles: checkedFiles,
           isRenamingMode: false));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           renameStatus: FileHomeRenameStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -278,10 +278,10 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
           deleteStatus: FileHomeDeleteStatus.success,
           files: files,
           checkedFiles: checkedFiles));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: FileHomeDeleteStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -435,11 +435,11 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
           openDirStatus: FileHomeOpenDirStatus.success,
           currentDir: lastDir,
           isRootDir: lastDir == null));
-    } catch (e) {
+    } on Exception catch (e) {
       log("_onBackToLastDir, failure: ${e.toString()}");
       emit(state.copyWith(
           openDirStatus: FileHomeOpenDirStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 

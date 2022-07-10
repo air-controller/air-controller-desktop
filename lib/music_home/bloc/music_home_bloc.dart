@@ -6,9 +6,9 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/audio_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/audio_repository.dart';
 import '../../repository/file_repository.dart';
+import '../../util/common_util.dart';
 
 part 'music_home_event.dart';
 part 'music_home_state.dart';
@@ -41,10 +41,10 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
     try {
       List<AudioItem> musics = await audioRepository.getAllAudios();
       emit(state.copyWith(status: MusicHomeStatus.success, musics: musics));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           status: MusicHomeStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -163,11 +163,11 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
           checkedMusics: checkedMusics,
           deleteStatus: MusicHomeDeleteStatusUnit(
               status: MusicHomeDeleteStatus.success, musics: event.musics)));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteStatus: MusicHomeDeleteStatusUnit(
               status: MusicHomeDeleteStatus.failure,
-              failureReason: (e as BusinessError).message)));
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 

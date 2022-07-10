@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:air_controller/constant.dart';
+import 'package:air_controller/util/common_util.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/album_item.dart';
 import '../../model/image_item.dart';
-import '../../repository/aircontroller_client.dart';
 import '../../repository/file_repository.dart';
 import '../../repository/image_repository.dart';
 
@@ -52,10 +52,10 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     try {
       List<AlbumItem> albums = await _imageRepository.getAllAlbums();
       emit(state.copyWith(albums: albums, status: AllAlbumsStatus.success));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           status: AllAlbumsStatus.failure,
-          failureReason: (e as BusinessError).message));
+          failureReason: CommonUtil.convertHttpError(e)));
     }
   }
 
@@ -167,11 +167,11 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
       emit(state.copyWith(
           loadImagesInAlbumStatus: state.loadImagesInAlbumStatus.copyWith(
               status: LoadImagesInAlbumStatus.success, images: images)));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           loadImagesInAlbumStatus: state.loadImagesInAlbumStatus.copyWith(
               status: LoadImagesInAlbumStatus.failure,
-              error: (e as BusinessError).message)));
+              error: CommonUtil.convertHttpError(e))));
     }
   }
 
@@ -309,11 +309,11 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
           checkedAlbums: checkedAlbums,
           deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
               status: AllAlbumsDeleteStatus.success, albums: albums)));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
               status: AllAlbumsDeleteStatus.failure,
-              failureReason: (e as BusinessError).message)));
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 
@@ -404,11 +404,11 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
       emit(state.copyWith(
           loadImagesInAlbumStatus: state.loadImagesInAlbumStatus
               .copyWith(images: images, checkedImages: checkedImages)));
-    } catch (e) {
+    } on Exception catch (e) {
       emit(state.copyWith(
           deleteAlbumStatus: AllAlbumsDeleteStatusUnit(
               status: AllAlbumsDeleteStatus.failure,
-              failureReason: (e as BusinessError).message)));
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 

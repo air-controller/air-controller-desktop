@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -160,5 +161,13 @@ class CommonUtil {
       logger.e("zipFile: error: ${e.toString()}");
       return false;
     }
+  }
+
+  static String? convertHttpError(Exception ex) {
+    if (ex is BusinessError) {
+      return ex.message;
+    }
+
+    return ex.toString();
   }
 }
