@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -9,15 +10,23 @@ import 'constant.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (!kIsWeb) {
+    await _setUpWindowManager();
+  }
+
+  bootstrap();
+}
+
+Future<void> _setUpWindowManager() async {
   await windowManager.ensureInitialized();
 
   windowManager.waitUntilReadyToShow().then((_) async {
     await windowManager.setTitleBarStyle(
         Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal);
     await windowManager.setMinimumSize(
-        Size(Constant.MIN_WINDOW_WIDTH, Constant.MIN_WINDOW_HEIGHT));
+        Size(Constant.minWindowWidth, Constant.minWindowHeight));
     await windowManager.setSize(
-        Size(Constant.DEFAULT_WINDOW_WIDTH, Constant.DEFAULT_WINDOW_HEIGHT));
+        Size(Constant.defaultWindowWidth, Constant.defaultWindowHeight));
     await windowManager.center();
     if (Platform.isMacOS || Platform.isWindows) {
       await windowManager.setHasShadow(true);
@@ -26,6 +35,4 @@ void main() async {
     await windowManager.show();
     await windowManager.setSkipTaskbar(false);
   });
-
-  bootstrap();
 }
