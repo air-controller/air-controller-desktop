@@ -33,13 +33,13 @@ class Constant {
 
   static const String APP_NAME = "AirController";
 
-  static const double MIN_WINDOW_WIDTH = 1036;
+  static const double minWindowWidth = 1036;
 
-  static const double MIN_WINDOW_HEIGHT = 687;
+  static const double minWindowHeight = 687;
 
-  static const double DEFAULT_WINDOW_WIDTH = 1243.2;
+  static const double defaultWindowWidth = 1243.2;
 
-  static const double DEFAULT_WINDOW_HEIGHT = 824.4;
+  static const double defaultWindowHeight = 824.4;
 
   static const String DEFAULT_LANGUAGE_CODE = "en";
 
@@ -55,9 +55,9 @@ class Constant {
   static const String KEY_UPDATE_DOWNLOAD_DIR =
       "aircontroller_update_download_directory";
 
-  static const bool ENABLE_HEARTBEAT_LOG = false;
+  static const bool ENABLE_HEARTBEAT_LOG = true;
 
-  static const bool ENABLE_UDP_DISCOVER_LOG = false;
+  static const bool ENABLE_UDP_DISCOVER_LOG = true;
 
   static const bool ENABLE_BLOC_LOG = false;
 
