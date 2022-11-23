@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../bootstrap.dart';
+import '../../constant_pool.dart';
 import '../../file_home/bloc/file_home_bloc.dart';
 import '../../home/bloc/home_bloc.dart';
 import '../../model/display_type.dart';
@@ -106,32 +107,16 @@ class ListModeFilesView extends StatelessWidget {
     }
 
     Image getFileTypeIcon(FileItem fileItem) {
+      String iconPath = "";
       if (fileItem.isDir) {
-        return Image.asset("assets/icons/icon_folder.png",
-            width: 20, height: 20);
+        iconPath = "assets/icons/ic_large_type_folder.png";
+      } else {
+        final extension = fileItem.name.split('.').last;
+        iconPath = ConstantPool.fileExtensionIconMap[extension] ??
+            ConstantPool.fileExtensionIconMap["other"]!;
       }
 
-      String name = fileItem.name.toLowerCase();
-
-      if (name.endsWith(".jpg") ||
-          name.endsWith(".jpeg") ||
-          name.endsWith(".png")) {
-        return Image.asset("assets/icons/icon_file_type_image.png",
-            width: 20, height: 20);
-      }
-
-      if (name.endsWith(".mp3")) {
-        return Image.asset("assets/icons/icon_file_type_audio.png",
-            width: 20, height: 20);
-      }
-
-      if (name.endsWith(".txt")) {
-        return Image.asset("assets/icons/icon_file_type_text.png",
-            width: 20, height: 20);
-      }
-
-      return Image.asset("assets/icons/icon_file_type_doc.png",
-          width: 20, height: 20);
+      return Image.asset(iconPath, width: 20, height: 20);
     }
 
     List<DataRow> _generateRows() {
