@@ -1,10 +1,10 @@
-
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_segmented_control/material_segmented_control.dart';
 
 import '../../all_videos/view/all_videos_page.dart';
+import '../../bootstrap.dart';
 import '../../constant.dart';
 import '../../model/video_order_type.dart';
 import '../../video_folders/view/video_folders_page.dart';
@@ -12,27 +12,42 @@ import '../../widget/unified_delete_button.dart';
 import '../bloc/video_home_bloc.dart';
 
 class VideoHomePage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider<VideoHomeBloc>(
-        create: (context) => VideoHomeBloc(),
+      create: (context) => VideoHomeBloc(),
       child: VideoHomeView(),
     );
   }
 }
 
-class VideoHomeView extends StatelessWidget {
+class VideoHomeView extends StatefulWidget {
+  @override
+  State<VideoHomeView> createState() {
+    return VideoHomeViewState();
+  }
+}
+
+class VideoHomeViewState extends State<VideoHomeView>
+    with AutomaticKeepAliveClientMixin {
   bool _isBackBtnDown = false;
 
   @override
   Widget build(BuildContext context) {
-    VideoHomeTab currentTab = context.select((VideoHomeBloc bloc) => bloc.state.tab);
-    VideoOrderType currentOrderType = context.select((VideoHomeBloc bloc) => bloc.state.orderType);
-    VideoHomeItemCount itemCount = context.select((VideoHomeBloc bloc) => bloc.state.itemCount);
-    bool isBackVisible = context.select((VideoHomeBloc bloc) => bloc.state.isBackVisible);
-    bool isOrderTypeVisible = context.select((VideoHomeBloc bloc) => bloc.state.isOrderTypeVisible);
-    bool isDeleteEnabled = context.select((VideoHomeBloc bloc) => bloc.state.isDeleteEnabled);
+    super.build(context);
+
+    VideoHomeTab currentTab =
+        context.select((VideoHomeBloc bloc) => bloc.state.tab);
+    VideoOrderType currentOrderType =
+        context.select((VideoHomeBloc bloc) => bloc.state.orderType);
+    VideoHomeItemCount itemCount =
+        context.select((VideoHomeBloc bloc) => bloc.state.itemCount);
+    bool isBackVisible =
+        context.select((VideoHomeBloc bloc) => bloc.state.isBackVisible);
+    bool isOrderTypeVisible =
+        context.select((VideoHomeBloc bloc) => bloc.state.isOrderTypeVisible);
+    bool isDeleteEnabled =
+        context.select((VideoHomeBloc bloc) => bloc.state.isDeleteEnabled);
 
     Color getSegmentBtnColor(VideoHomeTab tab) {
       if (tab == currentTab) {
@@ -66,19 +81,20 @@ class VideoHomeView extends StatelessWidget {
       }
     }
 
-    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${itemCount.totalCount}");
+    String itemNumStr = context.l10n.placeHolderItemCount01
+        .replaceFirst("%d", "${itemCount.totalCount}");
     if (itemCount.checkedCount > 0) {
-      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${itemCount.checkedCount}")
+      itemNumStr = context.l10n.placeHolderItemCount02
+          .replaceFirst("%d", "${itemCount.checkedCount}")
           .replaceFirst("%d", "${itemCount.totalCount}");
     }
-
 
     final _divider_line_color = Color(0xffe0e0e0);
 
     return MultiBlocListener(
         listeners: [
-          BlocListener<VideoHomeBloc, VideoHomeState>(listener: (context, state) {
-          },
+          BlocListener<VideoHomeBloc, VideoHomeState>(
+            listener: (context, state) {},
             listenWhen: (previous, current) => previous.tab != current.tab,
           )
         ],
@@ -111,7 +127,7 @@ class VideoHomeView extends StatelessWidget {
                                     ? Color(0xffe8e8e8)
                                     : Color(0xfff3f3f4),
                                 borderRadius:
-                                BorderRadius.all(Radius.circular(3.0)),
+                                    BorderRadius.all(Radius.circular(3.0)),
                                 border: Border.all(
                                     color: Color(0xffdedede), width: 1.0)),
                             height: 25,
@@ -122,7 +138,9 @@ class VideoHomeView extends StatelessWidget {
                         visible: isBackVisible,
                       ),
                       onTap: () {
-                        context.read<VideoHomeBloc>().add(VideoHomeBackTapStatusChanged(VideoHomeBackTapStatus.tap));
+                        context.read<VideoHomeBloc>().add(
+                            VideoHomeBackTapStatusChanged(
+                                VideoHomeBackTapStatus.tap));
                       },
                       onTapDown: (detail) {
                         setState(() {
@@ -141,7 +159,6 @@ class VideoHomeView extends StatelessWidget {
                       },
                     );
                   }),
-
                   Align(
                       alignment: Alignment.center,
                       child: Container(
@@ -151,15 +168,16 @@ class VideoHomeView extends StatelessWidget {
                               child: Text(context.l10n.allVideos,
                                   style: TextStyle(
                                       fontSize: 12,
-                                      color: getSegmentBtnColor(VideoHomeTab.allVideos))),
+                                      color: getSegmentBtnColor(
+                                          VideoHomeTab.allVideos))),
                               padding: EdgeInsets.only(left: 10, right: 10),
                             ),
                             VideoHomeTab.videoFolders.index: Container(
                               child: Text(context.l10n.videoFolders,
                                   style: TextStyle(
                                       fontSize: 12,
-                                      color:
-                                      getSegmentBtnColor(VideoHomeTab.videoFolders))),
+                                      color: getSegmentBtnColor(
+                                          VideoHomeTab.videoFolders))),
                               padding: EdgeInsets.only(left: 10, right: 10),
                             ),
                           },
@@ -171,9 +189,9 @@ class VideoHomeView extends StatelessWidget {
                           verticalOffset: 0,
                           disabledChildren: [],
                           onSegmentChosen: (index) {
-                            context.read<VideoHomeBloc>().add(VideoHomeTabChanged(
-                              VideoHomeTabX.convertToTab(index)
-                            ));
+                            context.read<VideoHomeBloc>().add(
+                                VideoHomeTabChanged(
+                                    VideoHomeTabX.convertToTab(index)));
                           },
                         ),
                         height: 30,
@@ -190,22 +208,30 @@ class VideoHomeView extends StatelessWidget {
                                     child: GestureDetector(
                                       child: Container(
                                         child: Image.asset(
-                                            _getSortOrderIcon(VideoOrderType.createTime),
+                                            _getSortOrderIcon(
+                                                VideoOrderType.createTime),
                                             width: 19,
                                             height: 19),
-                                        padding: EdgeInsets.fromLTRB(8, 3, 8, 3),
+                                        padding:
+                                            EdgeInsets.fromLTRB(8, 3, 8, 3),
                                         decoration: BoxDecoration(
                                           border: Border.all(
-                                              color: Color(0xffdddedf), width: 1.0),
+                                              color: Color(0xffdddedf),
+                                              width: 1.0),
                                           borderRadius: BorderRadius.only(
                                               topLeft: Radius.circular(4.0),
                                               bottomLeft: Radius.circular(4.0)),
-                                          color: _getSortOrderBgColor(VideoOrderType.createTime),
+                                          color: _getSortOrderBgColor(
+                                              VideoOrderType.createTime),
                                         ),
                                       ),
                                       onTap: () {
-                                        VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
-                                        if (currentOderType != VideoOrderType.createTime) {
+                                        VideoOrderType currentOderType = context
+                                            .read<VideoHomeBloc>()
+                                            .state
+                                            .orderType;
+                                        if (currentOderType !=
+                                            VideoOrderType.createTime) {
                                           context.read<VideoHomeBloc>().add(
                                               VideoHomeOderTypeChanged(
                                                   VideoOrderType.createTime));
@@ -218,22 +244,31 @@ class VideoHomeView extends StatelessWidget {
                                     child: GestureDetector(
                                       child: Container(
                                         child: Image.asset(
-                                            _getSortOrderIcon(VideoOrderType.duration),
+                                            _getSortOrderIcon(
+                                                VideoOrderType.duration),
                                             width: 19,
                                             height: 19),
-                                        padding: EdgeInsets.fromLTRB(8, 3, 8, 3),
+                                        padding:
+                                            EdgeInsets.fromLTRB(8, 3, 8, 3),
                                         decoration: BoxDecoration(
                                           border: Border.all(
-                                              color: Color(0xffdddedf), width: 1.0),
-                                          color: _getSortOrderBgColor(VideoOrderType.duration),
+                                              color: Color(0xffdddedf),
+                                              width: 1.0),
+                                          color: _getSortOrderBgColor(
+                                              VideoOrderType.duration),
                                           borderRadius: BorderRadius.only(
                                               topRight: Radius.circular(4.0),
-                                              bottomRight: Radius.circular(4.0)),
+                                              bottomRight:
+                                                  Radius.circular(4.0)),
                                         ),
                                       ),
                                       onTap: () {
-                                        VideoOrderType currentOderType = context.read<VideoHomeBloc>().state.orderType;
-                                        if (currentOderType != VideoOrderType.duration) {
+                                        VideoOrderType currentOderType = context
+                                            .read<VideoHomeBloc>()
+                                            .state
+                                            .orderType;
+                                        if (currentOderType !=
+                                            VideoOrderType.duration) {
                                           context.read<VideoHomeBloc>().add(
                                               VideoHomeOderTypeChanged(
                                                   VideoOrderType.duration));
@@ -247,14 +282,15 @@ class VideoHomeView extends StatelessWidget {
                               maintainSize: true,
                               maintainState: true,
                               maintainAnimation: true,
-                              visible: isOrderTypeVisible
-                          ),
+                              visible: isOrderTypeVisible),
                           UnifiedDeleteButton(
                             isEnable: isDeleteEnabled,
                             contentDescription: context.l10n.delete,
                             onTap: () {
                               if (isDeleteEnabled) {
-                                context.read<VideoHomeBloc>().add(VideoHomeDeleteTapped());
+                                context
+                                    .read<VideoHomeBloc>()
+                                    .add(VideoHomeDeleteTapped());
                               }
                             },
                             margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
@@ -273,10 +309,7 @@ class VideoHomeView extends StatelessWidget {
             Expanded(
               child: IndexedStack(
                 index: currentTab.index,
-                children: [
-                  AllVideosPage(),
-                  VideoFoldersPage()
-                ],
+                children: [AllVideosPage(), VideoFoldersPage()],
               ),
             ),
             Divider(color: _divider_line_color, height: 1.0, thickness: 1.0),
@@ -284,14 +317,15 @@ class VideoHomeView extends StatelessWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(itemNumStr,
-                    style: TextStyle(
-                        fontSize: 12, color: Color(0xff646464))),
+                    style: TextStyle(fontSize: 12, color: Color(0xff646464))),
               ),
               height: 20,
               color: Color(0xfffafafa),
             )
           ],
-        )
-    );
+        ));
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

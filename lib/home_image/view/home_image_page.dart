@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:air_controller/bootstrap.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,21 +25,39 @@ class HomeImagePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => HomeImageBloc(),
-      child: HomeImageView(navigatorKey: _navigatorKey),
+      child: HomeImageView(_navigatorKey),
     );
   }
 }
 
-class HomeImageView extends StatelessWidget {
-  final GlobalKey<NavigatorState> _navigatorKey;
+class HomeImageView extends StatefulWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  HomeImageView(this.navigatorKey);
+
+  @override
+  State<HomeImageView> createState() {
+    return HomeImageViewState();
+  }
+}
+
+class HomeImageViewState extends State<HomeImageView>
+    with AutomaticKeepAliveClientMixin {
   final _DIVIDER_LINE_COLOR = Color(0xffe0e0e0);
   bool _isBackBtnDown = false;
 
-  HomeImageView({required GlobalKey<NavigatorState> navigatorKey})
-      : _navigatorKey = navigatorKey;
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      logger.d("图片时长：${timeStamp.inMilliseconds}");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: MultiBlocListener(
         listeners: [
@@ -51,7 +70,8 @@ class HomeImageView extends StatelessWidget {
 
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(context.l10n.deleteFilesFailure)));
+                  ..showSnackBar(
+                      SnackBar(content: Text(context.l10n.deleteFilesFailure)));
               }),
           BlocListener<HomeImageBloc, HomeImageState>(
               listenWhen: (previous, current) =>
@@ -99,10 +119,12 @@ class HomeImageView extends StatelessWidget {
       }
     }
 
-    String itemNumStr = context.l10n.placeHolderItemCount01.replaceFirst("%d", "${imageCount.totalCount}");
+    String itemNumStr = context.l10n.placeHolderItemCount01
+        .replaceFirst("%d", "${imageCount.totalCount}");
     if (imageCount.checkedCount > 0) {
-      itemNumStr = context.l10n.placeHolderItemCount02.replaceFirst("%d", "${imageCount.checkedCount}")
-      .replaceFirst("%d", "${imageCount.totalCount}");
+      itemNumStr = context.l10n.placeHolderItemCount02
+          .replaceFirst("%d", "${imageCount.checkedCount}")
+          .replaceFirst("%d", "${imageCount.totalCount}");
     }
 
     return Column(
@@ -144,7 +166,9 @@ class HomeImageView extends StatelessWidget {
                     visible: isBackVisible,
                   ),
                   onTap: () {
-                    context.read<HomeImageBloc>().add(HomeImageBackTapStatusChanged(HomeImageBackTapStatus.tap));
+                    context.read<HomeImageBloc>().add(
+                        HomeImageBackTapStatusChanged(
+                            HomeImageBackTapStatus.tap));
                   },
                   onTapDown: (detail) {
                     setState(() {
@@ -198,7 +222,8 @@ class HomeImageView extends StatelessWidget {
                       verticalOffset: 0,
                       disabledChildren: [],
                       onSegmentChosen: (index) {
-                        context.read<HomeImageBloc>().add(HomeImageTabChanged(tab: HomeImageTabX.convertToTab(index)));
+                        context.read<HomeImageBloc>().add(HomeImageTabChanged(
+                            tab: HomeImageTabX.convertToTab(index)));
                       },
                     ),
                     height: 30,
@@ -212,8 +237,9 @@ class HomeImageView extends StatelessWidget {
                         child: ArrangementSegmentedControl(
                           initMode: currentArrangement,
                           onChange: (previous, current) {
-                            log("HomeImagePage, $previous : $current");
-                            context.read<HomeImageBloc>().add(HomeImageArrangementChanged(arrangement: current));
+                            context.read<HomeImageBloc>().add(
+                                HomeImageArrangementChanged(
+                                    arrangement: current));
                           },
                         ),
                         maintainSize: true,
@@ -226,9 +252,7 @@ class HomeImageView extends StatelessWidget {
                         contentDescription: context.l10n.delete,
                         onTap: () {
                           context.read<HomeImageBloc>().add(
-                              HomeImageDeleteTrigger(
-                                  currentTab: currentTab)
-                          );
+                              HomeImageDeleteTrigger(currentTab: currentTab));
                         },
                         margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
                       )
@@ -247,11 +271,11 @@ class HomeImageView extends StatelessWidget {
           child: IndexedStack(
             index: currentTab.index,
             children: [
-              AllImagesPage(navigatorKey: _navigatorKey),
-              AllImagesPage(navigatorKey: _navigatorKey, isFromCamera: true),
-              AllAlbumsPage(navigatorKey: _navigatorKey)
+              AllImagesPage(navigatorKey: widget.navigatorKey),
+              AllImagesPage(
+                  navigatorKey: widget.navigatorKey, isFromCamera: true),
+              AllAlbumsPage(navigatorKey: widget.navigatorKey)
             ],
-
           ),
         ),
         Divider(color: _DIVIDER_LINE_COLOR, height: 1.0, thickness: 1.0),
@@ -267,4 +291,7 @@ class HomeImageView extends StatelessWidget {
       ],
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

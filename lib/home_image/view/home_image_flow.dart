@@ -18,6 +18,7 @@ class HomeImageFlowState extends State<HomeImageFlow> with AutomaticKeepAliveCli
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Navigator(
         key: _navigatorKey,
         onGenerateRoute: _onGenerateRoute,

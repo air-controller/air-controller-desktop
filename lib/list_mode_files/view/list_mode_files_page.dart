@@ -289,9 +289,6 @@ class ListModeFilesView extends StatelessWidget {
           ],
           color: _getDataRowColor(context, file),
           selected: checkedFiles.contains(file),
-          onSelectChanged: (isSelected) {
-            debugPrint("onSelectChanged: $isSelected");
-          },
           onTap: () {
             context.read<FileHomeBloc>().add(FileHomeCheckedChanged(file));
 
@@ -428,7 +425,6 @@ class ListModeFilesView extends StatelessWidget {
               rows: _generateRows(),
               headingRowHeight: 40,
               headingTextStyle: headerStyle,
-              onSelectAll: (val) {},
               empty: Center(
                 child: Container(
                   padding: EdgeInsets.all(20),

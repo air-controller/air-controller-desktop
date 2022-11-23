@@ -41,10 +41,19 @@ class FileHomePage extends StatelessWidget {
   }
 }
 
-// ignore: must_be_immutable
-class FileHomeView extends StatelessWidget {
+class FileHomeView extends StatefulWidget {
   final bool isOnlyDownloadDir;
 
+  FileHomeView(this.isOnlyDownloadDir, {Key? key}) : super(key: key);
+
+  @override
+  State<FileHomeView> createState() {
+    return FileHomeViewState();
+  }
+}
+
+class FileHomeViewState extends State<FileHomeView>
+    with AutomaticKeepAliveClientMixin {
   bool _isBackBtnDown = false;
   FocusNode? _rootFocusNode;
 
@@ -53,10 +62,10 @@ class FileHomeView extends StatelessWidget {
 
   ProgressIndicatorDialog? _progressIndicatorDialog;
 
-  FileHomeView(this.isOnlyDownloadDir, {Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     List<FileNode> files =
         context.select((FileHomeBloc bloc) => bloc.state.files);
     List<FileNode> checkedFiles =
@@ -78,8 +87,8 @@ class FileHomeView extends StatelessWidget {
     _rootFocusNode = FocusNode();
     _rootFocusNode?.canRequestFocus = true;
 
-    if ((homeTab == HomeTab.allFile && !isOnlyDownloadDir) ||
-        (homeTab == HomeTab.download && isOnlyDownloadDir)) {
+    if ((homeTab == HomeTab.allFile && !widget.isOnlyDownloadDir) ||
+        (homeTab == HomeTab.download && widget.isOnlyDownloadDir)) {
       _rootFocusNode?.requestFocus();
     }
 
@@ -459,7 +468,7 @@ class FileHomeView extends StatelessWidget {
             Align(
                 alignment: Alignment.center,
                 child: Text(
-                    this.isOnlyDownloadDir
+                    widget.isOnlyDownloadDir
                         ? context.l10n.downloads
                         : context.l10n.files,
                     textAlign: TextAlign.center,
@@ -472,7 +481,6 @@ class FileHomeView extends StatelessWidget {
                           DisplayTypeSegmentedControl(
                             displayType: displayType,
                             onChange: ((displayType) {
-                              log("FileHomePage, displayType: $displayType");
                               context
                                   .read<FileHomeBloc>()
                                   .add(FileHomeDisplayTypeChanged(displayType));
@@ -628,4 +636,7 @@ class FileHomeView extends StatelessWidget {
       Navigator.of(context, rootNavigator: true).pop();
     });
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
