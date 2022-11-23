@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
@@ -22,33 +20,47 @@ class ContextMenuHelper {
         attachedBuilder: (cancelFunc) {
           _cancelFunc = cancelFunc;
 
-          return ClipRect(child: BackdropFilter(
-              filter: new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-              child: Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(items.length * 2 - 1, (index) {
-                    Divider divider = Divider(
-                        height: 1,
-                        thickness: 1,
-                        indent: 6,
-                        endIndent: 6,
-                        color: Color(0xffbabebf));
+          const dialogBorderRadius = BorderRadius.all(Radius.circular(5.0));
 
-                    if (index.isEven) {
-                      return items[index ~/ 2];
-                    } else {
-                      return divider;
-                    }
-                  }),
+          final outerBorderColor = Colors.black.withOpacity(0.23);
+
+          final innerBorderColor = Colors.white.withOpacity(0.45);
+
+          return Container(
+              width: 340,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: 2,
+                  color: innerBorderColor,
                 ),
-                decoration: BoxDecoration(
-                    color: Color(0xffdddddd).withOpacity(0.85),
-                    borderRadius: BorderRadius.all(Radius.circular(6)),
-                    border: Border.all(color: Color(0xffb8b8b8), width: 1)),
-                padding: EdgeInsets.all(5),
-                width: 320,
-              )),);
+                borderRadius: dialogBorderRadius,
+                color: const Color.fromARGB(255, 242, 242, 242),
+              ),
+              foregroundDecoration: BoxDecoration(
+                border: Border.all(
+                  width: 1,
+                  color: outerBorderColor,
+                ),
+                borderRadius: dialogBorderRadius,
+              ),
+              padding: const EdgeInsets.only(top: 5, bottom: 5),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(items.length * 2 - 1, (index) {
+                  Divider divider = Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 6,
+                      endIndent: 6,
+                      color: Color(0xffbabebf));
+
+                  if (index.isEven) {
+                    return items[index ~/ 2];
+                  } else {
+                    return divider;
+                  }
+                }),
+              ));
         },
         allowClick: false,
         target: globalOffset,
