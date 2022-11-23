@@ -36,6 +36,8 @@ class BusinessError implements Exception {
   final String? message;
 
   BusinessError(this.message);
+
+  toString() => message ?? 'BusinessError';
 }
 
 class AirControllerClient {
@@ -1245,8 +1247,8 @@ class AirControllerClient {
   }
 
   Future<DioCore.CancelToken> uploadFiles(
-      { required RootDirType rootDirType,
-        required List<File> files,
+      {required RootDirType rootDirType,
+      required List<File> files,
       String? folder = null,
       Function()? onSuccess,
       Function(int, int)? onUploading,
@@ -1322,6 +1324,29 @@ class AirControllerClient {
     });
 
     return cancelToken;
+  }
+
+  Future<ResponseEntity> connect(String? pwd) async {
+    String errorMsg = "";
+
+    try {
+      final response = await dio.post("/common/connect",
+          data: {"passwd": pwd ?? ""},
+          options:
+              DioCore.Options(receiveTimeout: 0, headers: _commonHeaders()));
+      if (response.statusCode == 200) {
+        final map = response.data;
+        final httpResponseEntity = ResponseEntity.fromJson(map);
+
+        return httpResponseEntity;
+      } else {
+        errorMsg = "Connect failure, status code: ${response.statusCode}";
+      }
+    } catch (e) {
+      errorMsg = "Connect failure, reason: ${e.toString()}";
+    }
+
+    throw BusinessError(errorMsg);
   }
 
   Map<String, String> _commonHeaders() {

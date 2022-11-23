@@ -73,8 +73,8 @@
   "wirelessConDisconnected": "Wireless connection disconnected",
   "placeholderDisconnectionDesc": "The wireless connection has been disconnected due to unstable network environment or %s connection timeout on the mobile phone, please check.",
   "backToHome": "Back to Home",
-    "ethernet": "Ethernet",
-      "wifi": "WLAN",
+  "ethernet": "Ethernet",
+  "wifi": "WLAN",
   "defaultType": "Default",
   "daily": "Daily",
   "monthly": "Monthly",
@@ -129,5 +129,11 @@
   "sure": "Ok",
   "addCategory": "Add category",
   "allContacts": "All contacts",
-  "loadImageFailure": "Load image failure!"
+  "loadImageFailure": "Load image failure!",
+  "ipAddress": "IP address",
+  "enterIpAddress": "Please enter the IP address",
+  "password": "Password",
+  "optional": "optional",
+  "invalidIpAddress": "Please enter a valid IP address!",
+  "connectionFailed": "Connection failed!"
 }

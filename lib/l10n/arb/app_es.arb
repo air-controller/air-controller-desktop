@@ -129,5 +129,11 @@
   "sure": "OK",
   "addCategory": "Añadir categoría",
   "allContacts": "Todos los contactos",
-  "loadImageFailure": "¡Error en la carga de la imagen!"
+  "loadImageFailure": "¡Error en la carga de la imagen!",
+  "ipAddress": "dirección IP",
+  "enterIpAddress": "Por favor ingrese la dirección IP",
+  "password": "clave",
+  "optional": "opcional",
+  "invalidIpAddress": "Por favor ingrese una dirección IP válida",
+  "connectionFailed": "La conexión falló"
 }

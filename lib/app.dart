@@ -1,3 +1,5 @@
+import 'package:air_controller/enter/view/web_enter_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -39,7 +41,7 @@ class App extends StatelessWidget {
               textSelectionTheme:
                   TextSelectionThemeData(selectionColor: Color(0xffe0e0e0)),
               textTheme: GoogleFonts.robotoSerifTextTheme(textTheme)),
-          home: EnterPage(key: EnterPage.enterKey),
+          home: kIsWeb ? WebEnterPage() : EnterPage(key: EnterPage.enterKey),
           navigatorObservers: [
             FlutterSmartDialog.observer,
             BotToastNavigatorObserver()

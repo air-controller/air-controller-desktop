@@ -5,6 +5,7 @@ import 'package:dio/dio.dart' as DioCore;
 
 import '../model/app_info.dart';
 import '../model/mobile_info.dart';
+import '../model/response_entity.dart';
 import 'aircontroller_client.dart';
 
 class CommonRepository {
@@ -88,4 +89,6 @@ class CommonRepository {
         onCancel: onCancel,
         onSuccess: onSuccess);
   }
+
+  Future<ResponseEntity> connect(String? pwd) => this.client.connect(pwd);
 }

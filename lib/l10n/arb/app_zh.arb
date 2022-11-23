@@ -129,5 +129,11 @@
   "sure": "确定",
   "addCategory": "添加分类",
   "allContacts": "所有联系人",
-  "loadImageFailure": "图片加载失败!"
+  "loadImageFailure": "图片加载失败!",
+  "ipAddress": "IP地址",
+  "enterIpAddress": "请输入IP地址",
+  "password": "密码",
+  "optional": "可选",
+  "invalidIpAddress": "请输入有效的IP地址",
+  "connectionFailed": "连接失败！"
 }
