@@ -1,3 +1,4 @@
+import 'dart:html' as html;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,8 @@ void main() async {
 
   if (!kIsWeb) {
     await _setUpWindowManager();
+  } else {
+    html.window.document.onContextMenu.listen((evt) => evt.preventDefault());
   }
 
   bootstrap();
