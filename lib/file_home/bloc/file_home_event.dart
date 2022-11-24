@@ -202,3 +202,12 @@ class FileHomeDragToUploadStatusChanged extends FileHomeEvent {
 class FileHomeSelectAll extends FileHomeEvent {
   const FileHomeSelectAll();
 }
+
+class FileHomeDownloadToLocal extends FileHomeEvent {
+  final List<FileNode> files;
+
+  const FileHomeDownloadToLocal(this.files);
+
+  @override
+  List<Object?> get props => [files];
+}

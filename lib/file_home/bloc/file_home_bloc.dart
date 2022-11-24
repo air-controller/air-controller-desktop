@@ -50,6 +50,7 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     on<FileHomeUploadStatusChanged>(_onUploadStatusChanged);
     on<FileHomeDragToUploadStatusChanged>(_onDragToUploadStatusChanged);
     on<FileHomeSelectAll>(_onSelectAll);
+    on<FileHomeDownloadToLocal>(_onDownloadToLocal);
   }
 
   void _onDisplayTypeChanged(
@@ -633,5 +634,34 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
   void _onSelectAll(FileHomeSelectAll event, Emitter<FileHomeState> emit) {
     final checkedFiles = [...state.files];
     emit(state.copyWith(checkedFiles: checkedFiles));
+  }
+
+  FutureOr<void> _onDownloadToLocal(
+      FileHomeDownloadToLocal event, Emitter<FileHomeState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await _fileRepository
+          .readAsBytes(event.files.map((e) => e.data).toList());
+
+      String fileName = "";
+      if (event.files.length == 1) {
+        final singleFile = event.files.first.data;
+        fileName = singleFile.name;
+
+        if (singleFile.isDir) {
+          fileName = "$fileName.zip";
+        }
+      } else if (event.files.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "files_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, errorMessage: e.toString()));
+    }
   }
 }

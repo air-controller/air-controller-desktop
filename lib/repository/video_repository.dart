@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -34,4 +36,21 @@ class VideoRepository {
           onUploading: onUploading,
           onError: onError,
           onCancel: onCancel);
+
+  Future<Uint8List> readVideosAsBytes(List<VideoItem> videos) async {
+    final paths = videos.map((video) => video.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
+
+  Future<Uint8List> readVideoFoldersAsBytes(
+      List<VideoFolderItem> videoFolders) async {
+    final paths = videoFolders.map((videoFolder) => videoFolder.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
 }

@@ -98,6 +98,9 @@ class MusicHomeState extends Equatable {
   final MusicHomeDeleteStatusUnit deleteStatus;
   final MusicHomeCopyStatusUnit copyStatus;
   final MusicHomeUploadStatusUnit uploadStatus;
+  final bool showLoading;
+  final bool showError;
+  final String? errorMesssage;
 
   const MusicHomeState(
       {this.musics = const [],
@@ -110,7 +113,10 @@ class MusicHomeState extends Equatable {
       this.openMenuStatus = const MusicHomeOpenMenuStatus(),
       this.deleteStatus = const MusicHomeDeleteStatusUnit(),
       this.copyStatus = const MusicHomeCopyStatusUnit(),
-      this.uploadStatus = const MusicHomeUploadStatusUnit()});
+      this.uploadStatus = const MusicHomeUploadStatusUnit(),
+      this.showLoading = false,
+      this.showError = false,
+      this.errorMesssage});
 
   @override
   List<Object?> get props => [
@@ -125,6 +131,9 @@ class MusicHomeState extends Equatable {
         deleteStatus,
         copyStatus,
         uploadStatus,
+        showLoading,
+        showError,
+        errorMesssage
       ];
 
   MusicHomeState copyWith(
@@ -138,7 +147,10 @@ class MusicHomeState extends Equatable {
       MusicHomeOpenMenuStatus? openMenuStatus,
       MusicHomeDeleteStatusUnit? deleteStatus,
       MusicHomeCopyStatusUnit? copyStatus,
-      MusicHomeUploadStatusUnit? uploadStatus}) {
+      MusicHomeUploadStatusUnit? uploadStatus,
+      bool? showLoading,
+      bool? showError,
+      String? errorMesssage}) {
     return MusicHomeState(
         musics: musics ?? this.musics,
         checkedMusics: checkedMusics ?? this.checkedMusics,
@@ -150,6 +162,9 @@ class MusicHomeState extends Equatable {
         openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteStatus: deleteStatus ?? this.deleteStatus,
         copyStatus: copyStatus ?? this.copyStatus,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        errorMesssage: errorMesssage ?? this.errorMesssage);
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
@@ -35,6 +36,7 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
     on<AllVideosCancelCopy>(_onCancelCopy);
     on<AllVideosUploadVideos>(_onUploadVideos);
     on<AllVideosUploadStatusChanged>(_onUploadStatusChanged);
+    on<AllVideosDownloadToLocal>(_onDownloadToLocal);
   }
 
   void _onSubscriptionRequested(AllVideosSubscriptionRequested event,
@@ -237,6 +239,26 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
     if (event.status.status == AllVideosUploadStatus.success) {
       List<VideoItem> videos = await _videoRepository.getAllVideos();
       emit(state.copyWith(videos: videos));
+    }
+  }
+
+  FutureOr<void> _onDownloadToLocal(
+      AllVideosDownloadToLocal event, Emitter<AllVideosState> emit) async {
+    emit(state.copyWith(showLoading: true));
+    try {
+      final bytes = await _videoRepository.readVideosAsBytes(event.videos);
+      String fileName = "";
+      if (event.videos.length == 1) {
+        fileName = event.videos.first.path.split("/").last;
+      } else if (event.videos.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "videos_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(showLoading: false));
+      emit(state.copyWith(showError: true, errorMessage: e.toString()));
     }
   }
 }

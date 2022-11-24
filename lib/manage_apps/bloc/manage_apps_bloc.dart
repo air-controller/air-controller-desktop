@@ -8,6 +8,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../util/common_util.dart';
+
 part 'manage_apps_event.dart';
 part 'manage_apps_state.dart';
 
@@ -61,6 +63,7 @@ class ManageAppsHomeBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
     on<ManageAppsItemCountChanged>(_onItemCountChanged);
     on<ManageAppsTabChanged>(_onTabChanged);
     on<ManageAppsOpenContextMenu>(_onOpenContextMenu);
+    on<ManageAppsWebExportApks>(_onWebExportApks);
   }
 
   void _onSubscriptionRequested(ManageAppsSubscriptionRequested event,
@@ -257,6 +260,28 @@ class ManageAppsHomeBloc extends Bloc<ManageAppsEvent, ManageAppsState> {
 
       emit(state.copyWith(
           contextMenuInfo: event.info, checkedSystemApps: checkedSystemApps));
+    }
+  }
+
+  FutureOr<void> _onWebExportApks(
+      ManageAppsWebExportApks event, Emitter<ManageAppsState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await _repository.readPackagesAsBytes(event.apps);
+      String fileName = "";
+      if (event.apps.length == 1) {
+        fileName = "${event.apps.first.name.split("/").last}.apk";
+      } else if (event.apps.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "apps_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, failureReason: e.toString()));
+      emit(state.copyWith(showError: false));
     }
   }
 }

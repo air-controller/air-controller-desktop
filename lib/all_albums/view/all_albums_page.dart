@@ -5,8 +5,10 @@ import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/sound_effect.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -355,6 +357,23 @@ class AllAlbumsView extends StatelessWidget {
             listenWhen: (previous, current) =>
                 previous.uploadStatus != current.uploadStatus &&
                 current.uploadStatus.status != AllAlbumsUploadStatus.initial,
+          ),
+          BlocListener<AllAlbumsBloc, AllAlbumsState>(
+            listener: (context, state) {
+              if (state.showLoading) {
+                BotToast.showLoading();
+              } else {
+                BotToast.closeAllLoading();
+              }
+
+              if (state.showError) {
+                BotToast.showText(
+                    text: state.errorMessage ?? context.l10n.unknownError);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.showLoading != current.showLoading ||
+                current.showError != current.showError,
           )
         ],
         child: Focus(
@@ -432,8 +451,9 @@ class AllAlbumsView extends StatelessWidget {
             ],
           ),
           onKey: (node, event) {
-            _isControlPressed =
-                Platform.isMacOS ? event.isMetaPressed : event.isControlPressed;
+            _isControlPressed = !kIsWeb && Platform.isMacOS
+                ? event.isMetaPressed
+                : event.isControlPressed;
             _isShiftPressed = event.isShiftPressed;
 
             AllAlbumsBoardKeyStatus status = AllAlbumsBoardKeyStatus.none;
@@ -448,7 +468,7 @@ class AllAlbumsView extends StatelessWidget {
                 .read<AllAlbumsBloc>()
                 .add(AllAlbumsKeyStatusChanged(status));
 
-            if (Platform.isMacOS) {
+            if (!kIsWeb && Platform.isMacOS) {
               if (event.isMetaPressed &&
                   event.isKeyPressed(LogicalKeyboardKey.keyA)) {
                 context
@@ -531,6 +551,10 @@ class AllAlbumsView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = context.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: context, globalOffset: position, items: [
       ContextMenuItem(
@@ -547,11 +571,17 @@ class AllAlbumsView extends StatelessWidget {
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
-            _startCopy(context, checkedAlbums, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+              _startCopy(context, checkedAlbums, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            context
+                .read<AllAlbumsBloc>()
+                .add(AllAlbumsDownloadAlbumsToLocal(checkedAlbums));
+          }
         },
       ),
       ContextMenuItem(
@@ -600,6 +630,10 @@ class AllAlbumsView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = context.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: context, globalOffset: position, items: [
       ContextMenuItem(
@@ -615,11 +649,17 @@ class AllAlbumsView extends StatelessWidget {
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
-            _startCopyImages(context, checkedImages, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+              _startCopyImages(context, checkedImages, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            context
+                .read<AllAlbumsBloc>()
+                .add(AllAlbumsDownloadImagesToLocal(checkedImages));
+          }
         },
       ),
       ContextMenuItem(

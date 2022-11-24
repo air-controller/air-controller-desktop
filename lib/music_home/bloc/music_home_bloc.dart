@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -32,6 +33,7 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
     on<MusicHomeSortInfoChanged>(_onSortInfoChanged);
     on<MusicHomeUploadAudios>(_onUploadAudios);
     on<MusicHomeUploadStatusChanged>(_onUploadStatusChanged);
+    on<MusicHomeDownloadToLocal>(_onDownloadToLocal);
   }
 
   void _onSubscriptionRequested(MusicHomeSubscriptionRequested event,
@@ -334,6 +336,28 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
     if (event.status.status == MusicHomeUploadStatus.success) {
       final audios = await audioRepository.getAllAudios();
       emit(state.copyWith(musics: audios));
+    }
+  }
+
+  FutureOr<void> _onDownloadToLocal(
+      MusicHomeDownloadToLocal event, Emitter<MusicHomeState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await audioRepository.readAsBytes(event.musics);
+      String fileName = "";
+      if (event.musics.length == 1) {
+        fileName = event.musics.first.path.split("/").last;
+      } else if (event.musics.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "audios_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, errorMesssage: e.toString()));
     }
   }
 }

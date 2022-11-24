@@ -12,6 +12,7 @@ import 'package:air_controller/util/common_util.dart';
 import 'package:dio/dio.dart' as DioCore;
 import 'package:flowder/flowder.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:crypto/crypto.dart';
@@ -48,8 +49,8 @@ class AirControllerClient {
   AirControllerClient({required String domain}) : _domain = domain {
     dio = DioCore.Dio();
     dio.options.baseUrl = domain;
-    dio.options.connectTimeout = 5000;
-    dio.options.receiveTimeout = 3000;
+    dio.options.connectTimeout = 0;
+    dio.options.receiveTimeout = 0;
   }
 
   Future<List<ImageItem>> getAllImages() async {
@@ -1348,6 +1349,22 @@ class AirControllerClient {
 
     throw BusinessError(errorMsg);
   }
+
+  Future<Uint8List> readAsBytes(String api) async {
+    final response = await dio.get(api,
+        options: DioCore.Options(
+            responseType: DioCore.ResponseType.bytes,
+            receiveTimeout: 0,
+            sendTimeout: 0,
+            headers: _commonHeaders()));
+
+    if (response.statusCode == 200) {
+      return response.data;
+    } else {
+      throw BusinessError(
+          "Download file failure, status code: ${response.statusCode}");
+    }
+  } 
 
   Map<String, String> _commonHeaders() {
     BuildContext? context = EnterPage.enterKey.currentContext;

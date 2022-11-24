@@ -4,8 +4,10 @@ import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -431,7 +433,23 @@ class VideoFoldersView extends StatelessWidget {
             listenWhen: (previous, current) =>
                 previous.uploadStatus != current.uploadStatus &&
                 current.uploadStatus.status != VideoFoldersUploadStatus.initial,
-          )
+          ),
+          BlocListener<VideoFoldersBloc, VideoFoldersState>(
+              listener: (context, state) {
+                if (state.showLoading) {
+                  BotToast.showLoading();
+                } else {
+                  BotToast.closeAllLoading();
+                }
+
+                if (state.showError) {
+                  BotToast.showText(
+                      text: state.failureReason ?? context.l10n.unknownError);
+                }
+              },
+              listenWhen: (previous, current) =>
+                  previous.showLoading != current.showLoading ||
+                  current.showError != previous.showError),
         ],
         child: Stack(
           children: [
@@ -460,10 +478,7 @@ class VideoFoldersView extends StatelessWidget {
               ),
               onFocusChange: (value) {},
               onKey: (node, event) {
-                debugPrint(
-                    "Outside key pressed: ${event.logicalKey.keyId}, ${event.logicalKey.keyLabel}");
-
-                _isControlPressed = Platform.isMacOS
+                _isControlPressed = !kIsWeb && Platform.isMacOS
                     ? event.isMetaPressed
                     : event.isControlPressed;
                 _isShiftPressed = event.isShiftPressed;
@@ -481,7 +496,7 @@ class VideoFoldersView extends StatelessWidget {
                     .read<VideoFoldersBloc>()
                     .add(VideoFoldersKeyStatusChanged(status));
 
-                if (Platform.isMacOS) {
+                if (!kIsWeb && Platform.isMacOS) {
                   if (event.isMetaPressed &&
                       event.isKeyPressed(LogicalKeyboardKey.keyA)) {
                     _checkAll(context);
@@ -779,6 +794,10 @@ class VideoFoldersView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = pageContext.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: pageContext, globalOffset: position, items: [
       ContextMenuItem(
@@ -794,11 +813,18 @@ class VideoFoldersView extends StatelessWidget {
         title: copyTitle,
         onTap: () {
           ContextMenuHelper().hideContextMenu();
-          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-            _startCopy(pageContext, checkedFolders, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+              _startCopy(pageContext, checkedFolders, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            pageContext
+                .read<VideoFoldersBloc>()
+                .add(VideoFoldersDownloadVideoFoldersToLocal(checkedFolders));
+          }
         },
       ),
       ContextMenuItem(
@@ -859,6 +885,10 @@ class VideoFoldersView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = pageContext.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: pageContext, globalOffset: position, items: [
       ContextMenuItem(
@@ -872,11 +902,18 @@ class VideoFoldersView extends StatelessWidget {
         title: copyTitle,
         onTap: () {
           ContextMenuHelper().hideContextMenu();
-          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-            _startCopyVideos(pageContext, checkedVideos, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+              _startCopyVideos(pageContext, checkedVideos, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            pageContext
+                .read<VideoFoldersBloc>()
+                .add(VideoFoldersDownloadVideosToLocal(checkedVideos));
+          }
         },
       ),
       ContextMenuItem(

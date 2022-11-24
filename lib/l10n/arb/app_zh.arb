@@ -135,5 +135,6 @@
   "password": "密码",
   "optional": "可选",
   "invalidIpAddress": "请输入有效的IP地址",
-  "connectionFailed": "连接失败！"
+  "connectionFailed": "连接失败！",
+  "downloadToLocal": "下载到本地"
 }

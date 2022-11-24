@@ -1,10 +1,12 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:html' as html;
 
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/repository/aircontroller_client.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -175,5 +177,21 @@ class CommonUtil {
     final ipRegex = RegExp(
         r"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
     return ipRegex.hasMatch(ip);
+  }
+
+  static void downloadAsWebFile(
+      {required Uint8List bytes, required String fileName}) {
+    final blob = html.Blob([bytes], 'application/octet-stream');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.document.createElement('a') as html.AnchorElement
+      ..href = url
+      ..style.display = 'none'
+      ..download = fileName;
+    html.document.body!.children.add(anchor);
+
+    anchor.click();
+
+    html.document.body!.children.remove(anchor);
+    html.Url.revokeObjectUrl(url);
   }
 }

@@ -128,6 +128,8 @@ class VideoFoldersState extends Equatable {
   final VideoFoldersDeleteStatus deleteStatus;
   final VideoFoldersCopyStatusUnit copyStatus;
   final VideoFoldersUploadStatusUnit uploadStatus;
+  final bool showLoading;
+  final bool showError;
 
   const VideoFoldersState(
       {this.videoFolders = const [],
@@ -141,7 +143,9 @@ class VideoFoldersState extends Equatable {
       this.deleteStatus = VideoFoldersDeleteStatus.initial,
       this.copyStatus = const VideoFoldersCopyStatusUnit(
           fileType: VideoFoldersFileType.folder),
-      this.uploadStatus = const VideoFoldersUploadStatusUnit()});
+      this.uploadStatus = const VideoFoldersUploadStatusUnit(),
+      this.showError = false,
+      this.showLoading = false});
 
   @override
   List<Object?> get props => [
@@ -155,7 +159,9 @@ class VideoFoldersState extends Equatable {
         openMenuStatus,
         deleteStatus,
         copyStatus,
-        uploadStatus
+        uploadStatus,
+        showError,
+        showLoading
       ];
 
   VideoFoldersState copyWith(
@@ -169,7 +175,9 @@ class VideoFoldersState extends Equatable {
       VideoFoldersOpenMenuStatus? openMenuStatus,
       VideoFoldersDeleteStatus? deleteStatus,
       VideoFoldersCopyStatusUnit? copyStatus,
-      VideoFoldersUploadStatusUnit? uploadStatus}) {
+      VideoFoldersUploadStatusUnit? uploadStatus,
+      bool? showError,
+      bool? showLoading}) {
     return VideoFoldersState(
         videoFolders: videoFolders ?? this.videoFolders,
         checkedVideoFolders: checkedVideoFolders ?? this.checkedVideoFolders,
@@ -183,6 +191,8 @@ class VideoFoldersState extends Equatable {
         openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteStatus: deleteStatus ?? this.deleteStatus,
         copyStatus: copyStatus ?? this.copyStatus,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        showError: showError ?? this.showError,
+        showLoading: showLoading ?? this.showLoading);
   }
 }

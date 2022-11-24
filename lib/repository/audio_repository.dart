@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -25,4 +27,12 @@ class AudioRepository {
           onUploading: onUploading,
           onError: onError,
           onCancel: onCancel);
+
+  Future<Uint8List> readAsBytes(List<AudioItem> audios) async {
+    final paths = audios.map((audio) => audio.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
 }

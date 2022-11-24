@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -40,6 +41,8 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
     on<VideoFoldersDeleteVideosSubmitted>(_onDeleteVideosSubmitted);
     on<VideoFoldersUploadVideos>(_onUploadVideos);
     on<VideoFoldersUploadStatusChanged>(_onUploadStatusChanged);
+    on<VideoFoldersDownloadVideoFoldersToLocal>(_onDownloadVideoFoldersToLocal);
+    on<VideoFoldersDownloadVideosToLocal>(_onDownloadVideosToLocal);
   }
 
   void _onSubscriptionRequested(VideoFoldersSubscriptionRequested event,
@@ -464,6 +467,51 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
         final videoFolders = await _videoRepository.getAllVideoFolders();
         emit(state.copyWith(videoFolders: videoFolders));
       }
+    }
+  }
+
+  FutureOr<void> _onDownloadVideoFoldersToLocal(
+      VideoFoldersDownloadVideoFoldersToLocal event,
+      Emitter<VideoFoldersState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes =
+          await _videoRepository.readVideoFoldersAsBytes(event.folders);
+      String fileName = "";
+      if (event.folders.length == 1) {
+        fileName = "${event.folders.first.path.split("/").last}.zip";
+      } else if (event.folders.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "videoFolders_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, failureReason: e.toString()));
+    }
+  }
+
+  FutureOr<void> _onDownloadVideosToLocal(
+      VideoFoldersDownloadVideosToLocal event,
+      Emitter<VideoFoldersState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await _videoRepository.readVideosAsBytes(event.videos);
+      String fileName = "";
+      if (event.videos.length == 1) {
+        fileName = event.videos.first.path.split("/").last;
+      } else if (event.videos.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "videos_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, failureReason: e.toString()));
     }
   }
 }

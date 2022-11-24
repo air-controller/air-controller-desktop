@@ -105,3 +105,12 @@ class MusicHomeUploadStatusChanged extends MusicHomeEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class MusicHomeDownloadToLocal extends MusicHomeEvent {
+  final List<AudioItem> musics;
+
+  const MusicHomeDownloadToLocal(this.musics);
+
+  @override
+  List<Object?> get props => [musics];
+}

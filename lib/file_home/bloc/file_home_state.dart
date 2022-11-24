@@ -75,9 +75,7 @@ class FileHomeUploadStatusUnit {
       this.failureReason});
 }
 
-enum DragToUploadStatus {
-  initial, enter, exit
-}
+enum DragToUploadStatus { initial, enter, exit }
 
 class FileHomeState extends Equatable {
   final DisplayType displayType;
@@ -104,6 +102,9 @@ class FileHomeState extends Equatable {
   final FileNode? currentDraggingTarget;
   final FileHomeUploadStatusUnit uploadStatus;
   final DragToUploadStatus dragToUploadStatus;
+  final bool showLoading;
+  final bool showError;
+  final String? errorMessage;
 
   FileHomeState(
       {this.displayType = DisplayType.icon,
@@ -129,7 +130,10 @@ class FileHomeState extends Equatable {
       this.isDraggingToRoot = false,
       this.currentDraggingTarget = null,
       this.uploadStatus = const FileHomeUploadStatusUnit(),
-      this.dragToUploadStatus = DragToUploadStatus.initial});
+      this.dragToUploadStatus = DragToUploadStatus.initial,
+      this.showLoading = false,
+      this.showError = false,
+      this.errorMessage});
 
   @override
   List<Object?> get props => [
@@ -156,7 +160,10 @@ class FileHomeState extends Equatable {
         isDraggingToRoot,
         currentDraggingTarget,
         uploadStatus,
-        dragToUploadStatus
+        dragToUploadStatus,
+        showLoading,
+        showError,
+        errorMessage
       ];
 
   FileHomeState copyWith(
@@ -183,7 +190,10 @@ class FileHomeState extends Equatable {
       bool? isDraggingToRoot,
       FileNode? currentDraggingTarget,
       FileHomeUploadStatusUnit? uploadStatus,
-      DragToUploadStatus? dragToUploadStatus}) {
+      DragToUploadStatus? dragToUploadStatus,
+      bool? showLoading,
+      bool? showError,
+      String? errorMessage}) {
     return FileHomeState(
         displayType: displayType ?? this.displayType,
         files: files ?? this.files,
@@ -209,6 +219,9 @@ class FileHomeState extends Equatable {
         currentDraggingTarget:
             currentDraggingTarget ?? this.currentDraggingTarget,
         uploadStatus: uploadStatus ?? this.uploadStatus,
-        dragToUploadStatus: dragToUploadStatus ?? this.dragToUploadStatus);
+        dragToUploadStatus: dragToUploadStatus ?? this.dragToUploadStatus,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        errorMessage: errorMessage ?? this.errorMessage);
   }
 }

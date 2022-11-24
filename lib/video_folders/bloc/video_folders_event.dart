@@ -138,3 +138,21 @@ class VideoFoldersUploadStatusChanged extends VideoFoldersEvent {
   @override
   List<Object?> get props => [status, addedVideoCount, folder];
 }
+
+class VideoFoldersDownloadVideoFoldersToLocal extends VideoFoldersEvent {
+  final List<VideoFolderItem> folders;
+
+  const VideoFoldersDownloadVideoFoldersToLocal(this.folders);
+
+  @override
+  List<Object?> get props => [folders];
+}
+
+class VideoFoldersDownloadVideosToLocal extends VideoFoldersEvent {
+  final List<VideoItem> videos;
+
+  const VideoFoldersDownloadVideosToLocal(this.videos);
+
+  @override
+  List<Object?> get props => [videos];
+}

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -310,6 +311,23 @@ class FileHomeViewState extends State<FileHomeView>
               listenWhen: (previous, current) =>
                   previous.uploadStatus != current.uploadStatus &&
                   current.uploadStatus.status != FileHomeUploadStatus.initial,
+            ),
+            BlocListener<FileHomeBloc, FileHomeState>(
+              listener: (context, state) {
+                if (state.showLoading) {
+                  BotToast.showLoading();
+                } else {
+                  BotToast.closeAllLoading();
+                }
+
+                if (state.showError) {
+                  BotToast.showText(
+                      text: state.errorMessage ?? context.l10n.unknownError);
+                }
+              },
+              listenWhen: (previous, current) =>
+                  previous.showLoading != current.showLoading ||
+                  current.showError != current.showError,
             )
           ],
           child: Focus(
@@ -327,7 +345,7 @@ class FileHomeViewState extends State<FileHomeView>
                 ],
               ),
               onKey: (node, event) {
-                _isControlPressed = Platform.isMacOS
+                _isControlPressed = !kIsWeb && Platform.isMacOS
                     ? event.isMetaPressed
                     : event.isControlPressed;
                 _isShiftPressed = event.isShiftPressed;
@@ -373,7 +391,7 @@ class FileHomeViewState extends State<FileHomeView>
                   return KeyEventResult.handled;
                 }
 
-                if (Platform.isMacOS) {
+                if (!kIsWeb && Platform.isMacOS) {
                   if (event.isMetaPressed &&
                       event.isKeyPressed(LogicalKeyboardKey.keyA)) {
                     context.read<FileHomeBloc>().add(FileHomeSelectAll());
@@ -550,6 +568,10 @@ class FileHomeViewState extends State<FileHomeView>
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = pageContext.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: pageContext, globalOffset: position, items: [
       ContextMenuItem(
@@ -575,11 +597,17 @@ class FileHomeViewState extends State<FileHomeView>
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-            _startCopyFiles(pageContext, checkedFiles, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+              _startCopyFiles(pageContext, checkedFiles, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            pageContext
+                .read<FileHomeBloc>()
+                .add(FileHomeDownloadToLocal(checkedFiles));
+          }
         },
       ),
       ContextMenuItem(

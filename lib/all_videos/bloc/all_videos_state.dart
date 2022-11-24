@@ -96,6 +96,9 @@ class AllVideosState extends Equatable {
   final AllVideosDeleteStatusUnit deleteStatus;
   final AllVideosCopyStatusUnit copyStatus;
   final AllVideosUploadStatusUnit uploadStatus;
+  final bool showLoading;
+  final bool showError;
+  final String? errorMessage;
 
   const AllVideosState(
       {this.status = AllVideosStatus.initial,
@@ -106,7 +109,10 @@ class AllVideosState extends Equatable {
       this.openMenuStatus = const AllVideosOpenMenuStatus(),
       this.deleteStatus = const AllVideosDeleteStatusUnit(),
       this.copyStatus = const AllVideosCopyStatusUnit(),
-      this.uploadStatus = const AllVideosUploadStatusUnit()});
+      this.uploadStatus = const AllVideosUploadStatusUnit(),
+      this.showLoading = false,
+      this.showError = false,
+      this.errorMessage});
 
   @override
   List<Object?> get props => [
@@ -118,7 +124,10 @@ class AllVideosState extends Equatable {
         openMenuStatus,
         deleteStatus,
         copyStatus,
-        uploadStatus
+        uploadStatus,
+        showLoading,
+        showError,
+        errorMessage
       ];
 
   AllVideosState copyWith(
@@ -130,7 +139,10 @@ class AllVideosState extends Equatable {
       AllVideosOpenMenuStatus? openMenuStatus,
       AllVideosDeleteStatusUnit? deleteStatus,
       AllVideosCopyStatusUnit? copyStatus,
-      AllVideosUploadStatusUnit? uploadStatus}) {
+      AllVideosUploadStatusUnit? uploadStatus,
+      bool? showLoading,
+      bool? showError,
+      String? errorMessage}) {
     return AllVideosState(
         status: status ?? this.status,
         videos: videos ?? this.videos,
@@ -140,6 +152,9 @@ class AllVideosState extends Equatable {
         openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteStatus: deleteStatus ?? this.deleteStatus,
         copyStatus: copyStatus ?? this.copyStatus,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        errorMessage: errorMessage ?? this.errorMessage);
   }
 }

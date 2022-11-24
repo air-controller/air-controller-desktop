@@ -14,6 +14,7 @@ import 'package:air_controller/widget/unified_text_field.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -182,58 +183,64 @@ class ManageAppsPage extends StatelessWidget {
 
     if (checkedApps.isEmpty) return;
 
-    CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) async {
-      final repo = context.read<CommonRepository>();
+    if (kIsWeb) {
+      context
+          .read<ManageAppsHomeBloc>()
+          .add(ManageAppsWebExportApks(checkedApps));
+    } else {
+      CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) async {
+        final repo = context.read<CommonRepository>();
 
-      List<String> packages =
-          checkedApps.map((app) => app.packageName).toList();
+        List<String> packages =
+            checkedApps.map((app) => app.packageName).toList();
 
-      String fileName = "";
+        String fileName = "";
 
-      if (checkedApps.length == 1) {
-        fileName = "${checkedApps.single.name}.apk";
-      } else {
-        int currentTimeInMills = DateTime.now().millisecondsSinceEpoch;
-        String currentTime =
-            CommonUtil.formatTime(currentTimeInMills, "yyyyMMddHHmmss");
-        fileName = "Apps_$currentTime.zip";
-      }
+        if (checkedApps.length == 1) {
+          fileName = "${checkedApps.single.name}.apk";
+        } else {
+          int currentTimeInMills = DateTime.now().millisecondsSinceEpoch;
+          String currentTime =
+              CommonUtil.formatTime(currentTimeInMills, "yyyyMMddHHmmss");
+          fileName = "Apps_$currentTime.zip";
+        }
 
-      context.read<ManageAppsHomeBloc>().add(ManageAppsExportStatusChanged(
-          ManageAppsExportApksStatusUnit(
-              status: ManageAppsExportApksStatus.start)));
+        context.read<ManageAppsHomeBloc>().add(ManageAppsExportStatusChanged(
+            ManageAppsExportApksStatusUnit(
+                status: ManageAppsExportApksStatus.start)));
 
-      _exportCancelToken = await repo.exportApks(
-          packages: packages,
-          dir: dir,
-          fileName: fileName,
-          onExportProgress: (current, total) {
-            final exportApksStatus =
-                context.read<ManageAppsHomeBloc>().state.exportApksStatus;
-            context.read<ManageAppsHomeBloc>().add(
-                ManageAppsExportStatusChanged(exportApksStatus.copyWith(
-                    status: ManageAppsExportApksStatus.exporting,
-                    current: current,
-                    total: total)));
-          },
-          onSuccess: (dir, fileName) {
-            final exportApksStatus =
-                context.read<ManageAppsHomeBloc>().state.exportApksStatus;
-            context.read<ManageAppsHomeBloc>().add(
-                ManageAppsExportStatusChanged(exportApksStatus.copyWith(
-                    status: ManageAppsExportApksStatus.exportSuccess)));
-          },
-          onError: (error) {
-            final exportApksStatus =
-                context.read<ManageAppsHomeBloc>().state.exportApksStatus;
-            context.read<ManageAppsHomeBloc>().add(
-                ManageAppsExportStatusChanged(exportApksStatus.copyWith(
-                    status: ManageAppsExportApksStatus.exportFailure,
-                    failureReason: error)));
-          });
-    }, (error) {
-      logger.e("Open directory failure.");
-    });
+        _exportCancelToken = await repo.exportApks(
+            packages: packages,
+            dir: dir,
+            fileName: fileName,
+            onExportProgress: (current, total) {
+              final exportApksStatus =
+                  context.read<ManageAppsHomeBloc>().state.exportApksStatus;
+              context.read<ManageAppsHomeBloc>().add(
+                  ManageAppsExportStatusChanged(exportApksStatus.copyWith(
+                      status: ManageAppsExportApksStatus.exporting,
+                      current: current,
+                      total: total)));
+            },
+            onSuccess: (dir, fileName) {
+              final exportApksStatus =
+                  context.read<ManageAppsHomeBloc>().state.exportApksStatus;
+              context.read<ManageAppsHomeBloc>().add(
+                  ManageAppsExportStatusChanged(exportApksStatus.copyWith(
+                      status: ManageAppsExportApksStatus.exportSuccess)));
+            },
+            onError: (error) {
+              final exportApksStatus =
+                  context.read<ManageAppsHomeBloc>().state.exportApksStatus;
+              context.read<ManageAppsHomeBloc>().add(
+                  ManageAppsExportStatusChanged(exportApksStatus.copyWith(
+                      status: ManageAppsExportApksStatus.exportFailure,
+                      failureReason: error)));
+            });
+      }, (error) {
+        logger.e("Open directory failure.");
+      });
+    }
   }
 
   void _batchUninstall(BuildContext context, List<AppInfo> checkedUserApps) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -37,6 +38,7 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
     on<AllImagesCopyStatusChanged>(_onCopyStatusChanged);
     on<AllImagesUploadPhotos>(_onUploadPhotos);
     on<AllImagesUploadStatusChanged>(_onUploadStatusChanged);
+    on<AllImagesDownloadToLocal>(_onDownloadToLocal);
   }
 
   void _onSubscriptionRequested(
@@ -264,5 +266,25 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
       }
     }
     emit(state.copyWith(uploadStatus: event.status, images: images));
+  }
+
+  FutureOr<void> _onDownloadToLocal(
+      AllImagesDownloadToLocal event, Emitter<AllImagesState> emit) async {
+    emit(state.copyWith(showLoading: true));
+    try {
+      final bytes = await _imageRepository.readImagesAsBytes(event.images);
+      String fileName = "";
+      if (event.images.length == 1) {
+        fileName = event.images.first.path.split("/").last;
+      } else if (event.images.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "images_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(showLoading: false));
+      emit(state.copyWith(showError: true, errorMessage: e.toString()));
+    }
   }
 }

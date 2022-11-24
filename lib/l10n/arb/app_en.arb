@@ -135,5 +135,6 @@
   "password": "Password",
   "optional": "optional",
   "invalidIpAddress": "Please enter a valid IP address!",
-  "connectionFailed": "Connection failed!"
+  "connectionFailed": "Connection failed!",
+  "downloadToLocal": "Download to local"
 }

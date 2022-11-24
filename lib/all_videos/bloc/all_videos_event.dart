@@ -95,3 +95,12 @@ class AllVideosUploadStatusChanged extends AllVideosEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class AllVideosDownloadToLocal extends AllVideosEvent {
+  final List<VideoItem> videos;
+
+  const AllVideosDownloadToLocal(this.videos);
+
+  @override
+  List<Object?> get props => [videos];
+}

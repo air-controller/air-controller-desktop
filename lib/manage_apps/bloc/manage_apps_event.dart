@@ -104,3 +104,12 @@ class ManageAppsOpenContextMenu extends ManageAppsEvent {
   @override
   List<Object?> get props => [info];
 }
+
+class ManageAppsWebExportApks extends ManageAppsEvent {
+  final List<AppInfo> apps;
+
+  const ManageAppsWebExportApks(this.apps);
+
+  @override
+  List<Object?> get props => [apps];
+}

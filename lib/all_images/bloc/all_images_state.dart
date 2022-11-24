@@ -13,6 +13,9 @@ class AllImagesState extends Equatable {
   final AllImageMenuArguments? contextMenuArguments;
   final AllImageCopyStatusUnit? copyStatus;
   final AllImageUploadStatusUnit uploadStatus;
+  final bool showLoading;
+  final bool showError;
+  final String? errorMessage;
 
   AllImagesState(
       {this.images = const [],
@@ -22,7 +25,10 @@ class AllImagesState extends Equatable {
       this.keyStatus = AllImagesBoardKeyStatus.none,
       this.contextMenuArguments = null,
       this.copyStatus,
-      this.uploadStatus = const AllImageUploadStatusUnit()});
+      this.uploadStatus = const AllImageUploadStatusUnit(),
+      this.showLoading = false,
+      this.showError = false,
+      this.errorMessage = null});
 
   @override
   List<Object?> get props => [
@@ -33,7 +39,10 @@ class AllImagesState extends Equatable {
         keyStatus,
         contextMenuArguments,
         copyStatus,
-        uploadStatus
+        uploadStatus,
+        showLoading,
+        showError,
+        errorMessage
       ];
 
   AllImagesState copyWith(
@@ -44,7 +53,10 @@ class AllImagesState extends Equatable {
       AllImagesBoardKeyStatus? keyStatus,
       AllImageMenuArguments? contextMenuArguments,
       AllImageCopyStatusUnit? copyStatus,
-      AllImageUploadStatusUnit? uploadStatus}) {
+      AllImageUploadStatusUnit? uploadStatus,
+      bool? showLoading,
+      bool? showError,
+      String? errorMessage}) {
     return AllImagesState(
         images: images ?? this.images,
         checkedImages: checkedImages ?? this.checkedImages,
@@ -53,6 +65,9 @@ class AllImagesState extends Equatable {
         keyStatus: keyStatus ?? this.keyStatus,
         contextMenuArguments: contextMenuArguments ?? this.contextMenuArguments,
         copyStatus: copyStatus ?? this.copyStatus,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        errorMessage: errorMessage ?? this.errorMessage);
   }
 }

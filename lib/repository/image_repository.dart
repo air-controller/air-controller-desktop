@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import '../model/album_item.dart';
@@ -55,4 +57,20 @@ class ImageRepository {
           onSuccess: onSuccess,
           onUploading: onUploading,
           onCancel: onCancel);
+
+  Future<Uint8List> readImagesAsBytes(List<ImageItem> images) async {
+    final paths = images.map((image) => image.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
+
+  Future<Uint8List> readAlbumsAsBytes(List<AlbumItem> albums) async {
+    final paths = albums.map((album) => album.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
 }

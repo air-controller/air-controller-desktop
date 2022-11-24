@@ -116,7 +116,8 @@ class AllAlbumsUploadStatusUnit extends Equatable {
       this.images});
 
   @override
-  List<Object?> get props => [status, total, current, photos, failureReason, images];
+  List<Object?> get props =>
+      [status, total, current, photos, failureReason, images];
 
   AllAlbumsUploadStatusUnit copyWith(
       {AllAlbumsUploadStatus? status,
@@ -147,6 +148,9 @@ class AllAlbumsState extends Equatable {
   final AllAlbumsDeleteStatusUnit deleteAlbumStatus;
   final AllAlbumsCopyStatusUnit copyStatus;
   final AllAlbumsUploadStatusUnit uploadStatus;
+  final bool showLoading;
+  final bool showError;
+  final String? errorMessage;
 
   const AllAlbumsState(
       {this.albums = const [],
@@ -160,7 +164,10 @@ class AllAlbumsState extends Equatable {
       this.deleteAlbumStatus = const AllAlbumsDeleteStatusUnit(),
       this.copyStatus =
           const AllAlbumsCopyStatusUnit(fileType: AllAlbumsFileType.album),
-      this.uploadStatus = const AllAlbumsUploadStatusUnit()});
+      this.uploadStatus = const AllAlbumsUploadStatusUnit(),
+      this.showLoading = false,
+      this.showError = false,
+      this.errorMessage});
 
   @override
   List<Object?> get props => [
@@ -174,7 +181,10 @@ class AllAlbumsState extends Equatable {
         openMenuStatus,
         deleteAlbumStatus,
         copyStatus,
-        uploadStatus
+        uploadStatus,
+        showLoading,
+        showError,
+        errorMessage
       ];
 
   AllAlbumsState copyWith(
@@ -188,7 +198,10 @@ class AllAlbumsState extends Equatable {
       AllAlbumsOpenMenuStatus? openMenuStatus,
       AllAlbumsDeleteStatusUnit? deleteAlbumStatus,
       AllAlbumsCopyStatusUnit? copyStatus,
-      AllAlbumsUploadStatusUnit? uploadStatus}) {
+      AllAlbumsUploadStatusUnit? uploadStatus,
+      bool? showLoading,
+      bool? showError,
+      String? errorMessage}) {
     return AllAlbumsState(
         albums: albums ?? this.albums,
         checkedAlbums: checkedAlbums ?? this.checkedAlbums,
@@ -201,6 +214,9 @@ class AllAlbumsState extends Equatable {
         openMenuStatus: openMenuStatus ?? this.openMenuStatus,
         deleteAlbumStatus: deleteAlbumStatus ?? this.deleteAlbumStatus,
         copyStatus: copyStatus ?? this.copyStatus,
-        uploadStatus: uploadStatus ?? this.uploadStatus);
+        uploadStatus: uploadStatus ?? this.uploadStatus,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError,
+        errorMessage: errorMessage ?? this.errorMessage);
   }
 }

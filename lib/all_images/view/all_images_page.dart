@@ -7,7 +7,9 @@ import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:air_controller/util/context_menu_helper.dart';
 import 'package:air_controller/util/sound_effect.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -73,34 +75,21 @@ class AllImagesView extends StatelessWidget {
       body: MultiBlocListener(
         listeners: [
           BlocListener<AllImagesBloc, AllImagesState>(
-            listener: (context, state) {
-              switch (state.status) {
-                case AllImagesStatus.loading:
-                  {
-                    break;
-                  }
+              listener: (context, state) {
+                if (state.showLoading) {
+                  BotToast.showLoading();
+                } else {
+                  BotToast.closeAllLoading();
+                }
 
-                case AllImagesStatus.failure:
-                  {
-                    log("All images page loads fail.");
-                    break;
-                  }
-
-                case AllImagesStatus.success:
-                  {
-                    break;
-                  }
-
-                default:
-                  {
-                    log("Ignore initial status.");
-                  }
-              }
-            },
-            listenWhen: (previous, current) =>
-                previous.status != current.status &&
-                current.status != AllImagesStatus.initial,
-          ),
+                if (state.showError) {
+                  BotToast.showText(
+                      text: state.errorMessage ?? context.l10n.unknownError);
+                }
+              },
+              listenWhen: (previous, current) =>
+                  previous.showLoading != current.showLoading ||
+                  current.showError != current.showError),
           BlocListener<AllImagesBloc, AllImagesState>(
             listener: (context, state) {
               log("HomeImageCountChanged, checkedCount: ${state.checkedImages.length}, totalCount: ${state.images.length}");
@@ -413,7 +402,7 @@ class AllImagesView extends StatelessWidget {
               },
             ),
             onKey: (node, event) {
-              _isControlPressed = Platform.isMacOS
+              _isControlPressed = !kIsWeb && Platform.isMacOS
                   ? event.isMetaPressed
                   : event.isControlPressed;
               _isShiftPressed = event.isShiftPressed;
@@ -430,7 +419,7 @@ class AllImagesView extends StatelessWidget {
                   .read<AllImagesBloc>()
                   .add(AllImageKeyStatusChanged(status));
 
-              if (Platform.isMacOS) {
+              if (!kIsWeb && Platform.isMacOS) {
                 if (event.isMetaPressed &&
                     event.isKeyPressed(LogicalKeyboardKey.keyA)) {
                   context
@@ -539,6 +528,10 @@ class AllImagesView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = context.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: context, globalOffset: position, items: [
       ContextMenuItem(
@@ -554,11 +547,17 @@ class AllImagesView extends StatelessWidget {
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
-            _startCopy(context, checkedImages, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+              _startCopy(context, checkedImages, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            context
+                .read<AllImagesBloc>()
+                .add(AllImagesDownloadToLocal(checkedImages));
+          }
         },
       ),
       ContextMenuItem(

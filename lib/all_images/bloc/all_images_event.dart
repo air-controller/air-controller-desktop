@@ -116,3 +116,9 @@ class AllImagesUploadStatusChanged extends AllImagesEvent {
   @override
   List<Object?> get props => [status];
 }
+
+class AllImagesDownloadToLocal extends AllImagesEvent {
+  final List<ImageItem> images;
+
+  const AllImagesDownloadToLocal(this.images);
+}

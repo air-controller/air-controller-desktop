@@ -9,6 +9,7 @@ import 'package:air_controller/util/context_menu_helper.dart';
 import 'package:air_controller/util/sound_effect.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -523,7 +524,8 @@ class MusicHomeView extends StatelessWidget {
                                         Visibility(
                                           child: Tooltip(
                                             message: audioItem.name,
-                                            textStyle: textStyle.copyWith(color: Colors.white),
+                                            textStyle: textStyle.copyWith(
+                                                color: Colors.white),
                                             child: Text(
                                               audioItem.name,
                                               overflow: TextOverflow.ellipsis,
@@ -754,7 +756,7 @@ class MusicHomeView extends StatelessWidget {
                 ),
                 onFocusChange: (value) {},
                 onKey: (node, event) {
-                  _isControlPressed = Platform.isMacOS
+                  _isControlPressed = !kIsWeb && Platform.isMacOS
                       ? event.isMetaPressed
                       : event.isControlPressed;
                   _isShiftPressed = event.isShiftPressed;
@@ -776,7 +778,7 @@ class MusicHomeView extends StatelessWidget {
                     return KeyEventResult.handled;
                   }
 
-                  if (Platform.isMacOS) {
+                  if (!kIsWeb && Platform.isMacOS) {
                     if (event.isMetaPressed &&
                         event.isKeyPressed(LogicalKeyboardKey.keyA)) {
                       _checkAll(context);
@@ -876,6 +878,10 @@ class MusicHomeView extends StatelessWidget {
           .adaptForOverflow();
     }
 
+    if (kIsWeb) {
+      copyTitle = pageContext.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: pageContext, globalOffset: position, items: [
       ContextMenuItem(
@@ -890,11 +896,17 @@ class MusicHomeView extends StatelessWidget {
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
-            _startCopy(pageContext, checkedMusics, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(pageContext.l10n.chooseDir, (dir) {
+              _startCopy(pageContext, checkedMusics, dir);
+            }, (error) {
+              debugPrint("_openFilePicker, error: $error");
+            });
+          } else {
+            pageContext
+                .read<MusicHomeBloc>()
+                .add(MusicHomeDownloadToLocal(checkedMusics));
+          }
         },
       ),
       ContextMenuItem(

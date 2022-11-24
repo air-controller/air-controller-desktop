@@ -153,8 +153,27 @@ class AllAlbumsUploadStatusChanged extends AllAlbumsEvent {
   final AlbumItem album;
   final List<ImageItem>? images;
 
-  const AllAlbumsUploadStatusChanged({required this.status, required this.album, this.images});
+  const AllAlbumsUploadStatusChanged(
+      {required this.status, required this.album, this.images});
 
   @override
   List<Object?> get props => [status, album, images];
+}
+
+class AllAlbumsDownloadAlbumsToLocal extends AllAlbumsEvent {
+  final List<AlbumItem> albums;
+
+  const AllAlbumsDownloadAlbumsToLocal(this.albums);
+
+  @override
+  List<Object?> get props => [albums];
+}
+
+class AllAlbumsDownloadImagesToLocal extends AllAlbumsEvent {
+  final List<ImageItem> images;
+
+  const AllAlbumsDownloadImagesToLocal(this.images);
+
+  @override
+  List<Object?> get props => [images];
 }

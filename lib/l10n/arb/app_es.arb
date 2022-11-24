@@ -135,5 +135,7 @@
   "password": "clave",
   "optional": "opcional",
   "invalidIpAddress": "Por favor ingrese una dirección IP válida",
-  "connectionFailed": "La conexión falló"
+  "connectionFailed": "La conexión falló",
+  "savingImageAs": "guardar imagen como...",
+  "downloadToLocal": "descargar a locales"
 }

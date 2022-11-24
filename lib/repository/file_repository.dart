@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:air_controller/repository/root_dir_type.dart';
 import 'package:dio/dio.dart';
@@ -56,4 +58,12 @@ class FileRepository {
           onUploading: onUploading,
           onError: onError,
           onCancel: onCancel);
+
+  Future<Uint8List> readAsBytes(List<FileItem> files) async {
+    final paths = files.map((file) => file.path).toList();
+    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+
+    String api = "/stream/download?paths=$pathsStr";
+    return await this.client.readAsBytes(api);
+  }
 }

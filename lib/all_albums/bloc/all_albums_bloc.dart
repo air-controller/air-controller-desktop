@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:air_controller/constant.dart';
@@ -43,6 +44,8 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     on<AllAlbumsCopyImagesSubmitted>(_onCopyImagesSubmitted);
     on<AllAlbumsUploadPhotos>(_onUploadPhotos);
     on<AllAlbumsUploadStatusChanged>(_onUploadStatusChanged);
+    on<AllAlbumsDownloadAlbumsToLocal>(_onDownloadAlbumsToLocal);
+    on<AllAlbumsDownloadImagesToLocal>(_onDownloadImagesToLocal);
   }
 
   void _onSubscriptionRequested(
@@ -519,5 +522,49 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     }
 
     emit(state.copyWith(uploadStatus: event.status));
+  }
+
+  FutureOr<void> _onDownloadAlbumsToLocal(AllAlbumsDownloadAlbumsToLocal event,
+      Emitter<AllAlbumsState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await _imageRepository.readAlbumsAsBytes(event.albums);
+
+      String fileName = "";
+      if (event.albums.length == 1) {
+        fileName = "${event.albums.first.path.split("/").last}.zip";
+      } else if (event.albums.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "albums_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, errorMessage: e.toString()));
+    }
+  }
+
+  FutureOr<void> _onDownloadImagesToLocal(AllAlbumsDownloadImagesToLocal event,
+      Emitter<AllAlbumsState> emit) async {
+    emit(state.copyWith(showLoading: true));
+
+    try {
+      final bytes = await _imageRepository.readImagesAsBytes(event.images);
+
+      String fileName = "";
+      if (event.images.length == 1) {
+        fileName = "${event.images.first.path.split("/").last}";
+      } else if (event.images.length > 1) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        fileName = "images_$timestamp.zip";
+      }
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(
+          showLoading: false, showError: true, errorMessage: e.toString()));
+    }
   }
 }

@@ -127,6 +127,8 @@ class ManageAppsState extends Equatable {
   final ManageAppsExportApksStatusUnit exportApksStatus;
   final String keyWord;
   final ManageAppContextMenuInfo? contextMenuInfo;
+  final bool showLoading;
+  final bool showError;
 
   const ManageAppsState(
       {this.tab = ManageAppsTab.mine,
@@ -144,7 +146,9 @@ class ManageAppsState extends Equatable {
       this.installStatus = const ManageAppsInstallStatusUnit(),
       this.exportApksStatus = const ManageAppsExportApksStatusUnit(),
       this.keyWord = "",
-      this.contextMenuInfo});
+      this.contextMenuInfo,
+      this.showLoading = false,
+      this.showError = false});
 
   @override
   List<Object?> get props => [
@@ -163,7 +167,9 @@ class ManageAppsState extends Equatable {
         installStatus,
         exportApksStatus,
         keyWord,
-        contextMenuInfo
+        contextMenuInfo,
+        showLoading,
+        showError
       ];
 
   ManageAppsState copyWith(
@@ -182,7 +188,9 @@ class ManageAppsState extends Equatable {
       String? userAppsKeyword,
       ManageAppsSortColumn? systemAppsSortColumn,
       ManageAppsSortDirection? systemAppsSortDirection,
-      ManageAppContextMenuInfo? contextMenuInfo}) {
+      ManageAppContextMenuInfo? contextMenuInfo,
+      bool? showLoading,
+      bool? showError}) {
     return ManageAppsState(
         tab: tab ?? this.tab,
         status: status ?? this.status,
@@ -201,6 +209,8 @@ class ManageAppsState extends Equatable {
         systemAppsSortColumn: systemAppsSortColumn ?? this.systemAppsSortColumn,
         systemAppsSortDirection:
             systemAppsSortDirection ?? this.systemAppsSortDirection,
-        contextMenuInfo: contextMenuInfo ?? this.contextMenuInfo);
+        contextMenuInfo: contextMenuInfo ?? this.contextMenuInfo,
+        showLoading: showLoading ?? this.showLoading,
+        showError: showError ?? this.showError);
   }
 }
