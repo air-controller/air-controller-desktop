@@ -2,7 +2,9 @@ import 'package:air_controller/ext/build_context_x.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
 import 'package:air_controller/ext/string-ext.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +14,7 @@ import 'package:intl/intl.dart';
 import '../../all_albums/bloc/all_albums_bloc.dart';
 import '../../all_images/bloc/all_images_bloc.dart';
 import '../../all_images/model/image_detail_arguments.dart';
+import '../../bootstrap.dart';
 import '../../constant.dart';
 import '../../model/image_item.dart';
 import '../../network/device_connection_manager.dart';
@@ -203,6 +206,23 @@ class _ImageDetailViewState extends State<ImageDetailView> {
             listenWhen: (previous, current) =>
                 previous.copyStatus != current.copyStatus &&
                 current.copyStatus.status != ImageDetailCopyStatus.initial,
+          ),
+          BlocListener<ImageDetailBloc, ImageDetailState>(
+            listener: (context, state) {
+              if (state.showLoading) {
+                BotToast.showLoading();
+              } else {
+                BotToast.closeAllLoading();
+              }
+
+              if (state.showError) {
+                BotToast.showText(
+                    text: state.errorMessage ?? context.l10n.unknownError);
+              }
+            },
+            listenWhen: (previous, current) =>
+                previous.showLoading != current.showLoading ||
+                previous.showError != current.showError,
           ),
         ],
         child: Focus(
@@ -557,6 +577,10 @@ class _ImageDetailViewState extends State<ImageDetailView> {
         .replaceFirst("%s", name)
         .adaptForOverflow();
 
+    if (kIsWeb) {
+      copyTitle = context.l10n.downloadToLocal;
+    }
+
     ContextMenuHelper()
         .showContextMenu(context: context, globalOffset: position, items: [
       ContextMenuItem(
@@ -564,11 +588,17 @@ class _ImageDetailViewState extends State<ImageDetailView> {
         onTap: () {
           ContextMenuHelper().hideContextMenu();
 
-          CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
-            _startCopy(context, image, dir);
-          }, (error) {
-            debugPrint("_openFilePicker, error: $error");
-          });
+          if (!kIsWeb) {
+            CommonUtil.openFilePicker(context.l10n.chooseDir, (dir) {
+              _startCopy(context, image, dir);
+            }, (error) {
+              logger.d("_openFilePicker, error: $error");
+            });
+          } else {
+            context
+                .read<ImageDetailBloc>()
+                .add(ImageDetailDownloadToLocal(image));
+          }
         },
       ),
       ContextMenuItem(

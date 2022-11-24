@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +15,8 @@ part 'image_detail_state.dart';
 class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
   final ImageRepository _imageRepository;
 
-  ImageDetailBloc(List<ImageItem> images, int index, {required ImageRepository imageRepository})
+  ImageDetailBloc(List<ImageItem> images, int index,
+      {required ImageRepository imageRepository})
       : _imageRepository = imageRepository,
         super(ImageDetailState(currentIndex: index, images: images)) {
     on<ImageDetailScaleChanged>(_onImageScaleChanged);
@@ -22,24 +24,24 @@ class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
     on<ImageDetailDeleteSubmitted>(_onDeleteImagesSubmitted);
     on<ImageDetailCopySubmitted>(_onCopyImageSubmitted);
     on<ImageDetailCopyStatusChanged>(_onCopyImageStatusChanged);
+    on<ImageDetailDownloadToLocal>(_onDownloadToLocal);
   }
 
   void _onImageScaleChanged(
-      ImageDetailScaleChanged event,
-      Emitter<ImageDetailState> emit) {
+      ImageDetailScaleChanged event, Emitter<ImageDetailState> emit) {
     emit(state.copyWith(imageScale: event.imageScale));
   }
 
   void _onImageIndexChanged(
-      ImageDetailIndexChanged event,
-      Emitter<ImageDetailState> emit) {
+      ImageDetailIndexChanged event, Emitter<ImageDetailState> emit) {
     emit(state.copyWith(currentIndex: event.index));
   }
 
   void _onDeleteImagesSubmitted(
-      ImageDetailDeleteSubmitted event,
-      Emitter<ImageDetailState> emit) async {
-    emit(state.copyWith(deleteStatus: DeleteImagesStatusUnit(status: DeleteImagesStatus.loading)));
+      ImageDetailDeleteSubmitted event, Emitter<ImageDetailState> emit) async {
+    emit(state.copyWith(
+        deleteStatus:
+            DeleteImagesStatusUnit(status: DeleteImagesStatus.loading)));
 
     try {
       await _imageRepository.deleteImages([event.image]);
@@ -56,22 +58,23 @@ class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
       }
 
       emit(state.copyWith(
-          deleteStatus: DeleteImagesStatusUnit(status: DeleteImagesStatus.success, images: [event.image]),
-        images: images,
-        currentIndex: currentIndex
-      ));
+          deleteStatus: DeleteImagesStatusUnit(
+              status: DeleteImagesStatus.success, images: [event.image]),
+          images: images,
+          currentIndex: currentIndex));
     } on Exception catch (e) {
-      emit(state.copyWith(deleteStatus: DeleteImagesStatusUnit(
-          status: DeleteImagesStatus.failure,
-        failureReason: CommonUtil.convertHttpError(e)
-      )));
+      emit(state.copyWith(
+          deleteStatus: DeleteImagesStatusUnit(
+              status: DeleteImagesStatus.failure,
+              failureReason: CommonUtil.convertHttpError(e))));
     }
   }
 
   void _onCopyImageSubmitted(
-      ImageDetailCopySubmitted event,
-      Emitter<ImageDetailState> emit) {
-    emit(state.copyWith(copyStatus: ImageDetailCopyStatusUnit(status: ImageDetailCopyStatus.start)));
+      ImageDetailCopySubmitted event, Emitter<ImageDetailState> emit) {
+    emit(state.copyWith(
+        copyStatus:
+            ImageDetailCopyStatusUnit(status: ImageDetailCopyStatus.start)));
 
     _imageRepository.copyImagesTo(
         images: [event.image],
@@ -81,26 +84,35 @@ class ImageDetailBloc extends Bloc<ImageDetailEvent, ImageDetailState> {
               status: ImageDetailCopyStatus.copying,
               fileName: fileName,
               current: current,
-              total: total
-          )));
+              total: total)));
         },
         onDone: (fileName) {
           add(ImageDetailCopyStatusChanged(ImageDetailCopyStatusUnit(
-              status: ImageDetailCopyStatus.success,
+            status: ImageDetailCopyStatus.success,
           )));
         },
         onError: (String error) {
           add(ImageDetailCopyStatusChanged(ImageDetailCopyStatusUnit(
-              status: ImageDetailCopyStatus.failure,
-              error: error
-          )));
-        }
-    );
+              status: ImageDetailCopyStatus.failure, error: error)));
+        });
   }
 
   void _onCopyImageStatusChanged(
-      ImageDetailCopyStatusChanged event,
-      Emitter<ImageDetailState> emit) {
+      ImageDetailCopyStatusChanged event, Emitter<ImageDetailState> emit) {
     emit(state.copyWith(copyStatus: event.status));
+  }
+
+  FutureOr<void> _onDownloadToLocal(
+      ImageDetailDownloadToLocal event, Emitter<ImageDetailState> emit) async {
+    emit(state.copyWith(showLoading: true));
+    try {
+      final bytes = await _imageRepository.readImagesAsBytes([event.image]);
+      String fileName = event.image.path.split("/").last;
+      CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
+      emit(state.copyWith(showLoading: false));
+    } catch (e) {
+      emit(state.copyWith(showLoading: false));
+      emit(state.copyWith(showError: true, errorMessage: e.toString()));
+    }
   }
 }

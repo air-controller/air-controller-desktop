@@ -46,3 +46,9 @@ class ImageDetailCopyStatusChanged extends ImageDetailEvent {
 
   const ImageDetailCopyStatusChanged(this.status);
 }
+
+class ImageDetailDownloadToLocal extends ImageDetailEvent {
+  final ImageItem image;
+
+  const ImageDetailDownloadToLocal(this.image);
+}
