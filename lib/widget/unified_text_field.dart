@@ -18,6 +18,7 @@ class UnifiedTextField extends StatelessWidget {
   final String? initialKeyword;
   final int maxLines;
   final int? maxLength;
+  final Function(String)? onFieldSubmitted;
 
   bool _needShowClearIcon = false;
 
@@ -36,7 +37,8 @@ class UnifiedTextField extends StatelessWidget {
       this.onChange,
       this.initialKeyword,
       this.maxLines = 1,
-      this.maxLength});
+      this.maxLength,
+      this.onFieldSubmitted});
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +87,7 @@ class UnifiedTextField extends StatelessWidget {
           controller: controller,
           initialValue: initialKeyword,
           maxLength: maxLength,
+          onFieldSubmitted: onFieldSubmitted,
           decoration: InputDecoration(
             suffixIcon: realClearIcon,
             hintText: hintText,

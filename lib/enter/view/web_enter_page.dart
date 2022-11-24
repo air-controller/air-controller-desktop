@@ -60,6 +60,11 @@ class _WebEnterPageState extends State<WebEnterPage> {
                 setState(() {
                   _ip = value;
                 });
+              },
+              onFieldSubmitted: (value) {
+                if (_ip != null && _ip!.trim().isNotEmpty) {
+                  _connect();
+                }
               }),
           SizedBox(height: 15),
           _buildInputView(
@@ -69,6 +74,11 @@ class _WebEnterPageState extends State<WebEnterPage> {
                 setState(() {
                   _pwd = value;
                 });
+              },
+              onFieldSubmitted: (value) {
+                if (_ip != null && _ip!.trim().isNotEmpty) {
+                  _connect();
+                }
               }),
           SizedBox(height: 30),
           SizedBox(
@@ -89,7 +99,8 @@ class _WebEnterPageState extends State<WebEnterPage> {
   Widget _buildInputView(
       {required String text,
       required String hint,
-      Function(String)? onChange}) {
+      Function(String)? onChange,
+      Function(String)? onFieldSubmitted}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -105,6 +116,7 @@ class _WebEnterPageState extends State<WebEnterPage> {
             borderRadius: 3,
             maxLines: 1,
             maxLength: 16,
+            onFieldSubmitted: onFieldSubmitted,
             onChange: (value) {
               onChange?.call(value);
             },
