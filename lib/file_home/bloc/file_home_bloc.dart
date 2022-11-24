@@ -539,7 +539,6 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
         groupFileNodes.forEach((parent, childNodes) {
           childNodes.sort((nodeA, nodeB) {
             return _sortFile(nodeA, nodeB, sortColumn, sortDirection);
-            ;
           });
 
           int index = directedChildNodes.indexOf(parent);

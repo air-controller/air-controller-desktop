@@ -44,7 +44,12 @@ class VideoFoldersPage extends StatelessWidget {
   }
 }
 
-class VideoFoldersView extends StatelessWidget {
+class VideoFoldersView extends StatefulWidget {
+  @override
+  State<VideoFoldersView> createState() => _VideoFoldersViewState();
+}
+
+class _VideoFoldersViewState extends State<VideoFoldersView> {
   FocusNode? _rootFocusNode;
 
   bool _isControlPressed = false;

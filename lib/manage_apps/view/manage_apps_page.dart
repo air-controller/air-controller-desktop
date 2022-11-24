@@ -30,15 +30,20 @@ import '../../util/common_util.dart';
 import '../../util/context_menu_helper.dart';
 import '../bloc/manage_apps_bloc.dart';
 
-class ManageAppsPage extends StatelessWidget {
+class ManageAppsPage extends StatefulWidget {
+  final bool isUserApps;
+
+  ManageAppsPage(this.isUserApps);
+
+  @override
+  _ManageAppsPageState createState() => _ManageAppsPageState();
+}
+
+class _ManageAppsPageState extends State<ManageAppsPage> {
   UnifiedLinearIndicator? _progressIndicator;
   CancelToken? _uploadAndInstallCancelToken;
   CancelToken? _directlyInstallCancelToken;
   CancelToken? _exportCancelToken;
-
-  final bool isUserApps;
-
-  ManageAppsPage(this.isUserApps);
 
   void _selectInstallationPackage(
       BuildContext context, Function(String path) onSelected) async {
@@ -171,7 +176,7 @@ class ManageAppsPage extends StatelessWidget {
   void _exportApks(BuildContext context) {
     List<AppInfo> checkedApps = [];
 
-    if (isUserApps) {
+    if (widget.isUserApps) {
       final checkedUserApps =
           context.read<ManageAppsHomeBloc>().state.checkedUserApps;
       checkedApps.addAll(checkedUserApps);
@@ -292,7 +297,7 @@ class ManageAppsPage extends StatelessWidget {
           ContextMenuHelper().hideContextMenu();
 
           List<AppInfo> checkedApps;
-          if (isUserApps) {
+          if (widget.isUserApps) {
             checkedApps =
                 context.read<ManageAppsHomeBloc>().state.checkedUserApps;
           } else {
@@ -315,7 +320,7 @@ class ManageAppsPage extends StatelessWidget {
     DataGridController controller;
     Map<AppInfoColumn, double> columnWidths;
 
-    if (isUserApps) {
+    if (widget.isUserApps) {
       apps = context.select((ManageAppsHomeBloc bloc) => bloc.state.userApps);
       checkedApps = context
           .select((ManageAppsHomeBloc bloc) => bloc.state.checkedUserApps);
@@ -323,13 +328,13 @@ class ManageAppsPage extends StatelessWidget {
       final userAppsDataSource = DataGridHolder.userAppsDataSource;
       if (null == userAppsDataSource) {
         dataSource = AppInfoDataSource(
-            isUserApps: isUserApps,
+            isUserApps: widget.isUserApps,
             apps: apps,
             checkedApps: checkedApps,
             context: context,
             onRightMouseTap: (position, app) {
               context.read<ManageAppsHomeBloc>().add(ManageAppsOpenContextMenu(
-                    isUserApp: isUserApps,
+                    isUserApp: widget.isUserApps,
                     info:
                         ManageAppContextMenuInfo(position: position, app: app),
                   ));
@@ -357,13 +362,13 @@ class ManageAppsPage extends StatelessWidget {
       final systemAppsDataSource = DataGridHolder.systemAppsDataSource;
       if (null == systemAppsDataSource) {
         dataSource = AppInfoDataSource(
-            isUserApps: isUserApps,
+            isUserApps: widget.isUserApps,
             apps: apps,
             checkedApps: checkedApps,
             context: context,
             onRightMouseTap: (position, app) {
               context.read<ManageAppsHomeBloc>().add(ManageAppsOpenContextMenu(
-                    isUserApp: isUserApps,
+                    isUserApp: widget.isUserApps,
                     info:
                         ManageAppContextMenuInfo(position: position, app: app),
                   ));
@@ -394,7 +399,7 @@ class ManageAppsPage extends StatelessWidget {
     var sortDirection = context
         .select((ManageAppsHomeBloc bloc) => bloc.state.userAppsSortDirection);
 
-    if (!isUserApps) {
+    if (!widget.isUserApps) {
       sortColumn = context
           .select((ManageAppsHomeBloc bloc) => bloc.state.systemAppsSortColumn);
       sortDirection = context.select(
@@ -417,8 +422,10 @@ class ManageAppsPage extends StatelessWidget {
           // Listen install status changed.
           BlocListener<ManageAppsHomeBloc, ManageAppsState>(
             listener: (context, state) {
-              if ((isUserApps && state.tab == ManageAppsTab.preInstalled) ||
-                  (!isUserApps && state.tab == ManageAppsTab.mine)) return;
+              if ((widget.isUserApps &&
+                      state.tab == ManageAppsTab.preInstalled) ||
+                  (!widget.isUserApps && state.tab == ManageAppsTab.mine))
+                return;
 
               if (state.installStatus.status ==
                   ManageAppsInstallStatus.startUpload) {
@@ -523,8 +530,10 @@ class ManageAppsPage extends StatelessWidget {
           // Listen export status changed.
           BlocListener<ManageAppsHomeBloc, ManageAppsState>(
             listener: (context, state) {
-              if ((isUserApps && state.tab == ManageAppsTab.preInstalled) ||
-                  (!isUserApps && state.tab == ManageAppsTab.mine)) return;
+              if ((widget.isUserApps &&
+                      state.tab == ManageAppsTab.preInstalled) ||
+                  (!widget.isUserApps && state.tab == ManageAppsTab.mine))
+                return;
 
               if (state.exportApksStatus.status ==
                   ManageAppsExportApksStatus.start) {
@@ -628,8 +637,10 @@ class ManageAppsPage extends StatelessWidget {
 
           BlocListener<ManageAppsHomeBloc, ManageAppsState>(
               listener: (context, state) {
-                if ((isUserApps && state.tab == ManageAppsTab.preInstalled) ||
-                    (!isUserApps && state.tab == ManageAppsTab.mine)) return;
+                if ((widget.isUserApps &&
+                        state.tab == ManageAppsTab.preInstalled) ||
+                    (!widget.isUserApps && state.tab == ManageAppsTab.mine))
+                  return;
 
                 _openMenu(context, state.contextMenuInfo!.position,
                     state.contextMenuInfo!.app);
@@ -645,7 +656,7 @@ class ManageAppsPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      if (isUserApps)
+                      if (widget.isUserApps)
                         UnifiedIconButtonWithText(
                           iconPath: "assets/icons/ic_install.png",
                           iconSize: 17,
@@ -663,7 +674,8 @@ class ManageAppsPage extends StatelessWidget {
                         iconSize: 19,
                         text: context.l10n.export,
                         space: 10,
-                        margin: EdgeInsets.only(left: isUserApps ? 10 : 20),
+                        margin:
+                            EdgeInsets.only(left: widget.isUserApps ? 10 : 20),
                         enable: checkedApps.isNotEmpty,
                         onTap: () {
                           _exportApks(context);
@@ -747,7 +759,7 @@ class ManageAppsPage extends StatelessWidget {
                                                       .state
                                                       .userAppsSortDirection;
 
-                                                  if (!isUserApps) {
+                                                  if (!widget.isUserApps) {
                                                     sortColumn = context
                                                         .read<
                                                             ManageAppsHomeBloc>()
@@ -941,7 +953,7 @@ class ManageAppsPage extends StatelessWidget {
                               context.read<ManageAppsHomeBloc>().add(
                                   ManageAppsCheckChanged(
                                       checkedApps: selectedApps,
-                                      isUserApps: isUserApps));
+                                      isUserApps: widget.isUserApps));
                             },
                             onColumnResizeUpdate: (details) {
                               setState(() {

@@ -50,7 +50,16 @@ class AllAlbumsPage extends StatelessWidget {
   }
 }
 
-class AllAlbumsView extends StatelessWidget {
+class AllAlbumsView extends StatefulWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  const AllAlbumsView({Key? key, required this.navigatorKey}) : super(key: key);
+
+  @override
+  State<AllAlbumsView> createState() => _AllAlbumsViewState();
+}
+
+class _AllAlbumsViewState extends State<AllAlbumsView> {
   FocusNode? _rootFocusNode = null;
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 15.0;
@@ -59,10 +68,6 @@ class AllAlbumsView extends StatelessWidget {
   bool _isShiftPressed = false;
 
   ProgressIndicatorDialog? _progressIndicatorDialog;
-
-  final GlobalKey<NavigatorState> navigatorKey;
-
-  AllAlbumsView({Key? key, required this.navigatorKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -885,7 +890,7 @@ class AllAlbumsView extends StatelessWidget {
         images: images,
         source: Source.albums,
         extra: context.read<AllAlbumsBloc>());
-    navigatorKey.currentState
+    widget.navigatorKey.currentState
         ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
   }
 
@@ -930,8 +935,7 @@ class _AlbumsListItem extends StatefulWidget {
   final Function(DropDoneDetails)? onDragDone;
 
   const _AlbumsListItem(
-      {Key? key,
-      required this.album,
+      {required this.album,
       required this.isChecked,
       required this.enableDrag,
       this.onTap,

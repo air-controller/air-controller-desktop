@@ -340,13 +340,11 @@ class PaginatedDataTable2 extends StatefulWidget {
   /// you want the paginator to stick to the bottom when there're few rows) or
   /// of you want to have the table to take minimal space and do not have bottom
   /// pager stick to the bottom (FlexFit.loose)
-  // TODO add test
   final FlexFit fit;
 
   /// Set vertical and horizontal borders between cells, as well as outside borders around table.
   /// NOTE: setting this field will disable standard horizontal dividers which are controlled by
   /// themes and [dividerThickness] property
-  // TODO: Add test
   final TableBorder? border;
 
   ///If true rows per page is set to fill available height so that no scroll bar is ever displayed.
@@ -732,8 +730,6 @@ class PaginatedDataTable2State extends State<PaginatedDataTable2> {
       child: IconTheme.merge(
         data: const IconThemeData(opacity: 0.54),
         child: SizedBox(
-          // TODO(bkonyi): this won't handle text zoom correctly,
-          //  https://github.com/flutter/flutter/issues/48522
           height: 56.0,
           child: SingleChildScrollView(
             dragStartBehavior: widget.dragStartBehavior,
@@ -765,7 +761,6 @@ class PaginatedDataTable2State extends State<PaginatedDataTable2> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(ianh): This whole build function doesn't handle RTL yet.
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         bool isHeaderPresent = widget.header != null || widget.actions != null;

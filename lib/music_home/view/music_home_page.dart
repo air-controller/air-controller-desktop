@@ -17,7 +17,6 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 
-import '../../bootstrap.dart';
 import '../../constant.dart';
 import '../../home/bloc/home_bloc.dart';
 import '../../model/audio_item.dart';
@@ -41,7 +40,12 @@ class MusicHomePage extends StatelessWidget {
   }
 }
 
-class MusicHomeView extends StatelessWidget {
+class MusicHomeView extends StatefulWidget {
+  @override
+  State<MusicHomeView> createState() => _MusicHomeViewState();
+}
+
+class _MusicHomeViewState extends State<MusicHomeView> {
   FocusNode? _rootFocusNode;
   bool _isControlPressed = false;
   bool _isShiftPressed = false;

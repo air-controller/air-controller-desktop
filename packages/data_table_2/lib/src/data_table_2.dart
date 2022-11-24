@@ -219,7 +219,6 @@ class DataTable2 extends DataTable {
   /// Set vertical and horizontal borders between cells, as well as outside borders around table.
   /// NOTE: setting this field will disable standard horizontal dividers which are controlled by
   /// themes and [dividerThickness] property
-  // TODO: Add test
   final TableBorder? border;
 
   /// Determines ratio of Small column's width to Medium column's width.

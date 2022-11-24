@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class UnifiedTextField extends StatelessWidget {
+class UnifiedTextField extends StatefulWidget {
   final TextEditingController? controller;
 
   /// Mark whether the clear icon is visible when the input box has content.
@@ -20,9 +20,7 @@ class UnifiedTextField extends StatelessWidget {
   final int? maxLength;
   final Function(String)? onFieldSubmitted;
 
-  bool _needShowClearIcon = false;
-
-  UnifiedTextField(
+  const UnifiedTextField(
       {this.controller,
       this.clearVisible = true,
       this.clearIcon,
@@ -41,21 +39,30 @@ class UnifiedTextField extends StatelessWidget {
       this.onFieldSubmitted});
 
   @override
+  State<StatefulWidget> createState() {
+    return UnifiedTextFieldState();
+  }
+}
+
+class UnifiedTextFieldState extends State<UnifiedTextField> {
+  bool _needShowClearIcon = false;
+
+  @override
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: (context, setState) {
-      var realClearIcon = clearIcon;
+      var realClearIcon = widget.clearIcon;
 
-      _needShowClearIcon = controller?.text.isNotEmpty == true;
+      _needShowClearIcon = widget.controller?.text.isNotEmpty == true;
 
       if (_needShowClearIcon) {
         if (null == realClearIcon) {
           realClearIcon = IconButton(
               onPressed: () {
-                this.controller?.clear();
+                widget.controller?.clear();
                 setState(() {
                   _needShowClearIcon = false;
                 });
-                onChange?.call("");
+                widget.onChange?.call("");
               },
               icon: Icon(Icons.close, size: 15, color: Color(0xff666666)));
         }
@@ -75,54 +82,58 @@ class UnifiedTextField extends StatelessWidget {
         return Color(0xffe5e5e5);
       });
 
-      if (null != borderColor) realBorderColor = borderColor!;
+      if (null != widget.borderColor) realBorderColor = widget.borderColor!;
 
       return TextFormField(
           autofocus: true,
-          cursorColor: cursorColor,
-          cursorHeight: cursorHeight,
-          maxLines: maxLines,
-          style: style,
+          cursorColor: widget.cursorColor,
+          cursorHeight: widget.cursorHeight,
+          maxLines: widget.maxLines,
+          style: widget.style,
           textAlignVertical: TextAlignVertical.center,
-          controller: controller,
-          initialValue: initialKeyword,
-          maxLength: maxLength,
-          onFieldSubmitted: onFieldSubmitted,
+          controller: widget.controller,
+          initialValue: widget.initialKeyword,
+          maxLength: widget.maxLength,
+          onFieldSubmitted: widget.onFieldSubmitted,
           decoration: InputDecoration(
             suffixIcon: realClearIcon,
-            hintText: hintText,
-            hintStyle: hintStyle,
+            hintText: widget.hintText,
+            hintStyle: widget.hintStyle,
             counterText: "",
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
                   color: realBorderColor.resolve(<MaterialState>[].toSet())),
-              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
             ),
             disabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
                   color: realBorderColor.resolve(
                       <MaterialState>[MaterialState.disabled].toSet())),
-              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
                   color: realBorderColor
                       .resolve(<MaterialState>[MaterialState.focused].toSet())),
-              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
             ),
             errorBorder: OutlineInputBorder(
               borderSide: BorderSide(
                   color: realBorderColor
                       .resolve(<MaterialState>[MaterialState.error].toSet())),
-              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
             ),
-            contentPadding: contentPadding,
+            contentPadding: widget.contentPadding,
           ),
           onChanged: (value) {
             setState(() {
               _needShowClearIcon = value.isNotEmpty;
             });
-            onChange?.call(value);
+            widget.onChange?.call(value);
           });
     });
   }

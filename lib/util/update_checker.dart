@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -18,7 +17,8 @@ class UpdateAsset {
 
 abstract class UpdateChecker {
   void onUpdateAvailable(
-      Function(int publishTime, String version, List<UpdateAsset> assets, String updateInfo)
+      Function(int publishTime, String version, List<UpdateAsset> assets,
+              String updateInfo)
           callback);
 
   void onNoUpdateAvailable(Function() callback);
@@ -33,7 +33,8 @@ abstract class UpdateChecker {
 }
 
 class UpdateCheckerImpl extends UpdateChecker {
-  Function(int publishTime, String version, List<UpdateAsset> assets, String updateInfo)? _onUpdateAvailable;
+  Function(int publishTime, String version, List<UpdateAsset> assets,
+      String updateInfo)? _onUpdateAvailable;
   Function()? _onNoUpdateAvailable;
   Function(String error)? _onCheckFailure;
 
@@ -92,7 +93,8 @@ class UpdateCheckerImpl extends UpdateChecker {
         final dateTime = DateTime.parse(publishTime);
 
         log("UpdateChecker, check, time: ${dateTime.millisecondsSinceEpoch}");
-        _onUpdateAvailable?.call(dateTime.millisecondsSinceEpoch, version, updateAssets, updateInfo);
+        _onUpdateAvailable?.call(
+            dateTime.millisecondsSinceEpoch, version, updateAssets, updateInfo);
       } else {
         _onNoUpdateAvailable?.call();
       }
@@ -113,7 +115,10 @@ class UpdateCheckerImpl extends UpdateChecker {
   }
 
   @override
-  void onUpdateAvailable(Function(int publishTime, String version, List<UpdateAsset> assets, String updateInfo) callback) {
+  void onUpdateAvailable(
+      Function(int publishTime, String version, List<UpdateAsset> assets,
+              String updateInfo)
+          callback) {
     _onUpdateAvailable = callback;
   }
 

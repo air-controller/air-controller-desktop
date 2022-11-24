@@ -54,18 +54,21 @@ class AllImagesPage extends StatelessWidget {
   }
 }
 
-class AllImagesView extends StatelessWidget {
+class AllImagesView extends StatefulWidget {
+  final bool isFromCamera;
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  AllImagesView({required this.navigatorKey, this.isFromCamera = false});
+
+  @override
+  State<AllImagesView> createState() => _AllImagesViewState();
+}
+
+class _AllImagesViewState extends State<AllImagesView> {
   bool _isControlPressed = false;
   bool _isShiftPressed = false;
   FocusNode? _rootFocusNode = null;
   ProgressIndicatorDialog? _progressIndicatorDialog;
-
-  final GlobalKey<NavigatorState> navigatorKey;
-  final bool isFromCamera;
-
-  AllImagesView(
-      {Key? key, required this.navigatorKey, this.isFromCamera = false})
-      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -208,8 +211,10 @@ class AllImagesView extends StatelessWidget {
           ),
           BlocListener<HomeImageBloc, HomeImageState>(
             listener: (context, state) {
-              if ((state.tab == HomeImageTab.allImages && !isFromCamera) ||
-                  (state.tab == HomeImageTab.cameraImages && isFromCamera)) {
+              if ((state.tab == HomeImageTab.allImages &&
+                      !widget.isFromCamera) ||
+                  (state.tab == HomeImageTab.cameraImages &&
+                      widget.isFromCamera)) {
                 _deleteImage(
                     context, context.read<AllImagesBloc>().state.checkedImages);
               }
@@ -223,9 +228,9 @@ class AllImagesView extends StatelessWidget {
           BlocListener<HomeImageBloc, HomeImageState>(
               listener: (context, state) {
                 if ((state.tab == HomeImageTab.allImages &&
-                        !this.isFromCamera) ||
+                        !widget.isFromCamera) ||
                     (state.tab == HomeImageTab.cameraImages &&
-                        this.isFromCamera)) {
+                        widget.isFromCamera)) {
                   List<ImageItem> images =
                       context.read<AllImagesBloc>().state.images;
                   List<ImageItem> checkedImages =
@@ -302,7 +307,7 @@ class AllImagesView extends StatelessWidget {
 
             if (photos.isEmpty) return;
 
-            int pos = isFromCamera
+            int pos = widget.isFromCamera
                 ? Constant.posCameraPictures
                 : Constant.posAllPictures;
             context
@@ -325,10 +330,10 @@ class AllImagesView extends StatelessWidget {
     final tab = context.read<HomeImageBloc>().state.tab;
 
     if (homeTab == HomeTab.image &&
-        isFromCamera &&
+        widget.isFromCamera &&
         tab == HomeImageTab.cameraImages) return true;
     if (homeTab == HomeTab.image &&
-        !isFromCamera &&
+        !widget.isFromCamera &&
         tab == HomeImageTab.allImages) return true;
     return false;
   }
@@ -354,8 +359,8 @@ class AllImagesView extends StatelessWidget {
     _rootFocusNode?.canRequestFocus = true;
 
     if (homeTab == HomeTab.image &&
-        ((currentTab == HomeImageTab.allImages && !isFromCamera) ||
-            currentTab == HomeImageTab.cameraImages && isFromCamera)) {
+        ((currentTab == HomeImageTab.allImages && !widget.isFromCamera) ||
+            currentTab == HomeImageTab.cameraImages && widget.isFromCamera)) {
       _rootFocusNode?.requestFocus();
     }
 
@@ -492,7 +497,7 @@ class AllImagesView extends StatelessWidget {
       int index, List<ImageItem> images, AllImagesBloc bloc) {
     final arguments = ImageDetailArguments(
         index: index, images: images, source: Source.allImages, extra: bloc);
-    navigatorKey.currentState
+    widget.navigatorKey.currentState
         ?.pushNamed(ImagePageRoute.IMAGE_DETAIL, arguments: arguments);
   }
 

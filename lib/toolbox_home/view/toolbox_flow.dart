@@ -17,6 +17,8 @@ class ToolboxFlowState extends State<ToolboxFlow>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Navigator(
         key: _navigatorKey,
         onGenerateRoute: _onGenerateRoute,

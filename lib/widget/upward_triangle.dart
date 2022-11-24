@@ -14,12 +14,15 @@ class TrianglePainter extends CustomPainter {
   late Paint _paint;
   late Path _path;
 
-  TrianglePainter({required this.color, this.dividerColor = Colors.black,
-    this.dividerWidth = 1.0, required this.isUpward}) {
+  TrianglePainter(
+      {required this.color,
+      this.dividerColor = Colors.black,
+      this.dividerWidth = 1.0,
+      required this.isUpward}) {
     _paint = Paint()
-        ..strokeWidth = 1.0
-        ..color = color
-        ..isAntiAlias = true;
+      ..strokeWidth = 1.0
+      ..color = color
+      ..isAntiAlias = true;
     _path = Path();
   }
 
@@ -66,16 +69,20 @@ class TrianglePainter extends CustomPainter {
 }
 
 class Triangle extends StatefulWidget {
-  double width;
-  double height;
-  Color color;
-  Color dividerColor;
-  bool isUpward;
+  final double width;
+  final double height;
+  final Color color;
+  final Color dividerColor;
+  final bool isUpward;
 
-  Triangle({required Key key, required this.width, required this.height,
-    this.color = Colors.white, this.dividerColor = Colors.black,
-    this.isUpward = true
-  }) : super(key: key);
+  Triangle(
+      {required Key key,
+      required this.width,
+      required this.height,
+      this.color = Colors.white,
+      this.dividerColor = Colors.black,
+      this.isUpward = true})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -84,19 +91,16 @@ class Triangle extends StatefulWidget {
 }
 
 class TriangleState extends State<Triangle> {
-
   @override
   Widget build(BuildContext context) {
     return Container(
       height: widget.height,
       width: widget.width,
       child: CustomPaint(
-        painter: TrianglePainter(
-            color: widget.color,
-            dividerColor: widget.dividerColor,
-          isUpward: widget.isUpward
-        )
-      ),
+          painter: TrianglePainter(
+              color: widget.color,
+              dividerColor: widget.dividerColor,
+              isUpward: widget.isUpward)),
     );
   }
 }

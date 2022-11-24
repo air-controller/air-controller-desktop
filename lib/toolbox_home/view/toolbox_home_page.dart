@@ -35,7 +35,6 @@ class _ToolboxHomeView extends StatelessWidget {
           "assets/icons/ic_manage_contacts.png"),
     ];
 
-    final FocusNode node = FocusNode();
     final dividerLineColor = Color(0xffe0e0e0);
     final _IMAGE_SPACE = 15.0;
 

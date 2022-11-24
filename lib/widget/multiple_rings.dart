@@ -8,8 +8,11 @@ class MultipleRingsPainter extends CustomPainter {
 
   late Paint _paint;
 
-  MultipleRingsPainter({required this.lineColor, required this.lineWidth,
-    required this.minRadius, required this.radiusStep}) {
+  MultipleRingsPainter(
+      {required this.lineColor,
+      required this.lineWidth,
+      required this.minRadius,
+      required this.radiusStep}) {
     _paint = Paint()
       ..strokeWidth = lineWidth
       ..style = PaintingStyle.stroke
@@ -40,21 +43,27 @@ class MultipleRingsPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
-
 }
 
 class MultipleRings extends StatefulWidget {
-  double width;
-  double height;
-  Color color;
-  Color lineColor;
-  double lineWidth;
-  double minRadius;
-  double radiusStep;
+  final double width;
+  final double height;
+  final Color color;
+  final Color lineColor;
+  final double lineWidth;
+  final double minRadius;
+  final double radiusStep;
 
-  MultipleRings({required this.width, required this.height,
-    this.color = Colors.white, this.lineColor = Colors.black, this.lineWidth = 1.0,
-    required this.minRadius, required this.radiusStep}) : super(key: Key("MultipleRings"));
+  const MultipleRings(
+      {Key? key,
+      required this.width,
+      required this.height,
+      this.color = Colors.white,
+      this.lineColor = Colors.black,
+      this.lineWidth = 1.0,
+      required this.minRadius,
+      required this.radiusStep})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -63,21 +72,17 @@ class MultipleRings extends StatefulWidget {
 }
 
 class MultipleRingsState extends State<MultipleRings> {
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.height,
-      width: widget.width,
-      child: CustomPaint(
-          painter: MultipleRingsPainter(
-            lineColor: widget.lineColor,
-            lineWidth: widget.lineWidth,
-            minRadius: widget.minRadius,
-            radiusStep: widget.radiusStep
-          )
-      ),
-      color: widget.color
-    );
+        height: widget.height,
+        width: widget.width,
+        child: CustomPaint(
+            painter: MultipleRingsPainter(
+                lineColor: widget.lineColor,
+                lineWidth: widget.lineWidth,
+                minRadius: widget.minRadius,
+                radiusStep: widget.radiusStep)),
+        color: widget.color);
   }
 }

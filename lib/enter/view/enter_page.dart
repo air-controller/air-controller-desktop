@@ -49,7 +49,6 @@ class _EnterState extends State<EnterPage>
   static final _ICON_SIZE = 80.0;
 
   AnimationController? _animationController;
-  bool _isConnectPressed = false;
 
   // 记录上一次设备显示坐标位置（Key为设备IP）
   Map<String, Rect> _deviceRectMap = Map();

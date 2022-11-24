@@ -55,24 +55,32 @@ class ImageDetailPage extends StatelessWidget {
   }
 }
 
-class ImageDetailView extends StatelessWidget {
-  bool _isAboutIconTapDown = false;
-  bool _isBackBtnDown = false;
-  ExtendedPageController? _extendedPageController;
-  bool _isImageInfoDialogShowing = false;
-  FocusNode? _imageDetailFocusNode;
-  ProgressIndicatorDialog? _progressIndicatorDialog;
-
+class ImageDetailView extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
-  final _URL_SERVER =
-      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
-  final GlobalKey _aboutIconKey = GlobalKey();
   final Source? source;
   final dynamic extra;
 
-  ImageDetailView(
-      {Key? key, required this.navigatorKey, this.source, this.extra})
+  const ImageDetailView(
+      {Key? key,
+      required this.navigatorKey,
+      required this.source,
+      required this.extra})
       : super(key: key);
+
+  @override
+  State<ImageDetailView> createState() => _ImageDetailViewState();
+}
+
+class _ImageDetailViewState extends State<ImageDetailView> {
+  bool _isAboutIconTapDown = false;
+  bool _isBackBtnDown = false;
+  ExtendedPageController? _extendedPageController;
+  FocusNode? _imageDetailFocusNode;
+  ProgressIndicatorDialog? _progressIndicatorDialog;
+
+  final _URL_SERVER =
+      "http://${DeviceConnectionManager.instance.currentDevice?.ip}:${Constant.PORT_HTTP}";
+  final GlobalKey _aboutIconKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -122,13 +130,13 @@ class ImageDetailView extends StatelessWidget {
               if (state.deleteStatus.status == DeleteImagesStatus.success) {
                 SmartDialog.dismiss();
 
-                if (source == Source.allImages) {
-                  AllImagesBloc bloc = extra;
+                if (widget.source == Source.allImages) {
+                  AllImagesBloc bloc = widget.extra;
                   bloc.add(AllImagesClearDeleted(state.deleteStatus.images));
                 }
 
-                if (source == Source.albums) {
-                  AllAlbumsBloc bloc = extra;
+                if (widget.source == Source.albums) {
+                  AllAlbumsBloc bloc = widget.extra;
                   bloc.add(AllAlbumsClearDeletedImage(
                       state.deleteStatus.images.single));
                 }
@@ -275,7 +283,8 @@ class ImageDetailView extends StatelessWidget {
                                           margin: EdgeInsets.only(left: 15),
                                         ),
                                         onTap: () {
-                                          navigatorKey.currentState?.pop();
+                                          widget.navigatorKey.currentState
+                                              ?.pop();
                                         },
                                         onTapDown: (detail) {
                                           setState(() {
@@ -674,223 +683,222 @@ class ImageDetailView extends StatelessWidget {
     var triangleLeft = offset.dx + width / 2 - left - triangleWidth / 2 - 8;
 
     showDialog(
-            context: context,
-            builder: (context) {
-              return Stack(
-                children: [
-                  Positioned(
-                      left: left,
-                      top: top,
-                      child: Stack(
-                        children: [
-                          Container(
-                            child: Wrap(
-                              direction: Axis.vertical,
+        context: context,
+        builder: (context) {
+          return Stack(
+            children: [
+              Positioned(
+                  left: left,
+                  top: top,
+                  child: Stack(
+                    children: [
+                      Container(
+                        child: Wrap(
+                          direction: Axis.vertical,
+                          children: [
+                            Container(
+                              child: Text(
+                                context.l10n.generalLabel,
+                                style: TextStyle(
+                                    color: Color(0xff313237), fontSize: 16),
+                              ),
+                              margin: EdgeInsets.only(
+                                  top: 10, left: 15, bottom: 15),
+                            ),
+                            Wrap(
                               children: [
                                 Container(
                                   child: Text(
-                                    context.l10n.generalLabel,
-                                    style: TextStyle(
-                                        color: Color(0xff313237), fontSize: 16),
+                                    context.l10n.nameLabel,
+                                    style: textStyle,
+                                    textAlign: TextAlign.right,
                                   ),
-                                  margin: EdgeInsets.only(
-                                      top: 10, left: 15, bottom: 15),
-                                ),
-                                Wrap(
-                                  children: [
-                                    Container(
-                                      child: Text(
-                                        context.l10n.nameLabel,
-                                        style: textStyle,
-                                        textAlign: TextAlign.right,
-                                      ),
-                                      width: labelWidth,
-                                      padding: EdgeInsets.only(right: 5),
-                                    ),
-                                    Container(
-                                      child: Text("$name", style: textStyle),
-                                      width: contentWidth,
-                                    )
-                                  ],
+                                  width: labelWidth,
+                                  padding: EdgeInsets.only(right: 5),
                                 ),
                                 Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.pathLabel,
-                                          textAlign: TextAlign.right,
-                                          style: textStyle,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          "$path",
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      )
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
-                                ),
-                                Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.kindLabel,
-                                          textAlign: TextAlign.right,
-                                          style: textStyle,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          "$extension",
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      ),
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
-                                ),
-                                Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.sizeLabel,
-                                          textAlign: TextAlign.right,
-                                          style: textStyle,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          "${CommonUtil.convertToReadableSize(imageItem.size)}",
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      ),
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
-                                ),
-                                Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.dimensionsLabel,
-                                          style: textStyle,
-                                          textAlign: TextAlign.right,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          "${imageItem.width} x ${imageItem.height}",
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      )
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
-                                ),
-                                Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.createdLabel,
-                                          style: textStyle,
-                                          textAlign: TextAlign.right,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          _convertToIntlTime(context, imageItem.createTime),
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      )
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
-                                ),
-                                Container(
-                                  child: Wrap(
-                                    children: [
-                                      Container(
-                                        child: Text(
-                                          context.l10n.modifiedLabel,
-                                          style: textStyle,
-                                          textAlign: TextAlign.right,
-                                        ),
-                                        width: labelWidth,
-                                        padding: EdgeInsets.only(right: 5),
-                                      ),
-                                      Container(
-                                        child: Text(
-                                          _convertToIntlTime(context, imageItem.modifyTime * 1000),
-                                          style: textStyle,
-                                        ),
-                                        width: contentWidth,
-                                      )
-                                    ],
-                                  ),
-                                  margin: EdgeInsets.only(top: 10),
+                                  child: Text("$name", style: textStyle),
+                                  width: contentWidth,
                                 )
                               ],
                             ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
-                              color: Color(0xfffdfdfc),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black54,
-                                    offset: Offset(0, 0),
-                                    blurRadius: 1),
-                              ],
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.pathLabel,
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "$path",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
                             ),
-                            padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
-                            margin: EdgeInsets.only(top: 10),
-                            width: dialogWidth,
-                          ),
-                          Container(
-                            child: Triangle(
-                              key: Key("upward_triangle"),
-                              width: triangleWidth,
-                              height: 10,
-                              color: Colors.white,
-                              dividerColor: Colors.black26,
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.kindLabel,
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "$extension",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  ),
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
                             ),
-                            margin: EdgeInsets.only(left: triangleLeft),
-                          )
-                        ],
-                      ))
-                ],
-              );
-            },
-            barrierColor: Colors.transparent)
-        .then((value) {
-      _isImageInfoDialogShowing = false;
-    });
-    _isImageInfoDialogShowing = true;
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.sizeLabel,
+                                      textAlign: TextAlign.right,
+                                      style: textStyle,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${CommonUtil.convertToReadableSize(imageItem.size)}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  ),
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.dimensionsLabel,
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      "${imageItem.width} x ${imageItem.height}",
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.createdLabel,
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      _convertToIntlTime(
+                                          context, imageItem.createTime),
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            ),
+                            Container(
+                              child: Wrap(
+                                children: [
+                                  Container(
+                                    child: Text(
+                                      context.l10n.modifiedLabel,
+                                      style: textStyle,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    width: labelWidth,
+                                    padding: EdgeInsets.only(right: 5),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      _convertToIntlTime(
+                                          context, imageItem.modifyTime * 1000),
+                                      style: textStyle,
+                                    ),
+                                    width: contentWidth,
+                                  )
+                                ],
+                              ),
+                              margin: EdgeInsets.only(top: 10),
+                            )
+                          ],
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Color(0xfffdfdfc),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black54,
+                                offset: Offset(0, 0),
+                                blurRadius: 1),
+                          ],
+                        ),
+                        padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                        margin: EdgeInsets.only(top: 10),
+                        width: dialogWidth,
+                      ),
+                      Container(
+                        child: Triangle(
+                          key: Key("upward_triangle"),
+                          width: triangleWidth,
+                          height: 10,
+                          color: Colors.white,
+                          dividerColor: Colors.black26,
+                        ),
+                        margin: EdgeInsets.only(left: triangleLeft),
+                      )
+                    ],
+                  ))
+            ],
+          );
+        },
+        barrierColor: Colors.transparent);
   }
 
   String _convertToIntlTime(BuildContext context, int time) {
-    final df = DateFormat.yMMMd(context.currentAppLocale.toString()).addPattern("HH:mm:ss");
+    final df = DateFormat.yMMMd(context.currentAppLocale.toString())
+        .addPattern("HH:mm:ss");
     return df.format(DateTime.fromMillisecondsSinceEpoch(time));
   }
 }

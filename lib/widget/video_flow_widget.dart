@@ -1,14 +1,44 @@
-
 import 'package:air_controller/widget/simple_gesture_detector.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
-import '../constant.dart';
 import '../model/video_item.dart';
 import '../model/video_order_type.dart';
 
-class VideoFlowWidget extends StatelessWidget {
+class VideoFlowWidget extends StatefulWidget {
+  final String rootUrl;
+  final List<VideoItem> videos;
+
+  final List<VideoItem> selectedVideos;
+  final VideoOrderType sortOrder;
+
+  final Color backgroundColor;
+  final Function(VideoItem video)? onVideoTap;
+  final Function()? onOutsideTap;
+  final Function(bool isTotalVisible, bool isPartOfVisible)? onVisibleChange;
+  final Function(VideoItem video)? onVideoDoubleTap;
+  final Function(PointerDownEvent event, VideoItem videoItem)? onPointerDown;
+
+  VideoFlowWidget(
+      {this.backgroundColor = Colors.white,
+      required this.rootUrl,
+      this.videos = const [],
+      this.selectedVideos = const [],
+      this.sortOrder = VideoOrderType.createTime,
+      required this.onVideoTap,
+      this.onOutsideTap,
+      this.onVisibleChange,
+      this.onVideoDoubleTap,
+      this.onPointerDown});
+
+  @override
+  State<VideoFlowWidget> createState() {
+    return _VideoFlowWidgetState();
+  }
+}
+
+class _VideoFlowWidgetState extends State<VideoFlowWidget> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
   List<VideoItem> _videos = [];
@@ -23,46 +53,11 @@ class VideoFlowWidget extends StatelessWidget {
 
   List<VideoItem> _selectedVideos = [];
 
-  // 当前排序方式
-  VideoOrderType _currentSortOrder = VideoOrderType.createTime;
-
-  late String _rootUrl;
-  late Color _backgroundColor;
-  Function(VideoItem video)? _onVideoTap;
-  Function()? _onOutsideTap;
-  Function(bool isTotalVisible, bool isPartOfVisible)? _onVisibleChange;
-  Function(VideoItem video)? _onVideoDoubleTap;
-  Function(PointerDownEvent event, VideoItem videoItem)? _onPointerDown;
-
-  VideoFlowWidget({
-    Color backgroundColor = Colors.white,
-    required String rootUrl,
-    required List<VideoItem> videos,
-    required List<VideoItem> selectedVideos,
-    required VideoOrderType sortOrder,
-    required Function(VideoItem video)? onVideoTap,
-    required Function()? onOutsideTap,
-    required Function(bool isTotalVisible, bool isPartOfVisible)? onVisibleChange,
-    required Function(VideoItem video)? onVideoDoubleTap,
-    required Function(PointerDownEvent event, VideoItem videoItem) onPointerDown
-}) {
-    _backgroundColor = backgroundColor;
-    _rootUrl = rootUrl;
-    _videos = videos;
-    _selectedVideos = selectedVideos;
-    _currentSortOrder = sortOrder;
-    _onVideoTap = onVideoTap;
-    _onOutsideTap = onOutsideTap;
-    _onVisibleChange = onVisibleChange;
-    _onVideoDoubleTap = onVideoDoubleTap;
-    _onPointerDown = onPointerDown;
-  }
-
   @override
   Widget build(BuildContext context) {
     var sortedVideos = [..._videos];
 
-    if (_currentSortOrder == VideoOrderType.createTime) {
+    if (widget.sortOrder == VideoOrderType.createTime) {
       sortedVideos.sort((a, b) {
         return b.createTime - a.createTime;
       });
@@ -89,16 +84,16 @@ class VideoFlowWidget extends StatelessWidget {
                 Container(
                   child: SimpleGestureDetector(
                     child: Container(
-                      child: CachedNetworkImage(
-                        imageUrl:
-                        "${_rootUrl}/stream/video/thumbnail/${videoItem.id}/200/200",
-                        fit: BoxFit.cover,
-                        width: 160,
-                        height: 160,
-                        memCacheWidth: 400,
-                        fadeOutDuration: Duration.zero,
-                        fadeInDuration: Duration.zero,
-                      ),
+                        child: CachedNetworkImage(
+                          imageUrl:
+                              "${widget.rootUrl}/stream/video/thumbnail/${videoItem.id}/200/200",
+                          fit: BoxFit.cover,
+                          width: 160,
+                          height: 160,
+                          memCacheWidth: 400,
+                          fadeOutDuration: Duration.zero,
+                          fadeInDuration: Duration.zero,
+                        ),
                         decoration: BoxDecoration(
                             border: new Border.all(
                                 color: _isChecked(videoItem)
@@ -106,14 +101,12 @@ class VideoFlowWidget extends StatelessWidget {
                                     : _BORDER_COLOR,
                                 width: _VIDEO_GRID_BORDER_WIDTH),
                             borderRadius: new BorderRadius.all(
-                                Radius.circular(
-                                    _VIDEO_GRID_RADIUS)))
-                    ),
+                                Radius.circular(_VIDEO_GRID_RADIUS)))),
                     onTap: () {
-                      _onVideoTap?.call(videoItem);
+                      widget.onVideoTap?.call(videoItem);
                     },
                     onDoubleTap: () {
-                      _onVideoDoubleTap?.call(videoItem);
+                      widget.onVideoDoubleTap?.call(videoItem);
                     },
                   ),
                   decoration: BoxDecoration(
@@ -122,26 +115,26 @@ class VideoFlowWidget extends StatelessWidget {
                               ? _CHECKED_BORDER_COLOR
                               : Colors.transparent,
                           width: _VIDEO_GRID_BORDER_WIDTH_CHECKED),
-                      borderRadius: new BorderRadius.all(Radius.circular(_VIDEO_GRID_RADIUS_CHECKED))),
+                      borderRadius: new BorderRadius.all(
+                          Radius.circular(_VIDEO_GRID_RADIUS_CHECKED))),
                 ),
                 Container(
                   child: Align(
                     child: Row(
                       children: [
-                        Image.asset("assets/icons/ic_video_indictor.png", width: 20, height: 20),
-
+                        Image.asset("assets/icons/ic_video_indictor.png",
+                            width: 20, height: 20),
                         Container(
-                          child: Text(duration, style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                    offset: Offset(0, 0),
-                                    blurRadius: 3.0,
-                                    color: Colors.black
-                                )
-                              ]
-                          )),
+                          child: Text(duration,
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                        offset: Offset(0, 0),
+                                        blurRadius: 3.0,
+                                        color: Colors.black)
+                                  ])),
                           margin: EdgeInsets.only(left: 5),
                         )
                       ],
@@ -153,7 +146,7 @@ class VideoFlowWidget extends StatelessWidget {
               ],
             ),
             onPointerDown: (event) {
-              _onPointerDown?.call(event, videoItem);
+              widget.onPointerDown?.call(event, videoItem);
             },
           );
         },
@@ -161,7 +154,7 @@ class VideoFlowWidget extends StatelessWidget {
         shrinkWrap: true,
         primary: false,
       ),
-      color: _backgroundColor,
+      color: widget.backgroundColor,
       width: double.infinity,
       height: double.infinity,
       padding: EdgeInsets.fromLTRB(_OUT_PADDING, _OUT_PADDING, _OUT_PADDING, 0),
@@ -172,11 +165,12 @@ class VideoFlowWidget extends StatelessWidget {
         child: GestureDetector(
           child: content,
           onTap: () {
-            _onOutsideTap?.call();
+            widget.onOutsideTap?.call();
           },
         ),
         onVisibilityChanged: (info) {
-          _onVisibleChange?.call(info.visibleFraction >= 1.0, info.visibleFraction > 0 && info.visibleFraction < 1.0);
+          widget.onVisibleChange?.call(info.visibleFraction >= 1.0,
+              info.visibleFraction > 0 && info.visibleFraction < 1.0);
         });
   }
 
@@ -195,7 +189,7 @@ class VideoFlowWidget extends StatelessWidget {
       return "$min:${sec < 10 ? "0${sec}" : sec}";
     }
   }
-  
+
   bool _isChecked(VideoItem video) {
     return _selectedVideos.contains(video);
   }

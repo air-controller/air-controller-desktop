@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:js';
 
 import 'package:air_controller/ext/filex.dart';
 import 'package:air_controller/ext/pointer_down_event_x.dart';
@@ -42,7 +41,12 @@ class AllVideosPage extends StatelessWidget {
   }
 }
 
-class AllVideosView extends StatelessWidget {
+class AllVideosView extends StatefulWidget {
+  @override
+  State<AllVideosView> createState() => _AllVideosViewState();
+}
+
+class _AllVideosViewState extends State<AllVideosView> {
   FocusNode? _rootFocusNode = null;
   bool _isControlPressed = false;
   bool _isShiftPressed = false;

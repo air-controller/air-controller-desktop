@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class UnifiedIconButton extends StatelessWidget {
+class UnifiedIconButton extends StatefulWidget {
   final double width;
   final double height;
   final String iconPath;
@@ -12,10 +12,7 @@ class UnifiedIconButton extends StatelessWidget {
   final bool enable;
   final VoidCallback? onTap;
 
-  bool _isHover = false;
-  bool _isTapDown = false;
-
-  UnifiedIconButton(
+  const UnifiedIconButton(
       {required this.width,
       required this.height,
       required this.iconPath,
@@ -28,28 +25,38 @@ class UnifiedIconButton extends StatelessWidget {
       this.onTap});
 
   @override
+  State<StatefulWidget> createState() {
+    return _UnifiedIconButtonState();
+  }
+}
+
+class _UnifiedIconButtonState extends State<UnifiedIconButton> {
+  bool _isHover = false;
+  bool _isTapDown = false;
+
+  @override
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: ((context, setState) {
-      Color color = _isHover ? hoverColor : this.color;
-      color = _isTapDown ? pressedColor : this.color;
+      Color color = _isHover ? widget.hoverColor : widget.color;
+      color = _isTapDown ? widget.pressedColor : widget.color;
 
-      if (!enable) {
-        color = this.disableColor;
+      if (!widget.enable) {
+        color = widget.disableColor;
       }
 
       return GestureDetector(
         child: Container(
           child: Image.asset(
-            iconPath,
-            width: width,
-            height: height,
+            widget.iconPath,
+            width: widget.width,
+            height: widget.height,
             color: color,
           ),
-          padding: padding,
+          padding: widget.padding,
         ),
         onTap: () {
-          if (enable) {
-            onTap?.call();
+          if (widget.enable) {
+            widget.onTap?.call();
           }
         },
         onTapDown: (details) {
@@ -58,12 +65,12 @@ class UnifiedIconButton extends StatelessWidget {
           });
         },
         onTapCancel: () {
-            setState(() {
+          setState(() {
             _isTapDown = false;
           });
         },
         onTapUp: (details) {
-            setState(() {
+          setState(() {
             _isTapDown = false;
           });
         },

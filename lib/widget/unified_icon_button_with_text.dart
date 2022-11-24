@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class UnifiedIconButtonWithText extends StatelessWidget {
+class UnifiedIconButtonWithText extends StatefulWidget {
   final String iconPath;
   final String text;
   final double fontSize;
@@ -15,9 +15,6 @@ class UnifiedIconButtonWithText extends StatelessWidget {
   final bool enable;
   final bool isIconAtLeft;
   final Function()? onTap;
-
-  bool _isHovered = false;
-  bool _isPressed = false;
 
   UnifiedIconButtonWithText(
       {required this.iconPath,
@@ -36,14 +33,24 @@ class UnifiedIconButtonWithText extends StatelessWidget {
       this.onTap});
 
   @override
+  State<UnifiedIconButtonWithText> createState() {
+    return UnifiedIconButtonWithTextState();
+  }
+}
+
+class UnifiedIconButtonWithTextState extends State<UnifiedIconButtonWithText> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: ((context, setState) {
-      Color color = _isHovered ? hoverColor : this.color;
-      if (!enable) color = disableColor;
+      Color color = _isHovered ? widget.hoverColor : widget.color;
+      if (!widget.enable) color = widget.disableColor;
 
       Color backgroundColor =
-          _isPressed ? pressedBackgroundColor : this.backgroundColor;
-      if (!enable) backgroundColor = Colors.transparent;
+          _isPressed ? widget.pressedBackgroundColor : widget.backgroundColor;
+      if (!widget.enable) backgroundColor = Colors.transparent;
 
       return InkResponse(
         splashColor: Colors.transparent,
@@ -51,37 +58,37 @@ class UnifiedIconButtonWithText extends StatelessWidget {
         highlightColor: Colors.transparent,
         child: Container(
           child: Row(
-            children: childWidgets(color, isIconAtLeft),
+            children: childWidgets(color, widget.isIconAtLeft),
           ),
           color: backgroundColor,
           padding: EdgeInsets.only(left: 5, right: 5, top: 3, bottom: 3),
-          margin: margin,
+          margin: widget.margin,
         ),
         onTap: () {
-          if (!enable) return;
+          if (!widget.enable) return;
 
-          onTap?.call();
+          widget.onTap?.call();
 
           setState(() {
             _isPressed = false;
           });
         },
         onTapDown: (details) {
-          if (!enable) return;
+          if (!widget.enable) return;
 
           setState(() {
             _isPressed = true;
           });
         },
         onTapCancel: () {
-          if (!enable) return;
+          if (!widget.enable) return;
 
           setState(() {
             _isPressed = false;
           });
         },
         onHover: (isHovered) {
-          if (!enable) return;
+          if (!widget.enable) return;
 
           setState(() {
             _isHovered = isHovered;
@@ -95,37 +102,37 @@ class UnifiedIconButtonWithText extends StatelessWidget {
     if (isIconAtLeft) {
       return [
         Image.asset(
-          iconPath,
-          width: iconSize,
-          height: iconSize,
+          widget.iconPath,
+          width: widget.iconSize,
+          height: widget.iconSize,
           color: color,
         ),
         Container(
           child: Text(
-            text,
+            widget.text,
             style: TextStyle(
-              fontSize: fontSize,
+              fontSize: widget.fontSize,
               color: color,
             ),
           ),
-          margin: EdgeInsets.only(left: space),
+          margin: EdgeInsets.only(left: widget.space),
         )
       ];
     } else {
       return [
-        Text(text,
+        Text(widget.text,
             style: TextStyle(
-              fontSize: fontSize,
+              fontSize: widget.fontSize,
               color: color,
             )),
         Container(
           child: Image.asset(
-            iconPath,
-            width: iconSize,
-            height: iconSize,
+            widget.iconPath,
+            width: widget.iconSize,
+            height: widget.iconSize,
             color: color,
           ),
-          margin: EdgeInsets.only(left: space),
+          margin: EdgeInsets.only(left: widget.space),
         )
       ];
     }

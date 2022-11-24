@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -6,12 +5,8 @@ import 'package:network_info_plus/network_info_plus.dart';
 
 import '../bootstrap.dart';
 import '../model/device.dart';
-import 'package:web_socket_channel/io.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import '../constant.dart';
 
 abstract class DeviceDiscoverManager {
@@ -136,7 +131,7 @@ class DeviceDiscoverManagerImpl implements DeviceDiscoverManager {
       logger.d("HeartBeat: $msg");
     }
   }
-  
+
   @override
   void stopDiscover() {
     udpSocket?.close();

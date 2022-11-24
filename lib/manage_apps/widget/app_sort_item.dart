@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class AppSortItem extends StatelessWidget {
+class AppSortItem extends StatefulWidget {
   final String title;
   final double width;
   final double height;
@@ -12,10 +11,7 @@ class AppSortItem extends StatelessWidget {
   final Color pressColor;
   final Function()? onTap;
 
-  bool _isHovered = false;
-  bool _isTapDown = false;
-
-  AppSortItem(
+  const AppSortItem(
       {required this.title,
       required this.width,
       required this.height,
@@ -27,17 +23,25 @@ class AppSortItem extends StatelessWidget {
       this.onTap});
 
   @override
+  State<AppSortItem> createState() => _AppSortItemState();
+}
+
+class _AppSortItemState extends State<AppSortItem> {
+  bool _isHovered = false;
+  bool _isTapDown = false;
+
+  @override
   Widget build(BuildContext context) {
     return StatefulBuilder(builder: ((context, setState) {
       final labelWidth = 60.0;
       final checkedIconSize = 18.0;
 
-      Color backgroundColor = color;
+      Color backgroundColor = widget.color;
 
       if (_isTapDown) {
-        backgroundColor = pressColor;
+        backgroundColor = widget.pressColor;
       } else if (_isHovered) {
-        backgroundColor = hoverColor;
+        backgroundColor = widget.hoverColor;
       }
 
       return InkResponse(
@@ -58,14 +62,14 @@ class AppSortItem extends StatelessWidget {
                   ),
                   margin: EdgeInsets.only(left: 10),
                 ),
-                visible: isChecked,
+                visible: widget.isChecked,
                 maintainSize: true,
                 maintainState: true,
                 maintainAnimation: true,
               ),
               Container(
                 child: Text(
-                  title,
+                  widget.title,
                   textAlign: TextAlign.start,
                 ),
                 margin: EdgeInsets.only(left: 15),
@@ -74,7 +78,7 @@ class AppSortItem extends StatelessWidget {
               Visibility(
                 child: Container(
                   child: Image.asset(
-                      isAscending
+                      widget.isAscending
                           ? "assets/icons/ic_arrow_up.png"
                           : "assets/icons/ic_arrow_down.png",
                       width: 16,
@@ -82,16 +86,16 @@ class AppSortItem extends StatelessWidget {
                       color: Color(0xff666666)),
                   margin: EdgeInsets.only(left: 70),
                 ),
-                visible: isChecked,
+                visible: widget.isChecked,
               )
             ],
           ),
-          height: height,
-          width: width,
+          height: widget.height,
+          width: widget.width,
           color: backgroundColor,
         ),
         onTap: () {
-          onTap?.call();
+          widget.onTap?.call();
 
           setState(() {
             _isTapDown = false;

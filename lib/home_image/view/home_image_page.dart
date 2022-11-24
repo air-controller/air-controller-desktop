@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:air_controller/bootstrap.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
