@@ -66,7 +66,6 @@ class CommonUtil {
         builder: (context) {
           return dialog;
         },
-        barrierColor: Colors.transparent,
         barrierDismissible: false);
   }
 

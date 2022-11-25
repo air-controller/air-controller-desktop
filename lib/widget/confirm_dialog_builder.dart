@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class ConfirmDialogBuilder {
@@ -51,18 +49,15 @@ class ConfirmDialogBuilder {
   Dialog build() {
     return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: Color(0xffdddddd).withOpacity(0.85),
+        backgroundColor: Color(0xfff5f5f5),
         elevation: 0,
         child: StatefulBuilder(
           builder: (context, setState) {
-            return ClipRect(
-              child: BackdropFilter(
-                  filter: new ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                  child: Container(
+            return Container(
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("assets/icons/ic_app_icon.png",
+                          Image.asset("assets/icons/ic_tips.png",
                               width: 60, height: 60),
                           Container(
                             child: Text(contentStr ?? "",
@@ -117,7 +112,6 @@ class ConfirmDialogBuilder {
                                     setState(() => _isNegativeBtnDown = false);
                                   },
                                   onTap: () {
-                                    debugPrint("Negative button clicked");
                                     _onNegativeClick?.call(context);
                                   },
                                 ),
@@ -144,7 +138,6 @@ class ConfirmDialogBuilder {
                                     alignment: Alignment.center,
                                   ),
                                   onTap: () {
-                                    debugPrint("Positive button clicked");
                                     _onPositiveClick?.call(context);
                                   },
                                   onTapDown: (detail) {
@@ -163,14 +156,13 @@ class ConfirmDialogBuilder {
                           )
                         ]),
                     decoration: BoxDecoration(
-                      color: Color(0xffdddddd).withOpacity(0.85),
+                      color: Color(0xfff5f5f5),
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       border: Border.all(color: Color(0xffb8b8b8), width: 1)
                     ),
                     width: 320,
                     height: 220,
-                  )),
-            );
+                  );
           },
         ));
   }
