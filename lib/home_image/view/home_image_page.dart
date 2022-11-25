@@ -1,4 +1,3 @@
-import 'package:air_controller/bootstrap.dart';
 import 'package:air_controller/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,15 +42,6 @@ class HomeImageViewState extends State<HomeImageView>
     with AutomaticKeepAliveClientMixin {
   final _DIVIDER_LINE_COLOR = Color(0xffe0e0e0);
   bool _isBackBtnDown = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      logger.d("图片时长：${timeStamp.inMilliseconds}");
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
