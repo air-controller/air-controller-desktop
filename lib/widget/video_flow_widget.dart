@@ -50,8 +50,6 @@ class _VideoFlowWidgetState extends State<VideoFlowWidget> {
   final _CHECKED_BORDER_COLOR = Color(0xff5d86ec);
   final _BORDER_COLOR = Color(0xffdedede);
 
-  List<VideoItem> _selectedVideos = [];
-
   @override
   Widget build(BuildContext context) {
     var sortedVideos = [...widget.videos];
@@ -190,6 +188,6 @@ class _VideoFlowWidgetState extends State<VideoFlowWidget> {
   }
 
   bool _isChecked(VideoItem video) {
-    return _selectedVideos.contains(video);
+    return widget.selectedVideos.contains(video);
   }
 }
