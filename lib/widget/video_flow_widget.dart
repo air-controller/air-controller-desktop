@@ -41,7 +41,6 @@ class VideoFlowWidget extends StatefulWidget {
 class _VideoFlowWidgetState extends State<VideoFlowWidget> {
   final _OUT_PADDING = 20.0;
   final _IMAGE_SPACE = 10.0;
-  List<VideoItem> _videos = [];
   final _VIDEO_GRID_RADIUS_CHECKED = 5.0;
   final _VIDEO_GRID_BORDER_WIDTH_CHECKED = 3.4;
 
@@ -55,7 +54,7 @@ class _VideoFlowWidgetState extends State<VideoFlowWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var sortedVideos = [..._videos];
+    var sortedVideos = [...widget.videos];
 
     if (widget.sortOrder == VideoOrderType.createTime) {
       sortedVideos.sort((a, b) {
