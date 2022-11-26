@@ -20,13 +20,19 @@ class CommonRepository {
   Future<List<AppInfo>> getInstalledApps() => this.client.getInstalledApps();
 
   Future<DioCore.CancelToken> uploadAndInstall(
-      {required File bundle,
+      {required bool isFromWeb,
+      File? bundle,
+      String? fileName,
+      Uint8List? bytes,
       Function(int sent, int total)? onUploadProgress,
       VoidCallback? onSuccess,
       Function(String? error)? onError,
       VoidCallback? onCancel}) {
     return this.client.uploadAndInstall(
+        isFromWeb: isFromWeb,
         bundle: bundle,
+        fileName: fileName,
+        bytes: bytes,
         onUploadProgress: onUploadProgress,
         onSuccess: onSuccess,
         onError: onError,
@@ -34,12 +40,14 @@ class CommonRepository {
   }
 
   Future<DioCore.CancelToken> tryToInstallFromCache(
-      {required File bundle,
+      {required String fileName,
+      required String md5,
       VoidCallback? onSuccess,
       Function(String? error)? onError,
       VoidCallback? onCancel}) {
     return this.client.tryToInstallFromCache(
-        bundle: bundle,
+        fileName: fileName,
+        md5: md5,
         onSuccess: onSuccess,
         onCancel: onCancel,
         onError: onError);

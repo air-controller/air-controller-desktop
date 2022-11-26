@@ -22,6 +22,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:dio/dio.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:crypto/crypto.dart';
+import 'package:convert/convert.dart';
 
 import '../../bootstrap.dart';
 import '../../model/app_info.dart';
@@ -46,7 +48,9 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
   CancelToken? _exportCancelToken;
 
   void _selectInstallationPackage(
-      BuildContext context, Function(String path) onSelected) async {
+      BuildContext context,
+      Function(bool isWeb, String? fileName, Uint8List? data, String? path)
+          onSelected) async {
     SmartDialog.showLoading();
     final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -55,9 +59,18 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
 
     SmartDialog.dismiss();
 
-    final path = result?.paths.single;
-    if (null != path) {
-      onSelected.call(path);
+    if (!kIsWeb) {
+      final path = result?.paths.single;
+      if (null != path) {
+        onSelected.call(false, null, null, path);
+      }
+    } else {
+      final data = result?.files.single.bytes;
+      final fileName = result?.files.single.name;
+
+      if (data != null) {
+        onSelected.call(true, fileName, data, null);
+      }
     }
   }
 
@@ -117,13 +130,33 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
     context.read<ManageAppsHomeBloc>().add(ManageAppsCancelInstallation());
   }
 
-  void _install(BuildContext context, String apkPath) async {
+  void _install(BuildContext context, bool isWeb,
+      {String? apkPath, String? fileName, Uint8List? data}) async {
     final repo = context.read<CommonRepository>();
 
     SmartDialog.showLoading();
 
+    String name = "";
+    String md5sum = "";
+
+    if (isWeb) {
+      name = fileName ?? "${DateTime.now().millisecondsSinceEpoch}.apk";
+      if (data != null) {
+        md5sum = hex.encode(md5.convert(data).bytes);
+      }
+    } else {
+      if (apkPath != null) {
+        final apkFile = File(apkPath);
+        final digest = await md5.bind(apkFile.openRead()).first;
+        md5sum = hex.encode(digest.bytes);
+
+        name = apkPath.split("/").last;
+      }
+    }
+
     _directlyInstallCancelToken = await repo.tryToInstallFromCache(
-        bundle: File(apkPath),
+        md5: md5sum,
+        fileName: name,
         onSuccess: () {
           SmartDialog.dismiss();
           final currentInstallStatus =
@@ -134,19 +167,24 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
         },
         onError: (error) {
           SmartDialog.dismiss();
-          _uploadAndInstall(context, apkPath);
+          _uploadAndInstall(context, isWeb,
+              apkPath: apkPath, fileName: fileName, data: data);
         });
   }
 
-  void _uploadAndInstall(BuildContext context, String apkPath) async {
+  void _uploadAndInstall(BuildContext context, bool isWeb,
+      {String? apkPath, String? fileName, Uint8List? data}) async {
     final repo = context.read<CommonRepository>();
 
     context.read<ManageAppsHomeBloc>().add(ManageAppsInstallStatusChanged(
         ManageAppsInstallStatusUnit(
             status: ManageAppsInstallStatus.startUpload)));
-
+    logger.e("uploadAndInstall, $isWeb");
     _uploadAndInstallCancelToken = await repo.uploadAndInstall(
-        bundle: File(apkPath),
+        isFromWeb: isWeb,
+        bundle: apkPath != null ? File(apkPath) : null,
+        bytes: data,
+        fileName: fileName,
         onUploadProgress: (current, total) {
           final currentInstallStatus =
               context.read<ManageAppsHomeBloc>().state.installStatus;
@@ -279,8 +317,10 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
         title: context.l10n.installApp,
         onTap: () {
           ContextMenuHelper().hideContextMenu();
-          _selectInstallationPackage(context, (path) async {
-            _install(context, path);
+          _selectInstallationPackage(context,
+              (bool isWeb, String? fileName, Uint8List? data, String? path) {
+            _install(context, isWeb,
+                apkPath: path, fileName: fileName, data: data);
           });
         },
       ),
@@ -664,8 +704,14 @@ class _ManageAppsPageState extends State<ManageAppsPage> {
                           space: 10,
                           margin: EdgeInsets.only(left: 20),
                           onTap: () {
-                            _selectInstallationPackage(context, (path) async {
-                              _install(context, path);
+                            _selectInstallationPackage(context, (bool isWeb,
+                                String? fileName,
+                                Uint8List? data,
+                                String? path) async {
+                              _install(context, isWeb,
+                                  apkPath: path,
+                                  data: data,
+                                  fileName: fileName);
                             });
                           },
                         ),

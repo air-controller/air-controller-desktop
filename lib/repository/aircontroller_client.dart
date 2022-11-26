@@ -546,7 +546,10 @@ class AirControllerClient {
   }
 
   Future<DioCore.CancelToken> uploadAndInstall(
-      {required File bundle,
+      {required bool isFromWeb,
+      File? bundle,
+      String? fileName,
+      Uint8List? bytes,
       Function(int sent, int total)? onUploadProgress,
       VoidCallback? onSuccess,
       Function(String? error)? onError,
@@ -554,13 +557,26 @@ class AirControllerClient {
     final headers = _commonHeaders();
     headers.remove("Content-Type");
 
-    final digest = await md5.bind(bundle.openRead()).first;
-    final md5Sum = hex.encode(digest.bytes);
+    String md5Sum = "";
 
-    final formData = DioCore.FormData.fromMap({
-      "bundle": await DioCore.MultipartFile.fromFile(bundle.path),
-      "md5": md5Sum
-    });
+    DioCore.MultipartFile? multipartFile;
+
+    if (isFromWeb) {
+      if (bytes == null) return DioCore.CancelToken();
+
+      md5Sum = hex.encode(bytes);
+      multipartFile =
+          DioCore.MultipartFile.fromBytes(bytes, filename: fileName);
+    } else {
+      if (bundle == null) return DioCore.CancelToken();
+
+      final digest = await md5.bind(bundle.openRead()).first;
+      md5Sum = hex.encode(digest.bytes);
+      multipartFile = await DioCore.MultipartFile.fromFile(bundle.path);
+    }
+
+    final formData =
+        DioCore.FormData.fromMap({"bundle": multipartFile, "md5": md5Sum});
 
     final cancelToken = DioCore.CancelToken();
     dio.post("/common/install",
@@ -595,25 +611,16 @@ class AirControllerClient {
   }
 
   Future<DioCore.CancelToken> tryToInstallFromCache(
-      {required File bundle,
+      {required String fileName,
+      required String md5,
       VoidCallback? onSuccess,
       Function(String? error)? onError,
       VoidCallback? onCancel}) async {
     final headers = _commonHeaders();
     headers.remove("Content-Type");
 
-    final digest = await md5.bind(bundle.openRead()).first;
-    final md5Sum = hex.encode(digest.bytes);
-
-    int pointIndex = bundle.path.lastIndexOf(".");
-    String name = bundle.path;
-
-    if (pointIndex >= 0) {
-      name = bundle.path.substring(pointIndex + 1);
-    }
-
     final formData =
-        DioCore.FormData.fromMap({"fileName": name, "md5": md5Sum});
+        DioCore.FormData.fromMap({"fileName": fileName, "md5": md5});
 
     final cancelToken = DioCore.CancelToken();
     dio
@@ -1364,7 +1371,7 @@ class AirControllerClient {
       throw BusinessError(
           "Download file failure, status code: ${response.statusCode}");
     }
-  } 
+  }
 
   Map<String, String> _commonHeaders() {
     BuildContext? context = EnterPage.enterKey.currentContext;

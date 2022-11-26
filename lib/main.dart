@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'bootstrap.dart';
 import 'constant.dart';
@@ -14,6 +15,7 @@ void main() async {
   if (!kIsWeb) {
     await _setUpWindowManager();
   } else {
+    usePathUrlStrategy();
     html.window.document.onContextMenu.listen((evt) => evt.preventDefault());
   }
 
