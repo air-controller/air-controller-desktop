@@ -152,8 +152,7 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
             AllVideosDeleteStatusUnit(status: AllVideosDeleteStatus.loading)));
 
     try {
-      await _fileRepository
-          .deleteFiles(event.videos.map((video) => video.path).toList());
+      await _videoRepository.deleteVideos(event.videos);
 
       List<VideoItem> videos = [...state.videos];
       List<VideoItem> checkedVideos = [...state.checkedVideos];
@@ -180,8 +179,8 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
         copyStatus:
             AllVideosCopyStatusUnit(status: AllVideosCopyStatus.start)));
 
-    _fileRepository.copyFilesTo(
-        paths: event.videos.map((video) => video.path).toList(),
+    _videoRepository.copyVideosTo(
+        videos: event.videos,
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(AllVideosCopyStatusChanged(AllVideosCopyStatusUnit(
@@ -257,8 +256,9 @@ class AllVideosBloc extends Bloc<AllVideosEvent, AllVideosState> {
       CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
       emit(state.copyWith(showLoading: false));
     } catch (e) {
-      emit(state.copyWith(showLoading: false));
-      emit(state.copyWith(showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(
+          showLoading: false, showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(showError: false));
     }
   }
 }

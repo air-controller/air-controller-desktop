@@ -298,8 +298,7 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
             AllAlbumsDeleteStatusUnit(status: AllAlbumsDeleteStatus.loading)));
 
     try {
-      await _fileRepository
-          .deleteFiles(event.albums.map((album) => album.path).toList());
+      await _imageRepository.deleteAlbums(event.albums);
 
       List<AlbumItem> albums = [...state.albums];
       List<AlbumItem> checkedAlbums = [...state.checkedAlbums];
@@ -333,9 +332,9 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
       fileName = "${event.albums.single.name}.zip";
     }
 
-    _fileRepository.copyFilesTo(
+    _imageRepository.copyImageAlbumsTo(
+        albums: event.albums,
         fileName: fileName,
-        paths: event.albums.map((album) => album.path).toList(),
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
@@ -376,8 +375,7 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
             AllAlbumsDeleteStatusUnit(status: AllAlbumsDeleteStatus.loading)));
 
     try {
-      await _fileRepository
-          .deleteFiles(event.images.map((album) => album.path).toList());
+      await _imageRepository.deleteImages(event.images);
 
       List<ImageItem> images = [...state.loadImagesInAlbumStatus.images];
       List<ImageItem> checkedImages = [
@@ -422,8 +420,8 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
             fileType: AllAlbumsFileType.image,
             status: AllAlbumsCopyStatus.start)));
 
-    _fileRepository.copyFilesTo(
-        paths: event.images.map((album) => album.path).toList(),
+    _imageRepository.copyImagesTo(
+        images: event.images,
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(AllAlbumsCopyStatusChanged(AllAlbumsCopyStatusUnit(
@@ -565,6 +563,7 @@ class AllAlbumsBloc extends Bloc<AllAlbumsEvent, AllAlbumsState> {
     } catch (e) {
       emit(state.copyWith(
           showLoading: false, showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(showError: false));
     }
   }
 }

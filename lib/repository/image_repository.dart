@@ -18,24 +18,6 @@ class ImageRepository {
 
   Future<List<ImageItem>> getCameraImages() => this.client.getCameraImages();
 
-  Future<ResponseEntity> deleteImages(List<ImageItem> images) =>
-      this.client.deleteFiles(images.map((image) => image.path).toList());
-
-  void copyImagesTo(
-          {required List<ImageItem> images,
-          required String dir,
-          Function(String fileName)? onDone,
-          Function(String fileName, int current, int total)? onProgress,
-          Function(String error)? onError}) =>
-      this.client.copyFileTo(
-          paths: images.map((image) => image.path).toList(),
-          dir: dir,
-          onDone: onDone,
-          onError: onError,
-          onProgress: onProgress);
-
-  void cancelCopy() => this.client.cancelDownload();
-
   Future<List<AlbumItem>> getAllAlbums() => this.client.getAllAlbums();
 
   Future<List<ImageItem>> getImagesInAlbum(AlbumItem albumItem) =>
@@ -67,10 +49,52 @@ class ImageRepository {
   }
 
   Future<Uint8List> readAlbumsAsBytes(List<AlbumItem> albums) async {
-    final paths = albums.map((album) => album.path).toList();
-    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+    final ids = albums.map((album) => album.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
 
-    String api = "/stream/download?paths=$pathsStr";
+    String api = "/image/downloadAlbums?ids=$idsStr";
     return await this.client.readAsBytes(api);
   }
+
+  Future<ResponseEntity> deleteImages(List<ImageItem> images) async {
+    return await this.client.deleteImages(images.map((e) => e.id).toList());
+  }
+
+  Future<ResponseEntity> deleteAlbums(List<AlbumItem> albums) async {
+    return await this.client.deleteAlbums(albums.map((e) => e.id).toList());
+  }
+
+  Future<void> copyImagesTo(
+      {required List<ImageItem> images,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    return await this.client.copyImagesTo(
+        dir: dir,
+        images: images,
+        onDone: onDone,
+        onProgress: onProgress,
+        onError: onError,
+        fileName: fileName);
+  }
+
+  Future<void> copyImageAlbumsTo(
+      {required List<AlbumItem> albums,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    return await this.client.copyImageAlbumsTo(
+        albums: albums,
+        dir: dir,
+        onDone: onDone,
+        onProgress: onProgress,
+        onError: onError,
+        fileName: fileName);
+  }
+
+  void cancelCopy() => this.client.cancelDownload();
 }

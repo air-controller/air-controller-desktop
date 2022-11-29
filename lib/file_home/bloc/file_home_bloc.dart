@@ -265,9 +265,8 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     emit(state.copyWith(deleteStatus: FileHomeDeleteStatus.loading));
 
     try {
-      await _fileRepository.deleteFiles(event.files
-          .map((file) => "${file.data.folder}/${file.data.name}")
-          .toList());
+      await _fileRepository
+          .deleteFiles(event.files.map((e) => e.data).toList());
 
       List<FileNode> files = [...state.files];
       List<FileNode> checkedFiles = [...state.checkedFiles];
@@ -661,6 +660,7 @@ class FileHomeBloc extends Bloc<FileHomeEvent, FileHomeState> {
     } catch (e) {
       emit(state.copyWith(
           showLoading: false, showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(showError: false));
     }
   }
 }

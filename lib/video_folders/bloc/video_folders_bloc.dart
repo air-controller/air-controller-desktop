@@ -270,8 +270,7 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
     emit(state.copyWith(deleteStatus: VideoFoldersDeleteStatus.loading));
 
     try {
-      await _fileRepository.deleteFiles(
-          event.videoFolders.map((folder) => folder.path).toList());
+      await _videoRepository.deleteVideoFolders(event.videoFolders);
 
       List<VideoFolderItem> videoFolders = [...state.videoFolders];
       List<VideoFolderItem> checkedVideoFolders = [
@@ -306,9 +305,9 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
       fileName = "${event.folders.single.name}.zip";
     }
 
-    _fileRepository.copyFilesTo(
+    _videoRepository.copyVideoFoldersTo(
         fileName: fileName,
-        paths: event.folders.map((folder) => folder.path).toList(),
+        videoFolders: event.folders,
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
@@ -349,8 +348,8 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
             fileType: VideoFoldersFileType.folder,
             status: VideoFoldersCopyStatus.start)));
 
-    _fileRepository.copyFilesTo(
-        paths: event.videos.map((folder) => folder.path).toList(),
+    _videoRepository.copyVideosTo(
+        videos: event.videos,
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(VideoFoldersCopyStatusChanged(VideoFoldersCopyStatusUnit(
@@ -379,8 +378,7 @@ class VideoFoldersBloc extends Bloc<VideoFoldersEvent, VideoFoldersState> {
     emit(state.copyWith(deleteStatus: VideoFoldersDeleteStatus.loading));
 
     try {
-      await _fileRepository
-          .deleteFiles(event.videos.map((folder) => folder.path).toList());
+      await _videoRepository.deleteVideos(event.videos);
 
       List<VideoItem> videos = [...state.loadVideosInFolderStatus.videos];
       List<VideoItem> checkedVideos = [

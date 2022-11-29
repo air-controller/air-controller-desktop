@@ -283,8 +283,8 @@ class AllImagesBloc extends Bloc<AllImagesEvent, AllImagesState> {
       CommonUtil.downloadAsWebFile(bytes: bytes, fileName: fileName);
       emit(state.copyWith(showLoading: false));
     } catch (e) {
-      emit(state.copyWith(showLoading: false));
-      emit(state.copyWith(showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(showLoading: false, showError: true, errorMessage: e.toString()));
+      emit(state.copyWith(showError: false));
     }
   }
 }

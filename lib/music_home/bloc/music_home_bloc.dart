@@ -151,8 +151,8 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
             MusicHomeDeleteStatusUnit(status: MusicHomeDeleteStatus.loading)));
 
     try {
-      await fileRepository
-          .deleteFiles(event.musics.map((music) => music.path).toList());
+      await audioRepository
+          .deleteAudios(event.musics.map((music) => music.path).toList());
 
       List<AudioItem> musics = [...state.musics];
       List<AudioItem> checkedMusics = [...state.checkedMusics];
@@ -179,8 +179,8 @@ class MusicHomeBloc extends Bloc<MusicHomeEvent, MusicHomeState> {
         copyStatus:
             MusicHomeCopyStatusUnit(status: MusicHomeCopyStatus.start)));
 
-    fileRepository.copyFilesTo(
-        paths: event.musics.map((music) => music.path).toList(),
+    audioRepository.copyAudiosTo(
+        audios: event.musics,
         dir: event.dir,
         onProgress: (fileName, current, total) {
           add(MusicHomeCopyStatusChanged(MusicHomeCopyStatusUnit(

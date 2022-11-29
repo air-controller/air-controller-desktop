@@ -141,34 +141,6 @@ class AirControllerClient {
     }
   }
 
-  @Deprecated("Use deleteFiles instead!")
-  Future<List<ImageItem>> deleteImages(List<ImageItem> images) async {
-    var url = Uri.parse("${_domain}/image/delete");
-    Response response = await post(url,
-        headers: _commonHeaders(),
-        body:
-            json.encode({"paths": images.map((image) => image.path).toList()}));
-
-    if (response.statusCode == 200) {
-      var body = response.body;
-
-      final map = jsonDecode(body);
-      final httpResponseEntity = ResponseEntity.fromJson(map);
-
-      if (httpResponseEntity.isSuccessful()) {
-        return images;
-      } else {
-        throw BusinessError(httpResponseEntity.msg == null
-            ? "Unknown error"
-            : httpResponseEntity.msg);
-      }
-    } else {
-      throw BusinessError(response.reasonPhrase != null
-          ? response.reasonPhrase!
-          : "Unknown error");
-    }
-  }
-
   void copyFileTo(
       {required List<String> paths,
       required String dir,
@@ -1370,6 +1342,401 @@ class AirControllerClient {
     } else {
       throw BusinessError(
           "Download file failure, status code: ${response.statusCode}");
+    }
+  }
+
+  Future<ResponseEntity> deleteImages(List<String> ids) async {
+    var url = Uri.parse("${_domain}/image/deleteImages");
+    Response response = await post(url,
+        headers: _commonHeaders(), body: json.encode({"ids": ids}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<ResponseEntity> deleteAlbums(List<String> ids) async {
+    var url = Uri.parse("${_domain}/image/deleteAlbums");
+    Response response = await post(url,
+        headers: _commonHeaders(), body: json.encode({"ids": ids}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<ResponseEntity> deleteAudios(List<String> ids) async {
+    var url = Uri.parse("${_domain}/audio/delete");
+    Response response = await post(url,
+        headers: _commonHeaders(), body: json.encode({"ids": ids}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<ResponseEntity> deleteVideos(List<String> ids) async {
+    var url = Uri.parse("${_domain}/video/deleteVideos");
+    Response response = await post(url,
+        headers: _commonHeaders(), body: json.encode({"ids": ids}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<ResponseEntity> deleteVideoFolders(List<String> ids) async {
+    var url = Uri.parse("${_domain}/video/deleteVideoFolders");
+    Response response = await post(url,
+        headers: _commonHeaders(), body: json.encode({"ids": ids}));
+
+    if (response.statusCode != 200) {
+      throw BusinessError(response.reasonPhrase != null
+          ? response.reasonPhrase!
+          : "Unknown error");
+    } else {
+      var body = response.body;
+
+      final map = jsonDecode(body);
+      final httpResponseEntity = ResponseEntity.fromJson(map);
+
+      if (httpResponseEntity.isSuccessful()) {
+        return httpResponseEntity;
+      } else {
+        throw BusinessError(httpResponseEntity.msg == null
+            ? "Unknown error"
+            : httpResponseEntity.msg!);
+      }
+    }
+  }
+
+  Future<void> copyImagesTo(
+      {required List<ImageItem> images,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (images.length <= 1) {
+        int index = images.single.path.lastIndexOf("/");
+
+        if (index != -1) {
+          name = images.single.path.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch));
+
+        name = "images_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    final ids = images.map((image) => image.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
+
+    String api = "${_domain}/image/downloadImages?ids=$idsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
+    }
+  }
+
+  Future<void> copyImageAlbumsTo(
+      {required List<AlbumItem> albums,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (albums.length <= 1) {
+        int index = albums.single.path.lastIndexOf("/");
+
+        if (index != -1) {
+          name = albums.single.path.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch));
+
+        name = "albums_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    final ids = albums.map((image) => image.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
+
+    String api = "${_domain}/image/downloadAlbums?ids=$idsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
+    }
+  }
+
+  Future<void> copyAudiosTo(
+      {required List<AudioItem> audios,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (audios.length <= 1) {
+        int index = audios.single.path.lastIndexOf("/");
+
+        if (index != -1) {
+          name = audios.single.path.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch));
+
+        name = "audios_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    final ids = audios.map((image) => image.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
+
+    String api = "${_domain}/audio/download?ids=$idsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
+    }
+  }
+
+  Future<void> copyVideosTo(
+      {required List<VideoItem> videos,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (videos.length <= 1) {
+        int index = videos.single.path.lastIndexOf("/");
+
+        if (index != -1) {
+          name = videos.single.path.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch));
+
+        name = "videos_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    final ids = videos.map((image) => image.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
+
+    String api = "${_domain}/video/downloadVideos?ids=$idsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
+    }
+  }
+
+  Future<void> copyVideoFoldersTo(
+      {required List<VideoFolderItem> videoFolders,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    String name = "";
+
+    if (fileName == null) {
+      if (videoFolders.length <= 1) {
+        int index = videoFolders.single.path.lastIndexOf("/");
+
+        if (index != -1) {
+          name = videoFolders.single.path.substring(index + 1);
+        }
+      } else {
+        final df = DateFormat("yyyyMd_HHmmss");
+
+        String formatTime = df.format(new DateTime.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch));
+
+        name = "videoFolders_${formatTime}.zip";
+      }
+    } else {
+      name = fileName;
+    }
+
+    var options = DownloaderUtils(
+        progress: ProgressImplementation(),
+        file: File("$dir/$name"),
+        onDone: () {
+          onDone?.call(name);
+        },
+        progressCallback: (current, total) {
+          onProgress?.call(name, current, total);
+        });
+
+    final ids = videoFolders.map((image) => image.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
+
+    String api = "${_domain}/video/downloadVideoFolders?ids=$idsStr";
+
+    try {
+      if (null == _downloaderCore) {
+        _downloaderCore = await Flowder.download(api, options);
+      } else {
+        _downloaderCore?.download(api, options);
+      }
+    } catch (e) {
+      onError?.call(e.toString());
     }
   }
 

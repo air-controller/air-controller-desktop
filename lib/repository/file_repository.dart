@@ -15,8 +15,8 @@ class FileRepository {
 
   FileRepository({required AirControllerClient client}) : this.client = client;
 
-  Future<ResponseEntity> deleteFiles(List<String> paths) =>
-      this.client.deleteFiles(paths);
+  Future<ResponseEntity> deleteFiles(List<FileItem> files) =>
+      this.client.deleteFiles(files.map((e) => e.path).toList());
 
   void copyFilesTo(
           {required List<String> paths,

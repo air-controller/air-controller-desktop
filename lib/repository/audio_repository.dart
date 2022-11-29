@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../model/audio_item.dart';
+import '../model/response_entity.dart';
 import 'aircontroller_client.dart';
 
 class AudioRepository {
@@ -29,10 +30,30 @@ class AudioRepository {
           onCancel: onCancel);
 
   Future<Uint8List> readAsBytes(List<AudioItem> audios) async {
-    final paths = audios.map((audio) => audio.path).toList();
-    String pathsStr = Uri.encodeComponent(jsonEncode(paths));
+    final ids = audios.map((audio) => audio.id).toList();
+    String idsStr = Uri.encodeComponent(jsonEncode(ids));
 
-    String api = "/stream/download?paths=$pathsStr";
+    String api = "/audio/download?ids=$idsStr";
     return await this.client.readAsBytes(api);
+  }
+
+  Future<ResponseEntity> deleteAudios(List<String> ids) async {
+    return await this.client.deleteAudios(ids);
+  }
+
+  Future<void> copyAudiosTo(
+      {required List<AudioItem> audios,
+      required String dir,
+      Function(String fileName)? onDone,
+      Function(String fileName, int current, int total)? onProgress,
+      Function(String error)? onError,
+      String? fileName = null}) async {
+    return this.client.copyAudiosTo(
+        audios: audios,
+        dir: dir,
+        onDone: onDone,
+        onProgress: onProgress,
+        onError: onError,
+        fileName: fileName);
   }
 }
