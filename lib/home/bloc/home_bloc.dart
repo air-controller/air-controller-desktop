@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:air_controller/bootstrap.dart';
+import 'package:air_controller/constant.dart';
 import 'package:auto_updater/auto_updater.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -113,8 +113,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       _updateChecker.onCheckFailure((error) {
         if (isClosed) return;
 
-        log("HomeBloc, _onCheckUpdateRequested, onCheckFailure: $error");
-
         add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
             status: UpdateCheckStatus.failure,
             isAutoCheck: event.isAutoCheck,
@@ -123,8 +121,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       _updateChecker.onNoUpdateAvailable(() {
         if (isClosed) return;
-
-        log("HomeBloc, _onCheckUpdateRequested, onNoUpdateAvailable");
 
         add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
             status: UpdateCheckStatus.success,
@@ -136,15 +132,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           .onUpdateAvailable((publishTime, version, assets, updateInfo) {
         if (isClosed) return;
 
-        log("HomeBloc, _onCheckUpdateRequested, onUpdateAvailable, version: $version, assets size: ${assets.length}, updateInfo: $updateInfo");
-
         add(HomeNewVersionAvailable(
             publishTime, version, assets, updateInfo, event.isAutoCheck));
       });
 
       _updateChecker.check();
     } else {
-      autoUpdater.checkForUpdates();
+      final feedURL = event.isInland ? urlAppcastInland : urlAppCastOverseas;
+      await autoUpdater.setFeedURL(feedURL);
+      await autoUpdater.checkForUpdates();
+      await autoUpdater.setScheduledCheckInterval(3600);
     }
   }
 

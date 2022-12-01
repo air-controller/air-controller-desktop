@@ -119,9 +119,9 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
                       });
                     },
                     onTap: () {
-                      context
-                          .read<HomeBloc>()
-                          .add(HomeCheckUpdateRequested(isAutoCheck: false));
+                      context.read<HomeBloc>().add(HomeCheckUpdateRequested(
+                          isAutoCheck: false,
+                          isInland: CommonUtil.isInland(context)));
                     },
                   ),
                   margin: EdgeInsets.only(left: 10),

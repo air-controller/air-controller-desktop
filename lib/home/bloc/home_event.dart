@@ -22,8 +22,9 @@ class HomeSubscriptionRequested extends HomeEvent {
 
 class HomeCheckUpdateRequested extends HomeEvent {
   final bool isAutoCheck;
+  final bool isInland;
 
-  const HomeCheckUpdateRequested({this.isAutoCheck = true});
+  const HomeCheckUpdateRequested({this.isAutoCheck = true, this.isInland = true});
 
   @override
   List<Object?> get props => [isAutoCheck];
@@ -40,7 +41,8 @@ class HomeNewVersionAvailable extends HomeEvent {
       this.updateInfo, this.isAutoCheck);
 
   @override
-  List<Object?> get props => [publishTime, version, assets, updateInfo, isAutoCheck];
+  List<Object?> get props =>
+      [publishTime, version, assets, updateInfo, isAutoCheck];
 }
 
 class HomeProgressIndicatorStatusChanged extends HomeEvent {

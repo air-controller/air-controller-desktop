@@ -69,17 +69,23 @@ class HomeBlocProviderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          HomeBloc(commonRepository: context.read<CommonRepository>())
-            ..add(const HomeSubscriptionRequested())
-            ..add(HomeCheckUpdateRequested()),
+      create: (_) => HomeBloc(
+          commonRepository: context.read<CommonRepository>())
+        ..add(const HomeSubscriptionRequested())
+        ..add(HomeCheckUpdateRequested(isInland: CommonUtil.isInland(context))),
       child: HomeView(),
     );
   }
 }
 
-// ignore: must_be_immutable
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
+  const HomeView({Key? key}) : super(key: key);
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
   final _icons_size = 30.0;
   final _tab_height = 50.0;
   final _icon_margin_hor = 10.0;
@@ -93,7 +99,10 @@ class HomeView extends StatelessWidget {
   String? _downloadUpdateDir;
   StreamSubscription<UpdateMobileInfo>? _updateMobileInfoSubscription;
 
-  HomeView({Key? key}) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

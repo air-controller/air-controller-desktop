@@ -224,6 +224,8 @@ const urlWeibo = "https://weibo.com/u/6140262139";
 const urlWechatOfficial = "https://youngfeng.com/assets/images/mpwexin.jpg";
 const urlQQGroup = "https://jq.qq.com/?_wv=1027&k=eHQ3Sv2J";
 const urlUpdateDomain = "https://docs.ac.yhdm360.cn";
+const urlAppcastInland = "https://docs.ac.yhdm360.cn/update/appcast.xml";
+const urlAppCastOverseas = "https://raw.githubusercontent.com/yuanhoujun/material/main/AirController/update/appcast.xml";
 
 const routeEnter = "/enter";
 const routeIndex = "/index";
