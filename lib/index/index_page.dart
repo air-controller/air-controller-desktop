@@ -75,9 +75,7 @@ class _IndexPageState extends State<IndexPage> {
           height: 50,
           margin: EdgeInsets.only(left: 20, top: 15),
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueGrey
-            ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
               onPressed: () {
                 _downloadApp();
               },
@@ -119,6 +117,12 @@ class _IndexPageState extends State<IndexPage> {
                     text: context.l10n.github,
                     onPressed: () {
                       SystemAppLauncher.openUrl(urlGitHub);
+                    }),
+                SizedBox(width: 10),
+                _buildTextButton(
+                    text: context.l10n.feedback,
+                    onPressed: () {
+                      _openFeedback();
                     }),
                 SizedBox(width: 20)
               ],
@@ -474,9 +478,23 @@ class _IndexPageState extends State<IndexPage> {
               onPressed: () {
                 SystemAppLauncher.openUrl(urlGitHub);
               }),
+          SizedBox(height: 10),
+          _MenuTextButton(
+              text: context.l10n.feedback,
+              onPressed: () {
+                _openFeedback();
+              }),
         ],
       ),
     );
+  }
+
+  void _openFeedback() {
+    if (CommonUtil.isInland(context)) {
+      SystemAppLauncher.openUrl(urlFeedback);
+    } else {
+      SystemAppLauncher.openUrl(urlIssuesGitHub);
+    }
   }
 
   Widget _buildCommunityView() {
