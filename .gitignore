@@ -45,7 +45,6 @@ app.*.map.json
 /android/app/release
 android/
 ios/
-web/
 .metadata
 pubspec.lock
 .vscode/
