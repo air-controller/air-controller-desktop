@@ -1,6 +1,9 @@
 PODS:
   - audioplayers_darwin (0.0.1):
     - FlutterMacOS
+  - auto_updater (0.0.1):
+    - FlutterMacOS
+    - Sparkle
   - connectivity_plus_macos (0.0.1):
     - FlutterMacOS
     - ReachabilitySwift
@@ -23,6 +26,7 @@ PODS:
     - FlutterMacOS
   - shared_preferences_macos (0.0.1):
     - FlutterMacOS
+  - Sparkle (2.2.2)
   - sqflite (0.0.2):
     - FlutterMacOS
     - FMDB (>= 2.7.5)
@@ -33,6 +37,7 @@ PODS:
 
 DEPENDENCIES:
   - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos`)
+  - auto_updater (from `Flutter/ephemeral/.symlinks/plugins/auto_updater/macos`)
   - connectivity_plus_macos (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus_macos/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - device_info_plus_macos (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus_macos/macos`)
@@ -50,10 +55,13 @@ SPEC REPOS:
   trunk:
     - FMDB
     - ReachabilitySwift
+    - Sparkle
 
 EXTERNAL SOURCES:
   audioplayers_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/macos
+  auto_updater:
+    :path: Flutter/ephemeral/.symlinks/plugins/auto_updater/macos
   connectivity_plus_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus_macos/macos
   desktop_drop:
@@ -81,10 +89,11 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audioplayers_darwin: dcad41de4fbd0099cb3749f7ab3b0cb8f70b810c
+  auto_updater: d3c03e9e5f2a00ec78572d9f7473cb8c9a6c0273
   connectivity_plus_macos: f6e86fd000e971d361e54b5afcadc8c8fa773308
   desktop_drop: 69eeff437544aa619c8db7f4481b3a65f7696898
   device_info_plus_macos: 1ad388a1ef433505c4038e7dd9605aadd1e2e9c7
-  FlutterMacOS: 57701585bf7de1b3fc2bb61f6378d73bbdea8424
+  FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   network_info_plus_macos: d2b9e6c01c291449b91a584217aa53b113847dbd
   package_info_plus_macos: f010621b07802a241d96d01876d6705f15e77c1c
@@ -92,6 +101,7 @@ SPEC CHECKSUMS:
   ReachabilitySwift: 985039c6f7b23a1da463388634119492ff86c825
   screen_retriever: 59634572a57080243dd1bf715e55b6c54f241a38
   shared_preferences_macos: a64dc611287ed6cbe28fd1297898db1336975727
+  Sparkle: cb8c851f6247a9acbe9e236539404c5be529f74d
   sqflite: a5789cceda41d54d23f31d6de539d65bb14100ea
   url_launcher_macos: 597e05b8e514239626bcf4a850fcf9ef5c856ec3
   window_manager: 3a1844359a6295ab1e47659b1a777e36773cd6e8

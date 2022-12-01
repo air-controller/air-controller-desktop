@@ -3,7 +3,9 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:air_controller/bootstrap.dart';
+import 'package:auto_updater/auto_updater.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/mobile_info.dart';
@@ -102,42 +104,48 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _onCheckUpdateRequested(
       HomeCheckUpdateRequested event, Emitter<HomeState> emit) async {
-    add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-        status: UpdateCheckStatus.start, isAutoCheck: event.isAutoCheck)));
+    if (kIsWeb) return;
 
-    _updateChecker.onCheckFailure((error) {
-      if (isClosed) return;
-
-      log("HomeBloc, _onCheckUpdateRequested, onCheckFailure: $error");
-
+    if (Platform.isLinux) {
       add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-          status: UpdateCheckStatus.failure,
-          isAutoCheck: event.isAutoCheck,
-          failureReason: "${error.toString()}")));
-    });
+          status: UpdateCheckStatus.start, isAutoCheck: event.isAutoCheck)));
 
-    _updateChecker.onNoUpdateAvailable(() {
-      if (isClosed) return;
+      _updateChecker.onCheckFailure((error) {
+        if (isClosed) return;
 
-      log("HomeBloc, _onCheckUpdateRequested, onNoUpdateAvailable");
+        log("HomeBloc, _onCheckUpdateRequested, onCheckFailure: $error");
 
-      add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
-          status: UpdateCheckStatus.success,
-          isAutoCheck: event.isAutoCheck,
-          hasUpdateAvailable: false)));
-    });
+        add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
+            status: UpdateCheckStatus.failure,
+            isAutoCheck: event.isAutoCheck,
+            failureReason: "${error.toString()}")));
+      });
 
-    _updateChecker
-        .onUpdateAvailable((publishTime, version, assets, updateInfo) {
-      if (isClosed) return;
+      _updateChecker.onNoUpdateAvailable(() {
+        if (isClosed) return;
 
-      log("HomeBloc, _onCheckUpdateRequested, onUpdateAvailable, version: $version, assets size: ${assets.length}, updateInfo: $updateInfo");
+        log("HomeBloc, _onCheckUpdateRequested, onNoUpdateAvailable");
 
-      add(HomeNewVersionAvailable(
-          publishTime, version, assets, updateInfo, event.isAutoCheck));
-    });
+        add(HomeCheckUpdateStatusChanged(UpdateCheckStatusUnit(
+            status: UpdateCheckStatus.success,
+            isAutoCheck: event.isAutoCheck,
+            hasUpdateAvailable: false)));
+      });
 
-    _updateChecker.check();
+      _updateChecker
+          .onUpdateAvailable((publishTime, version, assets, updateInfo) {
+        if (isClosed) return;
+
+        log("HomeBloc, _onCheckUpdateRequested, onUpdateAvailable, version: $version, assets size: ${assets.length}, updateInfo: $updateInfo");
+
+        add(HomeNewVersionAvailable(
+            publishTime, version, assets, updateInfo, event.isAutoCheck));
+      });
+
+      _updateChecker.check();
+    } else {
+      autoUpdater.checkForUpdates();
+    }
   }
 
   void _onNewVersionAvailable(

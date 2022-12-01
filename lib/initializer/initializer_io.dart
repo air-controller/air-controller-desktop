@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_updater/auto_updater.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -10,6 +11,10 @@ Future<bool> init() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await _setUpWindowManager();
+  String feedURL = 'http://localhost:5000/appcast.xml';
+  await autoUpdater.setFeedURL(feedURL);
+  await autoUpdater.checkForUpdates();
+  await autoUpdater.setScheduledCheckInterval(3600);
   bootstrap();
 
   return true;

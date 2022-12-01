@@ -1,0 +1,33 @@
+env:
+output: dist/
+releases:
+  - name: dev
+    jobs:
+      - name: macos-dmg
+        package:
+          platform: macos
+          target: dmg
+          build_args:
+            dart-define:
+              APP_ENV: dev
+      - name: macos-zip
+        package:
+          platform: macos
+          target: zip
+          build_args:
+            dart-define:
+              APP_ENV: dev
+      - name: windows-exe
+        package:
+          platform: windows
+          target: exe
+          build_args:
+            dart-define:
+              APP_ENV: dev
+      - name: windows-zip
+        package:
+          platform: windows
+          target: zip
+          build_args:
+            dart-define:
+              APP_ENV: dev

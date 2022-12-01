@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SUPublicEDKey</key>
+    <string>+xULVtkGc1z0nFwl6NozE7IvRzk1V6WUCUQmT4S9cxk=</string>
 </dict>
 </plist>

@@ -49,3 +49,4 @@ ios/
 pubspec.lock
 .vscode/
 .VSCodeCounter
+dist/

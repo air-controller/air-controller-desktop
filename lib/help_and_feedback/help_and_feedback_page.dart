@@ -119,7 +119,6 @@ class _HelpAndFeedbackState extends State<HelpAndFeedbackPage> {
                       });
                     },
                     onTap: () {
-                      // eventBus.fire(CheckForUpdatesEvent(false));
                       context
                           .read<HomeBloc>()
                           .add(HomeCheckUpdateRequested(isAutoCheck: false));
