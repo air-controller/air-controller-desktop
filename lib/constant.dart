@@ -218,3 +218,15 @@ const urlWindowsApp = "";
 const urlMacApp = "";
 const urlLinuxApp = "";
 const urlAndroidApp = "";
+const urlGitHub = "https://github.com/air-controller/air-controller-desktop";
+const urlDocs =
+    "https://github.com/air-controller/air-controller-desktop/blob/master/README.md";
+const urlIssues = "";
+const urlWeibo = "https://weibo.com/u/6140262139";
+const urlWechatOfficial = "https://youngfeng.com/assets/images/mpwexin.jpg";
+const urlQQGroup = "https://jq.qq.com/?_wv=1027&k=eHQ3Sv2J";
+const urlUpdateDomain = "https://ac.yhdm360.cn";
+
+const routeEnter = "/enter";
+const routeIndex = "/index";
+const routeHome = "/home";

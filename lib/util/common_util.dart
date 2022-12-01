@@ -193,4 +193,14 @@ class CommonUtil {
     html.document.body!.children.remove(anchor);
     html.Url.revokeObjectUrl(url);
   }
+
+  static bool isInland(BuildContext context) {
+    try {
+      final locale = Localizations.localeOf(context);
+      return locale.countryCode?.toUpperCase() == "CN";
+    } catch (e) {
+      logger.e("isInland: error: ${e.toString()}");
+      return true;
+    }
+  }
 }

@@ -1,7 +1,14 @@
 import 'package:air_controller/constant.dart';
 import 'package:air_controller/l10n/l10n.dart';
+import 'package:air_controller/model/update_info.dart';
+import 'package:air_controller/util/common_util.dart';
 import 'package:air_controller/util/system_app_launcher.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../bootstrap.dart';
 
 class IndexPage extends StatefulWidget {
   const IndexPage({Key? key}) : super(key: key);
@@ -13,6 +20,31 @@ class IndexPage extends StatefulWidget {
 class _IndexPageState extends State<IndexPage> {
   bool _showMenuView = false;
   final _widthBreakPoint = 960;
+  late Dio _dio;
+  UpdateInfo? _updateInfo;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _dio = Dio();
+    _dio.options.baseUrl = urlUpdateDomain;
+    _dio.options.connectTimeout = 60000;
+    _dio.options.receiveTimeout = 60000;
+
+    _obtainUpdateInfo();
+  }
+
+  void _obtainUpdateInfo() async {
+    try {
+      final updateInfo = await _getUpdateInfo();
+      setState(() {
+        _updateInfo = updateInfo;
+      });
+    } catch (e) {
+      logger.e(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +70,20 @@ class _IndexPageState extends State<IndexPage> {
             ? _buildHeaderWideSize()
             : _buildHeaderSmallSize(),
         _buildIntroView(),
+        Container(
+          width: 300,
+          height: 50,
+          margin: EdgeInsets.only(left: 20, top: 15),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueGrey
+            ),
+              onPressed: () {
+                _downloadApp();
+              },
+              child:
+                  Text(context.l10n.download, style: TextStyle(fontSize: 18))),
+        ),
         _buildDownloadButtons(),
         _buildPreviewView(),
         _buildStartWebView(),
@@ -57,11 +103,23 @@ class _IndexPageState extends State<IndexPage> {
               children: [
                 _buildLogoView(),
                 Spacer(),
-                _buildTextButton(text: context.l10n.web, onPressed: () {}),
+                _buildTextButton(
+                    text: context.l10n.web,
+                    onPressed: () {
+                      Navigator.pushNamed(context, routeEnter);
+                    }),
                 SizedBox(width: 10),
-                _buildTextButton(text: context.l10n.docs, onPressed: () {}),
+                _buildTextButton(
+                    text: context.l10n.docs,
+                    onPressed: () {
+                      SystemAppLauncher.openUrl(urlDocs);
+                    }),
                 SizedBox(width: 10),
-                _buildTextButton(text: context.l10n.github, onPressed: () {}),
+                _buildTextButton(
+                    text: context.l10n.github,
+                    onPressed: () {
+                      SystemAppLauncher.openUrl(urlGitHub);
+                    }),
                 SizedBox(width: 20)
               ],
             )),
@@ -133,15 +191,22 @@ class _IndexPageState extends State<IndexPage> {
 
   Widget _buildDownloadButton(
       {required String iconName, Function()? onPressed}) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-          color: Color(0xff424242),
-          borderRadius: BorderRadius.all(Radius.circular(30))),
-      padding: EdgeInsets.all(10),
-      child: Image.asset("assets/icons/$iconName",
-          fit: BoxFit.fitWidth, color: Colors.white),
+    return InkWell(
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      onTap: onPressed,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+            color: Color(0xff424242),
+            borderRadius: BorderRadius.all(Radius.circular(30))),
+        padding: EdgeInsets.all(10),
+        child: Image.asset("assets/icons/$iconName",
+            fit: BoxFit.fitWidth, color: Colors.white),
+      ),
     );
   }
 
@@ -153,28 +218,146 @@ class _IndexPageState extends State<IndexPage> {
             _buildDownloadButton(
                 iconName: "ic_windows.png",
                 onPressed: () {
-                  SystemAppLauncher.openUrl(urlWindowsApp);
+                  _downloadWindowsApp();
                 }),
             SizedBox(width: 20),
             _buildDownloadButton(
                 iconName: "ic_mac.png",
                 onPressed: () {
-                  SystemAppLauncher.openUrl(urlMacApp);
+                  _downloadMacApp();
                 }),
             SizedBox(width: 20),
             _buildDownloadButton(
                 iconName: "ic_linux.png",
                 onPressed: () {
-                  SystemAppLauncher.openUrl(urlLinuxApp);
+                  _downloadLinuxApp();
                 }),
             SizedBox(width: 20),
             _buildDownloadButton(
                 iconName: "ic_android.png",
                 onPressed: () {
-                  SystemAppLauncher.openUrl(urlAndroidApp);
+                  _downloadAndroidApp();
                 }),
           ],
         ));
+  }
+
+  void _downloadWindowsApp() async {
+    if (_updateInfo != null) {
+      final url = CommonUtil.isInland(context)
+          ? _updateInfo!.inland.urlWindows
+          : _updateInfo!.overseas.urlWindows;
+      SystemAppLauncher.openUrl(url);
+    } else {
+      BotToast.showLoading();
+
+      try {
+        final updateInfo = await _getUpdateInfo();
+        BotToast.closeAllLoading();
+
+        _updateInfo = updateInfo;
+
+        final url = CommonUtil.isInland(context)
+            ? _updateInfo!.inland.urlWindows
+            : _updateInfo!.overseas.urlWindows;
+        SystemAppLauncher.openUrl(url);
+      } catch (e) {
+        BotToast.closeAllLoading();
+        BotToast.showText(text: "Get update info failure, reason: $e");
+      }
+    }
+  }
+
+  void _downloadMacApp() async {
+    if (_updateInfo != null) {
+      final url = CommonUtil.isInland(context)
+          ? _updateInfo!.inland.urlMac
+          : _updateInfo!.overseas.urlMac;
+      SystemAppLauncher.openUrl(url);
+    } else {
+      BotToast.showLoading();
+
+      try {
+        final updateInfo = await _getUpdateInfo();
+        BotToast.closeAllLoading();
+
+        _updateInfo = updateInfo;
+
+        final url = CommonUtil.isInland(context)
+            ? _updateInfo!.inland.urlMac
+            : _updateInfo!.overseas.urlMac;
+        SystemAppLauncher.openUrl(url);
+      } catch (e) {
+        BotToast.closeAllLoading();
+        BotToast.showText(text: "Get update info failure, reason: $e");
+      }
+    }
+  }
+
+  void _downloadLinuxApp() async {
+    if (_updateInfo != null) {
+      final url = CommonUtil.isInland(context)
+          ? _updateInfo!.inland.urlLinux
+          : _updateInfo!.overseas.urlLinux;
+      SystemAppLauncher.openUrl(url);
+    } else {
+      BotToast.showLoading();
+
+      try {
+        final updateInfo = await _getUpdateInfo();
+        BotToast.closeAllLoading();
+
+        _updateInfo = updateInfo;
+
+        final url = CommonUtil.isInland(context)
+            ? _updateInfo!.inland.urlLinux
+            : _updateInfo!.overseas.urlLinux;
+        SystemAppLauncher.openUrl(url);
+      } catch (e) {
+        BotToast.closeAllLoading();
+        BotToast.showText(text: "Get update info failure, reason: $e");
+      }
+    }
+  }
+
+  void _downloadAndroidApp() async {
+    if (_updateInfo != null) {
+      final url = CommonUtil.isInland(context)
+          ? _updateInfo!.inland.urlAndroid
+          : _updateInfo!.overseas.urlAndroid;
+      SystemAppLauncher.openUrl(url);
+    } else {
+      BotToast.showLoading();
+
+      try {
+        final updateInfo = await _getUpdateInfo();
+        BotToast.closeAllLoading();
+
+        _updateInfo = updateInfo;
+
+        final url = CommonUtil.isInland(context)
+            ? _updateInfo!.inland.urlAndroid
+            : _updateInfo!.overseas.urlAndroid;
+        SystemAppLauncher.openUrl(url);
+      } catch (e) {
+        BotToast.closeAllLoading();
+        BotToast.showText(text: "Get update info failure, reason: $e");
+      }
+    }
+  }
+
+  void _downloadApp() {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.windows:
+        _downloadWindowsApp();
+        break;
+      case TargetPlatform.macOS:
+        _downloadMacApp();
+        break;
+      default:
+        _downloadLinuxApp();
+        break;
+    }
   }
 
   Widget _buildPreviewView() {
@@ -239,7 +422,11 @@ class _IndexPageState extends State<IndexPage> {
           Text(context.l10n.openSourceDeclaration,
               style: TextStyle(fontSize: 20, color: Colors.white)),
           SizedBox(height: 30),
-          _StartWebButton(text: context.l10n.tryWebVersion, onPressed: () {})
+          _StartWebButton(
+              text: context.l10n.tryWebVersion,
+              onPressed: () {
+                Navigator.pushNamed(context, routeEnter);
+              })
         ],
       ),
     );
@@ -270,11 +457,23 @@ class _IndexPageState extends State<IndexPage> {
                   icon: Icon(Icons.close, color: Colors.white, size: 25))
             ],
           ),
-          _MenuTextButton(text: context.l10n.web, onPressed: () {}),
+          _MenuTextButton(
+              text: context.l10n.web,
+              onPressed: () {
+                Navigator.pushNamed(context, routeEnter);
+              }),
           SizedBox(height: 10),
-          _MenuTextButton(text: context.l10n.docs, onPressed: () {}),
+          _MenuTextButton(
+              text: context.l10n.docs,
+              onPressed: () {
+                SystemAppLauncher.openUrl(urlDocs);
+              }),
           SizedBox(height: 10),
-          _MenuTextButton(text: context.l10n.github, onPressed: () {}),
+          _MenuTextButton(
+              text: context.l10n.github,
+              onPressed: () {
+                SystemAppLauncher.openUrl(urlGitHub);
+              }),
         ],
       ),
     );
@@ -321,26 +520,36 @@ class _IndexPageState extends State<IndexPage> {
       _buildCommunityItem(
           iconName: "ic_github.png",
           text: context.l10n.github,
-          onPressed: () {}),
+          onPressed: () {
+            SystemAppLauncher.openUrl(urlGitHub);
+          }),
       media.size.width > _widthBreakPoint
           ? SizedBox(width: 30)
           : SizedBox(height: 10),
       _buildCommunityItem(
-          iconName: "qq.png", text: context.l10n.qqGroup, onPressed: () {}),
+          iconName: "qq.png",
+          text: context.l10n.qqGroup,
+          onPressed: () {
+            SystemAppLauncher.openUrl(urlQQGroup);
+          }),
       media.size.width > _widthBreakPoint
           ? SizedBox(width: 30)
           : SizedBox(height: 10),
       _buildCommunityItem(
           iconName: "weixin.png",
           text: context.l10n.wechatOfficial,
-          onPressed: () {}),
+          onPressed: () {
+            SystemAppLauncher.openUrl(urlWechatOfficial);
+          }),
       media.size.width > _widthBreakPoint
           ? SizedBox(width: 30)
           : SizedBox(height: 10),
       _buildCommunityItem(
           iconName: "weibo.jpg",
           text: context.l10n.sinaWeibo,
-          onPressed: () {}),
+          onPressed: () {
+            SystemAppLauncher.openUrl(urlWeibo);
+          }),
     ];
   }
 
@@ -366,6 +575,15 @@ class _IndexPageState extends State<IndexPage> {
       ),
     );
   }
+
+  Future<UpdateInfo> _getUpdateInfo() async {
+    final response = await _dio.get("/update/update.json");
+    if (response.statusCode == 200) {
+      return UpdateInfo.fromJson(response.data);
+    } else {
+      throw Exception(response.statusMessage ?? "Failed to get update info");
+    }
+  }
 }
 
 class _StartWebButton extends StatefulWidget {
@@ -389,7 +607,9 @@ class _StartWebButtonState extends State<_StartWebButton> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        widget.onPressed?.call();
+      },
       onHover: (isHover) {
         setState(() {
           _isHover = isHover;
@@ -438,7 +658,9 @@ class _MenuTextButtonState extends State<_MenuTextButton> {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       hoverColor: Colors.transparent,
-      onTap: () {},
+      onTap: () {
+        widget.onPressed?.call();
+      },
       onHover: (isHover) {
         setState(() {
           _isHover = isHover;
