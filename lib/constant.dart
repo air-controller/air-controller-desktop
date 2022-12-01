@@ -55,9 +55,9 @@ class Constant {
   static const String KEY_UPDATE_DOWNLOAD_DIR =
       "aircontroller_update_download_directory";
 
-  static const bool ENABLE_HEARTBEAT_LOG = true;
+  static const bool ENABLE_HEARTBEAT_LOG = false;
 
-  static const bool ENABLE_UDP_DISCOVER_LOG = true;
+  static const bool ENABLE_UDP_DISCOVER_LOG = false;
 
   static const bool ENABLE_BLOC_LOG = false;
 
