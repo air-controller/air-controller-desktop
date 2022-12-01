@@ -137,5 +137,19 @@
   "invalidIpAddress": "Por favor ingrese una dirección IP válida",
   "connectionFailed": "La conexión falló",
   "savingImageAs": "guardar imagen como...",
-  "downloadToLocal": "descargar a locales"
+  "downloadToLocal": "descargar a locales",
+  "webLogoText": "Conecte su teléfono Android de forma inalámbrica y administre los archivos de su teléfono de forma remota",
+  "downloadAppGuide": "Descarga el software para la mejor experiencia",
+  "web": "versión web",
+  "docs": "documento",
+  "github": "GitHub",
+  "slogan": "La versión de código abierto de HandShaker le permite administrar mejor sus teléfonos Android en la plataforma Mac",
+  "appIntro": "AirController es una herramienta de administración y transferencia de archivos multiplataforma que conecta teléfonos móviles y computadoras. Actualmente, AirController admite el uso directo en navegadores y sistemas operativos Windows, macOS y Linux. La intención original de AirController es proporcionar un software de administración de teléfonos móviles Android fácil de usar para la plataforma Mac para compensar los defectos de sincronización entre la plataforma Mac y el teléfono móvil Android, y esperar que sea su derecho. hombre de mano",
+  "operationGuide": "Conéctese a WIFI para administrar su teléfono móvil de forma inalámbrica",
+  "openSourceDeclaration": "Software de código abierto, no dude en usarlo",
+  "tryWebVersion": "Experiencia de la versión web",
+  "joinOurCommunity": "Únete a nuestra comunidad",
+  "qqGroup": "Grupo de comunicación QQ",
+  "sinaWeibo": "SinaWeibo",
+  "wechatOfficial": "Cuenta oficial de Wechat"
 }

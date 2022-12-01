@@ -213,3 +213,8 @@ class ToolboxPageRoute {
 
   static const String MANAGE_CONTACTS = "/toolbox/contacts";
 }
+
+const urlWindowsApp = "";
+const urlMacApp = "";
+const urlLinuxApp = "";
+const urlAndroidApp = "";

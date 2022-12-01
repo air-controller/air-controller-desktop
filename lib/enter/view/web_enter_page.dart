@@ -39,58 +39,107 @@ class _WebEnterPageState extends State<WebEnterPage> {
       width: MediaQuery.of(context).size.width * 5 / 10,
       height: double.infinity,
       color: Color.fromARGB(255, 249, 252, 248),
-      child: Image.asset("assets/images/connection.jpg", fit: BoxFit.fitHeight),
+      child: Stack(
+        children: [
+          Image.asset("assets/images/connection.jpg",
+              fit: BoxFit.fitHeight, height: double.infinity),
+        ],
+      ),
     );
+  }
+
+  Widget _buildIntroButtonsView() {
+    return Align(
+      alignment: Alignment.center,
+      child: Column(
+      children: [
+        Text(context.l10n.downloadAppGuide, style: TextStyle(fontSize: 22, color: Color(0xff333333).withAlpha(210))),
+        SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildDownloadButton(text: "Mac", onPressed: () {}),
+            SizedBox(width: 30),
+            _buildDownloadButton(text: "Windows", onPressed: () {}),
+            SizedBox(width: 30),
+            _buildDownloadButton(text: "Linux", onPressed: () {}),
+          ],
+        ),
+        SizedBox(height: 50)
+      ],
+    ),
+    );
+  }
+
+  Widget _buildDownloadButton({required String text, Function()? onPressed}) {
+    return ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15)),
+        child: Text(text, style: TextStyle(fontSize: 20)));
   }
 
   Widget _buildConnectionView() {
     return Container(
       width: MediaQuery.of(context).size.width * 5 / 10,
       height: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          Text("AirController", style: TextStyle(fontSize: 35)),
-          SizedBox(height: 30),
-          _buildInputView(
-              text: context.l10n.ipAddress,
-              hint: context.l10n.enterIpAddress,
-              onChange: (value) {
-                setState(() {
-                  _ip = value;
-                });
-              },
-              onFieldSubmitted: (value) {
-                if (_ip != null && _ip!.trim().isNotEmpty) {
-                  _connect();
-                }
-              }),
-          SizedBox(height: 15),
-          _buildInputView(
-              text: context.l10n.password,
-              hint: context.l10n.optional,
-              onChange: (value) {
-                setState(() {
-                  _pwd = value;
-                });
-              },
-              onFieldSubmitted: (value) {
-                if (_ip != null && _ip!.trim().isNotEmpty) {
-                  _connect();
-                }
-              }),
-          SizedBox(height: 30),
           SizedBox(
-              width: 250,
-              height: 35,
-              child: ElevatedButton(
-                  onPressed: _ip != null && _ip!.trim().isNotEmpty
-                      ? () {
-                          _connect();
-                        }
-                      : null,
-                  child: Text(context.l10n.connect)))
+            width: double.infinity,
+            height: double.infinity,
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset("assets/images/logo.png", width: 300, fit: BoxFit.fitWidth),
+              SizedBox(height: 30),
+              _buildInputView(
+                  text: context.l10n.ipAddress,
+                  hint: context.l10n.enterIpAddress,
+                  onChange: (value) {
+                    setState(() {
+                      _ip = value;
+                    });
+                  },
+                  onFieldSubmitted: (value) {
+                    if (_ip != null && _ip!.trim().isNotEmpty) {
+                      _connect();
+                    }
+                  }),
+              SizedBox(height: 15),
+              _buildInputView(
+                  text: context.l10n.password,
+                  hint: context.l10n.optional,
+                  onChange: (value) {
+                    setState(() {
+                      _pwd = value;
+                    });
+                  },
+                  onFieldSubmitted: (value) {
+                    if (_ip != null && _ip!.trim().isNotEmpty) {
+                      _connect();
+                    }
+                  }),
+              SizedBox(height: 30),
+              SizedBox(
+                  width: 250,
+                  height: 35,
+                  child: ElevatedButton(
+                      onPressed: _ip != null && _ip!.trim().isNotEmpty
+                          ? () {
+                              _connect();
+                            }
+                          : null,
+                      child: Text(context.l10n.connect))),
+              SizedBox(height: 100),
+            ],
+          ),
+          ),
+          Positioned(
+              bottom: 0,
+              child: _buildIntroButtonsView(),
+              width: MediaQuery.of(context).size.width * 5 / 10)
         ],
       ),
     );
@@ -107,7 +156,7 @@ class _WebEnterPageState extends State<WebEnterPage> {
         Text(text, style: TextStyle(fontSize: 16)),
         SizedBox(height: 10),
         SizedBox(
-          width: 250,
+          width: 300,
           height: 35,
           child: UnifiedTextField(
             hintText: hint,

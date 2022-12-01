@@ -136,5 +136,19 @@
   "optional": "可选",
   "invalidIpAddress": "请输入有效的IP地址",
   "connectionFailed": "连接失败！",
-  "downloadToLocal": "下载到本地"
+  "downloadToLocal": "下载到本地",
+  "webLogoText": "无线连接你的Android手机，远程管理你的手机文件",
+  "downloadAppGuide": "下载软件，获取最佳体验",
+  "web": "网页版",
+  "docs": "文档",
+  "github": "GitHub",
+  "slogan": "开源版本HandShaker，让你在Mac平台上更好地管理你的Android手机",
+  "appIntro": "AirController是一个跨平台的、连接手机与电脑之间的文件传输与管理工具。目前，AirController已支持在Windows、macOS、Linux操作系统以及浏览器中直接使用。AirController的设计初衷是期望提供一个Mac平台好用的Android手机管理软件，以弥补Mac平台与Android手机同步的缺陷，期望它能成为你的得力助手。",
+  "operationGuide": "连接WIFI即可无线管理你的手机",
+  "openSourceDeclaration": "开源软件，放心使用",
+  "tryWebVersion": "网页版体验",
+  "joinOurCommunity": "加入我们的社区",
+  "qqGroup": "QQ交流群",
+  "sinaWeibo": "新浪微博",
+  "wechatOfficial": "微信公众号"
 }
