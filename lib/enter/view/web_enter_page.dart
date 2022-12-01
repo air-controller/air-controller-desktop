@@ -9,7 +9,6 @@ import 'package:air_controller/widget/unified_text_field.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
-import '../../bootstrap.dart';
 import '../../constant.dart';
 
 class WebEnterPage extends StatefulWidget {
@@ -48,47 +47,11 @@ class _WebEnterPageState extends State<WebEnterPage> {
     );
   }
 
-  Widget _buildIntroButtonsView() {
-    return Align(
-      alignment: Alignment.center,
-      child: Column(
-      children: [
-        Text(context.l10n.downloadAppGuide, style: TextStyle(fontSize: 22, color: Color(0xff333333).withAlpha(210))),
-        SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDownloadButton(text: "Mac", onPressed: () {}),
-            SizedBox(width: 30),
-            _buildDownloadButton(text: "Windows", onPressed: () {}),
-            SizedBox(width: 30),
-            _buildDownloadButton(text: "Linux", onPressed: () {}),
-          ],
-        ),
-        SizedBox(height: 50)
-      ],
-    ),
-    );
-  }
-
-  Widget _buildDownloadButton({required String text, Function()? onPressed}) {
-    return ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15)),
-        child: Text(text, style: TextStyle(fontSize: 20)));
-  }
-
   Widget _buildConnectionView() {
     return Container(
       width: MediaQuery.of(context).size.width * 5 / 10,
       height: double.infinity,
-      child: Stack(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-            child: Column(
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -135,13 +98,6 @@ class _WebEnterPageState extends State<WebEnterPage> {
               SizedBox(height: 100),
             ],
           ),
-          ),
-          Positioned(
-              bottom: 0,
-              child: _buildIntroButtonsView(),
-              width: MediaQuery.of(context).size.width * 5 / 10)
-        ],
-      ),
     );
   }
 
@@ -206,7 +162,6 @@ class _WebEnterPageState extends State<WebEnterPage> {
     } catch (e) {
       BotToast.closeAllLoading();
       BotToast.showText(text: context.l10n.connectionFailed);
-      logger.e("connect failure: $e");
     }
   }
 

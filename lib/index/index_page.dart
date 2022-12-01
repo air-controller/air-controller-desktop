@@ -159,8 +159,7 @@ class _IndexPageState extends State<IndexPage> {
           children: [
             Image.asset("assets/icons/ic_app_icon.png", width: 20, height: 20),
             SizedBox(width: 5),
-            Text("AirController",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600))
+            Text("AirController", style: TextStyle(fontSize: 18))
           ],
         ));
   }
@@ -187,7 +186,7 @@ class _IndexPageState extends State<IndexPage> {
           Text(context.l10n.slogan,
               style: TextStyle(fontWeight: FontWeight.w500, fontSize: 30)),
           SizedBox(height: 10),
-          Text(context.l10n.appIntro, style: TextStyle(fontSize: 20)),
+          Text(context.l10n.appIntro, style: TextStyle(fontSize: 18)),
         ],
       ),
     );
@@ -209,7 +208,10 @@ class _IndexPageState extends State<IndexPage> {
             borderRadius: BorderRadius.all(Radius.circular(30))),
         padding: EdgeInsets.all(10),
         child: Image.asset("assets/icons/$iconName",
-            fit: BoxFit.fitWidth, color: Colors.white),
+            fit: BoxFit.fitWidth,
+            color: Colors.white,
+            filterQuality: FilterQuality.high,
+            isAntiAlias: true),
       ),
     );
   }
@@ -510,8 +512,7 @@ class _IndexPageState extends State<IndexPage> {
             ? Row(
                 children: [
                   Text(context.l10n.joinOurCommunity,
-                      style:
-                          TextStyle(fontSize: 35, fontWeight: FontWeight.w500)),
+                      style: TextStyle(fontSize: 35)),
                   SizedBox(width: 30),
                   ..._buildCommunityItems()
                 ],
@@ -687,7 +688,6 @@ class _MenuTextButtonState extends State<_MenuTextButton> {
       child: Text(widget.text,
           style: TextStyle(
               fontSize: widget.fontSize,
-              fontWeight: FontWeight.w500,
               color: _isHover ? widget.hoverColor : widget.color)),
     );
   }
