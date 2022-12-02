@@ -1748,6 +1748,10 @@ class AirControllerClient {
       languageCode = Localizations.localeOf(context).languageCode;
     }
 
-    return {"Content-Type": "application/json", "languageCode": languageCode};
+    return {
+      "Content-Type": "application/json",
+      "languageCode": languageCode,
+      "Access-Control-Allow-Private-Network": "true"
+    };
   }
 }
