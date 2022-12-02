@@ -75,7 +75,7 @@ class _IndexPageState extends State<IndexPage> {
           height: 50,
           margin: EdgeInsets.only(left: 20, top: 15),
           child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
+              style: ElevatedButton.styleFrom(backgroundColor: Color(0xffeb8e36)),
               onPressed: () {
                 _downloadApp();
               },
